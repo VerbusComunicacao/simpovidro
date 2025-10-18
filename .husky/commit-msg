@@ -1,0 +1,11 @@
+echo "Verificando se o commit contém uma chave de API..."
+if git grep -E "[A-Z0-9]{20}"; then
+
+    echo "Detected a hardcoded 20 character string I think is an API key"
+
+    exit 2
+
+fi
+
+echo "Fazendo o commitlint..."
+npx commitlint --edit $1
