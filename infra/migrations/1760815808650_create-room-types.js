@@ -1,8 +1,8 @@
 exports.up = (pgm) => {
-  pgm.createTable("churchs", {
+  pgm.createTable("room-types", {
     id: {
       type: "uuid",
-      primarykey: true,
+      primaryKey: true,
       default: pgm.func("gen_random_uuid()"),
     },
     user_id: {
@@ -10,20 +10,24 @@ exports.up = (pgm) => {
       notNull: true,
     },
     name: {
-      type: "varchar(254)",
+      type: "varchar(100)",
       notNull: true,
     },
+    description: {
+      type: "text",
+    },
+
     created_at: {
       type: "timestamptz",
-      default: pgm.func("timezone('utc', now())"),
       notNull: true,
+      default: pgm.func("timezone('utc', now())"),
     },
+
     updated_at: {
       type: "timestamptz",
-      default: pgm.func("timezone('utc', now())"),
       notNull: true,
+      default: pgm.func("timezone('utc', now())"),
     },
   })
 }
-
 exports.down = false

@@ -30,6 +30,7 @@
     "dotenv": "16.4.4",
     "dotenv-expand": "11.0.6",
     "eslint": "8.57.0",
+    "joi": "^18.0.1",
     "next": "14.2.5",
     "next-connect": "1.0.0",
     "node-pg-migrate": "7.6.1",

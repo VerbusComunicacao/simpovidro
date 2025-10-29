@@ -44,72 +44,63 @@ async function sendEmailToUser(user, activationToken) {
 }
 
 async function activateAccount(token) {
-  const activationToken = await findValidToken(token)
+  const client = await database.getNewClient()
 
-  // Marcar token como usado
-  await database.query({
-    text: `
-      UPDATE 
-        user_activation_tokens 
-      SET
-        used_at = NOW(),
-        updated_at = NOW()
-      WHERE
-        id = $1
-    `,
-    values: [activationToken.id],
-  })
+  try {
+    await client.query("BEGIN")
+    const activationToken = await findValidToken(token, client)
 
-  // Atualizar features do usuário
-  await database.query({
-    text: `
-      UPDATE 
-        users 
-      SET
-        features = array_append(features, 'create:session'),
-        updated_at = NOW()
-      WHERE
-        id = $1
-    `,
-    values: [activationToken.user_id],
-  })
+    const tokenResults = await client.query({
+      text: `
+        UPDATE 
+          user_activation_tokens 
+        SET
+          used_at = NOW(),
+          updated_at = NOW()
+        WHERE
+          id = $1
+        RETURNING *
+      `,
+      values: [activationToken.id],
+    })
 
-  return {
-    id: activationToken.user_id,
-    username: activationToken.username,
-    email: activationToken.email,
+    await client.query({
+      text: `
+        UPDATE 
+          users 
+        SET
+          features = ARRAY['create:session'],
+          updated_at = NOW()
+        WHERE
+          id = $1
+      `,
+      values: [activationToken.user_id],
+    })
+
+    await client.query("COMMIT")
+
+    return tokenResults.rows[0]
+  } catch (error) {
+    await client.query("ROLLBACK")
+    throw error
+  } finally {
+    await client.end()
   }
-}
-
-async function findOneByUserId(userId) {
-  const results = await database.query({
-    text: `
-      SELECT 
-        *
-      FROM
-        user_activation_tokens
-      WHERE
-        user_id = $1 
-      LIMIT
-        1
-    `,
-    values: [userId],
-  })
-
-  if (results.rowCount === 0) return null
-
-  return results.rows[0].token
 }
 
 async function findValidToken(token) {
   const results = await database.query({
     text: `
-      SELECT at.*, u.* 
-      FROM user_activation_tokens at
-      JOIN users u ON at.user_id = u.id
-      WHERE at.token = $1 
-        AND at.expires_at > NOW()
-        AND at.used_at IS null
+      SELECT
+      *
+      FROM
+        user_activation_tokens
+      WHERE
+        token = $1 
+        AND expires_at > NOW()
+        AND used_at IS NULL
+      LIMIT
+        1
     `,
     values: [token],
   })
@@ -129,7 +120,6 @@ const activation = {
   sendEmailToUser,
   activateAccount,
   findValidToken,
-  findOneByUserId,
 }
 
 export default activation

@@ -22,14 +22,11 @@ const availableFeatures = new Set([
   "create:session",
   "read:session",
 
-  // CONTENT
+  // CONTENT (Hotel, Room types, categories, etc.)
   "read:content",
   "update:content",
   "create:content",
-  "create:content:text_root",
-  "create:content:text_child",
-  "read:content:list",
-  "read:content:tabcoins",
+  "delete:content",
 
   // MODERATION
   "read:user:list",

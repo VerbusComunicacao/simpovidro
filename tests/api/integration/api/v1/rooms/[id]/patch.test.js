@@ -1,0 +1,400 @@
+import orchestrator from "tests/orchestrator.js"
+
+beforeAll(async () => {
+  await orchestrator.waitForAllServices()
+  await orchestrator.clearDatabase()
+  await orchestrator.runPendingMigrations()
+})
+
+describe("PATCH /api/v1/rooms/[id]", () => {
+  describe("Anonymous user", () => {
+    test("Can't update room", async () => {
+      const response = await fetch(
+        "http://localhost:3000/api/v1/rooms/780a77f5-6fca-4e95-bc6c-e93e889cba80",
+        {
+          method: "PATCH",
+        },
+      )
+      expect(response.status).toBe(401)
+    })
+  })
+
+  describe("Authenticated user", () => {
+    test("Without feature 'update:content'", async () => {
+      const createdUser = await orchestrator.createUser({
+        username: "UserWithoutUpdateFeature",
+      })
+
+      const sessionObject = await orchestrator.createSession(createdUser.id)
+
+      const response = await fetch(
+        "http://localhost:3000/api/v1/rooms/780a77f5-6fca-4e95-bc6c-e93e889cba80",
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            price_per_night: 200.0,
+            total_rooms: 6,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionObject.token}`,
+          },
+        },
+      )
+
+      expect(response.status).toBe(403)
+    })
+
+    test("Room not found", async () => {
+      const createdUser = await orchestrator.createUser()
+      await orchestrator.activateAccount(createdUser.id)
+
+      const sessionObject = await orchestrator.createSession(createdUser.id)
+
+      const response = await fetch(
+        "http://localhost:3000/api/v1/rooms/87562c5a-7f7b-4f9e-b4de-08552758e4e9",
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            price_per_night: 200.0,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionObject.token}`,
+          },
+        },
+      )
+
+      expect(response.status).toBe(404)
+    })
+
+    test("Update room with blank data", async () => {
+      const createdUser = await orchestrator.createUser()
+      await orchestrator.activateAccount(createdUser.id)
+
+      const sessionObject = await orchestrator.createSession(createdUser.id)
+
+      const created = await orchestrator.createRoom(createdUser.id, {
+        price_per_night: 150.0,
+        total_rooms: 5,
+      })
+
+      const response = await fetch(
+        `http://localhost:3000/api/v1/rooms/${created.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionObject.token}`,
+          },
+        },
+      )
+
+      expect(response.status).toBe(400)
+
+      const errorBody = await response.json()
+      expect(errorBody).toEqual({
+        action: "Envie algum campo e tente novamente.",
+        message: `Nenhum campo enviado para atualização.`,
+        name: "ValidationError",
+        status_code: 400,
+      })
+    })
+
+    test("Update room successfully", async () => {
+      const createdUser = await orchestrator.createUser()
+      await orchestrator.activateAccount(createdUser.id)
+
+      const sessionObject = await orchestrator.createSession(createdUser.id)
+
+      const created = await orchestrator.createRoom(createdUser.id, {
+        price_per_night: 150.0,
+        total_rooms: 5,
+        available_rooms: 3,
+        blocked_rooms: 2,
+      })
+
+      const response = await fetch(
+        `http://localhost:3000/api/v1/rooms/${created.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            price_per_night: 200.0,
+            total_rooms: 8,
+            available_rooms: 6,
+            blocked_rooms: 2,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionObject.token}`,
+          },
+        },
+      )
+
+      expect(response.status).toBe(200)
+
+      const updated = await response.json()
+      expect(updated).toEqual({
+        id: created.id,
+        hotel_id: created.hotel_id,
+        room_type_id: created.room_type_id,
+        room_category_id: created.room_category_id,
+        price_per_night: "200.00",
+        total_rooms: 8,
+        available_rooms: 6,
+        blocked_rooms: 2,
+        user_id: createdUser.id,
+        created_at: created.created_at.toISOString(),
+        updated_at: expect.any(String),
+      })
+    })
+
+    test("Update room with invalid hotel_id", async () => {
+      const createdUser = await orchestrator.createUser()
+      await orchestrator.activateAccount(createdUser.id)
+
+      const sessionObject = await orchestrator.createSession(createdUser.id)
+
+      const created = await orchestrator.createRoom(createdUser.id)
+
+      const response = await fetch(
+        `http://localhost:3000/api/v1/rooms/${created.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            hotel_id: "invalid-uuid",
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionObject.token}`,
+          },
+        },
+      )
+
+      expect(response.status).toBe(400)
+    })
+
+    test("Update room with hotel from different user", async () => {
+      const user1 = await orchestrator.createUser()
+      await orchestrator.activateAccount(user1.id)
+
+      const user2 = await orchestrator.createUser()
+      await orchestrator.activateAccount(user2.id)
+
+      const session2 = await orchestrator.createSession(user2.id)
+
+      const hotel1 = await orchestrator.createHotel(user1.id)
+      const room2 = await orchestrator.createRoom(user2.id)
+
+      const response = await fetch(
+        `http://localhost:3000/api/v1/rooms/${room2.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            hotel_id: hotel1.id,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${session2.token}`,
+          },
+        },
+      )
+
+      expect(response.status).toBe(404)
+    })
+
+    test("Only total_rooms provided adjusts available", async () => {
+      const createdUser = await orchestrator.createUser()
+      await orchestrator.activateAccount(createdUser.id)
+      const sessionObject = await orchestrator.createSession(createdUser.id)
+
+      const hotel = await orchestrator.createHotel(createdUser.id)
+      const roomType = await orchestrator.createRoomType(createdUser.id)
+      const roomCategory = await orchestrator.createRoomCategory(createdUser.id)
+
+      const createResponse = await fetch("http://localhost:3000/api/v1/rooms", {
+        method: "POST",
+        body: JSON.stringify({
+          hotel_id: hotel.id,
+          room_type_id: roomType.id,
+          room_category_id: roomCategory.id,
+          total_rooms: 5,
+          available_rooms: 3,
+          blocked_rooms: 2,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+      })
+      const roomCreated = await createResponse.json()
+
+      const patchResponse = await fetch(
+        `http://localhost:3000/api/v1/rooms/${roomCreated.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ total_rooms: 12 }),
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionObject.token}`,
+          },
+        },
+      )
+
+      expect(patchResponse.status).toBe(200)
+      const roomUpdated = await patchResponse.json()
+      expect(roomUpdated).toMatchObject({
+        id: roomCreated.id,
+        total_rooms: 12,
+        available_rooms: 10,
+        blocked_rooms: 2,
+        user_id: createdUser.id,
+      })
+
+      const patchResponse2 = await fetch(
+        `http://localhost:3000/api/v1/rooms/${roomCreated.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ total_rooms: 2 }),
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionObject.token}`,
+          },
+        },
+      )
+
+      expect(patchResponse2.status).toBe(200)
+      const roomUpdated2 = await patchResponse2.json()
+      expect(roomUpdated2).toMatchObject({
+        id: roomCreated.id,
+        total_rooms: 2,
+        available_rooms: 0,
+        blocked_rooms: 2,
+        user_id: createdUser.id,
+      })
+
+      const patchResponse3 = await fetch(
+        `http://localhost:3000/api/v1/rooms/${roomCreated.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ total_rooms: 1 }),
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionObject.token}`,
+          },
+        },
+      )
+
+      expect(patchResponse3.status).toBe(400)
+      const roomUpdated3 = await patchResponse3.json()
+      expect(roomUpdated3).toEqual({
+        name: "ValidationError",
+        status_code: 400,
+        message:
+          "A soma de quartos disponíveis e bloqueados deve ser igual ao total.",
+        action: "Ajuste os valores e tente novamente.",
+      })
+    })
+
+    test("Negative values are rejected", async () => {
+      const createdUser = await orchestrator.createUser()
+      await orchestrator.activateAccount(createdUser.id)
+      const sessionObject = await orchestrator.createSession(createdUser.id)
+
+      const hotel = await orchestrator.createHotel(createdUser.id)
+      const roomType = await orchestrator.createRoomType(createdUser.id)
+      const roomCategory = await orchestrator.createRoomCategory(createdUser.id)
+
+      const createResponse = await fetch("http://localhost:3000/api/v1/rooms", {
+        method: "POST",
+        body: JSON.stringify({
+          hotel_id: hotel.id,
+          room_type_id: roomType.id,
+          room_category_id: roomCategory.id,
+          total_rooms: 5,
+          available_rooms: 5,
+          blocked_rooms: 0,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+      })
+      const roomCreated = await createResponse.json()
+
+      const response = await fetch(
+        `http://localhost:3000/api/v1/rooms/${roomCreated.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ available_rooms: -1 }),
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionObject.token}`,
+          },
+        },
+      )
+
+      expect(response.status).toBe(400)
+      const errorBody = await response.json()
+      expect(errorBody).toEqual({
+        name: "ValidationError",
+        status_code: 400,
+        message: "Os valores de quartos não podem ser negativos.",
+        action: "Verifique os campos e tente novamente.",
+      })
+    })
+
+    test("Sum available + blocked must equal total", async () => {
+      const createdUser = await orchestrator.createUser()
+      await orchestrator.activateAccount(createdUser.id)
+      const sessionObject = await orchestrator.createSession(createdUser.id)
+
+      const hotel = await orchestrator.createHotel(createdUser.id)
+      const roomType = await orchestrator.createRoomType(createdUser.id)
+      const roomCategory = await orchestrator.createRoomCategory(createdUser.id)
+
+      const createResponse = await fetch("http://localhost:3000/api/v1/rooms", {
+        method: "POST",
+        body: JSON.stringify({
+          hotel_id: hotel.id,
+          room_type_id: roomType.id,
+          room_category_id: roomCategory.id,
+          total_rooms: 5,
+          available_rooms: 3,
+          blocked_rooms: 2,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+      })
+      const roomCreated = await createResponse.json()
+
+      const response = await fetch(
+        `http://localhost:3000/api/v1/rooms/${roomCreated.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            available_rooms: 2,
+            blocked_rooms: 1,
+            total_rooms: 2,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionObject.token}`,
+          },
+        },
+      )
+
+      expect(response.status).toBe(400)
+      const errorBody = await response.json()
+      expect(errorBody).toEqual({
+        name: "ValidationError",
+        status_code: 400,
+        message:
+          "A soma de quartos disponíveis e bloqueados deve ser igual ao total.",
+        action: "Ajuste os valores e tente novamente.",
+      })
+    })
+  })
+})

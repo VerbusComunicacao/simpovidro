@@ -93,6 +93,28 @@ export class NotFoundError extends Error {
   }
 }
 
+export class ConflictError extends Error {
+  constructor({ cause, message, action }) {
+    super(message || "Um conflito foi detectado ao processar sua solicitação", {
+      cause,
+    })
+    this.name = "ConflictError"
+    this.action =
+      action ||
+      "Verifique se já existe um registro com os mesmos dados ou tente novamente com informações diferentes."
+    this.statusCode = 409
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    }
+  }
+}
+
 export class UnauthorizedError extends Error {
   constructor({ cause, message, action }) {
     super(message || "Usuário não autenticado.", {

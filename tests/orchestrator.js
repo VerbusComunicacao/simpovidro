@@ -4,7 +4,10 @@ import user from "models/user.js"
 import retry from "async-retry"
 import { faker } from "@faker-js/faker"
 import session from "models/session.js"
-import church from "models/church"
+import hotel from "models/hotel.js"
+import roomType from "models/room-type.js"
+import roomCategory from "models/room-category.js"
+import room from "models/room.js"
 
 const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`
 
@@ -58,22 +61,68 @@ async function createUser(userObject) {
   })
 }
 
-async function createChurch(userId, churchObject) {
-  return await church.create(
+async function deleteAllEmails() {
+  await fetch(`${emailHttpUrl}/messages`, { method: "DELETE" })
+}
+
+async function createHotel(userId, hotelData) {
+  return await hotel.create(
     {
-      name: churchObject?.name || faker.company.name(),
+      name: hotelData?.name || faker.company.name(),
+      city: hotelData?.city || faker.location.city(),
+      country: hotelData?.country || faker.location.country(),
+      email: hotelData?.email || faker.internet.email(),
+      phone: hotelData?.phone || faker.internet.phone,
+      address: hotelData?.address || faker.location.streetAddress(),
+      state: hotelData?.state || faker.location.state(),
     },
     userId,
   )
 }
 
-async function createManyChurches(userId, count = 5) {
-  const promises = Array.from({ length: count }, () => createChurch(userId))
-  return await Promise.all(promises)
+async function createRoomCategory(userId, roomCategoryData) {
+  return await roomCategory.create(
+    {
+      name: roomCategoryData?.name || faker.commerce.productName(),
+      max_adults:
+        roomCategoryData?.max_adults || faker.number.int({ min: 1, max: 4 }),
+      max_children:
+        roomCategoryData?.max_children || faker.number.int({ min: 0, max: 3 }),
+    },
+    userId,
+  )
 }
 
-async function deleteAllEmails() {
-  await fetch(`${emailHttpUrl}/messages`, { method: "DELETE" })
+async function createRoom(userId, roomData) {
+  return await room.create(
+    {
+      hotel_id: roomData?.hotel_id || (await createHotel(userId)).id,
+      room_type_id: roomData?.room_type_id || (await createRoomType(userId)).id,
+      room_category_id:
+        roomData?.room_category_id || (await createRoomCategory(userId)).id,
+      price_per_night:
+        roomData?.price_per_night ||
+        faker.number.float({ min: 50, max: 500, fractionDigits: 2 }),
+      total_rooms:
+        roomData?.total_rooms || faker.number.int({ min: 1, max: 10 }),
+      available_rooms:
+        roomData?.available_rooms || faker.number.int({ min: 0, max: 5 }),
+      blocked_rooms:
+        roomData?.blocked_rooms || faker.number.int({ min: 0, max: 3 }),
+    },
+    userId,
+  )
+}
+
+async function createRoomType(userId, roomTypeData) {
+  return await roomType.create(
+    {
+      name: roomTypeData?.name || faker.commerce.productName(),
+      description:
+        roomTypeData?.description || faker.commerce.productDescription(),
+    },
+    userId,
+  )
 }
 
 async function getLastEmail() {
@@ -97,6 +146,20 @@ async function createSession(userId) {
   return await session.create(userId)
 }
 
+async function activateAccount(userId) {
+  await database.query({
+    text: `
+    UPDATE
+      users
+    SET
+      features = ARRAY['create:content', 'read:content', 'update:content', 'delete:content']
+    WHERE
+      id = $1  
+    `,
+    values: [userId],
+  })
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
@@ -105,8 +168,11 @@ const orchestrator = {
   createSession,
   deleteAllEmails,
   getLastEmail,
-  createChurch,
-  createManyChurches,
+  createHotel,
+  createRoomType,
+  createRoomCategory,
+  createRoom,
+  activateAccount,
 }
 
 export default orchestrator

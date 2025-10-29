@@ -4,7 +4,8 @@ const router = createRouter()
 import authentication from "models/authentication.js"
 import session from "models/session.js"
 
-router.post(postHandler)
+router.use(controller.injectAnnonymousOrUser)
+router.post(controller.canRequest("create:session"), postHandler)
 router.delete(deleteHandler)
 
 export default router.handler(controller.errorHandlers)

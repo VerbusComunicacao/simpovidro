@@ -12,8 +12,11 @@ function can(user, feature, resource) {
       return resource?.id && user.id === resource.id
 
     case "update:content":
+    case "read:content":
+    case "delete:content":
+      if (!resource) return true
       return (
-        (resource?.owner_id && user.id === resource.owner_id) ||
+        (resource?.user_id && user.id === resource.user_id) ||
         user.features.includes("update:content:others")
       )
   }
@@ -58,8 +61,40 @@ function validateFeature(feature) {
   }
 }
 
+function filterOutput(user, feature, output) {
+  validateUser(user)
+  validateFeature(feature)
+
+  if (!user.features.includes(feature)) {
+    return null
+  }
+
+  // Para listagens
+  if (feature === "read:content" && Array.isArray(output)) {
+    return output.map((item) => filterOutput(user, feature, item))
+  }
+
+  // Para itens individuais
+  if (feature === "read:content") {
+    const clonedOutput = { ...output }
+
+    // Se o usuário não é o dono do recurso, remove campos sensíveis
+    if (user.id !== output.user_id) {
+      // Remove campos que só o dono deve ver
+      delete clonedOutput.user_id
+      delete clonedOutput.created_at
+      delete clonedOutput.updated_at
+    }
+
+    return clonedOutput
+  }
+
+  return output
+}
+
 const authorization = {
   can,
+  filterOutput,
 }
 
 export default authorization
