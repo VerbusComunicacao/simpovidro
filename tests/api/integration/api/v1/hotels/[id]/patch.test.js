@@ -48,9 +48,8 @@ describe("PATCH /api/v1/hotels/[id]", () => {
 
     test("Hotel not found", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
-
-      console.log(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["update:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -75,7 +74,8 @@ describe("PATCH /api/v1/hotels/[id]", () => {
 
     test("Update hotel with blank data", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["update:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -124,29 +124,12 @@ describe("PATCH /api/v1/hotels/[id]", () => {
 
     test("Update hotel successfully", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["update:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
-      // First create a hotel
-      const createResponse = await fetch(
-        "http://localhost:3000/api/v1/hotels",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            name: "Original Hotel",
-            city: "São Paulo",
-            country: "Brasil",
-            email: "original@hotel.com",
-          }),
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
-          },
-        },
-      )
-
-      const hotelCreated = await createResponse.json()
+      const hotelCreated = await orchestrator.createHotel(createdUser.id)
 
       // Update the hotel
       const response = await fetch(
@@ -182,49 +165,26 @@ describe("PATCH /api/v1/hotels/[id]", () => {
         address: "Av. Copacabana, 123",
         email: "updated@hotel.com",
         user_id: createdUser.id,
-        created_at: hotelCreated.created_at,
+        created_at: hotelCreated.created_at.toISOString(),
         updated_at: expect.any(String),
       })
     })
 
     test("Update hotel with duplicate name", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["update:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
       // Create first hotel
-      await fetch("http://localhost:3000/api/v1/hotels", {
-        method: "POST",
-        body: JSON.stringify({
-          name: "Hotel A",
-          city: "São Paulo",
-          country: "Brasil",
-        }),
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `session_id=${sessionObject.token}`,
-        },
+      await orchestrator.createHotel(createdUser.id, {
+        name: "Hotel A",
+        city: "Rio de Janeiro",
+        country: "Brasil",
       })
 
-      // Create second hotel
-      const createResponse2 = await fetch(
-        "http://localhost:3000/api/v1/hotels",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            name: "Hotel B",
-            city: "Rio de Janeiro",
-            country: "Brasil",
-          }),
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
-          },
-        },
-      )
-
-      const hotelB = await createResponse2.json()
+      const hotelB = await orchestrator.createHotel(createdUser.id)
 
       // Try to update Hotel B to have the same name as Hotel A
       const response = await fetch(
@@ -257,28 +217,17 @@ describe("PATCH /api/v1/hotels/[id]", () => {
 
     test("Update hotel with same name (should work)", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["update:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
       // Create hotel
-      const createResponse = await fetch(
-        "http://localhost:3000/api/v1/hotels",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            name: "Hotel Original",
-            city: "São Paulo",
-            country: "Brasil",
-          }),
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
-          },
-        },
-      )
-
-      const hotelCreated = await createResponse.json()
+      const hotelCreated = await orchestrator.createHotel(createdUser.id, {
+        name: "Hotel Original",
+        city: "São Paulo",
+        country: "Brasil",
+      })
 
       // Update hotel with same name but different city
       const response = await fetch(

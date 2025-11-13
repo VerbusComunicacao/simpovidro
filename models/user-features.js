@@ -28,15 +28,17 @@ const availableFeatures = new Set([
   "create:content",
   "delete:content",
 
-  // MODERATION
-  "read:user:list",
-  "read:votes:others",
-  "update:content:others",
-  "update:user:others",
-  "ban:user",
-  "create:recovery_token:username",
-  "read:firewall",
-  "review:firewall",
+  // COMPANY
+  "read:company",
+  "update:company",
+  "create:company",
+  "delete:company",
+
+  // Guests
+  "read:guest",
+  "update:guest",
+  "create:guest",
+  "delete:guest",
 
   // BANNED
   "nuked",

@@ -45,7 +45,8 @@ describe("DELETE /api/v1/hotels/[id]", () => {
 
     test("Hotel not found", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["delete:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -64,7 +65,8 @@ describe("DELETE /api/v1/hotels/[id]", () => {
 
     test("Delete hotel successfully", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["delete:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -99,10 +101,10 @@ describe("DELETE /api/v1/hotels/[id]", () => {
 
     test("Delete hotel from different user", async () => {
       const user1 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user1.id)
+      await orchestrator.activateUser(user1.id)
 
       const user2 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user2.id)
+      await orchestrator.activateUser(user2.id)
 
       const session1 = await orchestrator.createSession(user1.id)
       const session2 = await orchestrator.createSession(user2.id)

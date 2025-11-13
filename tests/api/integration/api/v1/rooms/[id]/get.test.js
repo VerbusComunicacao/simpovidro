@@ -38,7 +38,8 @@ describe("GET /api/v1/rooms/[id]", () => {
 
     test("Room not found", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["read:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -56,7 +57,8 @@ describe("GET /api/v1/rooms/[id]", () => {
 
     test("Get own room successfully", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["create:content", "read:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -90,10 +92,12 @@ describe("GET /api/v1/rooms/[id]", () => {
 
     test("Can't access room from different user", async () => {
       const user1 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user1.id)
+      await orchestrator.activateUser(user1.id)
+      await orchestrator.setUserFeatures(user1.id, ["create:content"])
 
       const user2 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user2.id)
+      await orchestrator.activateUser(user2.id)
+      await orchestrator.setUserFeatures(user2.id, ["read:content"])
 
       const session2 = await orchestrator.createSession(user2.id)
 
@@ -115,7 +119,8 @@ describe("GET /api/v1/rooms/[id]", () => {
 
     test("Invalid UUID format", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["read:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -132,4 +137,3 @@ describe("GET /api/v1/rooms/[id]", () => {
     })
   })
 })
-

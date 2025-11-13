@@ -47,7 +47,8 @@ describe("POST /api/v1/room-categories", () => {
     test("with blank data", async () => {
       const createdUser = await orchestrator.createUser()
 
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["create:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -75,7 +76,8 @@ describe("POST /api/v1/room-categories", () => {
     test("Activated account", async () => {
       const createdUser = await orchestrator.createUser()
 
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["create:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -137,7 +139,8 @@ describe("POST /api/v1/room-categories", () => {
     test("With Full data", async () => {
       const createdUser = await orchestrator.createUser()
 
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["create:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 

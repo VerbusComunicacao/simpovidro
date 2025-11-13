@@ -11,6 +11,7 @@ import {
   ValidationError,
 } from "infra/errors"
 import user from "models/user.js"
+import authorization from "models/authorization"
 
 function onErrorHandler(error, request, response) {
   if (
@@ -30,7 +31,7 @@ function onErrorHandler(error, request, response) {
   const publicErrorObject = new InternalServerError({
     cause: error,
   })
-
+  2
   console.log(publicErrorObject)
 
   response.status(publicErrorObject.statusCode).json(publicErrorObject)
@@ -89,7 +90,7 @@ async function injectAuthenticatedUser(request) {
 
 function injectAnonymousUser(request) {
   const anonymousUserObject = {
-    features: ["read:activation_token", "create:session", "create:user"],
+    features: ["read:activation_token", "create:user", "create:session"],
   }
 
   request.context = {
@@ -101,22 +102,22 @@ function injectAnonymousUser(request) {
 function canRequest(feature) {
   return function canRequestHandler(request, response, next) {
     const userTryingToRequest = request.context.user
-    if (!userTryingToRequest.features.includes(feature)) {
-      // Se não possui a feature e não está autenticado, responder 401
-      if (!userTryingToRequest.id) {
-        throw new UnauthorizedError({
-          message: `Usuário não autenticado.`,
-          action: `Faça novamente o login para continuar.`,
-        })
-      }
 
-      // Usuário autenticado porém sem permissão → 403
-      throw new ForbiddenError({
-        message: `Você não possui permissão para executar esta ação.`,
-        action: `Verifique se este usuário possui a feature "${feature}".`,
+    if (userTryingToRequest.features.includes(feature)) {
+      return next()
+    }
+
+    if (!userTryingToRequest.id) {
+      throw new UnauthorizedError({
+        message: `Usuário não autenticado.`,
+        action: `Faça novamente o login para continuar.`,
       })
     }
-    return next()
+
+    throw new ForbiddenError({
+      message: `Você não possui permissão para executar esta ação.`,
+      action: `Verifique se este usuário possui a feature "${feature}".`,
+    })
   }
 }
 

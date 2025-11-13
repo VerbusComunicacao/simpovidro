@@ -41,9 +41,9 @@ describe("POST /api/v1/hotels", () => {
     test("with blank data", async () => {
       const createdUser = await orchestrator.createUser()
 
-      await orchestrator.activateAccount(createdUser.id)
-
       const sessionObject = await orchestrator.createSession(createdUser.id)
+
+      await orchestrator.activateAdmUser(createdUser.id)
 
       const response = await fetch("http://localhost:3000/api/v1/hotels", {
         method: "POST",
@@ -67,7 +67,7 @@ describe("POST /api/v1/hotels", () => {
     test("Activated account", async () => {
       const createdUser = await orchestrator.createUser()
 
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateAdmUser(createdUser.id)
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -133,7 +133,7 @@ describe("POST /api/v1/hotels", () => {
     test("With Full data", async () => {
       const createdUser = await orchestrator.createUser()
 
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateAdmUser(createdUser.id)
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 

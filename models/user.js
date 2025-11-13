@@ -184,6 +184,20 @@ async function update(username, userInputNewValues) {
   }
 }
 
+async function setFeatures(userId, features) {
+  await database.query({
+    text: `
+    UPDATE
+      users
+    SET
+      features = $2
+    WHERE
+      id = $1
+    ;`,
+    values: [userId, features],
+  })
+}
+
 async function validateUniqueEmail(email) {
   const results = await database.query({
     text: `
@@ -237,6 +251,7 @@ const user = {
   findOneByUsername,
   findOneByEmail,
   update,
+  setFeatures,
 }
 
 export default user

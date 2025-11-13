@@ -49,7 +49,8 @@ describe("POST /api/v1/rooms", () => {
     test("with blank data", async () => {
       const createdUser = await orchestrator.createUser()
 
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["create:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -75,7 +76,8 @@ describe("POST /api/v1/rooms", () => {
     test("Activated account", async () => {
       const createdUser = await orchestrator.createUser()
 
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["create:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -117,7 +119,8 @@ describe("POST /api/v1/rooms", () => {
     test("With Full data", async () => {
       const createdUser = await orchestrator.createUser()
 
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["create:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -163,7 +166,8 @@ describe("POST /api/v1/rooms", () => {
     test("Invalid hotel_id", async () => {
       const createdUser = await orchestrator.createUser()
 
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["create:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -188,10 +192,12 @@ describe("POST /api/v1/rooms", () => {
 
     test("Hotel from different user", async () => {
       const user1 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user1.id)
+      await orchestrator.activateUser(user1.id)
+      await orchestrator.setUserFeatures(user1.id, ["create:content"])
 
       const user2 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user2.id)
+      await orchestrator.activateUser(user2.id)
+      await orchestrator.setUserFeatures(user2.id, ["create:content"])
 
       const session2 = await orchestrator.createSession(user2.id)
 

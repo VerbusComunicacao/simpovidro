@@ -35,11 +35,11 @@ async function sendEmailToUser(user, activationToken) {
     from: "Peregrinos <contato@peregrinos.com.br>",
     to: user.email,
     subject: "Ative seu cadastro!",
-    text: `${user.username}, clique no link abaixo para ativar o seu cadastro em Peregrinos:
+    text: `${user.username}, clique no link abaixo para ativar o seu cadastro no Simpovidro:
     ${activationLink}
 
     Atenciosamente,
-    Equipe Peregrinos`,
+    Equipe Abravidro`,
   })
 }
 
@@ -69,7 +69,52 @@ async function activateAccount(token) {
         UPDATE 
           users 
         SET
-          features = ARRAY['create:session'],
+          features = ARRAY['create:session', 'read:session', 'create:guest', 'read:guest'],
+          updated_at = NOW()
+        WHERE
+          id = $1
+      `,
+      values: [activationToken.user_id],
+    })
+
+    await client.query("COMMIT")
+
+    return tokenResults.rows[0]
+  } catch (error) {
+    await client.query("ROLLBACK")
+    throw error
+  } finally {
+    await client.end()
+  }
+}
+
+async function activateAdmAccount(token) {
+  const client = await database.getNewClient()
+
+  try {
+    await client.query("BEGIN")
+    const activationToken = await findValidToken(token, client)
+
+    const tokenResults = await client.query({
+      text: `
+        UPDATE 
+          user_activation_tokens 
+        SET
+          used_at = NOW(),
+          updated_at = NOW()
+        WHERE
+          id = $1
+        RETURNING *
+      `,
+      values: [activationToken.id],
+    })
+
+    await client.query({
+      text: `
+        UPDATE 
+          users 
+        SET
+          features = ARRAY['create:session', 'read:session', 'create:guest', 'read:guest', 'create:hotel', 'read:hotel', 'create:user', 'read:user', 'create:content', 'read:content', 'update:content', 'update:user', 'update:user:others', 'delete:content', 'delete:user', 'delete:user:others'],
           updated_at = NOW()
         WHERE
           id = $1
@@ -115,11 +160,21 @@ async function findValidToken(token) {
   return results.rows[0]
 }
 
+async function isFirstActivation() {
+  const activationCountResult = await database.query(
+    "SELECT count(*) FROM user_activation_tokens WHERE used_at IS NOT NULL;",
+  )
+  const activationCount = parseInt(activationCountResult.rows[0].count, 10)
+  return activationCount === 0
+}
+
 const activation = {
   generateToken,
   sendEmailToUser,
   activateAccount,
   findValidToken,
+  activateAdmAccount,
+  isFirstActivation,
 }
 
 export default activation

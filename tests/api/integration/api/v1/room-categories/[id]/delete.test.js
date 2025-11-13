@@ -47,7 +47,8 @@ describe("DELETE /api/v1/room-categories/[id]", () => {
 
     test("Room-category not found", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["delete:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -66,7 +67,8 @@ describe("DELETE /api/v1/room-categories/[id]", () => {
 
     test("Delete room-category successfully", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["create:content", "delete:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -96,10 +98,12 @@ describe("DELETE /api/v1/room-categories/[id]", () => {
 
     test("Delete room-category from different user", async () => {
       const user1 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user1.id)
+      await orchestrator.activateUser(user1.id)
+      await orchestrator.setUserFeatures(user1.id, ["create:content"])
 
       const user2 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user2.id)
+      await orchestrator.activateUser(user2.id)
+      await orchestrator.setUserFeatures(user2.id, ["delete:content"])
 
       const session1 = await orchestrator.createSession(user1.id)
       const session2 = await orchestrator.createSession(user2.id)

@@ -20,6 +20,8 @@ describe("GET /api/v1/hotels", () => {
         username: "UserWithoutReadFeature",
       })
 
+      await orchestrator.activateUser(createdUser.id)
+
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
       const response = await fetch("http://localhost:3000/api/v1/hotels", {
@@ -33,7 +35,7 @@ describe("GET /api/v1/hotels", () => {
 
     test("List user's own hotels", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateAdmUser(createdUser.id)
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -60,7 +62,7 @@ describe("GET /api/v1/hotels", () => {
 
     test("List empty when user has no hotels", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateAdmUser(createdUser.id)
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -78,10 +80,10 @@ describe("GET /api/v1/hotels", () => {
 
     test("Only returns user's own hotels", async () => {
       const user1 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user1.id)
+      await orchestrator.activateAdmUser(user1.id)
 
       const user2 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user2.id)
+      await orchestrator.activateAdmUser(user2.id)
 
       const session1 = await orchestrator.createSession(user1.id)
       const session2 = await orchestrator.createSession(user2.id)
@@ -135,7 +137,7 @@ describe("GET /api/v1/hotels", () => {
 
     test("Hotels are ordered by creation date (newest first)", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateAdmUser(createdUser.id)
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 

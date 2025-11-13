@@ -15,6 +15,7 @@ describe("GET /api/v1/users/[username]", () => {
       const createdUser = await orchestrator.createUser({
         username: "UserWithValidSession",
       })
+      await orchestrator.activateUser(createdUser.id)
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -33,10 +34,15 @@ describe("GET /api/v1/users/[username]", () => {
         id: createdUser.id,
         username: "UserWithValidSession",
         email: createdUser.email,
-        features: ["read:activation_token"],
+        features: [
+          "create:session",
+          "read:session",
+          "create:guest",
+          "read:guest",
+        ],
         password: createdUser.password,
         created_at: createdUser.created_at.toISOString(),
-        updated_at: createdUser.updated_at.toISOString(),
+        updated_at: expect.any(String),
       })
 
       expect(uuidVersion(responseBody.id)).toBe(4)
@@ -84,6 +90,8 @@ describe("GET /api/v1/users/[username]", () => {
 
       jest.useRealTimers()
 
+      await orchestrator.activateUser(createdUser.id)
+
       const response = await fetch("http://localhost:3000/api/v1/user", {
         headers: { Cookie: `session_id=${sessionObject.token}` },
       })
@@ -96,10 +104,15 @@ describe("GET /api/v1/users/[username]", () => {
         id: createdUser.id,
         username: "UserWithHalfValidSession",
         email: createdUser.email,
-        features: ["read:activation_token"],
+        features: [
+          "create:session",
+          "read:session",
+          "create:guest",
+          "read:guest",
+        ],
         password: createdUser.password,
         created_at: createdUser.created_at.toISOString(),
-        updated_at: createdUser.updated_at.toISOString(),
+        updated_at: expect.any(String),
       })
 
       expect(uuidVersion(responseBody.id)).toBe(4)

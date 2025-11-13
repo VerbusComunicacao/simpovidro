@@ -98,7 +98,6 @@ async function findOneByIdAndUserId(hotelId, userId) {
 }
 
 async function update(hotelId, hotelInputNewValues, userId) {
-  console.log(hotelInputNewValues)
   if (Object.keys(hotelInputNewValues).length === 0) {
     throw new ValidationError({
       message: `Nenhum campo enviado para atualização.`,

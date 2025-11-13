@@ -9,25 +9,91 @@ beforeAll(async () => {
   await orchestrator.deleteAllEmails()
 })
 
-let createdUserBody
-
 describe("Use case: Registration flow (all successful)", () => {
-  let createdUserResponse
-  let activationToken
+  let createdAdminUserBody
+  let adminActivationToken
+  let createdUserBody
+  let userActivationToken
 
-  test("Create user account", async () => {
-    createdUserResponse = await fetch("http://localhost:3000/api/v1/users", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+  test("Create admin account", async () => {
+    const createdAdminUserResponse = await fetch(
+      "http://localhost:3000/api/v1/users",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: "RegistrationFlowAdmin",
+          email: "registration.admin@flow.com",
+          password: "abc123",
+        }),
       },
+    )
+    expect(createdAdminUserResponse.status).toBe(201)
+    createdAdminUserBody = await createdAdminUserResponse.json()
+  })
+
+  test("Receive activation email for admin", async () => {
+    const lastEmail = await orchestrator.getLastEmail()
+    const tokenMatch = lastEmail.text.match(/cadastro\/ativar\/([a-f0-9]+)/)
+    expect(tokenMatch).toBeTruthy()
+    adminActivationToken = tokenMatch[1]
+
+    const activationTokenObject =
+      await activation.findValidToken(adminActivationToken)
+    expect(activationTokenObject.user_id).toBe(createdAdminUserBody.id)
+  })
+
+  test("Activate admin account", async () => {
+    const activationResponse = await fetch(
+      `http://localhost:3000/api/v1/activations/${adminActivationToken}`,
+      { method: "PATCH" },
+    )
+    expect(activationResponse.status).toBe(200)
+    const activationBody = await activationResponse.json()
+    const activatedUser = await user.findOneById(activationBody.user_id)
+    expect(activatedUser.features).toEqual([
+      "create:session",
+      "read:session",
+      "create:guest",
+      "read:guest",
+      "create:hotel",
+      "read:hotel",
+      "create:user",
+      "read:user",
+      "create:content",
+      "read:content",
+    ])
+  })
+
+  test("Login as admin", async () => {
+    const response = await fetch("http://localhost:3000/api/v1/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        username: "RegistrationFlow",
-        email: "registration@flow.com",
+        email: "registration.admin@flow.com",
         password: "abc123",
       }),
     })
+    expect(response.status).toBe(201)
+  })
 
+  test("Create user account", async () => {
+    const createdUserResponse = await fetch(
+      "http://localhost:3000/api/v1/users",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: "RegistrationFlow",
+          email: "registration@flow.com",
+          password: "abc123",
+        }),
+      },
+    )
+
+    expect(createdUserResponse.status).toBe(201)
     createdUserBody = await createdUserResponse.json()
 
     expect(createdUserBody).toEqual({
@@ -41,7 +107,7 @@ describe("Use case: Registration flow (all successful)", () => {
     })
   })
 
-  test("Failuer create session", async () => {
+  test("Failure to create session before activation", async () => {
     const response = await fetch("http://localhost:3000/api/v1/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -54,16 +120,16 @@ describe("Use case: Registration flow (all successful)", () => {
     expect(response.status).toBe(403)
   })
 
-  test("Receive activation email", async () => {
+  test("Receive activation email for user", async () => {
     const lastEmail = await orchestrator.getLastEmail()
 
-    const tokenMatch = lastEmail.text.match(/ativar\/([a-f0-9]+)/)
+    const tokenMatch = lastEmail.text.match(/cadastro\/ativar\/([a-f0-9]+)/)
     expect(tokenMatch).toBeTruthy()
 
-    activationToken = tokenMatch[1]
+    userActivationToken = tokenMatch[1]
 
     const activationTokenObject =
-      await activation.findValidToken(activationToken)
+      await activation.findValidToken(userActivationToken)
 
     expect(activationTokenObject.user_id).toBe(createdUserBody.id)
     expect(activationTokenObject.used_at).toBe(null)
@@ -74,10 +140,9 @@ describe("Use case: Registration flow (all successful)", () => {
     expect(lastEmail.text).toContain(`RegistrationFlow`)
   })
 
-  test("Activate account", async () => {
-    // Fazer a requisição de ativação
+  test("Activate user account", async () => {
     const activationResponse = await fetch(
-      `http://localhost:3000/api/v1/activations/${activationToken}`,
+      `http://localhost:3000/api/v1/activations/${userActivationToken}`,
       {
         method: "PATCH",
       },
@@ -91,10 +156,15 @@ describe("Use case: Registration flow (all successful)", () => {
     expect(Date.parse(activationBody.used_at)).not.toBeNaN()
 
     const activatedUser = await user.findOneById(activationBody.user_id)
-    expect(activatedUser.features).toEqual(["create:session"])
+    expect(activatedUser.features).toEqual([
+      "create:session",
+      "read:session",
+      "create:guest",
+      "read:guest",
+    ])
   })
 
-  test("Login", async () => {
+  test("Login as user", async () => {
     const response = await fetch("http://localhost:3000/api/v1/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -106,6 +176,4 @@ describe("Use case: Registration flow (all successful)", () => {
 
     expect(response.status).toBe(201)
   })
-
-  test("Get user information", async () => {})
 })

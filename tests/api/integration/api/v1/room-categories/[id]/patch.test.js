@@ -48,7 +48,8 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
 
     test("Room-category not found", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["update:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -71,7 +72,11 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
 
     test("Update room-category with blank data", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, [
+        "create:content",
+        "update:content",
+      ])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -105,7 +110,11 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
 
     test("Update room-category successfully", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, [
+        "create:content",
+        "update:content",
+      ])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -147,7 +156,11 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
 
     test("Update room-category with duplicate name", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, [
+        "create:content",
+        "update:content",
+      ])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -187,7 +200,8 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
 
     test("Update room-category with same name (should work)", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["update:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 

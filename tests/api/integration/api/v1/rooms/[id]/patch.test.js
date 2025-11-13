@@ -47,7 +47,8 @@ describe("PATCH /api/v1/rooms/[id]", () => {
 
     test("Room not found", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["update:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -70,7 +71,11 @@ describe("PATCH /api/v1/rooms/[id]", () => {
 
     test("Update room with blank data", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, [
+        "create:content",
+        "update:content",
+      ])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -103,7 +108,11 @@ describe("PATCH /api/v1/rooms/[id]", () => {
 
     test("Update room successfully", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, [
+        "create:content",
+        "update:content",
+      ])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -151,7 +160,11 @@ describe("PATCH /api/v1/rooms/[id]", () => {
 
     test("Update room with invalid hotel_id", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, [
+        "create:content",
+        "update:content",
+      ])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -176,10 +189,15 @@ describe("PATCH /api/v1/rooms/[id]", () => {
 
     test("Update room with hotel from different user", async () => {
       const user1 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user1.id)
+      await orchestrator.activateUser(user1.id)
+      await orchestrator.setUserFeatures(user1.id, ["create:content"])
 
       const user2 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user2.id)
+      await orchestrator.activateUser(user2.id)
+      await orchestrator.setUserFeatures(user2.id, [
+        "create:content",
+        "update:content",
+      ])
 
       const session2 = await orchestrator.createSession(user2.id)
 
@@ -205,29 +223,22 @@ describe("PATCH /api/v1/rooms/[id]", () => {
 
     test("Only total_rooms provided adjusts available", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["update:content"])
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
       const hotel = await orchestrator.createHotel(createdUser.id)
       const roomType = await orchestrator.createRoomType(createdUser.id)
       const roomCategory = await orchestrator.createRoomCategory(createdUser.id)
 
-      const createResponse = await fetch("http://localhost:3000/api/v1/rooms", {
-        method: "POST",
-        body: JSON.stringify({
-          hotel_id: hotel.id,
-          room_type_id: roomType.id,
-          room_category_id: roomCategory.id,
-          total_rooms: 5,
-          available_rooms: 3,
-          blocked_rooms: 2,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `session_id=${sessionObject.token}`,
-        },
+      const roomCreated = await orchestrator.createRoom(createdUser.id, {
+        hotel_id: hotel.id,
+        room_type_id: roomType.id,
+        room_category_id: roomCategory.id,
+        total_rooms: 5,
+        available_rooms: 3,
+        blocked_rooms: 2,
       })
-      const roomCreated = await createResponse.json()
 
       const patchResponse = await fetch(
         `http://localhost:3000/api/v1/rooms/${roomCreated.id}`,
@@ -298,29 +309,22 @@ describe("PATCH /api/v1/rooms/[id]", () => {
 
     test("Negative values are rejected", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["update:content"])
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
       const hotel = await orchestrator.createHotel(createdUser.id)
       const roomType = await orchestrator.createRoomType(createdUser.id)
       const roomCategory = await orchestrator.createRoomCategory(createdUser.id)
 
-      const createResponse = await fetch("http://localhost:3000/api/v1/rooms", {
-        method: "POST",
-        body: JSON.stringify({
-          hotel_id: hotel.id,
-          room_type_id: roomType.id,
-          room_category_id: roomCategory.id,
-          total_rooms: 5,
-          available_rooms: 5,
-          blocked_rooms: 0,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `session_id=${sessionObject.token}`,
-        },
+      const roomCreated = await orchestrator.createRoom(createdUser.id, {
+        hotel_id: hotel.id,
+        room_type_id: roomType.id,
+        room_category_id: roomCategory.id,
+        total_rooms: 5,
+        available_rooms: 5,
+        blocked_rooms: 0,
       })
-      const roomCreated = await createResponse.json()
 
       const response = await fetch(
         `http://localhost:3000/api/v1/rooms/${roomCreated.id}`,
@@ -346,29 +350,22 @@ describe("PATCH /api/v1/rooms/[id]", () => {
 
     test("Sum available + blocked must equal total", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["update:content"])
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
       const hotel = await orchestrator.createHotel(createdUser.id)
       const roomType = await orchestrator.createRoomType(createdUser.id)
       const roomCategory = await orchestrator.createRoomCategory(createdUser.id)
 
-      const createResponse = await fetch("http://localhost:3000/api/v1/rooms", {
-        method: "POST",
-        body: JSON.stringify({
-          hotel_id: hotel.id,
-          room_type_id: roomType.id,
-          room_category_id: roomCategory.id,
-          total_rooms: 5,
-          available_rooms: 3,
-          blocked_rooms: 2,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `session_id=${sessionObject.token}`,
-        },
+      const roomCreated = await orchestrator.createRoom(createdUser.id, {
+        hotel_id: hotel.id,
+        room_type_id: roomType.id,
+        room_category_id: roomCategory.id,
+        total_rooms: 5,
+        available_rooms: 3,
+        blocked_rooms: 2,
       })
-      const roomCreated = await createResponse.json()
 
       const response = await fetch(
         `http://localhost:3000/api/v1/rooms/${roomCreated.id}`,

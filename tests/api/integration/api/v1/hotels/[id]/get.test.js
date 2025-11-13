@@ -38,7 +38,8 @@ describe("GET /api/v1/hotels/[id]", () => {
 
     test("Hotel not found", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["read:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -56,7 +57,8 @@ describe("GET /api/v1/hotels/[id]", () => {
 
     test("Get own hotel successfully", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["read:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -96,10 +98,12 @@ describe("GET /api/v1/hotels/[id]", () => {
 
     test("Can't access hotel from different user", async () => {
       const user1 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user1.id)
+      await orchestrator.activateUser(user1.id)
+      await orchestrator.setUserFeatures(user1.id, ["read:content"])
 
       const user2 = await orchestrator.createUser()
-      await orchestrator.activateAccount(user2.id)
+      await orchestrator.activateUser(user2.id)
+      await orchestrator.setUserFeatures(user2.id, ["read:content"])
 
       const session2 = await orchestrator.createSession(user2.id)
 
@@ -125,7 +129,8 @@ describe("GET /api/v1/hotels/[id]", () => {
 
     test("Get hotel with all fields", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["read:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -170,7 +175,8 @@ describe("GET /api/v1/hotels/[id]", () => {
 
     test("Invalid UUID format", async () => {
       const createdUser = await orchestrator.createUser()
-      await orchestrator.activateAccount(createdUser.id)
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["read:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 

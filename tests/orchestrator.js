@@ -8,6 +8,7 @@ import hotel from "models/hotel.js"
 import roomType from "models/room-type.js"
 import roomCategory from "models/room-category.js"
 import room from "models/room.js"
+import activation from "models/activation"
 
 const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`
 
@@ -146,18 +147,18 @@ async function createSession(userId) {
   return await session.create(userId)
 }
 
-async function activateAccount(userId) {
-  await database.query({
-    text: `
-    UPDATE
-      users
-    SET
-      features = ARRAY['create:content', 'read:content', 'update:content', 'delete:content']
-    WHERE
-      id = $1  
-    `,
-    values: [userId],
-  })
+async function activateUser(userId) {
+  const token = await activation.generateToken(userId)
+  await activation.activateAccount(token)
+}
+
+async function activateAdmUser(userId) {
+  const token = await activation.generateToken(userId)
+  await activation.activateAdmAccount(token)
+}
+
+async function setUserFeatures(userId, features) {
+  await user.setFeatures(userId, features)
 }
 
 const orchestrator = {
@@ -172,7 +173,9 @@ const orchestrator = {
   createRoomType,
   createRoomCategory,
   createRoom,
-  activateAccount,
+  activateUser,
+  activateAdmUser,
+  setUserFeatures,
 }
 
 export default orchestrator
