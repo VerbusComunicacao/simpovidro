@@ -1,7 +1,6 @@
 import { createRouter } from "next-connect"
 import controller from "infra/controller.js"
 import activation from "models/activation.js"
-import session from "models/session.js"
 
 const router = createRouter()
 
@@ -14,16 +13,13 @@ async function patchHandler(request, response) {
 
   const isFirst = await activation.isFirstActivation()
 
-  let activatedTokenRow
+  let activatedUser
 
   if (isFirst) {
-    activatedTokenRow = await activation.activateAdmAccount(token)
+    activatedUser = await activation.activateAdmAccount(token)
   } else {
-    activatedTokenRow = await activation.activateAccount(token)
+    activatedUser = await activation.activateAccount(token)
   }
 
-  const sessionObject = await session.create(activatedTokenRow.user_id)
-  await controller.setSessionCookie(sessionObject.token, response)
-
-  response.status(200).json(activatedTokenRow)
+  response.status(200).json(activatedUser)
 }
