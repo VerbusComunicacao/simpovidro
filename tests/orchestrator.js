@@ -11,6 +11,7 @@ import room from "models/room.js"
 import activation from "models/activation"
 
 const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`
+const webserverUrl = "http://localhost:3000"
 
 async function waitForAllServices() {
   await waitForWebServer()
@@ -160,6 +161,18 @@ async function setUserFeatures(userId, features) {
   await user.setFeatures(userId, features)
 }
 
+async function injectPasswordRecoveryToken(tokenObject) {
+  await database.query({
+    text: "INSERT INTO password_recovery_tokens (token, user_id, expires_at, used_at) VALUES ($1, $2, $3, $4)",
+    values: [
+      tokenObject.token,
+      tokenObject.user_id,
+      tokenObject.expires_at || new Date(Date.now() + 100000),
+      tokenObject.used_at || null,
+    ],
+  })
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
@@ -175,6 +188,8 @@ const orchestrator = {
   activateUser,
   activateAdmUser,
   setUserFeatures,
+  injectPasswordRecoveryToken,
+  webserverUrl,
 }
 
 export default orchestrator

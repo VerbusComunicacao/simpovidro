@@ -33,7 +33,7 @@ export function UserProvider({ children }) {
 
         const cachedUserProperties = {
           id: responseBody.id,
-          username: responseBody.username,
+          full_name: responseBody.full_name,
           features: responseBody.features,
           cacheTime: Date.now(),
         }
@@ -71,7 +71,7 @@ export function UserProvider({ children }) {
     function onFocus() {
       const cachedUser = JSON.parse(localStorage.getItem("user"))
       setUser((user) =>
-        cachedUser?.username ? { ...user, ...cachedUser } : null,
+        cachedUser?.id ? { ...user, ...cachedUser } : null,
       )
       if (refreshInterval < Date.now() - cachedUser?.cacheTime) fetchUser()
     }
