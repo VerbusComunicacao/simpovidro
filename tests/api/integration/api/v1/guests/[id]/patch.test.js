@@ -11,7 +11,7 @@ describe("PATCH /api/v1/guests/[id]", () => {
   describe("Anonymous user", () => {
     test("Should update a guest by ID with valid data", async () => {
       const createdUser = await orchestrator.createUser({
-        username: "Felipe",
+        full_name: "Felipe",
       })
       await orchestrator.activateUser(createdUser.id)
       await orchestrator.setUserFeatures(createdUser.id, ["update:guest"])
@@ -20,13 +20,12 @@ describe("PATCH /api/v1/guests/[id]", () => {
 
       const createdGuest = await guest.create({
         name: "Guest to Update",
-        email: "updateme@example.com",
         phone: "+5511999999904",
         gender: "Male",
         rg_number: "444444444",
         cpf_number: "444.444.444-04",
         birth_date: "1994-01-01",
-      })
+      }, createdUser.id)
 
       const response = await fetch(
         `http://localhost:3000/api/v1/guests/${createdGuest.id}`,
@@ -38,7 +37,6 @@ describe("PATCH /api/v1/guests/[id]", () => {
           },
           body: JSON.stringify({
             name: "Updated Guest Name",
-            email: "updated@example.com",
           }),
         },
       )
@@ -48,7 +46,8 @@ describe("PATCH /api/v1/guests/[id]", () => {
 
       expect(responseBody.id).toBe(createdGuest.id)
       expect(responseBody.name).toBe("Updated Guest Name")
-      expect(responseBody.email).toBe("updated@example.com")
+      expect(responseBody.id).toBe(createdGuest.id)
+      expect(responseBody.name).toBe("Updated Guest Name")
     })
 
     test("Should return 404 if guest not found", async () => {
@@ -93,23 +92,21 @@ describe("PATCH /api/v1/guests/[id]", () => {
 
       await guest.create({
         name: "Existing Guest",
-        email: "existing@example.com",
         phone: "+5511999999905",
         gender: "Female",
         rg_number: "555555555",
         cpf_number: "555.555.555-05",
         birth_date: "1995-01-01",
-      })
+      }, createdUser.id)
 
       const guestToUpdate = await guest.create({
         name: "Another Guest",
-        email: "another@example.com",
         phone: "+5511999999906",
         gender: "Male",
         rg_number: "666666666",
         cpf_number: "666.666.666-06",
         birth_date: "1996-01-01",
-      })
+      }, createdUser.id)
 
       const response = await fetch(
         `http://localhost:3000/api/v1/guests/${guestToUpdate.id}`,
@@ -120,7 +117,7 @@ describe("PATCH /api/v1/guests/[id]", () => {
             Cookie: `session_id=${sessionObject.token}`,
           },
           body: JSON.stringify({
-            email: "existing@example.com", // Duplicate email
+            rg_number: "555555555", // Duplicate RG
           }),
         },
       )
@@ -129,8 +126,8 @@ describe("PATCH /api/v1/guests/[id]", () => {
       const responseBody = await response.json()
       expect(responseBody).toEqual({
         name: "ConflictError",
-        message: "Já existe um hóspede cadastrado com este e-mail.",
-        action: "Utilize um e-mail diferente.",
+        message: "Já existe um hóspede cadastrado com este RG.",
+        action: "Utilize um RG diferente.",
         status_code: 409,
       })
     })

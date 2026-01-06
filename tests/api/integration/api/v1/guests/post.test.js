@@ -18,7 +18,6 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Test Guest",
-          email: "test@example.com",
           phone: "+5511999999999",
           gender: "Male",
           rg_number: "123456789",
@@ -46,7 +45,6 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Test Guest",
-          email: "test@example.com",
           phone: "+5511999999999",
           gender: "Male",
           rg_number: "123456789",
@@ -62,7 +60,6 @@ describe("POST /api/v1/guests", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         name: "Test Guest",
-        email: "test@example.com",
         phone: "+5511999999999",
         badge_name: null,
         gender: "Male",
@@ -99,7 +96,7 @@ describe("POST /api/v1/guests", () => {
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN()
     })
 
-    test("With duplicated 'email'", async () => {
+    test("With duplicated 'RG'", async () => {
       const createdUser = await orchestrator.createUser()
       await orchestrator.setUserFeatures(createdUser.id, ["create:guest"])
       await orchestrator.activateUser(createdUser.id)
@@ -114,7 +111,6 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Guest One",
-          email: "duplicate@example.com",
           phone: "+5511999999991",
           gender: "Female",
           rg_number: "111111111",
@@ -133,10 +129,9 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Guest Two",
-          email: "duplicate@example.com",
           phone: "+5511999999992",
           gender: "Male",
-          rg_number: "222222222",
+          rg_number: "111111111", // Duplicated RG instead of email
           cpf_number: "222.222.222-22",
           birth_date: "1992-01-01",
         }),
@@ -148,8 +143,8 @@ describe("POST /api/v1/guests", () => {
 
       expect(responseBody).toEqual({
         name: "ConflictError",
-        message: "Já existe um hóspede cadastrado com este e-mail.",
-        action: "Utilize um e-mail diferente.",
+        message: "Já existe um hóspede cadastrado com este RG.",
+        action: "Utilize um RG diferente.",
         status_code: 409,
       })
     })
@@ -169,7 +164,6 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Guest Three",
-          email: "unique3@example.com",
           phone: "+5511999999993",
           gender: "Female",
           rg_number: "333333333",
@@ -188,7 +182,6 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Guest Four",
-          email: "unique4@example.com",
           phone: "+5511999999994",
           gender: "Male",
           rg_number: "333333333",
@@ -224,7 +217,6 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Guest Five",
-          email: "unique5@example.com",
           phone: "+5511999999995",
           gender: "Female",
           rg_number: "555555555",
@@ -243,7 +235,6 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Guest Six",
-          email: "unique6@example.com",
           phone: "+5511999999996",
           gender: "Male",
           rg_number: "666666666",
@@ -279,7 +270,6 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Felipe",
-          email: "",
           phone: "",
           gender: "",
           rg_number: "",
@@ -295,7 +285,7 @@ describe("POST /api/v1/guests", () => {
       expect(responseBody).toEqual({
         name: "ValidationError",
         message:
-          "Campos obrigatórios ausentes: email, phone, gender, rg_number, cpf_number, birth_date.",
+          "Campos obrigatórios ausentes: phone, gender, rg_number, cpf_number, birth_date.",
         action: "Envie todos os campos obrigatórios e tente novamente.",
         status_code: 400,
       })

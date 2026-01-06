@@ -1,24 +1,29 @@
-import { createRouter } from "next-connect";
-import controller from "infra/controller.js";
-import activation from "models/activation.js";
+import { createRouter } from "next-connect"
+import controller from "infra/controller.js"
+import activation from "models/activation.js"
+import session from "models/session.js"
 
-const router = createRouter();
+const router = createRouter()
 
-router.patch(patchHandler);
+router.patch(patchHandler)
 
-export default router.handler(controller.errorHandlers);
+export default router.handler(controller.errorHandlers)
 
 async function patchHandler(request, response) {
-  const token = request.query.token;
+  const token = request.query.token
 
-  const isFirst = await activation.isFirstActivation();
+  const isFirst = await activation.isFirstActivation()
 
-  let activatedUser;
+  let activatedTokenRow
+
   if (isFirst) {
-    activatedUser = await activation.activateAdmAccount(token);
+    activatedTokenRow = await activation.activateAdmAccount(token)
   } else {
-    activatedUser = await activation.activateAccount(token);
+    activatedTokenRow = await activation.activateAccount(token)
   }
 
-  response.status(200).json(activatedUser);
+  const sessionObject = await session.create(activatedTokenRow.user_id)
+  await controller.setSessionCookie(sessionObject.token, response)
+
+  response.status(200).json(activatedTokenRow)
 }

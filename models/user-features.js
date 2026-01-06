@@ -3,7 +3,9 @@ const availableFeatures = new Set([
   "create:user",
   "read:user",
   "read:user:self",
+  "read:user:others",
   "update:user",
+  "update:user:others",
 
   // MIGRATION
   "read:migration",

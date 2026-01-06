@@ -19,7 +19,6 @@ describe("GET /api/v1/guests/[id]", () => {
       const createdGuest = await guest.create(
         {
           name: "Guest to Find",
-          email: "findme@example.com",
           phone: "+5511999999903",
           gender: "Female",
           rg_number: "333333333",
@@ -41,7 +40,7 @@ describe("GET /api/v1/guests/[id]", () => {
       const responseBody = await response.json()
 
       expect(responseBody.id).toBe(createdGuest.id)
-      expect(responseBody.email).toBe("findme@example.com")
+      expect(responseBody.name).toBe("Guest to Find")
     })
 
     test("Should return 404 if guest not found", async () => {

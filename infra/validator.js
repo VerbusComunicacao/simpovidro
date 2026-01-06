@@ -167,23 +167,6 @@ export function validateStringLength(
   }
 }
 
-/**
- * Valida se um username tem formato válido
- * @param {string} username - Username para validar
- * @throws {ValidationError} - Se o username não for válido
- */
-export function validateUsername(username) {
-  // Username deve ter 3-20 caracteres, apenas letras, números, underscore e hífen
-  const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/
-
-  if (!username || !usernameRegex.test(username)) {
-    throw new ValidationError({
-      message:
-        "Username deve ter entre 3 e 20 caracteres e conter apenas letras, números, underscore (_) e hífen (-)",
-      action: "Ajuste o formato do username",
-    })
-  }
-}
 
 /**
  * Valida se um telefone tem formato válido (Brasil)

@@ -19,7 +19,6 @@ describe("DELETE /api/v1/guests/[id]", () => {
       const createdGuest = await guest.create(
         {
           name: "Guest to Delete",
-          email: "deleteme@example.com",
           phone: "+5511999999907",
           gender: "Male",
           rg_number: "777777777",

@@ -2,6 +2,7 @@ import { createRouter } from "next-connect"
 import controller from "infra/controller"
 import user from "models/user.js"
 import session from "models/session.js"
+import authorization from "models/authorization.js"
 
 const router = createRouter()
 
@@ -23,5 +24,11 @@ async function getHandler(request, response) {
     "no-store, no-cache, max-age=0, must-revalidate",
   )
 
-  response.status(200).json(userFound)
+  const secureUserFound = authorization.filterOutput(
+    request.context.user,
+    "read:session",
+    userFound,
+  )
+
+  response.status(200).json(secureUserFound)
 }

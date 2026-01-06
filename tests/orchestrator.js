@@ -55,8 +55,7 @@ async function runPendingMigrations() {
 
 async function createUser(userObject) {
   return await user.create({
-    username:
-      userObject?.username || faker.internet.username().replace(/[_.-]/g, ""),
+    full_name: userObject?.full_name || faker.person.fullName(),
     email: userObject?.email || faker.internet.email(),
     password: userObject?.password || "validPassword",
   })

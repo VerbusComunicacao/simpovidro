@@ -35,7 +35,7 @@ async function sendEmailToUser(user, activationToken) {
     from: "Peregrinos <contato@peregrinos.com.br>",
     to: user.email,
     subject: "Ative seu cadastro!",
-    text: `${user.username}, clique no link abaixo para ativar o seu cadastro no Simpovidro:
+    text: `${user.full_name}, clique no link abaixo para ativar o seu cadastro no Simpovidro:
     ${activationLink}
 
     Atenciosamente,
@@ -69,7 +69,7 @@ async function activateAccount(token) {
         UPDATE 
           users 
         SET
-          features = ARRAY['create:session', 'read:session', 'create:guest', 'read:guest'],
+          features = ARRAY['create:session', 'read:session', 'create:guest', 'read:guest', 'read:user', 'update:user'],
           updated_at = NOW()
         WHERE
           id = $1
@@ -114,7 +114,7 @@ async function activateAdmAccount(token) {
         UPDATE 
           users 
         SET
-          features = ARRAY['create:session', 'read:session', 'create:guest', 'read:guest', 'create:hotel', 'read:hotel', 'create:user', 'read:user', 'create:content', 'read:content', 'update:content', 'update:user', 'update:user:others', 'delete:content', 'delete:user', 'delete:user:others'],
+          features = ARRAY['create:session', 'read:session', 'create:guest', 'read:guest', 'create:hotel', 'read:hotel', 'create:user', 'read:user', 'create:content', 'read:content', 'update:content', 'update:user', 'update:user:others', 'delete:content', 'delete:user', 'delete:user:others', 'read:user:others'],
           updated_at = NOW()
         WHERE
           id = $1

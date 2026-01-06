@@ -5,7 +5,6 @@ import { validateRequiredFields, validateUUID } from "infra/validator.js"
 async function create(guestInputValues, userId) {
   validateRequiredFields(guestInputValues, [
     "name",
-    "email",
     "phone",
     "gender",
     "rg_number",
@@ -52,16 +51,15 @@ async function create(guestInputValues, userId) {
     const results = await database.query({
       text: `
         INSERT INTO
-          guests (user_id, name, email, phone, badge_name, gender, rg_number, cpf_number, passport_number, medication_details, blood_type, blood_rh_factor, health_observations, special_needs_details, has_heart_condition, has_diabetes, has_high_blood_pressure, has_low_blood_pressure, birth_date, nationality, address, address_number, address_complement, neighborhood, city, state, country, emergency_contact_name, emergency_contact_phone)
+          guests (user_id, name, phone, badge_name, gender, rg_number, cpf_number, passport_number, medication_details, blood_type, blood_rh_factor, health_observations, special_needs_details, has_heart_condition, has_diabetes, has_high_blood_pressure, has_low_blood_pressure, birth_date, nationality, address, address_number, address_complement, neighborhood, city, state, country, emergency_contact_name, emergency_contact_phone)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
         RETURNING
           *
       `,
       values: [
         userId,
         name,
-        email,
         phone,
         badge_name,
         gender,
@@ -162,7 +160,6 @@ async function update(guestId, guestInputNewValues) {
     const {
       id,
       name,
-      email,
       phone,
       badge_name,
       gender,
@@ -197,33 +194,32 @@ async function update(guestId, guestInputNewValues) {
           guests
         SET
           name = $2,
-          email = $3,
-          phone = $4,
-          badge_name = $5,
-          gender = $6,
-          rg_number = $7,
-          cpf_number = $8,
-          passport_number = $9,
-          medication_details = $10,
-          blood_type = $11,
-          blood_rh_factor = $12,
-          health_observations = $13,
-          special_needs_details = $14,
-          has_heart_condition = $15,
-          has_diabetes = $16,
-          has_high_blood_pressure = $17,
-          has_low_blood_pressure = $18,
-          birth_date = $19,
-          nationality = $20,
-          address = $21,
-          address_number = $22,
-          address_complement = $23,
-          neighborhood = $24,
-          city = $25,
-          state = $26,
-          country = $27,
-          emergency_contact_name = $28,
-          emergency_contact_phone = $29,
+          phone = $3,
+          badge_name = $4,
+          gender = $5,
+          rg_number = $6,
+          cpf_number = $7,
+          passport_number = $8,
+          medication_details = $9,
+          blood_type = $10,
+          blood_rh_factor = $11,
+          health_observations = $12,
+          special_needs_details = $13,
+          has_heart_condition = $14,
+          has_diabetes = $15,
+          has_high_blood_pressure = $16,
+          has_low_blood_pressure = $17,
+          birth_date = $18,
+          nationality = $19,
+          address = $20,
+          address_number = $21,
+          address_complement = $22,
+          neighborhood = $23,
+          city = $24,
+          state = $25,
+          country = $26,
+          emergency_contact_name = $27,
+          emergency_contact_phone = $28,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
@@ -233,7 +229,6 @@ async function update(guestId, guestInputNewValues) {
       values: [
         id,
         name,
-        email,
         phone,
         badge_name,
         gender,
@@ -280,18 +275,18 @@ async function deleteById(guestId) {
 }
 
 async function checkUniqueFields(guestData, currentGuestId = null) {
-  const { email, rg_number, cpf_number } = guestData
+  const { rg_number, cpf_number } = guestData
   const query = {
     text: `
-      SELECT email, rg_number, cpf_number
+      SELECT rg_number, cpf_number
       FROM guests
-      WHERE (email = $1 OR rg_number = $2 OR cpf_number = $3)
+      WHERE (rg_number = $1 OR cpf_number = $2)
     `,
-    values: [email, rg_number, cpf_number],
+    values: [rg_number, cpf_number],
   }
 
   if (currentGuestId) {
-    query.text += ` AND id != $4`
+    query.text += ` AND id != $3`
     query.values.push(currentGuestId)
   }
 
@@ -299,12 +294,6 @@ async function checkUniqueFields(guestData, currentGuestId = null) {
 
   if (results.rowCount > 0) {
     for (const row of results.rows) {
-      if (row.email === email) {
-        throw new ConflictError({
-          message: "Já existe um hóspede cadastrado com este e-mail.",
-          action: "Utilize um e-mail diferente.",
-        })
-      }
       if (row.rg_number === rg_number) {
         throw new ConflictError({
           message: "Já existe um hóspede cadastrado com este RG.",

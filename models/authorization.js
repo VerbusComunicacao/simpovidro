@@ -9,13 +9,17 @@ function can(user, feature, resource) {
 
   switch (feature) {
     case "update:user":
+    case "read:user":
       return (
-        (resource?.user_id && user.id === resource.user_id) ||
-        user.features.includes("update:user:others")
+        (resource?.id && user.id === resource.id) ||
+        user.features.includes(`${feature}:others`)
       )
 
     case "update:guest":
-      return resource?.user_id && user.id === resource.user_id
+      return (
+        (resource?.user_id && user.id === resource.user_id) ||
+        user.features.includes("update:guest:others")
+      )
 
     case "update:content":
     case "read:content":
@@ -76,17 +80,28 @@ function filterOutput(user, feature, output) {
     return null
   }
 
+  // Always remove password if it exists
+  if (output && typeof output === "object" && "password" in output) {
+    const clonedOutput = { ...output }
+    delete clonedOutput.password
+    output = clonedOutput
+  }
+
   // Para listagens
   if (feature === "read:content" && Array.isArray(output)) {
     return output.map((item) => filterOutput(user, feature, item))
   }
 
   // Para itens individuais
-  if (feature === "read:content") {
+  if (feature === "read:content" || feature === "read:user") {
     const clonedOutput = { ...output }
 
     // Se o usuário não é o dono do recurso, remove campos sensíveis
-    if (user.id !== output.user_id) {
+    const isOwner = feature === "read:user" 
+      ? user.id === output.id 
+      : user.id === output.user_id
+
+    if (!isOwner) {
       // Remove campos que só o dono deve ver
       delete clonedOutput.user_id
       delete clonedOutput.created_at

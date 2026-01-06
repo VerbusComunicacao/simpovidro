@@ -14,6 +14,7 @@ describe("Use case: Registration flow (all successful)", () => {
   let adminActivationToken
   let createdUserBody
   let userActivationToken
+  let userSession
 
   test("Create admin account", async () => {
     const createdAdminUserResponse = await fetch(
@@ -22,7 +23,7 @@ describe("Use case: Registration flow (all successful)", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: "RegistrationFlowAdmin",
+          full_name: "RegistrationFlowAdmin",
           email: "registration.admin@flow.com",
           password: "abc123",
         }),
@@ -62,6 +63,13 @@ describe("Use case: Registration flow (all successful)", () => {
       "read:user",
       "create:content",
       "read:content",
+      "update:content",
+      "update:user",
+      "update:user:others",
+      "delete:content",
+      "delete:user",
+      "delete:user:others",
+      "read:user:others",
     ])
   })
 
@@ -86,7 +94,7 @@ describe("Use case: Registration flow (all successful)", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: "RegistrationFlow",
+          full_name: "RegistrationFlow",
           email: "registration@flow.com",
           password: "abc123",
         }),
@@ -98,10 +106,9 @@ describe("Use case: Registration flow (all successful)", () => {
 
     expect(createdUserBody).toEqual({
       id: createdUserBody.id,
-      username: "RegistrationFlow",
+      full_name: "RegistrationFlow",
       email: "registration@flow.com",
       features: ["read:activation_token"],
-      password: createdUserBody.password,
       created_at: createdUserBody.created_at,
       updated_at: createdUserBody.updated_at,
     })
@@ -161,6 +168,8 @@ describe("Use case: Registration flow (all successful)", () => {
       "read:session",
       "create:guest",
       "read:guest",
+      "read:user",
+      "update:user",
     ])
   })
 
@@ -175,5 +184,33 @@ describe("Use case: Registration flow (all successful)", () => {
     })
 
     expect(response.status).toBe(201)
+    userSession = await response.json()
+  })
+
+  test("Get user data", async () => {
+    const response = await fetch("http://localhost:3000/api/v1/user", {
+      headers: {
+        Cookie: `session_id=${userSession.token}`,
+      },
+    })
+
+    expect(response.status).toBe(200)
+    const userBody = await response.json()
+
+    expect(userBody).toEqual({
+      id: createdUserBody.id,
+      full_name: "RegistrationFlow",
+      email: "registration@flow.com",
+      features: [
+        "create:session",
+        "read:session",
+        "create:guest",
+        "read:guest",
+        "read:user",
+        "update:user",
+      ],
+      created_at: createdUserBody.created_at,
+      updated_at: expect.any(String),
+    })
   })
 })

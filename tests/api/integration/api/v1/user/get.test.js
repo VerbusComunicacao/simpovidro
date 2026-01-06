@@ -9,11 +9,11 @@ beforeAll(async () => {
   await orchestrator.runPendingMigrations()
 })
 
-describe("GET /api/v1/users/[username]", () => {
+describe("GET /api/v1/user", () => {
   describe("Default user", () => {
     test("With valid session", async () => {
       const createdUser = await orchestrator.createUser({
-        username: "UserWithValidSession",
+        full_name: "UserWithValidSession",
       })
       await orchestrator.activateUser(createdUser.id)
 
@@ -32,15 +32,16 @@ describe("GET /api/v1/users/[username]", () => {
 
       expect(responseBody).toEqual({
         id: createdUser.id,
-        username: "UserWithValidSession",
+        full_name: "UserWithValidSession",
         email: createdUser.email,
         features: [
           "create:session",
           "read:session",
           "create:guest",
           "read:guest",
+          "read:user",
+          "update:user",
         ],
-        password: createdUser.password,
         created_at: createdUser.created_at.toISOString(),
         updated_at: expect.any(String),
       })
@@ -83,7 +84,7 @@ describe("GET /api/v1/users/[username]", () => {
       })
 
       const createdUser = await orchestrator.createUser({
-        username: "UserWithHalfValidSession",
+        full_name: "UserWithHalfValidSession",
       })
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
@@ -102,15 +103,16 @@ describe("GET /api/v1/users/[username]", () => {
 
       expect(responseBody).toEqual({
         id: createdUser.id,
-        username: "UserWithHalfValidSession",
+        full_name: "UserWithHalfValidSession",
         email: createdUser.email,
         features: [
           "create:session",
           "read:session",
           "create:guest",
           "read:guest",
+          "read:user",
+          "update:user",
         ],
-        password: createdUser.password,
         created_at: createdUser.created_at.toISOString(),
         updated_at: expect.any(String),
       })
@@ -172,7 +174,7 @@ describe("GET /api/v1/users/[username]", () => {
       })
 
       const createdUser = await orchestrator.createUser({
-        username: "UserWithExpiredSession",
+        full_name: "UserWithExpiredSession",
       })
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
