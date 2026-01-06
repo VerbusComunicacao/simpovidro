@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import useSWR from "swr";
 import { Plus, Hotel } from "lucide-react";
 import Link from "next/link";
@@ -81,7 +82,12 @@ export default function Table() {
             >
               <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
                 <CardHeader>
-                  <CardTitle>{hotel.name}</CardTitle>
+                  <div className="flex justify-between items-start">
+                    <CardTitle>{hotel.name}</CardTitle>
+                    {hotel.active && (
+                      <Badge variant="success">Ativo</Badge>
+                    )}
+                  </div>
                   <CardDescription>
                     {hotel.city}, {hotel.state}
                   </CardDescription>

@@ -26,13 +26,13 @@ async function create(hotelInputValues, userId) {
     const results = await database.query({
       text: `
         INSERT INTO
-          hotels (user_id, name, email, phone, address, city, state, country)
+          hotels (user_id, name, email, phone, address, city, state, country, active)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING
           *
       `,
-      values: [userId, name, email, phone, address, city, state, country],
+      values: [userId, name, email, phone, address, city, state, country, false],
     })
 
     return results.rows[0]
@@ -107,9 +107,12 @@ async function update(hotelId, hotelInputNewValues, userId) {
 
   const currentHotel = await findOneById(hotelId)
 
-  // Validar campos obrigatórios se fornecidos
-  if (Object.keys(hotelInputNewValues).length > 0) {
-    validateRequired(hotelInputNewValues, ["name", "city", "country"])
+  // Validar campos apenas se fornecidos
+  const fieldsToValidate = ["name", "city", "country"].filter(
+    (field) => field in hotelInputNewValues,
+  )
+  if (fieldsToValidate.length > 0) {
+    validateRequired(hotelInputNewValues, fieldsToValidate)
   }
 
   // Verificar se o nome já existe (apenas se o nome estiver sendo alterado)
@@ -126,31 +129,48 @@ async function update(hotelId, hotelInputNewValues, userId) {
   return updatedHotel
 
   async function runUpdateQuery(hotelWithNewValues) {
-    const { id, name, email, phone, address, city, state, country } =
+    const { id, name, email, phone, address, city, state, country, active } =
       hotelWithNewValues
 
-    const results = await database.query({
-      text: `
-        UPDATE
-          hotels
-        SET 
-          name = $2,
-          email = $3,
-          phone = $4,
-          address = $5,
-          city = $6,
-          state = $7,
-          country = $8,
-          updated_at = timezone('utc', now())
-        WHERE
-          id = $1
-        RETURNING
-          *
-      `,
-      values: [id, name, email, phone, address, city, state, country],
-    })
+    const client = await database.getNewClient()
+    try {
+      await client.query("BEGIN")
 
-    return results.rows[0]
+      if (active === true) {
+        // Desativa todos os outros hotéis
+        await client.query("UPDATE hotels SET active = false")
+      }
+
+      const results = await client.query({
+        text: `
+          UPDATE
+            hotels
+          SET 
+            name = $2,
+            email = $3,
+            phone = $4,
+            address = $5,
+            city = $6,
+            state = $7,
+            country = $8,
+            active = $9,
+            updated_at = timezone('utc', now())
+          WHERE
+            id = $1
+          RETURNING
+            *
+        `,
+        values: [id, name, email, phone, address, city, state, country, active],
+      })
+
+      await client.query("COMMIT")
+      return results.rows[0]
+    } catch (error) {
+      await client.query("ROLLBACK")
+      throw error
+    } finally {
+      await client.end()
+    }
   }
 }
 
@@ -179,6 +199,7 @@ async function findAllByUserId(userId) {
         city,
         state,
         country,
+        active,
         created_at,
         updated_at
       FROM 
@@ -214,6 +235,39 @@ async function verifyIHotelAlreadyExists(name, userId) {
   }
 }
 
+async function activate(hotelId) {
+  validateUUID(hotelId)
+
+  const client = await database.getNewClient()
+  try {
+    await client.query("BEGIN")
+
+    // 1. Desativa todos os hotéis
+    await client.query("UPDATE hotels SET active = false")
+
+    // 2. Ativa o hotel alvo
+    const results = await client.query({
+      text: "UPDATE hotels SET active = true, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *",
+      values: [hotelId],
+    })
+
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O ID do hotel informado não foi encontrado no sistema.",
+        action: "Verifique se o ID está digitado corretamente.",
+      })
+    }
+
+    await client.query("COMMIT")
+    return results.rows[0]
+  } catch (error) {
+    await client.query("ROLLBACK")
+    throw error
+  } finally {
+    await client.end()
+  }
+}
+
 const hotel = {
   create,
   findOneById,
@@ -221,5 +275,6 @@ const hotel = {
   findAllByUserId,
   update,
   deleteById,
+  activate,
 }
 export default hotel

@@ -10,7 +10,15 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Pencil, Trash2, Plus, BedDouble } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowLeft,
+  Pencil,
+  Trash2,
+  Plus,
+  BedDouble,
+  CheckCircle,
+} from "lucide-react";
 import ErrorDialog from "@/components/ui/ErrorDialog";
 import { useEffect, useState } from "react";
 import { AddRoomDialog } from "@/components/hotel/AddRoomDialog";
@@ -93,6 +101,35 @@ export default function HotelPage() {
     mutateRooms,
   ]);
 
+  const handleActivate = async () => {
+    try {
+      const response = await fetch(`/api/v1/hotels/${hotelId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ active: true }),
+      });
+      if (response.ok) {
+        mutateHotel();
+      } else {
+        const data = await response.json();
+        setErrorInfo({
+          title: "Erro ao Ativar Hotel",
+          message: data.message || "Ocorreu um erro.",
+          actionMessage: data.action,
+        });
+        setIsErrorDialogOpen(true);
+      }
+    } catch (error) {
+      setErrorInfo({
+        title: "Erro ao Ativar Hotel",
+        message: "Ocorreu um erro de conexão.",
+      });
+      setIsErrorDialogOpen(true);
+    }
+  };
+
   const handleDelete = async () => {
     try {
       const response = await fetch(`/api/v1/hotels/${hotelId}`, {
@@ -120,6 +157,11 @@ export default function HotelPage() {
 
   const pageActions = hotel && (
     <>
+      {!hotel.active && (
+        <Button onClick={handleActivate} className="bg-green-600 hover:bg-green-700">
+          <CheckCircle className="mr-2 h-4 w-4" /> Ativar Hotel
+        </Button>
+      )}
       <EditHotelDialog hotel={hotel} onHotelUpdated={mutateHotel}>
         <Button variant="outline">
           <Pencil className="mr-2 h-4 w-4" /> Editar Hotel
@@ -213,10 +255,17 @@ export default function HotelPage() {
       {hotel && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>{hotel.name}</CardTitle>
-            <CardDescription>
-              {hotel.city}, {hotel.state} - {hotel.country}
-            </CardDescription>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle>{hotel.name}</CardTitle>
+                <CardDescription>
+                  {hotel.city}, {hotel.state} - {hotel.country}
+                </CardDescription>
+              </div>
+              {hotel.active && (
+                <Badge variant="success">Este hotel está ativo no site</Badge>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <p>{hotel.address}</p>

@@ -164,6 +164,7 @@ describe("PATCH /api/v1/hotels/[id]", () => {
         state: "Rio de Janeiro",
         address: "Av. Copacabana, 123",
         email: "updated@hotel.com",
+        active: false,
         user_id: createdUser.id,
         created_at: hotelCreated.created_at.toISOString(),
         updated_at: expect.any(String),
