@@ -283,7 +283,10 @@ async function getAllActiveHotels() {
               'room_type_description', rt.description,
               'room_category', rc.name,
               'max_adults', rc.max_adults,
-              'max_children', rc.max_children
+              'max_children', rc.max_children,
+              'name', r.name,
+              'description', r.description,
+              'photos', r.photos
             )
           ) FILTER (WHERE r.id IS NOT NULL),
           '[]'

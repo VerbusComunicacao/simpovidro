@@ -33,14 +33,17 @@ async function create(roomInputValues, userId) {
       total_rooms,
       available_rooms = total_rooms,
       blocked_rooms = 0,
+      name,
+      description,
+      photos,
     } = roomInputValues;
 
     const results = await database.query({
       text: `
         INSERT INTO
-          "rooms" (user_id, hotel_id, room_type_id, room_category_id, price_per_night, total_rooms, available_rooms, blocked_rooms)
+          "rooms" (user_id, hotel_id, room_type_id, room_category_id, price_per_night, total_rooms, available_rooms, blocked_rooms, name, description, photos)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING
           *
       `,
@@ -53,6 +56,9 @@ async function create(roomInputValues, userId) {
         total_rooms,
         available_rooms,
         blocked_rooms,
+        name,
+        description,
+        photos || [],
       ],
     });
 
@@ -133,6 +139,9 @@ async function findAllByUserId(userId) {
         total_rooms,
         available_rooms,
         blocked_rooms,
+        name,
+        description,
+        photos,
         created_at,
         updated_at
       FROM 
@@ -163,6 +172,9 @@ async function findAllByHotelId(hotelId, userId) {
         r.total_rooms,
         r.available_rooms,
         r.blocked_rooms,
+        r.name,
+        r.description,
+        r.photos,
         r.created_at,
         r.updated_at
       FROM 
@@ -257,6 +269,9 @@ async function update(roomId, roomInputNewValues, userId) {
           total_rooms = $6,
           available_rooms = $7,
           blocked_rooms = $8,
+          name = $9,
+          description = $10,
+          photos = $11,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
@@ -272,6 +287,9 @@ async function update(roomId, roomInputNewValues, userId) {
         total_rooms,
         available_rooms,
         blocked_rooms,
+        roomWithNewValues.name,
+        roomWithNewValues.description,
+        roomWithNewValues.photos || [],
       ],
     });
 

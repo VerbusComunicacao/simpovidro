@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react"
 import Head from "next/head"
+import { useRouter } from "next/router"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,6 +9,7 @@ import { MapPin, Hotel, BedDouble, Users, AlertCircle } from "lucide-react"
 import { Empty } from "@/components/ui/empty"
 
 export default function RegistrationPage({ activeHotels }) {
+  const router = useRouter()
   const [selectedType, setSelectedType] = useState("all")
   const [selectedCategory, setSelectedCategory] = useState("all")
 
@@ -129,9 +131,19 @@ export default function RegistrationPage({ activeHotels }) {
           {filteredRooms.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredRooms.map((room) => (
-                <Card key={room.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-500 h-24 flex items-center justify-center">
-                    <BedDouble className="h-10 w-10 text-white/50" />
+                <Card key={room.id} className="overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+                  <div className="h-48 w-full relative bg-gray-100 border-b overflow-hidden">
+                    {room.photos && room.photos.length > 0 ? (
+                      <img 
+                        src={room.photos[0]} 
+                        alt={room.name || room.room_type} 
+                        className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-r from-blue-600 to-blue-500 flex items-center justify-center">
+                        <BedDouble className="h-12 w-12 text-white/50" />
+                      </div>
+                    )}
                   </div>
                   <CardHeader>
                     <div className="flex justify-between items-start mb-2">
@@ -142,7 +154,7 @@ export default function RegistrationPage({ activeHotels }) {
                         {room.available_rooms} {room.available_rooms === 1 ? 'disponível' : 'disponíveis'}
                       </span>
                     </div>
-                    <CardTitle className="text-xl">{room.room_type}</CardTitle>
+                    <CardTitle className="text-xl">{room.name || room.room_type}</CardTitle>
                     <CardDescription>{room.room_type_description}</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -166,7 +178,12 @@ export default function RegistrationPage({ activeHotels }) {
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(room.price_per_night)}
                           </p>
                         </div>
-                        <Button className="bg-blue-600 hover:bg-blue-700">Selecionar</Button>
+                        <Button 
+                          className="bg-blue-600 hover:bg-blue-700"
+                          onClick={() => router.push(`/inscricao/quarto/${room.id}`)}
+                        >
+                          Selecionar
+                        </Button>
                       </div>
                     </div>
                   </CardContent>

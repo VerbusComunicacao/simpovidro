@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Plus, Trash2 } from "lucide-react";
 import ErrorDialog from "@/components/ui/ErrorDialog";
 
 export function AddRoomDialog({
@@ -32,10 +33,28 @@ export function AddRoomDialog({
   const [roomCategoryId, setRoomCategoryId] = useState("");
   const [pricePerNight, setPricePerNight] = useState("");
   const [totalRooms, setTotalRooms] = useState("");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [photos, setPhotos] = useState([""]);
   const [error, setError] = useState("");
   const [action, setAction] = useState("");
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const handleAddPhoto = () => {
+    setPhotos([...photos, ""]);
+  };
+
+  const handleRemovePhoto = (index) => {
+    const newPhotos = photos.filter((_, i) => i !== index);
+    setPhotos(newPhotos.length > 0 ? newPhotos : [""]);
+  };
+
+  const handlePhotoChange = (index, value) => {
+    const newPhotos = [...photos];
+    newPhotos[index] = value;
+    setPhotos(newPhotos);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,6 +73,9 @@ export function AddRoomDialog({
         room_category_id: roomCategoryId,
         price_per_night: pricePerNight,
         total_rooms: totalRooms,
+        name,
+        description,
+        photos: photos.filter(p => p.trim() !== ""),
       }),
     });
 
@@ -67,6 +89,9 @@ export function AddRoomDialog({
       setRoomCategoryId("");
       setPricePerNight("");
       setTotalRooms("");
+      setName("");
+      setDescription("");
+      setPhotos([""]);
     } else {
       const data = await response.json();
       setError(data.message || "Ocorreu um erro ao adicionar o quarto.");
@@ -81,7 +106,7 @@ export function AddRoomDialog({
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>{children}</DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Adicionar Novo Quarto</DialogTitle>
             <DialogDescription>
@@ -89,7 +114,8 @@ export function AddRoomDialog({
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
+            <div className="max-h-[70vh] overflow-y-auto px-1">
+              <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="room-type" className="text-right">
                   Tipo
@@ -141,7 +167,7 @@ export function AddRoomDialog({
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="total-rooms" className="text-right">
-                  Total
+                  Total de quartos
                 </Label>
                 <Input
                   id="total-rooms"
@@ -151,8 +177,67 @@ export function AddRoomDialog({
                   className="col-span-3"
                 />
               </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Nome (opcional)
+                </Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="col-span-3"
+                  placeholder="Ex: Suíte Presidencial"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">
+                  Descrição
+                </Label>
+                <textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="col-span-3 min-h-[100px] border rounded-md p-2 text-sm"
+                  placeholder="Descreva as comodidades do quarto..."
+                />
+              </div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label className="text-right pt-2">
+                  Fotos (URLs)
+                </Label>
+                <div className="col-span-3 space-y-2">
+                  {photos.map((photo, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        value={photo}
+                        onChange={(e) => handlePhotoChange(index, e.target.value)}
+                        placeholder="https://exemplo.com/foto.jpg"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleRemovePhoto(index)}
+                        disabled={photos.length === 1 && photos[0] === ""}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={handleAddPhoto}
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> Adicionar outra foto
+                  </Button>
+                </div>
+              </div>
             </div>
-            <DialogFooter>
+            </div>
+            <DialogFooter className="mt-4 pt-2 border-t">
               <Button type="submit" disabled={loading}>
                 {loading ? "Salvando..." : "Salvar Quarto"}
               </Button>

@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Plus, Trash2 } from "lucide-react";
 import ErrorDialog from "@/components/ui/ErrorDialog";
 
 export function EditRoomDialog({
@@ -32,20 +33,39 @@ export function EditRoomDialog({
   const [roomCategoryId, setRoomCategoryId] = useState(room.room_category_id);
   const [pricePerNight, setPricePerNight] = useState(room.price_per_night);
   const [totalRooms, setTotalRooms] = useState(room.total_rooms);
-  const [availableRooms, setAvailableRooms] = useState(room.available_rooms);
   const [blockedRooms, setBlockedRooms] = useState(room.blocked_rooms);
+  const [name, setName] = useState(room.name || "");
+  const [description, setDescription] = useState(room.description || "");
+  const [photos, setPhotos] = useState(room.photos && room.photos.length > 0 ? room.photos : [""]);
   const [error, setError] = useState("");
   const [action, setAction] = useState("");
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const handleAddPhoto = () => {
+    setPhotos([...photos, ""]);
+  };
+
+  const handleRemovePhoto = (index) => {
+    const newPhotos = photos.filter((_, i) => i !== index);
+    setPhotos(newPhotos.length > 0 ? newPhotos : [""]);
+  };
+
+  const handlePhotoChange = (index, value) => {
+    const newPhotos = [...photos];
+    newPhotos[index] = value;
+    setPhotos(newPhotos);
+  };
 
   useEffect(() => {
     setRoomTypeId(room.room_type_id);
     setRoomCategoryId(room.room_category_id);
     setPricePerNight(room.price_per_night);
     setTotalRooms(room.total_rooms);
-    setAvailableRooms(room.available_rooms);
     setBlockedRooms(room.blocked_rooms);
+    setName(room.name || "");
+    setDescription(room.description || "");
+    setPhotos(room.photos && room.photos.length > 0 ? room.photos : [""]);
   }, [room]);
 
   const handleSubmit = async (e) => {
@@ -73,6 +93,9 @@ export function EditRoomDialog({
         total_rooms: parseInt(totalRooms),
         blocked_rooms: parseInt(blockedRooms),
         available_rooms: parseInt(totalRooms) - parseInt(blockedRooms),
+        name,
+        description,
+        photos: photos.filter(p => p.trim() !== ""),
       }),
     });
 
@@ -95,7 +118,7 @@ export function EditRoomDialog({
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>{children}</DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Editar Quarto</DialogTitle>
             <DialogDescription>
@@ -103,7 +126,8 @@ export function EditRoomDialog({
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
+            <div className="max-h-[70vh] overflow-y-auto px-1">
+              <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="room-type-edit" className="text-right">
                   Tipo
@@ -160,7 +184,7 @@ export function EditRoomDialog({
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="total-rooms-edit" className="text-right">
-                  Total
+                  Total de quartos
                 </Label>
                 <Input
                   id="total-rooms-edit"
@@ -182,8 +206,67 @@ export function EditRoomDialog({
                   className="col-span-3"
                 />
               </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name-edit" className="text-right">
+                  Nome (opcional)
+                </Label>
+                <Input
+                  id="name-edit"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="col-span-3"
+                  placeholder="Ex: Suíte Presidencial"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description-edit" className="text-right">
+                  Descrição
+                </Label>
+                <textarea
+                  id="description-edit"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="col-span-3 min-h-[100px] border rounded-md p-2 text-sm"
+                  placeholder="Descreva as comodidades do quarto..."
+                />
+              </div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label className="text-right pt-2">
+                  Fotos (URLs)
+                </Label>
+                <div className="col-span-3 space-y-2">
+                  {photos.map((photo, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        value={photo}
+                        onChange={(e) => handlePhotoChange(index, e.target.value)}
+                        placeholder="https://exemplo.com/foto.jpg"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleRemovePhoto(index)}
+                        disabled={photos.length === 1 && photos[0] === ""}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={handleAddPhoto}
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> Adicionar outra foto
+                  </Button>
+                </div>
+              </div>
             </div>
-            <DialogFooter>
+            </div>
+            <DialogFooter className="mt-4 pt-2 border-t">
               <Button type="submit" disabled={loading}>
                 {loading ? "Salvando..." : "Salvar Alterações"}
               </Button>
