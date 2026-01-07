@@ -44,7 +44,7 @@ describe("POST /api/v1/rooms", () => {
 
       expect(response1.status).toBe(403)
     })
-    
+
     test("with blank data", async () => {
       const createdUser = await orchestrator.createUser()
 
@@ -142,6 +142,9 @@ describe("POST /api/v1/rooms", () => {
       expect(roomCreated).toEqual({
         id: expect.any(String),
         hotel_id: hotel.id,
+        name: null,
+        description: null,
+        photos: [],
         room_type_id: roomType.id,
         room_category_id: roomCategory.id,
         price_per_night: "250.50",

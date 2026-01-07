@@ -61,6 +61,7 @@ describe("POST /api/v1/guests", () => {
         id: responseBody.id,
         name: "Test Guest",
         phone: "+5511999999999",
+        email: null,
         badge_name: null,
         gender: "Male",
         rg_number: "123456789",

@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MapPin, Hotel, BedDouble, Users, AlertCircle } from "lucide-react"
 import { Empty } from "@/components/ui/empty"
+import RegistrationLayout from "@/components/registration/RegistrationLayout"
+import Link from "next/link"
 
 export default function RegistrationPage({ activeHotels }) {
   const router = useRouter()
@@ -41,30 +43,25 @@ export default function RegistrationPage({ activeHotels }) {
 
   if (!activeHotel) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Head>
-          <title>Simpovidro 2025 - Inscrições Indisponíveis</title>
-        </Head>
-        <Card className="max-w-md w-full text-center p-8">
-          <AlertCircle className="mx-auto h-12 w-12 text-blue-500 mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Inscrições não disponíveis</h1>
-          <p className="text-gray-600 mb-6">
-            Volte mais tarde.
-          </p>
-          <Button asChild variant="outline" className="w-full">
-            <a href="/">Voltar para o início</a>
-          </Button>
-        </Card>
-      </div>
+      <RegistrationLayout title="Simpovidro 2025 - Inscrições Indisponíveis">
+        <div className="flex items-center justify-center p-4 py-20">
+          <Card className="max-w-md w-full text-center p-8">
+            <AlertCircle className="mx-auto h-12 w-12 text-blue-500 mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Inscrições não disponíveis</h1>
+            <p className="text-gray-600 mb-6">
+              Volte mais tarde.
+            </p>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/">Voltar para o início</Link>
+            </Button>
+          </Card>
+        </div>
+      </RegistrationLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Head>
-        <title>Simpovidro 2025 - Inscrição</title>
-      </Head>
-
+    <RegistrationLayout>
       <main className="container mx-auto px-4 py-8">
         {/* Hotel Header */}
         <section className="mb-12">
@@ -200,7 +197,7 @@ export default function RegistrationPage({ activeHotels }) {
           )}
         </section>
       </main>
-    </div>
+    </RegistrationLayout>
   )
 }
 

@@ -5,13 +5,13 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { FormattedText } from "@/components/ui/FormattedText"
 import { 
-  ChevronLeft, 
   Users, 
   Info,
   CheckCircle,
   BedDouble
 } from "lucide-react"
 import { useState } from "react"
+import RegistrationLayout from "@/components/registration/RegistrationLayout"
 
 export default function RoomDetailsPage({ room }) {
   const router = useRouter()
@@ -19,26 +19,20 @@ export default function RoomDetailsPage({ room }) {
 
   if (!room) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Quarto não encontrado.</p>
-      </div>
+      <RegistrationLayout title="Quarto não encontrado - Simpovidro 2025" showBackButton>
+        <div className="flex items-center justify-center p-20">
+          <p className="text-xl text-gray-600">Quarto não encontrado.</p>
+        </div>
+      </RegistrationLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Head>
-        <title>{room.name || room.room_type} - Simpovidro 2025</title>
-      </Head>
-
+    <RegistrationLayout 
+      title={`${room.name || room.room_type} - Simpovidro 2025`}
+      showBackButton
+    >
       <main className="container mx-auto px-4 py-8">
-        <Button 
-          variant="ghost" 
-          className="mb-6" 
-          onClick={() => router.push("/inscricao")}
-        >
-          <ChevronLeft className="mr-2 h-4 w-4" /> Voltar para a lista
-        </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Photo Gallery */}
@@ -117,7 +111,11 @@ export default function RoomDetailsPage({ room }) {
                       </span>
                     </div>
                   </div>
-                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 px-8 text-lg font-semibold shadow-md active:scale-95 transition-all">
+                  <Button 
+                    size="lg" 
+                    className="bg-blue-600 hover:bg-blue-700 px-8 text-lg font-semibold shadow-md active:scale-95 transition-all"
+                    onClick={() => router.push(`/inscricao/checkout/${room.id}`)}
+                  >
                     Fazer Minha Inscrição
                   </Button>
                 </div>
@@ -147,7 +145,7 @@ export default function RoomDetailsPage({ room }) {
           </section>
         </div>
       </main>
-    </div>
+    </RegistrationLayout>
   )
 }
 

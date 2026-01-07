@@ -9,6 +9,7 @@ function can(user, feature, resource) {
 
   switch (feature) {
     case "update:user":
+    case "read:guest":
     case "read:user":
       return (
         (resource?.id && user.id === resource.id) ||

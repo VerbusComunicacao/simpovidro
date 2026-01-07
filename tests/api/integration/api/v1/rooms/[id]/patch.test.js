@@ -145,6 +145,9 @@ describe("PATCH /api/v1/rooms/[id]", () => {
       expect(updated).toEqual({
         id: created.id,
         hotel_id: created.hotel_id,
+        name: null,
+        description: null,
+        photos: [],
         room_type_id: created.room_type_id,
         room_category_id: created.room_category_id,
         price_per_night: "200.00",

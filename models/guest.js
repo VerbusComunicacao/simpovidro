@@ -51,15 +51,16 @@ async function create(guestInputValues, userId) {
     const results = await database.query({
       text: `
         INSERT INTO
-          guests (user_id, name, phone, badge_name, gender, rg_number, cpf_number, passport_number, medication_details, blood_type, blood_rh_factor, health_observations, special_needs_details, has_heart_condition, has_diabetes, has_high_blood_pressure, has_low_blood_pressure, birth_date, nationality, address, address_number, address_complement, neighborhood, city, state, country, emergency_contact_name, emergency_contact_phone)
+          guests (user_id, name, phone, badge_name, gender, rg_number, cpf_number, passport_number, medication_details, blood_type, blood_rh_factor, health_observations, special_needs_details, has_heart_condition, has_diabetes, has_high_blood_pressure, has_low_blood_pressure, birth_date, nationality, address, address_number, address_complement, neighborhood, city, state, country, emergency_contact_name, emergency_contact_phone, email)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
         RETURNING
           *
       `,
       values: [
         userId,
         name,
+
         phone,
         badge_name,
         gender,
@@ -86,6 +87,7 @@ async function create(guestInputValues, userId) {
         country,
         emergency_contact_name,
         emergency_contact_phone,
+        email,
       ],
     })
 
@@ -95,10 +97,10 @@ async function create(guestInputValues, userId) {
 
 async function findOneById(guestId) {
   validateUUID(guestId)
-  const guestFound = await runSelectQuery(guestId)
+  const guestFound = await runSelectQuery()
   return guestFound
 
-  async function runSelectQuery(guestId) {
+  async function runSelectQuery() {
     const results = await database.query({
       text: `
         SELECT
@@ -118,6 +120,34 @@ async function findOneById(guestId) {
         message: "O ID do hóspede informado não foi encontrado no sistema.",
         action: "Verifique se o ID está digitado corretamente.",
       })
+    }
+
+    return results.rows[0]
+  }
+}
+
+async function findOneByUserId(userId) {
+  validateUUID(userId)
+  const guestFound = await runSelectQuery(userId)
+  return guestFound
+
+  async function runSelectQuery(userId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          *
+        FROM
+          guests
+        WHERE
+          user_id = $1
+        LIMIT
+          1
+        ;`,
+      values: [userId],
+    })
+
+    if (results.rowCount === 0) {
+      return null
     }
 
     return results.rows[0]
@@ -160,6 +190,7 @@ async function update(guestId, guestInputNewValues) {
     const {
       id,
       name,
+      email,
       phone,
       badge_name,
       gender,
@@ -220,7 +251,8 @@ async function update(guestId, guestInputNewValues) {
           country = $26,
           emergency_contact_name = $27,
           emergency_contact_phone = $28,
-          updated_at = timezone('utc', now())
+          updated_at = timezone('utc', now()),
+          email = $29
         WHERE
           id = $1
         RETURNING
@@ -255,6 +287,7 @@ async function update(guestId, guestInputNewValues) {
         country,
         emergency_contact_name,
         emergency_contact_phone,
+        email,
       ],
     })
 
@@ -313,6 +346,7 @@ async function checkUniqueFields(guestData, currentGuestId = null) {
 const guest = {
   create,
   findOneById,
+  findOneByUserId,
   findAll,
   update,
   deleteById,
