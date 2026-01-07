@@ -95,6 +95,7 @@ function injectAnonymousUser(request) {
       "create:user",
       "create:session",
       "read:recovery_token",
+      "read:public-content",
     ],
   }
 

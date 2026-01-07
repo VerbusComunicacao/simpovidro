@@ -17,7 +17,7 @@ async function runTestsWithCleanup() {
       "--success",
       "command-jest",
       '"next dev"',
-      '"jest --runInBand --verbose"',
+      `"jest --runInBand --verbose ${process.argv.slice(2).join(" ")}"`,
     ],
     {
       stdio: "inherit",

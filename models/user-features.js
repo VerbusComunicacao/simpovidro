@@ -24,11 +24,13 @@ const availableFeatures = new Set([
   "create:session",
   "read:session",
 
-  // CONTENT (Hotel, Room types, categories, etc.)
+  // CONTENT (Hotel, Room types, categories, etc. - apenas administradores)
   "read:content",
   "update:content",
   "create:content",
   "delete:content",
+
+  "read:public-content",
 
   // COMPANY
   "read:company",

@@ -75,7 +75,7 @@ async function createHotel(userId, hotelData) {
       email: hotelData?.email || faker.internet.email(),
       phone: hotelData?.phone || faker.internet.phone,
       address: hotelData?.address || faker.location.streetAddress(),
-      state: hotelData?.state || faker.location.state(),
+      state: hotelData?.state || faker.location.state()
     },
     userId,
   )
@@ -161,6 +161,10 @@ async function setUserFeatures(userId, features) {
   await user.setFeatures(userId, features)
 }
 
+async function activateHotel(hotelId) {
+  await hotel.activate(hotelId)
+}
+
 async function injectPasswordRecoveryToken(tokenObject) {
   await database.query({
     text: "INSERT INTO password_recovery_tokens (token, user_id, expires_at, used_at) VALUES ($1, $2, $3, $4)",
@@ -188,6 +192,7 @@ const orchestrator = {
   activateUser,
   activateAdmUser,
   setUserFeatures,
+  activateHotel,
   injectPasswordRecoveryToken,
   webserverUrl,
 }

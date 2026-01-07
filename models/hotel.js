@@ -268,6 +268,41 @@ async function activate(hotelId) {
   }
 }
 
+async function getAllActiveHotels() {
+  const results = await database.query({
+    text: `
+      SELECT 
+        h.*,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', r.id,
+              'price_per_night', r.price_per_night,
+              'available_rooms', r.available_rooms,
+              'room_type', rt.name,
+              'room_type_description', rt.description,
+              'room_category', rc.name,
+              'max_adults', rc.max_adults,
+              'max_children', rc.max_children
+            )
+          ) FILTER (WHERE r.id IS NOT NULL),
+          '[]'
+        ) as rooms
+      FROM 
+        hotels h
+      LEFT JOIN rooms r ON h.id = r.hotel_id
+      LEFT JOIN "room-types" rt ON r.room_type_id = rt.id
+      LEFT JOIN "room-categories" rc ON r.room_category_id = rc.id
+      WHERE 
+        h.active = true
+      GROUP BY 
+        h.id
+    `,
+  })
+
+  return results.rows
+}
+
 const hotel = {
   create,
   findOneById,
@@ -276,5 +311,6 @@ const hotel = {
   update,
   deleteById,
   activate,
+  getAllActiveHotels,
 }
 export default hotel
