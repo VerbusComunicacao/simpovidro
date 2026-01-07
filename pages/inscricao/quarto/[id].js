@@ -3,7 +3,14 @@ import { useRouter } from "next/router"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, Users, BedDouble, CheckCircle } from "lucide-react"
+import { FormattedText } from "@/components/ui/FormattedText"
+import { 
+  ChevronLeft, 
+  Users, 
+  Info,
+  CheckCircle,
+  BedDouble
+} from "lucide-react"
 import { useState } from "react"
 
 export default function RoomDetailsPage({ room }) {
@@ -30,7 +37,7 @@ export default function RoomDetailsPage({ room }) {
           className="mb-6" 
           onClick={() => router.push("/inscricao")}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para a lista
+          <ChevronLeft className="mr-2 h-4 w-4" /> Voltar para a lista
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -94,9 +101,9 @@ export default function RoomDetailsPage({ room }) {
 
             <div className="prose prose-blue max-w-none">
               <h3 className="text-lg font-semibold text-gray-900">Descrição</h3>
-              <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
-                {room.description || "Nenhuma descrição disponível para este quarto."}
-              </p>
+              <div className="text-gray-600 leading-relaxed">
+                <FormattedText text={room.description || "Nenhuma descrição disponível para este quarto."} />
+              </div>
             </div>
 
             <Card className="bg-white border-2 border-blue-50 shadow-sm">

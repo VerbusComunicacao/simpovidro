@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Bold, Italic, Superscript } from "lucide-react";
 import ErrorDialog from "@/components/ui/ErrorDialog";
 
 export function EditRoomDialog({
@@ -55,6 +55,33 @@ export function EditRoomDialog({
     const newPhotos = [...photos];
     newPhotos[index] = value;
     setPhotos(newPhotos);
+  };
+
+  const handleInsertTag = (tag) => {
+    const textarea = document.getElementById("description-edit");
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = description;
+    const before = text.substring(0, start);
+    const after = text.substring(end, text.length);
+    const selection = text.substring(start, end);
+
+    let symbol = "";
+    if (tag === "b") symbol = "**";
+    else if (tag === "i") symbol = "_";
+    else if (tag === "sup") symbol = "^";
+
+    const newText = before + symbol + selection + symbol + after;
+    setDescription(newText);
+    
+    // Auto focus back to textarea
+    setTimeout(() => {
+      textarea.focus();
+      const cursorOffset = symbol.length;
+      textarea.setSelectionRange(start + cursorOffset, end + cursorOffset);
+    }, 0);
   };
 
   useEffect(() => {
@@ -222,13 +249,47 @@ export function EditRoomDialog({
                 <Label htmlFor="description-edit" className="text-right">
                   Descrição
                 </Label>
-                <textarea
-                  id="description-edit"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="col-span-3 min-h-[100px] border rounded-md p-2 text-sm"
-                  placeholder="Descreva as comodidades do quarto..."
-                />
+                <div className="col-span-3 space-y-2">
+                  <div className="flex gap-1 border-b pb-1 mb-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => handleInsertTag("b")}
+                      title="Negrito"
+                    >
+                      <Bold className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => handleInsertTag("i")}
+                      title="Itálico"
+                    >
+                      <Italic className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => handleInsertTag("sup")}
+                      title="Sobrescrito (Ex: m²)"
+                    >
+                      <Superscript className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <textarea
+                    id="description-edit"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full min-h-[100px] border rounded-md p-2 text-sm"
+                    placeholder="Descreva as comodidades do quarto... Use os botões acima para formatar."
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-4 items-start gap-4">
                 <Label className="text-right pt-2">

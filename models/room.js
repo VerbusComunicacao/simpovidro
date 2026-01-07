@@ -168,6 +168,8 @@ async function findAllByHotelId(hotelId, userId) {
         r.hotel_id,
         rt.name as room_type,
         rc.name as room_category,
+        r.room_type_id,
+        r.room_category_id,
         r.price_per_night,
         r.total_rooms,
         r.available_rooms,
