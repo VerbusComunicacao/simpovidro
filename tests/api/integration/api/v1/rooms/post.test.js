@@ -35,8 +35,6 @@ describe("POST /api/v1/rooms", () => {
           room_category_id: roomCategory.id,
           price_per_night: 150.0,
           total_rooms: 5,
-          available_rooms: 3,
-          blocked_rooms: 2,
         }),
         headers: {
           "Content-Type": "application/json",
@@ -46,6 +44,7 @@ describe("POST /api/v1/rooms", () => {
 
       expect(response1.status).toBe(403)
     })
+    
     test("with blank data", async () => {
       const createdUser = await orchestrator.createUser()
 
@@ -68,12 +67,12 @@ describe("POST /api/v1/rooms", () => {
       expect(roomCreated).toEqual({
         action: "Envie todos os campos obrigatórios e tente novamente.",
         message:
-          "Campos obrigatórios ausentes: hotel_id, room_type_id, room_category_id.",
+          "Campos obrigatórios ausentes: hotel_id, room_type_id, room_category_id, price_per_night, total_rooms.",
         name: "ValidationError",
         status_code: 400,
       })
     })
-    test("Activated account", async () => {
+    test("Activated account with feature 'create:content'", async () => {
       const createdUser = await orchestrator.createUser()
 
       await orchestrator.activateUser(createdUser.id)
@@ -98,25 +97,19 @@ describe("POST /api/v1/rooms", () => {
         },
       })
 
-      expect(response.status).toBe(201)
+      expect(response.status).toBe(400)
 
-      const roomCreated = await response.json()
-      expect(roomCreated).toEqual({
-        id: expect.any(String),
-        hotel_id: hotel.id,
-        room_type_id: roomType.id,
-        room_category_id: roomCategory.id,
-        price_per_night: "0.00",
-        total_rooms: 0,
-        available_rooms: 0,
-        blocked_rooms: 0,
-        user_id: createdUser.id,
-        created_at: expect.any(String),
-        updated_at: expect.any(String),
+      const responseBody = await response.json()
+      expect(responseBody).toEqual({
+        action: "Envie todos os campos obrigatórios e tente novamente.",
+        message:
+          "Campos obrigatórios ausentes: price_per_night, total_rooms.",
+        name: "ValidationError",
+        status_code: 400,
       })
     })
 
-    test("With Full data", async () => {
+    test("return available_rooms equal to total_rooms", async () => {
       const createdUser = await orchestrator.createUser()
 
       await orchestrator.activateUser(createdUser.id)
@@ -135,9 +128,7 @@ describe("POST /api/v1/rooms", () => {
           room_type_id: roomType.id,
           room_category_id: roomCategory.id,
           price_per_night: 250.5,
-          total_rooms: 8,
-          available_rooms: 6,
-          blocked_rooms: 2,
+          total_rooms: 6
         }),
         headers: {
           "Content-Type": "application/json",
@@ -154,14 +145,15 @@ describe("POST /api/v1/rooms", () => {
         room_type_id: roomType.id,
         room_category_id: roomCategory.id,
         price_per_night: "250.50",
-        total_rooms: 8,
+        total_rooms: 6,
         available_rooms: 6,
-        blocked_rooms: 2,
+        blocked_rooms: 0,
         user_id: createdUser.id,
         created_at: expect.any(String),
         updated_at: expect.any(String),
       })
     })
+
 
     test("Invalid hotel_id", async () => {
       const createdUser = await orchestrator.createUser()
@@ -211,6 +203,8 @@ describe("POST /api/v1/rooms", () => {
           hotel_id: hotel1.id,
           room_type_id: roomType2.id,
           room_category_id: roomCategory2.id,
+          price_per_night: 250.5,
+          total_rooms: 6,
         }),
         headers: {
           "Content-Type": "application/json",

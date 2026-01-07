@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, MapPin, Users } from "lucide-react"
 import Image from "next/image"
+import router from "next/router"
 
 export default function Home() {
   return (
@@ -24,7 +25,7 @@ export default function Home() {
               O maior encontro do setor vidreiro da América do Sul.
             </p>
             <div className="mt-8">
-              <Button size="lg">Inscreva-se Agora</Button>
+              <Button onClick={() => router.push("/inscricao")} size="lg">Inscreva-se Agora</Button>
             </div>
           </div>
         </div>
@@ -72,7 +73,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="mt-8">
-                  <Button className="bg-blue-600" size="lg">
+                  <Button onClick={() => router.push("/inscricao")} className="bg-blue-600" size="lg">
                     Garanta sua vaga!
                   </Button>
                 </div>

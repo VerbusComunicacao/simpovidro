@@ -7,6 +7,8 @@ async function create(roomInputValues, userId) {
     "hotel_id",
     "room_type_id",
     "room_category_id",
+    "price_per_night",
+    "total_rooms",
   ]);
   validateUUID(roomInputValues.hotel_id);
   validateUUID(roomInputValues.room_type_id);
@@ -27,9 +29,9 @@ async function create(roomInputValues, userId) {
       hotel_id,
       room_type_id,
       room_category_id,
-      price_per_night = 0,
-      total_rooms = 0,
-      available_rooms = 0,
+      price_per_night,
+      total_rooms,
+      available_rooms = total_rooms,
       blocked_rooms = 0,
     } = roomInputValues;
 

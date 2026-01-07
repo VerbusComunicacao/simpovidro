@@ -119,7 +119,6 @@ describe("PATCH /api/v1/rooms/[id]", () => {
       const created = await orchestrator.createRoom(createdUser.id, {
         price_per_night: 150.0,
         total_rooms: 5,
-        available_rooms: 3,
         blocked_rooms: 2,
       })
 

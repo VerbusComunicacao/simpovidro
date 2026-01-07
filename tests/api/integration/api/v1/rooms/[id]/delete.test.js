@@ -115,6 +115,7 @@ describe("DELETE /api/v1/rooms/[id]", () => {
           room_category_id: (await orchestrator.createRoomCategory(user1.id))
             .id,
           price_per_night: 150.0,
+          total_rooms: 5,
         }),
         headers: {
           "Content-Type": "application/json",
