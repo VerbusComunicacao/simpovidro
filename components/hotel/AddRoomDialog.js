@@ -32,8 +32,6 @@ export function AddRoomDialog({
   const [roomCategoryId, setRoomCategoryId] = useState("");
   const [pricePerNight, setPricePerNight] = useState("");
   const [totalRooms, setTotalRooms] = useState("");
-  const [availableRooms, setAvailableRooms] = useState("");
-  const [blockedRooms, setBlockedRooms] = useState("");
   const [error, setError] = useState("");
   const [action, setAction] = useState("");
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
@@ -56,8 +54,6 @@ export function AddRoomDialog({
         room_category_id: roomCategoryId,
         price_per_night: pricePerNight,
         total_rooms: totalRooms,
-        available_rooms: availableRooms,
-        blocked_rooms: blockedRooms,
       }),
     });
 
@@ -71,8 +67,6 @@ export function AddRoomDialog({
       setRoomCategoryId("");
       setPricePerNight("");
       setTotalRooms("");
-      setAvailableRooms("");
-      setBlockedRooms("");
     } else {
       const data = await response.json();
       setError(data.message || "Ocorreu um erro ao adicionar o quarto.");
@@ -154,30 +148,6 @@ export function AddRoomDialog({
                   type="number"
                   value={totalRooms}
                   onChange={(e) => setTotalRooms(e.target.value)}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="available-rooms" className="text-right">
-                  Disponíveis
-                </Label>
-                <Input
-                  id="available-rooms"
-                  type="number"
-                  value={availableRooms}
-                  onChange={(e) => setAvailableRooms(e.target.value)}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="blocked-rooms" className="text-right">
-                  Bloqueados
-                </Label>
-                <Input
-                  id="blocked-rooms"
-                  type="number"
-                  value={blockedRooms}
-                  onChange={(e) => setBlockedRooms(e.target.value)}
                   className="col-span-3"
                 />
               </div>

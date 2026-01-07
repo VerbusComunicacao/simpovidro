@@ -52,6 +52,13 @@ export function EditRoomDialog({
     e.preventDefault();
     setError("");
     setAction("");
+    
+    if (parseInt(blockedRooms) > parseInt(totalRooms)) {
+      setError("O número de quartos bloqueados não pode ser maior que o total de quartos.");
+      setIsErrorDialogOpen(true);
+      return;
+    }
+
     setLoading(true);
 
     const response = await fetch(`/api/v1/rooms/${room.id}`, {
@@ -63,9 +70,9 @@ export function EditRoomDialog({
         room_type_id: roomTypeId,
         room_category_id: roomCategoryId,
         price_per_night: pricePerNight,
-        total_rooms: totalRooms,
-        available_rooms: availableRooms,
-        blocked_rooms: blockedRooms,
+        total_rooms: parseInt(totalRooms),
+        blocked_rooms: parseInt(blockedRooms),
+        available_rooms: parseInt(totalRooms) - parseInt(blockedRooms),
       }),
     });
 
@@ -160,18 +167,6 @@ export function EditRoomDialog({
                   type="number"
                   value={totalRooms}
                   onChange={(e) => setTotalRooms(e.target.value)}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="available-rooms-edit" className="text-right">
-                  Disponíveis
-                </Label>
-                <Input
-                  id="available-rooms-edit"
-                  type="number"
-                  value={availableRooms}
-                  onChange={(e) => setAvailableRooms(e.target.value)}
                   className="col-span-3"
                 />
               </div>
