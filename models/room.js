@@ -82,16 +82,24 @@ async function findOneById(roomId) {
           rt.name as room_type,
           rc.name as room_category,
           rc.max_adults,
-          rc.max_children
-        FROM 
+          rc.max_children,
+          COALESCE(
+            (
+              SELECT json_agg(pp.*)
+              FROM "price_policies" pp
+              WHERE pp.room_category_id = r.room_category_id
+            ),
+            '[]'::json
+          ) as price_policies
+        FROM
           "rooms" r
-        JOIN 
+        JOIN
           "hotels" h ON r.hotel_id = h.id
-        JOIN 
+        JOIN
           "room-types" rt ON r.room_type_id = rt.id
-        JOIN 
+        JOIN
           "room-categories" rc ON r.room_category_id = rc.id
-        WHERE 
+        WHERE
           r.id = $1
         LIMIT
           1

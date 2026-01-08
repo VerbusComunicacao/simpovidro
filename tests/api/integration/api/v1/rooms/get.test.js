@@ -59,6 +59,7 @@ describe("GET /api/v1/rooms", () => {
       const list = await response.json()
       expect(list).toHaveLength(3)
       expect(list[0].price_per_night).toBe("250.00")
+      expect(list[0].price_policies).toEqual([])
       expect(list[1].price_per_night).toBe("200.00")
       expect(list[2].price_per_night).toBe("150.00")
     })

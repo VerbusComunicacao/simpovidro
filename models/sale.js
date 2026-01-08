@@ -28,7 +28,7 @@ async function create(saleInputValues) {
   try {
     await client.query("BEGIN")
 
-    // 1. Validate if room exists and fetch hotel_id and capacity
+    // 1. Validate if room exists and fetch hotel_id, capacity and policies
     const roomResults = await client.query({
       text: `
         SELECT 
@@ -36,7 +36,15 @@ async function create(saleInputValues) {
           h.check_in_date as hotel_check_in_date,
           h.check_out_date as hotel_check_out_date,
           rc.max_adults,
-          rc.max_children
+          rc.max_children,
+          COALESCE(
+            (
+              SELECT json_agg(pp.* ORDER BY pp.max_age ASC)
+              FROM "price_policies" pp
+              WHERE pp.room_category_id = r.room_category_id
+            ),
+            '[]'::json
+          ) as price_policies
         FROM 
           "rooms" r
         JOIN 
@@ -76,11 +84,51 @@ async function create(saleInputValues) {
       })
     }
 
-    // 4. Create Sale
+    // 4. Calculate Total Amount based on Age Policies
+    let calculatedTotalAmount = 0
+    const guests = await client.query({
+        text: `SELECT id, birth_date FROM guests WHERE id = ANY($1)`,
+        values: [guest_ids]
+    })
+
+    if (guests.rowCount !== guest_ids.length) {
+        throw new NotFoundError({
+            message: "Um ou mais hóspedes informados não foram encontrados.",
+            action: "Verifique os dados dos hóspedes."
+        })
+    }
+
+    const policies = targetRoom.price_policies || []
+
+    for (const guest of guests.rows) {
+        let guestPrice = Number(targetRoom.price_per_night)
+        
+        if (policies.length > 0) {
+            const birth = new Date(guest.birth_date)
+            // Age should be calculated based on check_in_date
+            const referenceDate = new Date(targetRoom.hotel_check_in_date || new Date())
+            
+            let age = referenceDate.getFullYear() - birth.getFullYear()
+            const m = referenceDate.getMonth() - birth.getMonth()
+            if (m < 0 || (m === 0 && referenceDate.getDate() < birth.getDate())) {
+                age--
+            }
+
+            for (const policy of policies) {
+                if (age <= policy.max_age) {
+                    guestPrice = Number(policy.price)
+                    break
+                }
+            }
+        }
+        calculatedTotalAmount += guestPrice
+    }
+
+    // 5. Create Sale
     const {
       check_in_date = targetRoom.hotel_check_in_date || new Date(),
       check_out_date = targetRoom.hotel_check_out_date || new Date(new Date().setDate(new Date().getDate() + 3)),
-      total_amount = targetRoom.price_per_night * guest_ids.length,
+      total_amount = calculatedTotalAmount,
       company_id = null,
     } = saleInputValues
 

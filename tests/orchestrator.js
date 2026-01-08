@@ -88,9 +88,9 @@ async function createRoomCategory(userId, roomCategoryData) {
     {
       name: roomCategoryData?.name || faker.commerce.productName(),
       max_adults:
-        roomCategoryData?.max_adults || faker.number.int({ min: 1, max: 4 }),
+        roomCategoryData?.max_adults ?? faker.number.int({ min: 1, max: 4 }),
       max_children:
-        roomCategoryData?.max_children || faker.number.int({ min: 0, max: 3 }),
+        roomCategoryData?.max_children ?? faker.number.int({ min: 0, max: 3 }),
     },
     userId,
   )
@@ -196,7 +196,25 @@ const orchestrator = {
   setUserFeatures,
   activateHotel,
   injectPasswordRecoveryToken,
+  injectPasswordRecoveryToken,
+  createPricePolicy,
   webserverUrl,
+}
+
+async function createPricePolicy(roomCategoryId, policyData) {
+  return await database.query({
+    text: `
+      INSERT INTO price_policies (room_category_id, max_age, price, description)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `,
+    values: [
+      roomCategoryId, 
+      policyData.max_age, 
+      policyData.price, 
+      policyData.description
+    ]
+  })
 }
 
 export default orchestrator

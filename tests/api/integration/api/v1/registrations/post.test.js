@@ -94,6 +94,16 @@ describe("POST /api/v1/registrations", () => {
     })
 
     test("Scenario: Register 2 people (Lead + Companion) and verify price multiplication", async () => {
+        const roomCategory = await orchestrator.createRoomCategory(hotelOwner.id, {
+          max_adults: 2,
+          max_children: 0
+        })
+
+        const room = await orchestrator.createRoom(hotelOwner.id, {
+          hotel_id: hotel.id,
+          room_category_id: roomCategory.id,
+          price_per_night: 150.00
+        })
       const guestsData = [
         {
           name: "Main User",
@@ -283,6 +293,76 @@ describe("POST /api/v1/registrations", () => {
         expect(response.status).toBe(400)
         const responseBody = await response.json()
         expect(responseBody.message).toContain("excede a capacidade máxima do quarto")
+    })
+
+    test("Scenario: Pricing with age policies", async () => {
+        // 1. Setup Room Category with Pricing Policy
+        const category = await orchestrator.createRoomCategory(hotelOwner.id, {
+            max_adults: 2,
+            max_children: 1
+        })
+
+        // Policy: Up to 5 years old -> $20.00
+        await orchestrator.createPricePolicy(category.id, {
+            max_age: 5,
+            price: 20.00,
+            description: "Criança"
+        })
+
+        const room = await orchestrator.createRoom(hotelOwner.id, {
+            hotel_id: hotel.id,
+            room_category_id: category.id,
+            price_per_night: 100.00, 
+            available_rooms: 5
+        })
+
+        // 2. Prepare Guest Data
+        const adultGuest = { 
+            name: "Adult", 
+            email: "adult@t.com", 
+            cpf_number: "111.111.111-11", 
+            rg_number: "ORG1", 
+            birth_date: "1990-01-01", // 30+ years
+            phone: "11", 
+            gender: "M" 
+        }
+
+        const childGuest = { 
+            name: "Child", 
+            email: "child@t.com", 
+            cpf_number: "222.222.222-22", 
+            rg_number: "ORG2", 
+            birth_date: new Date().toISOString().split('T')[0], // Today (0 years)
+            phone: "22", 
+            gender: "M" 
+        }
+
+        // 3. Register
+        const response = await fetch(`${orchestrator.webserverUrl}/api/v1/registrations`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Cookie: `session_id=${session.token}`
+            },
+            body: JSON.stringify({
+                room_id: room.id,
+                guests_data: [adultGuest, childGuest]
+            })
+        })
+
+        expect(response.status).toBe(201)
+        
+        // 4. Verify Total Amount
+        // Adult (not matched by policy) = 100.00
+        // Child (0 years <= 5) = 20.00
+        // Total should be 120.00
+        const saleResult = await database.query({
+            text: `SELECT total_amount FROM sales WHERE room_id = $1`,
+            values: [room.id]
+        })
+
+        expect(saleResult.rows).toHaveLength(1)
+        expect(Number(saleResult.rows[0].total_amount)).toBe(120.00)
     })
   })
 })
