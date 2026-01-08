@@ -57,16 +57,15 @@ describe("GET /api/v1/my-orders", () => {
         },
         body: JSON.stringify({
           room_id: room.id,
-          guest_data: {
+          guests_data: [{
              name: "Test Guest",
              email: "test@example.com",
-             // ... minimal required fields
              phone: "123456789",
              gender: "Masculino",
              rg_number: "123456789",
              cpf_number: "123.456.789-00",
              birth_date: "1990-01-01"
-          }
+          }]
         })
       })
       expect(registrationResponse.status).toBe(201)

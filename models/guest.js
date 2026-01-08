@@ -154,6 +154,43 @@ async function findOneByUserId(userId) {
   }
 }
 
+async function upsert(guestData, userId = null) {
+  validateRequiredFields(guestData, [
+    "name",
+    "phone",
+    "gender",
+    "rg_number",
+    "cpf_number",
+    "birth_date",
+  ])
+
+  const existingGuest = await findOneByCpfOrRg(guestData.cpf_number, guestData.rg_number)
+
+  if (existingGuest) {
+    return await update(existingGuest.id, guestData)
+  }
+
+  return await create(guestData, userId)
+}
+
+async function findOneByCpfOrRg(cpf_number, rg_number) {
+  const results = await database.query({
+    text: `
+      SELECT
+        *
+      FROM
+        guests
+      WHERE
+        cpf_number = $1 OR rg_number = $2
+      LIMIT
+        1
+      ;`,
+    values: [cpf_number, rg_number],
+  })
+
+  return results.rows[0] || null
+}
+
 async function findAll() {
   const results = await database.query({
     text: `
@@ -345,8 +382,11 @@ async function checkUniqueFields(guestData, currentGuestId = null) {
 
 const guest = {
   create,
+  update,
+  upsert,
   findOneById,
   findOneByUserId,
+  findOneByCpfOrRg,
   findAll,
   update,
   deleteById,

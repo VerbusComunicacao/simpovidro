@@ -10,31 +10,44 @@ const REQUIRED_FIELDS = [
 
 async function create(saleInputValues) {
   validateRequiredFields(saleInputValues, [
-    "guest_id",
+    "guest_ids",
     "room_id",
   ])
   
+  const { guest_ids, room_id } = saleInputValues
+  
+  if (!Array.isArray(guest_ids) || guest_ids.length === 0) {
+    throw new ValidationError({
+      message: "A lista de hóspedes não pode estar vazia.",
+      action: "Adicione pelo menos um hóspede.",
+    })
+  }
+
   const client = await database.getNewClient()
   
   try {
     await client.query("BEGIN")
 
-    // 1. Validate if room exists and fetch hotel_id
+    // 1. Validate if room exists and fetch hotel_id and capacity
     const roomResults = await client.query({
       text: `
         SELECT 
           r.*,
           h.check_in_date as hotel_check_in_date,
-          h.check_out_date as hotel_check_out_date
+          h.check_out_date as hotel_check_out_date,
+          rc.max_adults,
+          rc.max_children
         FROM 
           "rooms" r
         JOIN 
           "hotels" h ON r.hotel_id = h.id
+        JOIN
+          "room-categories" rc ON r.room_category_id = rc.id
         WHERE 
           r.id = $1
         LIMIT 1
-        FOR UPDATE;`,
-      values: [saleInputValues.room_id],
+        FOR UPDATE OF r;`,
+      values: [room_id],
     })
 
     const targetRoom = roomResults.rows[0]
@@ -54,17 +67,25 @@ async function create(saleInputValues) {
       })
     }
 
+    // 3. Check room capacity
+    const totalCapacity = (targetRoom.max_adults || 0) + (targetRoom.max_children || 0)
+    if (guest_ids.length > totalCapacity) {
+      throw new ValidationError({
+        message: `O número de hóspedes (${guest_ids.length}) excede a capacidade máxima do quarto (${totalCapacity}).`,
+        action: "Selecione um quarto maior ou remova convidados.",
+      })
+    }
+
     // 4. Create Sale
     const {
-      guest_id,
-      room_id,
       check_in_date = targetRoom.hotel_check_in_date || new Date(),
       check_out_date = targetRoom.hotel_check_out_date || new Date(new Date().setDate(new Date().getDate() + 3)),
-      total_amount = targetRoom.price_per_night,
+      total_amount = targetRoom.price_per_night * guest_ids.length,
       company_id = null,
     } = saleInputValues
 
     const sale_number = uuidv4()
+    const lead_guest_id = guest_ids[0]
 
     const saleResults = await client.query({
       text: `
@@ -77,7 +98,7 @@ async function create(saleInputValues) {
       `,
       values: [
         targetRoom.hotel_id,
-        guest_id,
+        lead_guest_id,
         room_id,
         check_in_date,
         check_out_date,
@@ -89,6 +110,17 @@ async function create(saleInputValues) {
     })
 
     const newSale = saleResults.rows[0]
+
+    // 4.1 Register all guests in sales_guests
+    for (const guest_id of guest_ids) {
+      await client.query({
+        text: `
+          INSERT INTO sales_guests (sale_id, guest_id)
+          VALUES ($1, $2)
+        `,
+        values: [newSale.id, guest_id],
+      })
+    }
 
     // 5. Update Room Availability 
     await client.query({

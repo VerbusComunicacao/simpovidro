@@ -15,7 +15,7 @@ async function postHandler(request, response) {
   const user = request.context.user
   const { 
     room_id, 
-    guest_data 
+    guests_data 
   } = request.body
 
   if (!user.id) {
@@ -25,24 +25,34 @@ async function postHandler(request, response) {
     })
   }
 
-  // 1. Upsert Guest (Find existing by User ID, update it, or create new)
-  let userGuest = await guest.findOneByUserId(user.id)
-  let savedGuest
+  if (!Array.isArray(guests_data) || guests_data.length === 0) {
+    throw new ValidationError({
+      message: "É necessário informar pelo menos um hóspede.",
+      action: "Adicione os dados do hóspede e tente novamente."
+    })
+  }
 
-  if (userGuest) {
-    savedGuest = await guest.update(userGuest.id, guest_data)
-  } else {
-    savedGuest = await guest.create(guest_data, user.id)
+  // 1. Process all guests (Single Responsibility: Guest Identity management handled by guest.upsert)
+  const savedGuestIds = []
+  
+  for (let i = 0; i < guests_data.length; i++) {
+    const currentGuestData = guests_data[i]
+    
+    // First guest is associated with the logged-in user if it's a new record
+    const guestUserId = i === 0 ? user.id : null
+    
+    const savedGuest = await guest.upsert(currentGuestData, guestUserId)
+    savedGuestIds.push(savedGuest.id)
   }
 
   // 2. Create Sale (Transactions handling: Validate room, Check availability, Create Sale, Update Room Availability)
   const newSale = await sale.create({
-    guest_id: savedGuest.id,
+    guest_ids: savedGuestIds,
     room_id: room_id,
   })
 
   return response.status(201).json({
     saleId: newSale.id,
-    guestId: savedGuest.id
+    guestIds: savedGuestIds
   })
 }

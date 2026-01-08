@@ -107,11 +107,11 @@ async function createRoom(userId, roomData) {
         roomData?.price_per_night ||
         faker.number.float({ min: 50, max: 500, fractionDigits: 2 }),
       total_rooms:
-        roomData?.total_rooms || faker.number.int({ min: 1, max: 10 }),
+        roomData?.total_rooms ?? faker.number.int({ min: 1, max: 10 }),
       available_rooms:
-        roomData?.available_rooms || faker.number.int({ min: 0, max: 5 }),
+        roomData?.available_rooms ?? faker.number.int({ min: 0, max: 5 }),
       blocked_rooms:
-        roomData?.blocked_rooms || faker.number.int({ min: 0, max: 3 }),
+        roomData?.blocked_rooms ?? faker.number.int({ min: 0, max: 3 }),
     },
     userId,
   )
