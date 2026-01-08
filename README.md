@@ -1,6 +1,10 @@
-# Gerenciamento de Hotéis - Simpovidro
+# Gerenciamento Simpovidro
 
-Este projeto é um sistema de gerenciamento de hotéis desenvolvido para o Simpovidro, o maior evento vidreiro da América Latina. O objetivo é fornecer uma plataforma robusta para hospedar e gerenciar os participantes do evento, desde o cadastro de hotéis e quartos até o gerenciamento de hóspedes e vendas.
+Este sistema é destinado ao gerenciamento exclusivo de hospedagens para o evento **Simpovidro 2025**.
+
+## Objetivo
+
+Gerenciar as reservas e inscrições de hotéis parceiros para os participantes do Simpovidro.
 
 ## Funcionalidades Principais
 

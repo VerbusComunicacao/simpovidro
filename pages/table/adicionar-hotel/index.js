@@ -24,6 +24,8 @@ export default function AddHotelPage() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [country, setCountry] = useState("Brasil");
+  const [checkInDate, setCheckInDate] = useState("");
+  const [checkOutDate, setCheckOutDate] = useState("");
   const [error, setError] = useState("");
   const [action, setAction] = useState("");
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
@@ -48,6 +50,8 @@ export default function AddHotelPage() {
         city,
         state,
         country,
+        check_in_date: checkInDate,
+        check_out_date: checkOutDate,
       }),
     });
 
@@ -143,6 +147,26 @@ export default function AddHotelPage() {
                     id="country"
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="check_in_date">Início do evento</Label>
+                  <Input
+                    id="check_in_date"
+                    type="datetime-local"
+                    value={checkInDate}
+                    onChange={(e) => setCheckInDate(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="check_out_date">Fim do evento</Label>
+                  <Input
+                    id="check_out_date" 
+                    type="datetime-local"
+                    value={checkOutDate}
+                    onChange={(e) => setCheckOutDate(e.target.value)}
+                    required
                   />
                 </div>
               </div>

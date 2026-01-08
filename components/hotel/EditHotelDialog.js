@@ -22,19 +22,23 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
   const [city, setCity] = useState(hotel.city);
   const [state, setState] = useState(hotel.state);
   const [country, setCountry] = useState(hotel.country);
+  const [checkInDate, setCheckInDate] = useState("");
+  const [checkOutDate, setCheckOutDate] = useState("");
   const [error, setError] = useState("");
   const [action, setAction] = useState("");
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setName(hotel.name);
-    setEmail(hotel.email);
-    setPhone(hotel.phone);
-    setAddress(hotel.address);
-    setCity(hotel.city);
-    setState(hotel.state);
-    setCountry(hotel.country);
+    setName(hotel.name || "");
+    setEmail(hotel.email || "");
+    setPhone(hotel.phone || "");
+    setAddress(hotel.address || "");
+    setCity(hotel.city || "");
+    setState(hotel.state || "");
+    setCountry(hotel.country || "Brasil");
+    setCheckInDate(hotel.check_in_date ? new Date(hotel.check_in_date).toISOString().slice(0, 16) : "");
+    setCheckOutDate(hotel.check_out_date ? new Date(hotel.check_out_date).toISOString().slice(0, 16) : "");
   }, [hotel]);
 
   const handleSubmit = async (e) => {
@@ -56,6 +60,8 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
         city,
         state,
         country,
+        check_in_date: checkInDate,
+        check_out_date: checkOutDate,
       }),
     });
 
@@ -165,6 +171,32 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
                   className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="check-in-edit" className="text-right">
+                  Entrada
+                </Label>
+                <Input
+                  id="check-in-edit"
+                  type="datetime-local"
+                  value={checkInDate}
+                  onChange={(e) => setCheckInDate(e.target.value)}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="check-out-edit" className="text-right">
+                  Saída
+                </Label>
+                <Input
+                  id="check-out-edit"
+                  type="datetime-local"
+                  value={checkOutDate}
+                  onChange={(e) => setCheckOutDate(e.target.value)}
+                  className="col-span-3"
+                  required
                 />
               </div>
             </div>

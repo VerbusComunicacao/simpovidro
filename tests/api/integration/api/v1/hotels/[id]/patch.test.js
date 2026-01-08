@@ -35,6 +35,8 @@ describe("PATCH /api/v1/hotels/[id]", () => {
             name: "Updated Hotel",
             city: "Rio de Janeiro",
             country: "Brasil",
+            check_in_date: "2026-01-07T20:43:12.021Z",
+            check_out_date: "2026-01-10T20:43:12.021Z",
           }),
           headers: {
             "Content-Type": "application/json",
@@ -61,6 +63,8 @@ describe("PATCH /api/v1/hotels/[id]", () => {
             name: "Updated Hotel",
             city: "Rio de Janeiro",
             country: "Brasil",
+            check_in_date: "2026-01-07T20:43:12.021Z",
+            check_out_date: "2026-01-10T20:43:12.021Z",
           }),
           headers: {
             "Content-Type": "application/json",
@@ -89,6 +93,8 @@ describe("PATCH /api/v1/hotels/[id]", () => {
             city: "São Paulo",
             country: "Brasil",
             email: "original@hotel.com",
+            check_in_date: "2026-01-07T20:43:12.021Z",
+            check_out_date: "2026-01-10T20:43:12.021Z",
           }),
           headers: {
             "Content-Type": "application/json",
@@ -144,6 +150,8 @@ describe("PATCH /api/v1/hotels/[id]", () => {
             state: "Rio de Janeiro",
             address: "Av. Copacabana, 123",
             email: "updated@hotel.com",
+            check_in_date: "2026-01-07T20:43:12.021Z",
+            check_out_date: "2026-01-10T20:43:12.021Z",
           }),
           headers: {
             "Content-Type": "application/json",
@@ -164,6 +172,8 @@ describe("PATCH /api/v1/hotels/[id]", () => {
         state: "Rio de Janeiro",
         address: "Av. Copacabana, 123",
         email: "updated@hotel.com",
+        check_in_date: "2026-01-07T20:43:12.021Z",
+        check_out_date: "2026-01-10T20:43:12.021Z",
         active: false,
         user_id: createdUser.id,
         created_at: hotelCreated.created_at.toISOString(),
@@ -196,6 +206,8 @@ describe("PATCH /api/v1/hotels/[id]", () => {
             name: "Hotel A",
             city: "Rio de Janeiro",
             country: "Brasil",
+            check_in_date: "2026-01-07T20:43:12.021Z",
+            check_out_date: "2026-01-10T20:43:12.021Z",
           }),
           headers: {
             "Content-Type": "application/json",
@@ -239,6 +251,8 @@ describe("PATCH /api/v1/hotels/[id]", () => {
             name: "Hotel Original",
             city: "Rio de Janeiro",
             country: "Brasil",
+            check_in_date: "2026-01-07T20:43:12.021Z",
+            check_out_date: "2026-01-10T20:43:12.021Z",
           }),
           headers: {
             "Content-Type": "application/json",

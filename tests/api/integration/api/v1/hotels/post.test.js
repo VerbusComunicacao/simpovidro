@@ -59,7 +59,7 @@ describe("POST /api/v1/hotels", () => {
       const hotelCreated = await response.json()
       expect(hotelCreated).toEqual({
         action: "Envie todos os campos obrigatórios e tente novamente.",
-        message: "Campos obrigatórios ausentes: name, city, country.",
+        message: "Campos obrigatórios ausentes: name, city, country, check_in_date, check_out_date.",
         name: "ValidationError",
         status_code: 400,
       })
@@ -78,6 +78,8 @@ describe("POST /api/v1/hotels", () => {
           city: "São Paulo",
           country: "Brasil",
           email: "hotel@paradise.com",
+          check_in_date: "2026-01-07T20:43:12.021Z",
+          check_out_date: "2026-01-10T20:43:12.021Z",
         }),
         headers: {
           "Content-Type": "application/json",
@@ -96,6 +98,8 @@ describe("POST /api/v1/hotels", () => {
         phone: null,
         state: null,
         address: null,
+        check_in_date: "2026-01-07T20:43:12.021Z",
+        check_out_date: "2026-01-10T20:43:12.021Z",
         email: "hotel@paradise.com",
         active: false,
         user_id: createdUser.id,
@@ -112,6 +116,8 @@ describe("POST /api/v1/hotels", () => {
           city: "São Paulo",
           country: "Brasil",
           email: "hotel@paradise.com",
+          check_in_date: "2026-01-07T20:43:12.021Z",
+          check_out_date: "2026-01-10T20:43:12.021Z",
         }),
         headers: {
           "Content-Type": "application/json",
@@ -149,6 +155,8 @@ describe("POST /api/v1/hotels", () => {
           state: "São Paulo",
           address: "Av. Paraná, 1105",
           email: "hotel@paradise.com",
+          check_in_date: "2026-01-07T20:43:12.021Z",
+          check_out_date: "2026-01-10T20:43:12.021Z",
         }),
         headers: {
           "Content-Type": "application/json",
@@ -168,6 +176,8 @@ describe("POST /api/v1/hotels", () => {
         state: "São Paulo",
         address: "Av. Paraná, 1105",
         email: "hotel@paradise.com",
+        check_in_date: "2026-01-07T20:43:12.021Z",
+        check_out_date: "2026-01-10T20:43:12.021Z",
         active: false,
         user_id: createdUser.id,
         created_at: expect.any(String),

@@ -3,32 +3,70 @@ import { ValidationError, NotFoundError } from "infra/errors.js"
 import { validateRequiredFields, validateUUID } from "infra/validator.js"
 import { v4 as uuidv4 } from "uuid"
 
-async function create(saleInputValues, hotelId) {
+const REQUIRED_FIELDS = [
+  "guest_id",
+  "room_id",
+]
+
+async function create(saleInputValues) {
   validateRequiredFields(saleInputValues, [
     "guest_id",
     "room_id",
-    "check_in_date",
-    "check_out_date",
-    "total_amount",
   ])
+  
+  const client = await database.getNewClient()
+  
+  try {
+    await client.query("BEGIN")
 
-  const newSale = await runInsertQuery(saleInputValues, hotelId)
-  return newSale
+    // 1. Validate if room exists and fetch hotel_id
+    const roomResults = await client.query({
+      text: `
+        SELECT 
+          r.*,
+          h.check_in_date as hotel_check_in_date,
+          h.check_out_date as hotel_check_out_date
+        FROM 
+          "rooms" r
+        JOIN 
+          "hotels" h ON r.hotel_id = h.id
+        WHERE 
+          r.id = $1
+        LIMIT 1
+        FOR UPDATE;`,
+      values: [saleInputValues.room_id],
+    })
 
-  async function runInsertQuery(saleInputValues, hotelId) {
+    const targetRoom = roomResults.rows[0]
+
+    if (!targetRoom) {
+      throw new NotFoundError({
+        message: "Quarto não encontrado.",
+        action: "Selecione outro quarto.",
+      })
+    }
+
+    // 2. Check room availability
+    if (targetRoom.available_rooms <= 0) {
+      throw new ValidationError({
+        message: "Este quarto não está mais disponível.",
+        action: "Selecione outro quarto.",
+      })
+    }
+
+    // 4. Create Sale
     const {
       guest_id,
       room_id,
-      check_in_date,
-      check_out_date,
-      total_amount,
+      check_in_date = targetRoom.hotel_check_in_date || new Date(),
+      check_out_date = targetRoom.hotel_check_out_date || new Date(new Date().setDate(new Date().getDate() + 3)),
+      total_amount = targetRoom.price_per_night,
       company_id = null,
     } = saleInputValues
 
     const sale_number = uuidv4()
-    const final_amount = total_amount
 
-    const results = await database.query({
+    const saleResults = await client.query({
       text: `
         INSERT INTO
           sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, final_amount, sale_number, company_id)
@@ -38,21 +76,40 @@ async function create(saleInputValues, hotelId) {
           *
       `,
       values: [
-        hotelId,
+        targetRoom.hotel_id,
         guest_id,
         room_id,
         check_in_date,
         check_out_date,
         total_amount,
-        final_amount,
+        total_amount, // final_amount
         sale_number,
         company_id,
       ],
     })
 
-    return results.rows[0]
+    const newSale = saleResults.rows[0]
+
+    // 5. Update Room Availability 
+    await client.query({
+      text: `
+        UPDATE "rooms"
+        SET available_rooms = available_rooms - 1
+        WHERE id = $1
+      `,
+      values: [room_id],
+    })
+
+    await client.query("COMMIT")
+    return newSale
+  } catch (error) {
+    await client.query("ROLLBACK")
+    throw error
+  } finally {
+    await client.end()
   }
 }
+
 
 async function findOneById(saleId) {
   validateUUID(saleId)
@@ -144,13 +201,7 @@ async function update(saleId, saleInputNewValues) {
   const currentSale = await findOneById(saleId)
 
   if (Object.keys(saleInputNewValues).length > 0) {
-    validateRequiredFields(saleInputNewValues, [
-      "guest_id",
-      "room_id",
-      "check_in_date",
-      "check_out_date",
-      "total_amount",
-    ])
+    validateRequiredFields(saleInputNewValues, REQUIRED_FIELDS)
   }
 
   const saleWithNewValues = { ...currentSale, ...saleInputNewValues }

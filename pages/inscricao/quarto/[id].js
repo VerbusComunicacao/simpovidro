@@ -8,7 +8,8 @@ import {
   Users, 
   Info,
   CheckCircle,
-  BedDouble
+  BedDouble,
+  Calendar
 } from "lucide-react"
 import { useState } from "react"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
@@ -104,7 +105,7 @@ export default function RoomDetailsPage({ room }) {
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div>
-                    <span className="text-sm text-gray-500 uppercase font-semibold">Valor da diária</span>
+                    <span className="text-sm text-gray-500 uppercase font-semibold">Valor</span>
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-bold text-gray-900">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(room.price_per_night)}
@@ -130,6 +131,17 @@ export default function RoomDetailsPage({ room }) {
                 <div>
                   <p className="font-medium text-gray-900">Confirmação Imediata</p>
                   <p className="text-sm text-gray-500">Sua vaga é garantida após o pagamento.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-blue-50 rounded-full">
+                  <Calendar className="h-4 w-4 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Período do Evento</p>
+                  <p className="text-sm text-gray-500">
+                    {room.hotel_check_in_date ? new Date(room.hotel_check_in_date).toLocaleDateString('pt-BR') : '--'} até {room.hotel_check_out_date ? new Date(room.hotel_check_out_date).toLocaleDateString('pt-BR') : '--'}
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">

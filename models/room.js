@@ -75,11 +75,24 @@ async function findOneById(roomId) {
     const results = await database.query({
       text: `
         SELECT 
-          * 
+          r.*,
+          h.name as hotel_name,
+          h.check_in_date as hotel_check_in_date,
+          h.check_out_date as hotel_check_out_date,
+          rt.name as room_type,
+          rc.name as room_category,
+          rc.max_adults,
+          rc.max_children
         FROM 
-          "rooms"
+          "rooms" r
+        JOIN 
+          "hotels" h ON r.hotel_id = h.id
+        JOIN 
+          "room-types" rt ON r.room_type_id = rt.id
+        JOIN 
+          "room-categories" rc ON r.room_category_id = rc.id
         WHERE 
-          id = $1
+          r.id = $1
         LIMIT
           1
         ;`,

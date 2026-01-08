@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { MapPin, Hotel, BedDouble, Users, AlertCircle } from "lucide-react"
+import { MapPin, Hotel, BedDouble, Users, AlertCircle, Calendar } from "lucide-react"
 import { Empty } from "@/components/ui/empty"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 import Link from "next/link"
@@ -81,6 +81,14 @@ export default function RegistrationPage({ activeHotels }) {
                   <MapPin className="h-4 w-4" />
                   <span>{activeHotel.city}, {activeHotel.country}</span>
                 </div>
+                {activeHotel.check_in_date && (
+                   <div className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    <span>
+                      {new Date(activeHotel.check_in_date).toLocaleDateString('pt-BR')} - {new Date(activeHotel.check_out_date).toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                )}
                 {activeHotel.email && <div>{activeHotel.email}</div>}
               </div>
             </div>
@@ -170,7 +178,7 @@ export default function RegistrationPage({ activeHotels }) {
                       
                       <div className="pt-4 border-t flex items-center justify-between">
                         <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Valor da diária</p>
+                          <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Valor</p>
                           <p className="text-2xl font-bold text-gray-900">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(room.price_per_night)}
                           </p>

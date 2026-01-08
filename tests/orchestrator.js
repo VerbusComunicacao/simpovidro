@@ -75,7 +75,9 @@ async function createHotel(userId, hotelData) {
       email: hotelData?.email || faker.internet.email(),
       phone: hotelData?.phone || faker.internet.phone,
       address: hotelData?.address || faker.location.streetAddress(),
-      state: hotelData?.state || faker.location.state()
+      state: hotelData?.state || faker.location.state(),
+      check_in_date: hotelData?.check_in_date || new Date().toISOString(),
+      check_out_date: hotelData?.check_out_date || new Date(Date.now() + 86400000 * 3).toISOString()
     },
     userId,
   )

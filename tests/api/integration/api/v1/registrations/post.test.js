@@ -87,11 +87,28 @@ describe("POST /api/v1/registrations", () => {
         },
         body: JSON.stringify({
             room_id: uuidv4(),
-            guest_data: {}
+            guest_data: {
+          name: "Test Guest",
+          email: user.email,
+          cpf_number: "123.458.789-00",
+          rg_number: "13.345.678-9",
+          birth_date: "1990-01-01",
+          phone: "11999999999",
+          gender: "Masculino"
+      }
         })
       })
 
+      const responseBody = await response.json()
+
       expect(response.status).toBe(404)
+
+      expect(responseBody).toEqual({
+        name: "NotFoundError",
+        message: "Quarto não encontrado.",
+        action: "Selecione outro quarto.",
+        status_code: 404
+      })
     })
   })
 })

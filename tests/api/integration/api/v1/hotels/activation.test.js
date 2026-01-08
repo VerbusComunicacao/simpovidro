@@ -28,6 +28,8 @@ describe("PATCH /api/v1/hotels/[id] (Activation)", () => {
         name: "Hotel A",
         city: "City A",
         country: "Brasil",
+        check_in_date: "2026-01-07T20:43:12.021Z",
+        check_out_date: "2026-01-10T20:43:12.021Z",
       }),
     })
     const hotelA = await hotelAResponse.json()
@@ -43,6 +45,8 @@ describe("PATCH /api/v1/hotels/[id] (Activation)", () => {
         name: "Hotel B",
         city: "City B",
         country: "Brasil",
+        check_in_date: "2026-01-07T20:43:12.021Z",
+        check_out_date: "2026-01-10T20:43:12.021Z",
       }),
     })
     const hotelB = await hotelBResponse.json()

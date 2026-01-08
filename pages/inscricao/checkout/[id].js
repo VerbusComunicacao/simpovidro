@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { AlertCircle, Loader2 } from "lucide-react"
+import { AlertCircle, Loader2, Calendar } from "lucide-react"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 
 import * as cookie from "cookie"
@@ -114,13 +114,19 @@ export default function CheckoutPage({ room, user, guestProfile }) {
                 <p className="font-semibold">{room.name || room.room_type}</p>
                 <p className="text-sm text-gray-600">{room.room_category}</p>
               </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Calendar className="h-4 w-4" />
+                <span>
+                  {room.hotel_check_in_date ? new Date(room.hotel_check_in_date).toLocaleDateString('pt-BR') : '--'} - {room.hotel_check_out_date ? new Date(room.hotel_check_out_date).toLocaleDateString('pt-BR') : '--'}
+                </span>
+              </div>
               <Separator />
               <div>
                 <p className="text-sm text-gray-500">Valor Total</p>
                 <p className="text-2xl font-bold text-blue-600">
                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(room.price_per_night)}
                 </p>
-                <p className="text-xs text-gray-500">Valor referente a todo o evento</p>
+                <p className="text-xs text-gray-500">por pessoa</p>
               </div>
             </CardContent>
            </Card>

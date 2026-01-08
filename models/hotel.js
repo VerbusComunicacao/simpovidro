@@ -6,7 +6,7 @@ import {
 } from "infra/validator.js"
 
 async function create(hotelInputValues, userId) {
-  validateRequired(hotelInputValues, ["name", "city", "country"])
+  validateRequired(hotelInputValues, ["name", "city", "country", "check_in_date", "check_out_date"])
   await verifyIHotelAlreadyExists(hotelInputValues.name, userId)
 
   const newHotel = await runInsertQuery(hotelInputValues, userId)
@@ -21,18 +21,20 @@ async function create(hotelInputValues, userId) {
       city,
       state = null,
       country = null,
+      check_in_date = null,
+      check_out_date = null,
     } = hotelInputValues
 
     const results = await database.query({
       text: `
         INSERT INTO
-          hotels (user_id, name, email, phone, address, city, state, country, active)
+          hotels (user_id, name, email, phone, address, city, state, country, active, check_in_date, check_out_date)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING
           *
       `,
-      values: [userId, name, email, phone, address, city, state, country, false],
+      values: [userId, name, email, phone, address, city, state, country, false, check_in_date, check_out_date],
     })
 
     return results.rows[0]
@@ -108,7 +110,7 @@ async function update(hotelId, hotelInputNewValues, userId) {
   const currentHotel = await findOneById(hotelId)
 
   // Validar campos apenas se fornecidos
-  const fieldsToValidate = ["name", "city", "country"].filter(
+  const fieldsToValidate = ["name", "city", "country", "check_in_date", "check_out_date"].filter(
     (field) => field in hotelInputNewValues,
   )
   if (fieldsToValidate.length > 0) {
@@ -129,7 +131,7 @@ async function update(hotelId, hotelInputNewValues, userId) {
   return updatedHotel
 
   async function runUpdateQuery(hotelWithNewValues) {
-    const { id, name, email, phone, address, city, state, country, active } =
+    const { id, name, email, phone, address, city, state, country, active, check_in_date, check_out_date } =
       hotelWithNewValues
 
     const client = await database.getNewClient()
@@ -154,13 +156,15 @@ async function update(hotelId, hotelInputNewValues, userId) {
             state = $7,
             country = $8,
             active = $9,
+            check_in_date = $10,
+            check_out_date = $11,
             updated_at = timezone('utc', now())
           WHERE
             id = $1
           RETURNING
             *
         `,
-        values: [id, name, email, phone, address, city, state, country, active],
+        values: [id, name, email, phone, address, city, state, country, active, check_in_date, check_out_date],
       })
 
       await client.query("COMMIT")
@@ -200,6 +204,8 @@ async function findAllByUserId(userId) {
         state,
         country,
         active,
+        check_in_date,
+        check_out_date,
         created_at,
         updated_at
       FROM 
@@ -272,7 +278,14 @@ async function getAllActiveHotels() {
   const results = await database.query({
     text: `
       SELECT 
-        h.*,
+        h.id,
+        h.name,
+        h.city,
+        h.country,
+        h.email,
+        h.check_in_date,
+        h.check_out_date,
+        h.active,
         COALESCE(
           json_agg(
             json_build_object(
