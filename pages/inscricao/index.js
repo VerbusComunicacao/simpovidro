@@ -97,12 +97,6 @@ export default function RegistrationPage({ activeHotels }) {
                 <h1 className="text-3xl font-bold text-gray-900">
                   {activeHotel.name}
                 </h1>
-                <Badge
-                  variant="secondary"
-                  className="bg-green-100 text-green-700 hover:bg-green-100 border-none"
-                >
-                  Hotel Selecionado
-                </Badge>
               </div>
               <div className="flex flex-wrap gap-4 text-gray-600">
                 <div className="flex items-center gap-1">
