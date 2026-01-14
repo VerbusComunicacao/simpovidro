@@ -1,10 +1,13 @@
 import "../styles/global.css"
 import { UserProvider } from "../hooks/useUser"
+import { ThemeProvider } from "../hooks/useTheme"
 
 export default function App({ Component, pageProps }) {
   return (
     <UserProvider>
-      <Component {...pageProps} />
+      <ThemeProvider>
+        <Component {...pageProps} />
+      </ThemeProvider>
     </UserProvider>
   )
 }

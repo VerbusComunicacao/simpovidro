@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/router"
-import useUser from "../../hooks/useUser"
-import useTheme from "../../hooks/useTheme"
-import defaultColors from "../../lib/colors"
+import useUser from "@/hooks/useUser"
+import useTheme from "@/hooks/useTheme"
+import defaultColors from "@/lib/colors"
 
 export default function ThemeSettings() {
   const router = useRouter()

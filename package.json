@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "node infra/scripts/services-init.js",
+    "build": "next build",
     "test": "node infra/scripts/run-tests-with-cleanup.js",
     "test:watch": "jest --watchAll --runInBand --verbose",
     "services:up": "docker compose -f infra/compose.yaml up -d",
