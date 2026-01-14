@@ -49,8 +49,15 @@ describe("POST /api/v1/registrations", () => {
       hotelOwner = await orchestrator.createUser()
       await orchestrator.activateUser(hotelOwner.id)
       hotel = await orchestrator.createHotel(hotelOwner.id)
+      const roomCategory = await orchestrator.createRoomCategory(
+        hotelOwner.id,
+        {
+          max_adults: 5,
+        },
+      )
       room = await orchestrator.createRoom(hotelOwner.id, {
         hotel_id: hotel.id,
+        room_category_id: roomCategory.id,
         available_rooms: 5,
         price_per_night: 150.0,
       })
@@ -209,8 +216,15 @@ describe("POST /api/v1/registrations", () => {
       const hotel2 = await orchestrator.createHotel(hotelOwner.id, {
         name: "Other Hotel",
       })
+      const roomCategory2 = await orchestrator.createRoomCategory(
+        hotelOwner.id,
+        {
+          max_adults: 5,
+        },
+      )
       const room2 = await orchestrator.createRoom(hotelOwner.id, {
         hotel_id: hotel2.id,
+        room_category_id: roomCategory2.id,
         available_rooms: 5,
       })
 
