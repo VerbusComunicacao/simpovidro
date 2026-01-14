@@ -7,7 +7,7 @@ export default function RegistrationSuccessPage() {
   const router = useRouter()
 
   return (
-    <RegistrationLayout title="Inscrição Confirmada - Simpovidro 2025">
+    <RegistrationLayout title="Inscrição Confirmada - Simpovidro 2026">
       <div className="flex items-center justify-center p-4 py-20">
         <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center space-y-6">
           <div className="mx-auto h-20 w-20 bg-green-100 rounded-full flex items-center justify-center">

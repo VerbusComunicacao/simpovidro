@@ -115,7 +115,7 @@ async function postHandler(request, response) {
 
     const emailHtml = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #2563eb;">Confirmação de Inscrição - Simpovidro 2025</h1>
+        <h1 style="color: #2563eb;">Confirmação de Inscrição - Simpovidro 2026</h1>
         <p>Olá, <strong>${user.full_name || "Participante"}</strong>!</p>
         <p>Sua inscrição foi confirmada com sucesso! Abaixo estão os detalhes do seu pedido:</p>
         
@@ -156,11 +156,11 @@ async function postHandler(request, response) {
     `
 
     await email.send({
-      from: "Simpovidro <nao-responda@simpovidro.com.br>",
+      from: "Abravidro <contato@resend.dev>",
       to: user.email,
       subject: `Confirmação de Inscrição - Pedido #${saleDetails.sale_number || saleDetails.id.slice(0, 8)}`,
       html: emailHtml,
-      text: `Sua inscrição no Simpovidro 2025 foi confirmada! Hotel: ${saleDetails.hotel_name}. Valor: ${formatCurrency(saleDetails.final_amount)}.`,
+      text: `Sua inscrição no Simpovidro 2026 foi confirmada! Hotel: ${saleDetails.hotel_name}. Valor: ${formatCurrency(saleDetails.final_amount)}.`,
     })
   } catch (error) {
     console.error("Falha ao enviar email de confirmação:", error)

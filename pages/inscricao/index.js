@@ -66,7 +66,7 @@ export default function RegistrationPage({ activeHotels }) {
 
   if (!activeHotel) {
     return (
-      <RegistrationLayout title="Simpovidro 2025 - Inscrições Indisponíveis">
+      <RegistrationLayout title="Simpovidro 2026 - Inscrições Indisponíveis">
         <div className="flex items-center justify-center p-4 py-20">
           <Card className="max-w-md w-full text-center p-8">
             <AlertCircle className="mx-auto h-12 w-12 text-blue-500 mb-4" />

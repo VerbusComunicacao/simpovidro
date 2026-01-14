@@ -1,6 +1,6 @@
 # Gerenciamento Simpovidro
 
-Este sistema é destinado ao gerenciamento exclusivo de hospedagens para o evento **Simpovidro 2025**.
+Este sistema é destinado ao gerenciamento exclusivo de hospedagens para o evento **Simpovidro 2026**.
 
 ## Objetivo
 

@@ -3,7 +3,7 @@ import Head from "next/head"
 
 export default function RegistrationLayout({
   children,
-  title = "Simpovidro 2025 - Inscrição",
+  title = "Simpovidro 2026 - Inscrição",
   showBackButton = false,
 }) {
   return (

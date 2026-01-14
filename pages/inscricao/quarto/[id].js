@@ -16,7 +16,7 @@ export default function RoomDetailsPage({ room }) {
   if (!room) {
     return (
       <RegistrationLayout
-        title="Quarto não encontrado - Simpovidro 2025"
+        title="Quarto não encontrado - Simpovidro 2026"
         showBackButton
       >
         <div className="flex items-center justify-center p-20">
@@ -28,7 +28,7 @@ export default function RoomDetailsPage({ room }) {
 
   return (
     <RegistrationLayout
-      title={`${room.name || room.room_type} - Simpovidro 2025`}
+      title={`${room.name || room.room_type} - Simpovidro 2026`}
       showBackButton
     >
       <main className="container mx-auto px-4 py-8">

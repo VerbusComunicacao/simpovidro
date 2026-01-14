@@ -11,7 +11,7 @@ export default function Home() {
       <div className="relative h-[60vh]">
         <Image
           src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1473&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-          alt="Simpovidro 2025"
+          alt="Simpovidro 2026"
           layout="fill"
           objectFit="cover"
           quality={100}
@@ -19,7 +19,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
           <div className="text-center text-white">
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-              Simpovidro 2025
+              Simpovidro 2026
             </h1>
             <p className="mt-3 max-w-2xl text-xl">
               O maior encontro do setor vidreiro da América do Sul.
@@ -123,7 +123,7 @@ export default function Home() {
       <div className="bg-blue-600">
         <div className="container mx-auto px-4 py-16 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-white">
-            Garanta sua Vaga no Simpovidro 2025!
+            Garanta sua Vaga no Simpovidro 2026!
           </h2>
           <p className="mt-4 text-lg text-blue-100">
             Não perca a chance de participar do maior encontro do setor vidreiro

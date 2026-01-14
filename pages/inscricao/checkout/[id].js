@@ -237,7 +237,7 @@ export default function CheckoutPage({ room, user, guestProfile }) {
 
   return (
     <RegistrationLayout
-      title="Finalizar Inscrição - Simpovidro 2025"
+      title="Finalizar Inscrição - Simpovidro 2026"
       showBackButton
     >
       <div className="py-8 px-4">

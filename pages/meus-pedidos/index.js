@@ -71,7 +71,7 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <RegistrationLayout title="Meus Pedidos - Simpovidro 2025" showBackButton>
+    <RegistrationLayout title="Meus Pedidos - Simpovidro 2026" showBackButton>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Meus Pedidos</h1>
 

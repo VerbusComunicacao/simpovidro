@@ -31,7 +31,7 @@ export default function RegistrationHeader({ showBackButton = false }) {
               <Hotel className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900 hidden sm:inline-block">
-              Simpovidro 2025
+              Simpovidro 2026
             </span>
           </Link>
 
