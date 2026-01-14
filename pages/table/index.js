@@ -1,45 +1,45 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import useSWR from "swr";
-import { Plus, Hotel } from "lucide-react";
-import Link from "next/link";
-import TableLayout from "@/components/layout/TableLayout";
-import ErrorDialog from "@/components/ui/ErrorDialog";
-import { useEffect, useState } from "react";
+} from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import useSWR from "swr"
+import { Plus, Hotel } from "lucide-react"
+import Link from "next/link"
+import TableLayout from "@/components/layout/TableLayout"
+import ErrorDialog from "@/components/ui/ErrorDialog"
+import { useEffect, useState } from "react"
 
 const fetcher = async (url) => {
-  const res = await fetch(url);
+  const res = await fetch(url)
 
   if (!res.ok) {
-    const error = new Error("An error occurred while fetching the data.");
-    error.info = await res.json();
-    error.status = res.status;
-    throw error;
+    const error = new Error("An error occurred while fetching the data.")
+    error.info = await res.json()
+    error.status = res.status
+    throw error
   }
 
-  return res.json();
-};
+  return res.json()
+}
 
 export default function Table() {
   const {
     data: hotels,
     error: hotelsError,
     mutate,
-  } = useSWR("/api/v1/hotels", fetcher);
-  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
+  } = useSWR("/api/v1/hotels", fetcher)
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
 
   useEffect(() => {
     if (hotelsError) {
-      setIsErrorDialogOpen(true);
+      setIsErrorDialogOpen(true)
     }
-  }, [hotelsError]);
+  }, [hotelsError])
 
   const pageActions = (
     <Link href="/table/adicionar-hotel">
@@ -47,7 +47,7 @@ export default function Table() {
         <Plus className="mr-2 h-4 w-4" /> Adicionar Hotel
       </Button>
     </Link>
-  );
+  )
 
   return (
     <TableLayout pageActions={pageActions}>
@@ -75,18 +75,12 @@ export default function Table() {
       {hotels && hotels.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {hotels.map((hotel) => (
-            <Link
-              href={`/table/hoteis/${hotel.id}`}
-              key={hotel.id}
-              passHref
-            >
+            <Link href={`/table/hoteis/${hotel.id}`} key={hotel.id} passHref>
               <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <CardTitle>{hotel.name}</CardTitle>
-                    {hotel.active && (
-                      <Badge variant="success">Ativo</Badge>
-                    )}
+                    {hotel.active && <Badge variant="success">Ativo</Badge>}
                   </div>
                   <CardDescription>
                     {hotel.city}, {hotel.state}
@@ -114,5 +108,5 @@ export default function Table() {
         onRetry={mutate}
       />
     </TableLayout>
-  );
+  )
 }

@@ -51,7 +51,10 @@ export default function ResetPasswordPage() {
       if (response.ok) {
         setMessage(responseBody.message)
       } else {
-        setError(responseBody.message || "Ocorreu um erro ao tentar redefinir a senha.")
+        setError(
+          responseBody.message ||
+            "Ocorreu um erro ao tentar redefinir a senha.",
+        )
       }
     } catch (err) {
       setError("Ocorreu um erro ao tentar redefinir a senha.")
@@ -63,7 +66,9 @@ export default function ResetPasswordPage() {
   if (!token && router.isReady) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
-        <p className="text-red-600 font-medium">Token de recuperação não encontrado.</p>
+        <p className="text-red-600 font-medium">
+          Token de recuperação não encontrado.
+        </p>
       </div>
     )
   }
@@ -82,9 +87,7 @@ export default function ResetPasswordPage() {
             <div className="text-center space-y-4">
               <p className="text-green-600 font-medium">{message}</p>
               <Link href="/login" passHref>
-                <Button className="w-full">
-                  Fazer login agora
-                </Button>
+                <Button className="w-full">Fazer login agora</Button>
               </Link>
             </div>
           ) : (

@@ -1,6 +1,6 @@
-import database from "infra/database.js";
-import { ValidationError, NotFoundError } from "infra/errors.js";
-import { validateRequiredFields, validateUUID } from "infra/validator.js";
+import database from "infra/database.js"
+import { ValidationError, NotFoundError } from "infra/errors.js"
+import { validateRequiredFields, validateUUID } from "infra/validator.js"
 
 async function create(roomInputValues, userId) {
   validateRequiredFields(roomInputValues, [
@@ -9,21 +9,21 @@ async function create(roomInputValues, userId) {
     "room_category_id",
     "price_per_night",
     "total_rooms",
-  ]);
-  validateUUID(roomInputValues.hotel_id);
-  validateUUID(roomInputValues.room_type_id);
-  validateUUID(roomInputValues.room_category_id);
+  ])
+  validateUUID(roomInputValues.hotel_id)
+  validateUUID(roomInputValues.room_type_id)
+  validateUUID(roomInputValues.room_category_id)
 
-  await verifyHotelBelongsToUser(roomInputValues.hotel_id, userId);
-  await verifyRoomTypeBelongsToUser(roomInputValues.room_type_id, userId);
+  await verifyHotelBelongsToUser(roomInputValues.hotel_id, userId)
+  await verifyRoomTypeBelongsToUser(roomInputValues.room_type_id, userId)
   await verifyRoomCategoryBelongsToUser(
     roomInputValues.room_category_id,
-    userId
-  );
+    userId,
+  )
 
-  const newRoom = await runInsertQuery(roomInputValues, userId);
-  
-  return await findOneById(newRoom.id);
+  const newRoom = await runInsertQuery(roomInputValues, userId)
+
+  return await findOneById(newRoom.id)
 
   async function runInsertQuery(roomInputValues, userId) {
     const {
@@ -37,7 +37,7 @@ async function create(roomInputValues, userId) {
       name,
       description,
       photos,
-    } = roomInputValues;
+    } = roomInputValues
 
     const results = await database.query({
       text: `
@@ -61,16 +61,16 @@ async function create(roomInputValues, userId) {
         description,
         photos || [],
       ],
-    });
+    })
 
-    return results.rows[0];
+    return results.rows[0]
   }
 }
 
 async function findOneById(roomId) {
-  validateUUID(roomId);
-  const roomFound = await runSelectQuery(roomId);
-  return roomFound;
+  validateUUID(roomId)
+  const roomFound = await runSelectQuery(roomId)
+  return roomFound
 
   async function runSelectQuery(roomId) {
     const results = await database.query({
@@ -106,22 +106,22 @@ async function findOneById(roomId) {
           1
         ;`,
       values: [roomId],
-    });
+    })
 
     if (results.rowCount === 0) {
       throw new NotFoundError({
         message: "O ID do quarto informado não foi encontrado no sistema.",
         action: "Verifique se o ID está digitado corretamente.",
-      });
+      })
     }
 
-    return results.rows[0];
+    return results.rows[0]
   }
 }
 
 async function findOneByIdAndUserId(roomId, userId) {
-  validateUUID(roomId);
-  validateUUID(userId);
+  validateUUID(roomId)
+  validateUUID(userId)
 
   const results = await database.query({
     text: `
@@ -135,20 +135,20 @@ async function findOneByIdAndUserId(roomId, userId) {
         1
       ;`,
     values: [roomId, userId],
-  });
+  })
 
   if (results.rowCount === 0) {
     throw new NotFoundError({
       message: "O ID do quarto informado não foi encontrado no sistema.",
       action: "Verifique se o ID está digitado corretamente.",
-    });
+    })
   }
 
-  return results.rows[0];
+  return results.rows[0]
 }
 
 async function findAllByUserId(userId) {
-  validateUUID(userId);
+  validateUUID(userId)
 
   const results = await database.query({
     text: `
@@ -174,14 +174,14 @@ async function findAllByUserId(userId) {
         created_at DESC
     `,
     values: [userId],
-  });
+  })
 
-  return results.rows;
+  return results.rows
 }
 
 async function findAllByHotelId(hotelId, userId) {
-  validateUUID(hotelId);
-  validateUUID(userId);
+  validateUUID(hotelId)
+  validateUUID(userId)
 
   const results = await database.query({
     text: `
@@ -211,43 +211,43 @@ async function findAllByHotelId(hotelId, userId) {
         r.created_at DESC
     `,
     values: [hotelId, userId],
-  });
+  })
 
-  return results.rows;
+  return results.rows
 }
 
 async function update(roomId, roomInputNewValues, userId) {
-  validateUUID(roomId);
-  validateUUID(userId);
+  validateUUID(roomId)
+  validateUUID(userId)
 
   if (Object.keys(roomInputNewValues).length === 0) {
     throw new ValidationError({
       message: `Nenhum campo enviado para atualização.`,
       action: "Envie algum campo e tente novamente.",
-    });
+    })
   }
 
-  const currentRoom = await findOneById(roomId);
+  const currentRoom = await findOneById(roomId)
 
   if ("hotel_id" in roomInputNewValues) {
-    validateUUID(roomInputNewValues.hotel_id);
-    await verifyHotelBelongsToUser(roomInputNewValues.hotel_id, userId);
+    validateUUID(roomInputNewValues.hotel_id)
+    await verifyHotelBelongsToUser(roomInputNewValues.hotel_id, userId)
   }
 
   if ("room_type_id" in roomInputNewValues) {
-    validateUUID(roomInputNewValues.room_type_id);
-    await verifyRoomTypeBelongsToUser(roomInputNewValues.room_type_id, userId);
+    validateUUID(roomInputNewValues.room_type_id)
+    await verifyRoomTypeBelongsToUser(roomInputNewValues.room_type_id, userId)
   }
 
   if ("room_category_id" in roomInputNewValues) {
-    validateUUID(roomInputNewValues.room_category_id);
+    validateUUID(roomInputNewValues.room_category_id)
     await verifyRoomCategoryBelongsToUser(
       roomInputNewValues.room_category_id,
-      userId
-    );
+      userId,
+    )
   }
 
-  let normalizedRoomWithNewValues;
+  let normalizedRoomWithNewValues
 
   if (
     "total_rooms" in roomInputNewValues ||
@@ -256,19 +256,19 @@ async function update(roomId, roomInputNewValues, userId) {
   ) {
     normalizedRoomWithNewValues = validateAndNormalizeRoomAvailability(
       currentRoom,
-      roomInputNewValues
-    );
+      roomInputNewValues,
+    )
   }
 
   const roomWithNewValues = {
     ...currentRoom,
     ...roomInputNewValues,
     ...normalizedRoomWithNewValues,
-  };
+  }
 
-  const updatedRoom = await runUpdateQuery(roomWithNewValues);
+  const updatedRoom = await runUpdateQuery(roomWithNewValues)
 
-  return await findOneById(updatedRoom.id);
+  return await findOneById(updatedRoom.id)
 
   async function runUpdateQuery(roomWithNewValues) {
     const {
@@ -280,7 +280,7 @@ async function update(roomId, roomInputNewValues, userId) {
       total_rooms,
       available_rooms,
       blocked_rooms,
-    } = roomWithNewValues;
+    } = roomWithNewValues
 
     const results = await database.query({
       text: `
@@ -316,35 +316,35 @@ async function update(roomId, roomInputNewValues, userId) {
         roomWithNewValues.description,
         roomWithNewValues.photos || [],
       ],
-    });
+    })
 
-    return results.rows[0];
+    return results.rows[0]
   }
 
   function validateAndNormalizeRoomAvailability(currentRoom, newValues) {
-    const currentAvailable = currentRoom.available_rooms;
-    const currentBlocked = currentRoom.blocked_rooms;
-    const currentTotal = currentRoom.total_rooms;
+    const currentAvailable = currentRoom.available_rooms
+    const currentBlocked = currentRoom.blocked_rooms
+    const currentTotal = currentRoom.total_rooms
 
-    let available = newValues.available_rooms ?? currentAvailable;
-    let blocked = newValues.blocked_rooms ?? currentBlocked;
-    let total = newValues.total_rooms ?? currentTotal;
+    let available = newValues.available_rooms ?? currentAvailable
+    let blocked = newValues.blocked_rooms ?? currentBlocked
+    let total = newValues.total_rooms ?? currentTotal
 
     if (
       "total_rooms" in newValues &&
       !("available_rooms" in newValues) &&
       !("blocked_rooms" in newValues)
     ) {
-      const calculatedAvailable = total - blocked;
+      const calculatedAvailable = total - blocked
 
-      available = Math.max(0, calculatedAvailable);
+      available = Math.max(0, calculatedAvailable)
     }
 
     if (available < 0 || blocked < 0 || total < 0) {
       throw new ValidationError({
         message: "Os valores de quartos não podem ser negativos.",
         action: "Verifique os campos e tente novamente.",
-      });
+      })
     }
 
     if (available + blocked !== total) {
@@ -352,7 +352,7 @@ async function update(roomId, roomInputNewValues, userId) {
         message:
           "A soma de quartos disponíveis e bloqueados deve ser igual ao total.",
         action: "Ajuste os valores e tente novamente.",
-      });
+      })
     }
 
     return {
@@ -360,13 +360,13 @@ async function update(roomId, roomInputNewValues, userId) {
       available_rooms: available,
       blocked_rooms: blocked,
       total_rooms: total,
-    };
+    }
   }
 }
 
 async function deleteById(roomId, userId) {
-  validateUUID(roomId);
-  validateUUID(userId);
+  validateUUID(roomId)
+  validateUUID(userId)
 
   await database.query({
     text: `
@@ -374,7 +374,7 @@ async function deleteById(roomId, userId) {
     WHERE user_id = $1 and id = $2
     `,
     values: [userId, roomId],
-  });
+  })
 }
 
 async function verifyHotelBelongsToUser(hotelId, userId) {
@@ -385,13 +385,13 @@ async function verifyHotelBelongsToUser(hotelId, userId) {
       LIMIT 1
     `,
     values: [hotelId, userId],
-  });
+  })
 
   if (results.rowCount === 0) {
     throw new NotFoundError({
       message: "Hotel não encontrado ou não pertence ao usuário.",
       action: "Verifique se o hotel existe e pertence a você.",
-    });
+    })
   }
 }
 
@@ -403,13 +403,13 @@ async function verifyRoomTypeBelongsToUser(roomTypeId, userId) {
       LIMIT 1
     `,
     values: [roomTypeId, userId],
-  });
+  })
 
   if (results.rowCount === 0) {
     throw new NotFoundError({
       message: "Tipo de quarto não encontrado ou não pertence ao usuário.",
       action: "Verifique se o tipo de quarto existe e pertence a você.",
-    });
+    })
   }
 }
 
@@ -421,13 +421,13 @@ async function verifyRoomCategoryBelongsToUser(roomCategoryId, userId) {
       LIMIT 1
     `,
     values: [roomCategoryId, userId],
-  });
+  })
 
   if (results.rowCount === 0) {
     throw new NotFoundError({
       message: "Categoria de quarto não encontrada ou não pertence ao usuário.",
       action: "Verifique se a categoria de quarto existe e pertence a você.",
-    });
+    })
   }
 }
 
@@ -439,6 +439,6 @@ const room = {
   findAllByHotelId,
   update,
   deleteById,
-};
+}
 
-export default room;
+export default room

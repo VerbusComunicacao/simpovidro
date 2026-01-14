@@ -1,36 +1,36 @@
-import useSWR from "swr";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import TableLayout from "@/components/layout/TableLayout";
-import { Button } from "@/components/ui/button";
+import useSWR from "swr"
+import { Plus, Pencil, Trash2 } from "lucide-react"
+import TableLayout from "@/components/layout/TableLayout"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/card"
 import {
   AddRoomTypeDialog,
   EditRoomTypeDialog,
-} from "@/components/hotel/RoomTypeDialogs";
+} from "@/components/hotel/RoomTypeDialogs"
 
 const fetcher = async (url) => {
-  const res = await fetch(url);
+  const res = await fetch(url)
   if (!res.ok) {
-    const error = new Error("An error occurred while fetching the data.");
-    error.info = await res.json();
-    error.status = res.status;
-    throw error;
+    const error = new Error("An error occurred while fetching the data.")
+    error.info = await res.json()
+    error.status = res.status
+    throw error
   }
-  return res.json();
-};
+  return res.json()
+}
 
 export default function RoomTypesPage() {
   const {
     data: roomTypes,
     error,
     mutate,
-  } = useSWR("/api/v1/room-types", fetcher);
+  } = useSWR("/api/v1/room-types", fetcher)
 
   const pageActions = (
     <AddRoomTypeDialog onRoomTypeAdded={mutate}>
@@ -38,7 +38,7 @@ export default function RoomTypesPage() {
         <Plus className="mr-2 h-4 w-4" /> Adicionar Tipo de Quarto
       </Button>
     </AddRoomTypeDialog>
-  );
+  )
 
   return (
     <TableLayout pageActions={pageActions}>
@@ -91,5 +91,5 @@ export default function RoomTypesPage() {
         </CardContent>
       </Card>
     </TableLayout>
-  );
+  )
 }

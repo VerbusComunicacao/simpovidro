@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/router"
 import Container from "components/common/Container"
 import Button from "components/common/Button"
@@ -11,13 +11,7 @@ export default function Activate() {
   const router = useRouter()
   const { token } = router.query
 
-  useEffect(() => {
-    if (token) {
-      handleActivate()
-    }
-  }, [token])
-
-  const handleActivate = async () => {
+  const handleActivate = useCallback(async () => {
     if (!token) {
       setMessage("Token não encontrado")
       setAlertType("error")
@@ -56,7 +50,13 @@ export default function Activate() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token, router])
+
+  useEffect(() => {
+    if (token) {
+      handleActivate()
+    }
+  }, [token, handleActivate])
 
   return (
     <Container>

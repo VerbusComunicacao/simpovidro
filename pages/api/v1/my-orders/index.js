@@ -16,13 +16,13 @@ async function getHandler(request, response) {
   if (!user.id) {
     throw new ValidationError({
       message: "Você precisa estar logado para ver seus pedidos.",
-      action: "Faça login e tente novamente."
+      action: "Faça login e tente novamente.",
     })
   }
 
   // 1. Find Guest Profile
   const userGuest = await guest.findOneByUserId(user.id)
-  
+
   if (!userGuest) {
     // If no guest profile, user definitely has no orders yet (created via guest profile)
     return response.status(200).json([])

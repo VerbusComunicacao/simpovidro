@@ -1,6 +1,6 @@
 import database from "infra/database.js"
 import crypto from "node:crypto"
-import { ValidationError, NotFoundError } from "infra/errors.js"
+import { ValidationError } from "infra/errors.js"
 import email from "infra/email.js"
 import webserver from "infra/webserver"
 import password from "models/password.js"
@@ -114,8 +114,10 @@ async function resetPassword(token, newPassword) {
   }
 }
 
-export default {
+const passwordRecovery = {
   createToken,
   findValidToken,
   resetPassword,
 }
+
+export default passwordRecovery

@@ -40,7 +40,10 @@ export default function ForgotPasswordPage() {
       if (response.ok) {
         setMessage(responseBody.message)
       } else {
-        setError(responseBody.message || "Ocorreu um erro ao tentar solicitar a recuperação.")
+        setError(
+          responseBody.message ||
+            "Ocorreu um erro ao tentar solicitar a recuperação.",
+        )
       }
     } catch (err) {
       setError("Ocorreu um erro ao tentar solicitar a recuperação.")

@@ -17,7 +17,8 @@ async function getHandler(request, response) {
 
   if (!authorization.can(request.context.user, "read:user", userFound)) {
     throw new ForbiddenError({
-      message: "Você não possui permissão para ler as informações deste usuário.",
+      message:
+        "Você não possui permissão para ler as informações deste usuário.",
       action: "Verifique se você possui permissão para executar esta ação.",
     })
   }
@@ -38,7 +39,8 @@ async function patchHandler(request, response) {
 
   if (!authorization.can(request.context.user, "update:user", userToUpdate)) {
     throw new ForbiddenError({
-      message: "Você não possui permissão para atualizar as informações deste usuário.",
+      message:
+        "Você não possui permissão para atualizar as informações deste usuário.",
       action: "Verifique se você possui permissão para executar esta ação.",
     })
   }

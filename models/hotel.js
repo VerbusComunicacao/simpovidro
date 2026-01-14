@@ -6,12 +6,21 @@ import {
 } from "infra/validator.js"
 
 async function create(hotelInputValues, userId) {
-  validateRequired(hotelInputValues, ["name", "city", "country", "check_in_date", "check_out_date"])
+  validateRequired(hotelInputValues, [
+    "name",
+    "city",
+    "country",
+    "check_in_date",
+    "check_out_date",
+  ])
   await verifyIHotelAlreadyExists(hotelInputValues.name, userId)
 
   const newHotel = await runInsertQuery(hotelInputValues, userId)
 
-  if (hotelInputValues.price_policies && Array.isArray(hotelInputValues.price_policies)) {
+  if (
+    hotelInputValues.price_policies &&
+    Array.isArray(hotelInputValues.price_policies)
+  ) {
     await syncPricePolicies(newHotel.id, hotelInputValues.price_policies)
   }
 
@@ -39,7 +48,19 @@ async function create(hotelInputValues, userId) {
         RETURNING
           *
       `,
-      values: [userId, name, email, phone, address, city, state, country, false, check_in_date, check_out_date],
+      values: [
+        userId,
+        name,
+        email,
+        phone,
+        address,
+        city,
+        state,
+        country,
+        false,
+        check_in_date,
+        check_out_date,
+      ],
     })
 
     return results.rows[0]
@@ -131,9 +152,13 @@ async function update(hotelId, hotelInputNewValues, userId) {
   const currentHotel = await findOneById(hotelId)
 
   // Validar campos apenas se fornecidos
-  const fieldsToValidate = ["name", "city", "country", "check_in_date", "check_out_date"].filter(
-    (field) => field in hotelInputNewValues,
-  )
+  const fieldsToValidate = [
+    "name",
+    "city",
+    "country",
+    "check_in_date",
+    "check_out_date",
+  ].filter((field) => field in hotelInputNewValues)
   if (fieldsToValidate.length > 0) {
     validateRequired(hotelInputNewValues, fieldsToValidate)
   }
@@ -150,15 +175,29 @@ async function update(hotelId, hotelInputNewValues, userId) {
 
   const updatedHotel = await runUpdateQuery(hotelWithNewValues)
 
-  if (hotelInputNewValues.price_policies && Array.isArray(hotelInputNewValues.price_policies)) {
+  if (
+    hotelInputNewValues.price_policies &&
+    Array.isArray(hotelInputNewValues.price_policies)
+  ) {
     await syncPricePolicies(updatedHotel.id, hotelInputNewValues.price_policies)
   }
 
   return await findOneById(updatedHotel.id)
 
   async function runUpdateQuery(hotelWithNewValues) {
-    const { id, name, email, phone, address, city, state, country, active, check_in_date, check_out_date } =
-      hotelWithNewValues
+    const {
+      id,
+      name,
+      email,
+      phone,
+      address,
+      city,
+      state,
+      country,
+      active,
+      check_in_date,
+      check_out_date,
+    } = hotelWithNewValues
 
     const client = await database.getNewClient()
     try {
@@ -190,7 +229,19 @@ async function update(hotelId, hotelInputNewValues, userId) {
           RETURNING
             *
         `,
-        values: [id, name, email, phone, address, city, state, country, active, check_in_date, check_out_date],
+        values: [
+          id,
+          name,
+          email,
+          phone,
+          address,
+          city,
+          state,
+          country,
+          active,
+          check_in_date,
+          check_out_date,
+        ],
       })
 
       await client.query("COMMIT")
@@ -350,28 +401,31 @@ async function getAllActiveHotels() {
 }
 
 async function syncPricePolicies(hotelId, policies) {
-    // 1. Delete existing
-    await database.query({
-        text: `DELETE FROM "price_policies" WHERE hotel_id = $1`,
-        values: [hotelId]
-    })
+  // 1. Delete existing
+  await database.query({
+    text: `DELETE FROM "price_policies" WHERE hotel_id = $1`,
+    values: [hotelId],
+  })
 
-    // 2. Insert new
-    for (const policy of policies) {
-        if (
-            policy.max_age === undefined || policy.max_age === "" || 
-            policy.percentage === undefined || policy.percentage === "" || 
-            !policy.description
-        ) continue;
-        
-        await database.query({
-            text: `
+  // 2. Insert new
+  for (const policy of policies) {
+    if (
+      policy.max_age === undefined ||
+      policy.max_age === "" ||
+      policy.percentage === undefined ||
+      policy.percentage === "" ||
+      !policy.description
+    )
+      continue
+
+    await database.query({
+      text: `
                 INSERT INTO "price_policies" (hotel_id, max_age, percentage, description)
                 VALUES ($1, $2, $3, $4)
             `,
-            values: [hotelId, policy.max_age, policy.percentage, policy.description]
-        })
-    }
+      values: [hotelId, policy.max_age, policy.percentage, policy.description],
+    })
+  }
 }
 
 const hotel = {

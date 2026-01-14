@@ -13,5 +13,5 @@ exports.up = (pgm) => {
       notNull: false,
       default: "{}",
     },
-  });
-};
+  })
+}

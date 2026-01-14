@@ -58,7 +58,10 @@ describe("GET /api/v1/rooms/[id]", () => {
     test("Get own room successfully", async () => {
       const createdUser = await orchestrator.createUser()
       await orchestrator.activateUser(createdUser.id)
-      await orchestrator.setUserFeatures(createdUser.id, ["create:content", "read:content"])
+      await orchestrator.setUserFeatures(createdUser.id, [
+        "create:content",
+        "read:content",
+      ])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 

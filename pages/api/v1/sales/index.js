@@ -15,14 +15,14 @@ async function getHandler(request, response) {
   if (!user.id) {
     throw new ValidationError({
       message: "Você precisa estar logado para acessar os dados.",
-      action: "Faça login e tente novamente."
+      action: "Faça login e tente novamente.",
     })
   }
 
   if (!user.features?.includes("read:content")) {
     throw new ValidationError({
       message: "Você não tem permissão para acessar esta área.",
-      action: "Entre em contato com o administrador."
+      action: "Entre em contato com o administrador.",
     })
   }
 

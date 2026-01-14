@@ -1,10 +1,10 @@
 import RegistrationHeader from "./RegistrationHeader"
 import Head from "next/head"
 
-export default function RegistrationLayout({ 
-  children, 
+export default function RegistrationLayout({
+  children,
   title = "Simpovidro 2025 - Inscrição",
-  showBackButton = false 
+  showBackButton = false,
 }) {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -14,9 +14,7 @@ export default function RegistrationLayout({
 
       <RegistrationHeader showBackButton={showBackButton} />
 
-      <main className="flex-1">
-        {children}
-      </main>
+      <main className="flex-1">{children}</main>
 
       <footer className="bg-white border-t py-8 mt-auto">
         <div className="container mx-auto px-4 text-center text-gray-500 text-sm">

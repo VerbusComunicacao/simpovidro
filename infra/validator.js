@@ -167,7 +167,6 @@ export function validateStringLength(
   }
 }
 
-
 /**
  * Valida se um telefone tem formato válido (Brasil)
  * @param {string} phone - Telefone para validar

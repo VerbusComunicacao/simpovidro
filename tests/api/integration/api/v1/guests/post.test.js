@@ -1,6 +1,5 @@
 import { version as uuidVersion } from "uuid"
 import orchestrator from "tests/orchestrator.js"
-import guest from "models/guest.js"
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices()

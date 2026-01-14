@@ -1,30 +1,39 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Plus, Trash2 } from "lucide-react"
 
-export function PricePolicyManager({ policies, onChange, hideSideLabel = false }) {
+export function PricePolicyManager({
+  policies,
+  onChange,
+  hideSideLabel = false,
+}) {
   const handleAddPolicy = () => {
-    onChange([...policies, { max_age: "", percentage: "", description: "" }]);
-  };
+    onChange([...policies, { max_age: "", percentage: "", description: "" }])
+  }
 
   const handleRemovePolicy = (index) => {
-    const newPolicies = policies.filter((_, i) => i !== index);
-    onChange(newPolicies);
-  };
+    const newPolicies = policies.filter((_, i) => i !== index)
+    onChange(newPolicies)
+  }
 
   const handlePolicyChange = (index, field, value) => {
-    const newPolicies = [...policies];
-    newPolicies[index] = { ...newPolicies[index], [field]: value };
-    onChange(newPolicies);
-  };
+    const newPolicies = [...policies]
+    newPolicies[index] = { ...newPolicies[index], [field]: value }
+    onChange(newPolicies)
+  }
 
   return (
     <div className={hideSideLabel ? "" : "grid grid-cols-4 items-start gap-4"}>
-      {!hideSideLabel && <Label className="text-right pt-2">Políticas de Idade</Label>}
+      {!hideSideLabel && (
+        <Label className="text-right pt-2">Políticas de Idade</Label>
+      )}
       <div className={hideSideLabel ? "space-y-4" : "col-span-3 space-y-4"}>
         {policies.map((policy, index) => (
-          <div key={index} className="flex gap-2 items-start p-2 border rounded-md bg-gray-50">
+          <div
+            key={index}
+            className="flex gap-2 items-start p-2 border rounded-md bg-gray-50"
+          >
             <div className="grid gap-2 flex-1">
               <div className="flex gap-2">
                 <div className="flex-1">
@@ -87,5 +96,5 @@ export function PricePolicyManager({ policies, onChange, hideSideLabel = false }
         </Button>
       </div>
     </div>
-  );
+  )
 }

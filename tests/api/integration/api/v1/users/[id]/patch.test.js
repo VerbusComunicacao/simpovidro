@@ -85,7 +85,7 @@ describe("PATCH /api/v1/users/[id]", () => {
         `http://localhost:3000/api/v1/users/${createdUser2.id}`,
         {
           method: "PATCH",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             Cookie: `session_id=${sessionObject.token}`,
           },
@@ -116,7 +116,7 @@ describe("PATCH /api/v1/users/[id]", () => {
         `http://localhost:3000/api/v1/users/${userCreated.id}`,
         {
           method: "PATCH",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             Cookie: `session_id=${sessionObject.token}`,
           },
@@ -152,17 +152,19 @@ describe("PATCH /api/v1/users/[id]", () => {
     })
 
     test("With others user info (should fail)", async () => {
-       const mainUser = await orchestrator.createUser({ email: "main@test.com" })
-       await orchestrator.activateUser(mainUser.id)
-       const sessionObject = await orchestrator.createSession(mainUser.id)
+      const mainUser = await orchestrator.createUser({ email: "main@test.com" })
+      await orchestrator.activateUser(mainUser.id)
+      const sessionObject = await orchestrator.createSession(mainUser.id)
 
-       const otherUser = await orchestrator.createUser({ email: "other@test.com" })
+      const otherUser = await orchestrator.createUser({
+        email: "other@test.com",
+      })
 
-       const response = await fetch(
+      const response = await fetch(
         `http://localhost:3000/api/v1/users/${otherUser.id}`,
         {
           method: "PATCH",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             Cookie: `session_id=${sessionObject.token}`,
           },

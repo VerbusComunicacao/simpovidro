@@ -15,7 +15,7 @@ describe("POST /api/v1/rooms", () => {
       expect(response1.status).toBe(401)
     })
   })
-  
+
   describe("Default user'", () => {
     test("Without feature 'create:content'", async () => {
       const createdUser = await orchestrator.createUser({
@@ -103,8 +103,7 @@ describe("POST /api/v1/rooms", () => {
       const responseBody = await response.json()
       expect(responseBody).toEqual({
         action: "Envie todos os campos obrigatórios e tente novamente.",
-        message:
-          "Campos obrigatórios ausentes: price_per_night, total_rooms.",
+        message: "Campos obrigatórios ausentes: price_per_night, total_rooms.",
         name: "ValidationError",
         status_code: 400,
       })
@@ -129,7 +128,7 @@ describe("POST /api/v1/rooms", () => {
           room_type_id: roomType.id,
           room_category_id: roomCategory.id,
           price_per_night: 250.5,
-          total_rooms: 6
+          total_rooms: 6,
         }),
         headers: {
           "Content-Type": "application/json",
@@ -162,11 +161,9 @@ describe("POST /api/v1/rooms", () => {
         room_type: roomType.name,
         room_category: roomCategory.name,
         max_adults: roomCategory.max_adults,
-        max_children: roomCategory.max_children
+        max_children: roomCategory.max_children,
       })
     })
-
-
 
     test("Invalid hotel_id", async () => {
       const createdUser = await orchestrator.createUser()

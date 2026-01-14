@@ -1,5 +1,5 @@
 import database from "infra/database.js"
-import { ValidationError, NotFoundError } from "infra/errors.js"
+import { ValidationError } from "infra/errors.js"
 import { validateUUID } from "infra/validator.js"
 import defaultColors from "lib/colors.js"
 
@@ -157,7 +157,11 @@ function deepMerge(defaultObj, customObj) {
   const result = { ...defaultObj }
 
   for (const key in customObj) {
-    if (customObj[key] && typeof customObj[key] === "object" && !Array.isArray(customObj[key])) {
+    if (
+      customObj[key] &&
+      typeof customObj[key] === "object" &&
+      !Array.isArray(customObj[key])
+    ) {
       result[key] = deepMerge(result[key] || {}, customObj[key])
     } else {
       result[key] = customObj[key]
@@ -174,4 +178,3 @@ const theme = {
 }
 
 export default theme
-
