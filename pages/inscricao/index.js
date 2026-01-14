@@ -187,6 +187,7 @@ export default function RegistrationPage({ activeHotels }) {
                         src={room.photos[0]}
                         alt={room.name || room.room_type}
                         className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
+                        fill
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-r from-blue-600 to-blue-500 flex items-center justify-center">
