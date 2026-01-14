@@ -28,6 +28,7 @@ import { Empty } from "@/components/ui/empty"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 import Link from "next/link"
 import Image from "next/image"
+import webserver from "infra/webserver"
 
 export default function RegistrationPage({ activeHotels }) {
   const router = useRouter()
@@ -277,9 +278,7 @@ export default function RegistrationPage({ activeHotels }) {
 
 export async function getServerSideProps() {
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/hotels/active`,
-    )
+    const response = await fetch(`${webserver.origin}/api/v1/hotels/active`)
     const activeHotels = await response.json()
 
     return {

@@ -7,6 +7,7 @@ import { Users, CheckCircle, BedDouble, Calendar } from "lucide-react"
 import { useState } from "react"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 import Image from "next/image"
+import webserver from "infra/webserver"
 
 export default function RoomDetailsPage({ room }) {
   const router = useRouter()
@@ -206,7 +207,7 @@ export async function getServerSideProps(context) {
   const { id } = context.params
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/rooms/${id}/public`,
+      `${webserver.origin}/api/v1/rooms/${id}/public`,
     )
     if (!response.ok) throw new Error()
     const room = await response.json()
