@@ -3,7 +3,7 @@ import RegistrationLayout from "@/components/registration/RegistrationLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Hotel, Calendar, BedDouble, AlertCircle, Loader2 } from "lucide-react"
+import { Hotel, Calendar, BedDouble, AlertCircle, Loader2, Users, MapPin, Phone } from "lucide-react"
 import Link from "next/link"
 import { Empty } from "@/components/ui/empty"
 
@@ -98,34 +98,106 @@ export default function MyOrdersPage() {
                    </div>
                  </CardHeader>
                  <CardContent className="p-6">
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <div className="space-y-4">
-                       <div className="flex items-start gap-3">
-                         <div className="p-2 bg-blue-50 rounded-lg">
-                           <BedDouble className="h-5 w-5 text-blue-600" />
-                         </div>
-                         <div>
-                           <p className="font-medium text-gray-900">{order.room_name || order.room_type}</p>
-                           <p className="text-sm text-gray-500">{order.room_category}</p>
-                         </div>
-                       </div>
-                       
-                       <div className="flex items-start gap-3">
-                         <div className="p-2 bg-blue-50 rounded-lg">
-                           <Calendar className="h-5 w-5 text-blue-600" />
-                         </div>
-                         <div>
-                           <p className="font-medium text-gray-900">Período</p>
-                           <p className="text-sm text-gray-500">
-                             {formatDate(order.check_in_date)} - {formatDate(order.check_out_date)}
+                   <div className="space-y-6">
+                     {/* Hotel & Location */}
+                     <div className="flex items-start gap-3">
+                        <div className="p-2 bg-gray-100 rounded-lg shrink-0">
+                           <MapPin className="h-5 w-5 text-gray-600" />
+                        </div>
+                        <div>
+                           <p className="font-semibold text-gray-900">Endereço do Hotel</p>
+                           <p className="text-sm text-gray-600">
+                              {order.hotel_address}, {order.hotel_city} - {order.hotel_state}
                            </p>
-                         </div>
-                       </div>
+                           {order.hotel_phone && (
+                              <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
+                                 <Phone className="h-3 w-3" />
+                                 <span>{order.hotel_phone}</span>
+                              </div>
+                           )}
+                        </div>
                      </div>
 
-                     <div className="flex flex-col justify-end items-end border-t md:border-t-0 pt-4 md:pt-0">
-                       <p className="text-sm text-gray-500 mb-1">Valor Total</p>
-                       <p className="text-2xl font-bold text-gray-900">{formatCurrency(order.final_amount)}</p>
+                     <div className="border-t pt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Room Details */}
+                        <div className="space-y-4">
+                           <div className="flex items-start gap-3">
+                              <div className="p-2 bg-blue-50 rounded-lg shrink-0">
+                                 <BedDouble className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div>
+                                 <p className="font-semibold text-gray-900">{order.room_name || order.room_type}</p>
+                                 <p className="text-sm text-gray-500">{order.room_category}</p>
+                                 {order.room_description && (
+                                    <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+                                       {order.room_description}
+                                    </p>
+                                 )}
+                              </div>
+                           </div>
+
+                           <div className="flex items-start gap-3">
+                              <div className="p-2 bg-blue-50 rounded-lg shrink-0">
+                                 <Calendar className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div>
+                                 <p className="font-medium text-gray-900">Período</p>
+                                 <p className="text-sm text-gray-500">
+                                    {formatDate(order.check_in_date)} - {formatDate(order.check_out_date)}
+                                 </p>
+                              </div>
+                           </div>
+                        </div>
+
+                        {/* Guest List */}
+                        {order.guests && order.guests.length > 0 && (
+                           <div className="flex items-start gap-3">
+                              <div className="p-2 bg-blue-50 rounded-lg shrink-0">
+                                 <Users className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div className="w-full">
+                                 <p className="font-medium text-gray-900 mb-2">Hóspedes ({order.guests.length})</p>
+                                 <div className="bg-gray-50 rounded-lg border divide-y overflow-hidden">
+                                    {order.guests.map((guest, index) => (
+                                       <div key={guest.id || index} className="px-4 py-3">
+                                          <div className="flex justify-between items-start mb-2">
+                                             <span className="font-semibold text-gray-800">{index + 1}. {guest.name}</span>
+                                          </div>
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 text-sm text-gray-600">
+                                             {guest.cpf_number && <div><span className="font-medium text-gray-500">CPF:</span> {guest.cpf_number}</div>}
+                                             {guest.rg_number && <div><span className="font-medium text-gray-500">RG:</span> {guest.rg_number}</div>}
+                                             {guest.birth_date && <div><span className="font-medium text-gray-500">Nascimento:</span> {formatDate(guest.birth_date)}</div>}
+                                             {guest.email && <div><span className="font-medium text-gray-500">Email:</span> {guest.email}</div>}
+                                             {guest.phone && <div><span className="font-medium text-gray-500">Celular:</span> {guest.phone}</div>}
+                                             {guest.address && (
+                                                <div className="md:col-span-2">
+                                                   <span className="font-medium text-gray-500">Endereço:</span> {guest.address}, {guest.address_number} {guest.address_complement ? `(${guest.address_complement})` : ''} - {guest.city}/{guest.state}
+                                                </div>
+                                             )}
+                                             {guest.medication_details && (
+                                                <div className="md:col-span-2 text-amber-700 bg-amber-50 p-2 rounded mt-1">
+                                                   <span className="font-medium">Medicamentos:</span> {guest.medication_details}
+                                                </div>
+                                             )}
+                                             {guest.health_observations && (
+                                                <div className="md:col-span-2 text-blue-700 bg-blue-50 p-2 rounded mt-1">
+                                                   <span className="font-medium">Obs. Saúde:</span> {guest.health_observations}
+                                                </div>
+                                             )}
+                                          </div>
+                                       </div>
+                                    ))}
+                                 </div>
+                              </div>
+                           </div>
+                        )}
+                     </div>
+
+                     <div className="flex justify-end pt-4 border-t">
+                        <div className="text-right">
+                           <p className="text-sm text-gray-500 mb-1">Valor Total</p>
+                           <p className="text-2xl font-bold text-gray-900">{formatCurrency(order.final_amount)}</p>
+                        </div>
                      </div>
                    </div>
                  </CardContent>

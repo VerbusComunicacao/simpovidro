@@ -42,8 +42,8 @@ Siga estas instruções para configurar e rodar o projeto localmente:
 
 1.  **Clone o repositório:**
     ```bash
-    git clone https://github.com/seu-usuario/gerenciamento-hoteis.git
-    cd gerenciamento-hoteis
+    git clone https://github.com/seu-usuario/simpovidro.git
+    cd simpovidro
     ```
 
 2.  **Instale as dependências:**

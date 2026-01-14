@@ -5,26 +5,71 @@ import {
   validateUUID,
 } from "infra/validator.js"
 
-async function create(companyInputValues, hotelId) {
-  validateRequired(companyInputValues, ["name", "cnpj"])
-  await verifyIfCompanyAlreadyExists(companyInputValues.cnpj)
+async function create(companyInputValues) {
+  validateRequired(companyInputValues, [
+    "corporate_name",
+    "badge",
+    "cnpj",
+    "address",
+    "address_number",
+    "neighborhood",
+    "city",
+    "state",
+    "phone",
+    "email",
+    "responsible_person",
+    "zip_code",
+    "permission",
+    "discount_status",
+  ])
+  
+  if (companyInputValues.cnpj) {
+    await verifyIfCompanyAlreadyExists(companyInputValues.cnpj)
+  }
 
-  const newCompany = await runInsertQuery(companyInputValues, hotelId)
+  const newCompany = await runInsertQuery(companyInputValues)
   return newCompany
 
-  async function runInsertQuery(companyInputValues, hotelId) {
-    const { name, email = null, phone = null, cnpj } = companyInputValues
+  async function runInsertQuery(values) {
+    const {
+      corporate_name,
+      badge = null,
+      cnpj = null,
+      address = null,
+      address_number = null,
+      address_complement = null,
+      neighborhood = null,
+      city,
+      state = null,
+      country = 'Brasil',
+      phone = null,
+      permission = 'A',
+      discount_status = 'N',
+      email = null,
+      responsible_person = null,
+      zip_code = null,
+    } = values
 
     const results = await database.query({
       text: `
         INSERT INTO
-          companies (hotel_id, name, email, phone, cnpj)
+          companies (
+            corporate_name, badge, cnpj, address, address_number, 
+            address_complement, neighborhood, city, state, country, 
+            phone, permission, discount_status, email, responsible_person, 
+            zip_code
+          )
         VALUES
-          ($1, $2, $3, $4, $5)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         RETURNING
           *
       `,
-      values: [hotelId, name, email, phone, cnpj],
+      values: [
+        corporate_name, badge, cnpj, address, address_number, 
+        address_complement, neighborhood, city, state, country, 
+        phone, permission, discount_status, email, responsible_person, 
+        zip_code
+      ],
     })
 
     return results.rows[0]
@@ -33,72 +78,31 @@ async function create(companyInputValues, hotelId) {
 
 async function findOneById(companyId) {
   validateUUID(companyId)
-  const companyFound = await runSelectQuery(companyId)
-  return companyFound
+  const results = await database.query({
+    text: `SELECT * FROM companies WHERE id = $1 LIMIT 1;`,
+    values: [companyId],
+  })
 
-  async function runSelectQuery(companyId) {
-    const results = await database.query({
-      text: `
-        SELECT 
-          * 
-        FROM 
-          companies
-        WHERE 
-          id = $1
-        LIMIT
-          1
-        ;`,
-      values: [companyId],
+  if (results.rowCount === 0) {
+    throw new NotFoundError({
+      message: "O ID da empresa informado não foi encontrado no sistema.",
+      action: "Verifique se o ID está digitado corretamente.",
     })
-
-    if (results.rowCount === 0) {
-      throw new NotFoundError({
-        message: "O ID da empresa informado não foi encontrado no sistema.",
-        action: "Verifique se o ID está digitado corretamente.",
-      })
-    }
-
-    return results.rows[0]
   }
+
+  return results.rows[0]
 }
 
-async function findAllByHotelId(hotelId) {
+async function findAll() {
   const results = await database.query({
     text: `
       SELECT 
         *
       FROM 
         companies
-      WHERE 
-        hotel_id = $1
       ORDER BY 
-        created_at DESC
+        corporate_name ASC
     `,
-    values: [hotelId],
-  })
-
-  return results.rows
-}
-
-async function findAllByHotelIdAndUserId(hotelId, userId) {
-  validateUUID(hotelId)
-  validateUUID(userId)
-
-  const results = await database.query({
-    text: `
-      SELECT
-        c.*
-      FROM
-        companies c
-      INNER JOIN
-        hotels h ON c.hotel_id = h.id
-      WHERE
-        c.hotel_id = $1
-        AND h.user_id = $2
-      ORDER BY
-        c.created_at DESC
-    `,
-    values: [hotelId, userId],
   })
 
   return results.rows
@@ -114,12 +118,9 @@ async function update(companyId, companyInputNewValues) {
 
   const currentCompany = await findOneById(companyId)
 
-  if (Object.keys(companyInputNewValues).length > 0) {
-    validateRequired(companyInputNewValues, ["name", "email"])
-  }
-
   if (
     "cnpj" in companyInputNewValues &&
+    companyInputNewValues.cnpj &&
     companyInputNewValues.cnpj !== currentCompany.cnpj
   ) {
     await verifyIfCompanyAlreadyExists(companyInputNewValues.cnpj)
@@ -130,78 +131,79 @@ async function update(companyId, companyInputNewValues) {
   const updatedCompany = await runUpdateQuery(companyWithNewValues)
   return updatedCompany
 
-  async function runUpdateQuery(companyWithNewValues) {
-    const { id, name, email, phone, cnpj } = companyWithNewValues
+  async function runUpdateQuery(values) {
+    const {
+      id,
+      corporate_name,
+      badge,
+      cnpj,
+      address,
+      address_number,
+      address_complement,
+      neighborhood,
+      city,
+      state,
+      country,
+      phone,
+      permission,
+      discount_status,
+      email,
+      responsible_person,
+      zip_code,
+    } = values
 
     const results = await database.query({
       text: `
         UPDATE
           companies
         SET 
-          name = $2,
-          email = $3,
-          phone = $4,
-          cnpj = $5,
+          corporate_name = $2,
+          badge = $3,
+          cnpj = $4,
+          address = $5,
+          address_number = $6,
+          address_complement = $7,
+          neighborhood = $8,
+          city = $9,
+          state = $10,
+          country = $11,
+          phone = $12,
+          permission = $13,
+          discount_status = $14,
+          email = $15,
+          responsible_person = $16,
+          zip_code = $17,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
         RETURNING
           *
       `,
-      values: [id, name, email, phone, cnpj],
+      values: [
+        id, corporate_name, badge, cnpj, address, address_number, 
+        address_complement, neighborhood, city, state, country, 
+        phone, permission, discount_status, email, responsible_person, 
+        zip_code
+      ],
     })
 
     return results.rows[0]
   }
 }
 
-async function deleteById(companyId, hotelId) {
+async function deleteById(companyId) {
   validateUUID(companyId)
-  validateUUID(hotelId)
 
   await database.query({
-    text: `
-    DELETE FROM companies
-    WHERE hotel_id = $1 and id = $2
-    `,
-    values: [hotelId, companyId],
+    text: `DELETE FROM companies WHERE id = $1`,
+    values: [companyId],
   })
-}
-
-async function findOneByIdAndUserId(companyId, userId) {
-  validateUUID(companyId)
-  validateUUID(userId)
-
-  const results = await database.query({
-    text: `
-      SELECT
-        c.*
-      FROM
-        companies c
-      INNER JOIN
-        hotels h ON c.hotel_id = h.id
-      WHERE
-        c.id = $1
-        AND h.user_id = $2
-      LIMIT 1
-    `,
-    values: [companyId, userId],
-  })
-
-  if (results.rowCount === 0) {
-    throw new NotFoundError({
-      message: "O ID da empresa informado não foi encontrado no sistema.",
-      action: "Verifique se o ID está digitado corretamente.",
-    })
-  }
-
-  return results.rows[0]
 }
 
 async function verifyIfCompanyAlreadyExists(cnpj) {
   const results = await database.query({
     text: `
-      SELECT *
+      SELECT id
       FROM companies
       WHERE cnpj = $1
       LIMIT 1
@@ -212,7 +214,7 @@ async function verifyIfCompanyAlreadyExists(cnpj) {
   if (results.rowCount > 0) {
     throw new ConflictError({
       message: "Já existe uma empresa cadastrada com este CNPJ.",
-      action: "Escolha outro email ou edite a empresa existente.",
+      action: "Verifique os dados ou edite a empresa existente.",
     })
   }
 }
@@ -226,9 +228,7 @@ async function findOneByCnpj(cnpj) {
   }
 
   const results = await database.query({
-    text: `
-      SELECT * FROM companies WHERE cnpj = $1 LIMIT 1;
-    `,
+    text: `SELECT * FROM companies WHERE cnpj = $1 LIMIT 1;`,
     values: [cnpj],
   })
 
@@ -245,9 +245,7 @@ async function findOneByCnpj(cnpj) {
 const company = {
   create,
   findOneById,
-  findOneByIdAndUserId,
-  findAllByHotelId,
-  findAllByHotelIdAndUserId,
+  findAll,
   update,
   deleteById,
   findOneByCnpj,

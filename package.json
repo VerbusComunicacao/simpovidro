@@ -1,7 +1,7 @@
 {
-  "name": "tabnews-clone",
+  "name": "simpovidro",
   "version": "1.0.0",
-  "description": "clone do tabnews",
+  "description": "Gerenciamento Simpovidro",
   "main": "index.js",
   "scripts": {
     "dev": "node infra/scripts/services-init.js",

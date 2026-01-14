@@ -22,7 +22,8 @@ async function create(roomInputValues, userId) {
   );
 
   const newRoom = await runInsertQuery(roomInputValues, userId);
-  return newRoom;
+  
+  return await findOneById(newRoom.id);
 
   async function runInsertQuery(roomInputValues, userId) {
     const {
@@ -85,9 +86,9 @@ async function findOneById(roomId) {
           rc.max_children,
           COALESCE(
             (
-              SELECT json_agg(pp.*)
+              SELECT json_agg(pp.* ORDER BY pp.max_age ASC)
               FROM "price_policies" pp
-              WHERE pp.room_category_id = r.room_category_id
+              WHERE pp.hotel_id = r.hotel_id
             ),
             '[]'::json
           ) as price_policies
@@ -266,7 +267,8 @@ async function update(roomId, roomInputNewValues, userId) {
   };
 
   const updatedRoom = await runUpdateQuery(roomWithNewValues);
-  return updatedRoom;
+
+  return await findOneById(updatedRoom.id);
 
   async function runUpdateQuery(roomWithNewValues) {
     const {

@@ -15,6 +15,7 @@ describe("POST /api/v1/rooms", () => {
       expect(response1.status).toBe(401)
     })
   })
+  
   describe("Default user'", () => {
     test("Without feature 'create:content'", async () => {
       const createdUser = await orchestrator.createUser({
@@ -148,14 +149,23 @@ describe("POST /api/v1/rooms", () => {
         room_type_id: roomType.id,
         room_category_id: roomCategory.id,
         price_per_night: "250.50",
+        price_policies: [],
         total_rooms: 6,
         available_rooms: 6,
         blocked_rooms: 0,
         user_id: createdUser.id,
         created_at: expect.any(String),
         updated_at: expect.any(String),
+        hotel_name: hotel.name,
+        hotel_check_in_date: hotel.check_in_date.toISOString(),
+        hotel_check_out_date: hotel.check_out_date.toISOString(),
+        room_type: roomType.name,
+        room_category: roomCategory.name,
+        max_adults: roomCategory.max_adults,
+        max_children: roomCategory.max_children
       })
     })
+
 
 
     test("Invalid hotel_id", async () => {

@@ -23,7 +23,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!router.isReady || isLoading) return
     if (user) {
-      const redirect = router.query.redirect || "/table"
+      const redirect = router.query.redirect || "/inscricao"
       router.replace(redirect)
     }
   }, [user, isLoading, router])

@@ -41,7 +41,10 @@ describe("GET /api/v1/my-orders", () => {
       
       // 2. Create Hotel & Room
       const hotel = await orchestrator.createHotel(user.id)
-      const room = await orchestrator.createRoom(user.id, { hotel_id: hotel.id })
+      const room = await orchestrator.createRoom(user.id, { 
+        hotel_id: hotel.id,
+        available_rooms: 5 // Ensure availability
+      })
 
       // 3. Register Guest & Create Sale (via existing flow or direct DB insertion)
       
@@ -68,6 +71,7 @@ describe("GET /api/v1/my-orders", () => {
           }]
         })
       })
+
       expect(registrationResponse.status).toBe(201)
 
       // 4. Fetch My Orders

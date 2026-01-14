@@ -1,4 +1,3 @@
-import Head from "next/head"
 import { useRouter } from "next/router"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -7,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { AlertCircle, Loader2, Calendar } from "lucide-react"
+import { AlertCircle, Loader2, Calendar, User } from "lucide-react"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 
 import * as cookie from "cookie"
@@ -22,10 +21,10 @@ export default function CheckoutPage({ room, user, guestProfile }) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   
-  const [formData, setFormData] = useState({
+  const initialGuest = {
     // Personal
     name: guestProfile?.name || user.full_name || "",
-    email: user.email || "", // Email is usually fixed to account but we display it
+    email: user.email || "", 
     phone: guestProfile?.phone || "",
     gender: guestProfile?.gender || "",
     rg_number: guestProfile?.rg_number || "",
@@ -48,10 +47,50 @@ export default function CheckoutPage({ room, user, guestProfile }) {
     blood_type: guestProfile?.blood_type || "",
     special_needs_details: guestProfile?.special_needs_details || "",
     health_observations: guestProfile?.health_observations || "",
+  }
+
+  const emptyGuest = {
+    name: "",
+    email: "", 
+    phone: "",
+    gender: "",
+    rg_number: "",
+    cpf_number: "",
+    birth_date: "",
+    nationality: "Brasileira",
+    address: "",
+    address_number: "",
+    address_complement: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+    country: "Brasil",
+    emergency_contact_name: "",
+    emergency_contact_phone: "",
+    blood_type: "",
+    special_needs_details: "",
+    health_observations: "",
+  }
+
+  // Initialize guests array with fixed capacity
+  const maxAdults = room.max_adults || 0
+  const maxChildren = room.max_children || 0
+  const totalCapacity = maxAdults + maxChildren
+
+  const [guests, setGuests] = useState(() => {
+    const initialGuests = []
+    for (let i = 0; i < totalCapacity; i++) {
+        if (i === 0) {
+            initialGuests.push({ ...initialGuest })
+        } else {
+            initialGuests.push({ ...emptyGuest })
+        }
+    }
+    return initialGuests
   })
 
   // Handlers for form changes
-  const handleChange = (e) => {
+  const handleChange = (index, e) => {
     let { name, value } = e.target
 
     if (name === "cpf_number") {
@@ -62,17 +101,78 @@ export default function CheckoutPage({ room, user, guestProfile }) {
       value = maskPhone(value)
     }
 
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const newGuests = [...guests]
+    newGuests[index] = { ...newGuests[index], [name]: value }
+    setGuests(newGuests)
   }
 
-  const handleSelectChange = (name, value) => {
-    setFormData(prev => ({ ...prev, [name]: value }))
+  const handleSelectChange = (index, name, value) => {
+    const newGuests = [...guests]
+    newGuests[index] = { ...newGuests[index], [name]: value }
+    setGuests(newGuests)
   }
+
+  const calculateTotalPrice = () => {
+    let total = 0
+    let adultCount = 0
+    let childCount = 0
+    const policies = room.price_policies || []
+    const pricePerNight = Number(room.price_per_night)
+    const referenceDate = new Date(room.hotel_check_in_date || new Date())
+
+    guests.forEach((guest) => {
+      let percentage = 100 // Default to 100%
+      let isAdult = true
+      let age = null // Initialize age
+
+      if (guest.birth_date) {
+        const birth = new Date(guest.birth_date)
+        age = referenceDate.getUTCFullYear() - birth.getUTCFullYear()
+        const m = referenceDate.getUTCMonth() - birth.getUTCMonth()
+        if (m < 0 || (m === 0 && referenceDate.getUTCDate() < birth.getUTCDate())) {
+          age--
+        }
+        isAdult = age >= 18
+        if (policies.length > 0) {
+          for (const policy of policies) {
+            if (age <= policy.max_age) {
+              percentage = Number(policy.percentage)
+              break
+            }
+          }
+        }
+      }
+
+      if (isAdult) adultCount++
+      else childCount++
+
+      total += pricePerNight * (percentage / 100)
+    })
+
+    return { total, adultCount, childCount }
+  }
+
+  const { total: totalPrice, adultCount, childCount } = calculateTotalPrice()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
+
+    // 1. Client-side capacity validation
+    if (adultCount > maxAdults) {
+      setError(`O número de adultos (${adultCount}) excede a capacidade máxima do quarto (${maxAdults}).`)
+      setIsLoading(false)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+
+    if (childCount > maxChildren) {
+      setError(`O número de crianças (${childCount}) excede a capacidade máxima do quarto (${maxChildren}).`)
+      setIsLoading(false)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
 
     try {
       const response = await fetch("/api/v1/registrations", {
@@ -82,7 +182,7 @@ export default function CheckoutPage({ room, user, guestProfile }) {
         },
         body: JSON.stringify({
           room_id: room.id,
-          guest_data: formData
+          guests_data: guests
         }),
       })
 
@@ -98,13 +198,25 @@ export default function CheckoutPage({ room, user, guestProfile }) {
     }
   }
 
+  const getGuestTitle = (index) => {
+    if (index === 0) return "Responsável (Adulto 1)"
+
+    return index < maxAdults ? `Adulto ${index + 1}` : `Criança ${index - maxAdults + 1}`
+  }
+
+  const getGuestDescription = (index) => {
+    if (index === 0) return "Seus dados principais (obrigatório)."
+
+    return index < maxAdults ? "Dados do acompanhante adulto (obrigatório)." : "Dados da criança (obrigatório)."
+  }
+
   return (
     <RegistrationLayout title="Finalizar Inscrição - Simpovidro 2025" showBackButton>
       <div className="py-8 px-4">
-        <div className="container max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="container max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Order Summary */}
-        <div className="md:col-span-1 space-y-6">
-           <Card>
+        <div className="lg:col-span-1 space-y-6">
+           <Card className="sticky top-8">
             <CardHeader>
               <CardTitle className="text-lg">Resumo do Pedido</CardTitle>
             </CardHeader>
@@ -122,138 +234,161 @@ export default function CheckoutPage({ room, user, guestProfile }) {
               </div>
               <Separator />
               <div>
+                <p className="text-sm text-gray-500">Capacidade do Quarto</p>
+                <p className="font-semibold text-blue-600">{maxAdults} Adultos + {maxChildren} Crianças</p>
+              </div>
+              <Separator />
+              <div>
                 <p className="text-sm text-gray-500">Valor Total</p>
-                <p className="text-2xl font-bold text-blue-600">
-                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(room.price_per_night)}
+                <p className="text-3xl font-bold text-blue-600">
+                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalPrice)}
                 </p>
-                <p className="text-xs text-gray-500">por pessoa</p>
               </div>
             </CardContent>
            </Card>
         </div>
 
         {/* Guest Form */}
-        <div className="md:col-span-2">
-          <form onSubmit={handleSubmit}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Dados do Participante</CardTitle>
-                <CardDescription>
-                  {guestProfile 
-                    ? "Confirme seus dados abaixo para finalizar a inscrição." 
-                    : "Preencha seus dados completos para realizar a inscrição."}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                 {error && (
-                  <div className="bg-red-50 text-red-600 p-3 rounded-md flex items-center gap-2 text-sm">
-                    <AlertCircle className="h-4 w-4" />
-                    {error}
-                  </div>
-                )}
-
-                {/* Personal Data */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900 border-b pb-2">Dados Pessoais</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nome Completo *</Label>
-                      <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
-                    </div>
-                     <div className="space-y-2">
-                      <Label htmlFor="birth_date">Data de Nascimento *</Label>
-                      <Input id="birth_date" name="birth_date" type="date" value={formData.birth_date} onChange={handleChange} required />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cpf_number">CPF *</Label>
-                      <Input id="cpf_number" name="cpf_number" value={formData.cpf_number} onChange={handleChange} placeholder="000.000.000-00" required />
-                    </div>
-                     <div className="space-y-2">
-                      <Label htmlFor="rg_number">RG *</Label>
-                      <Input id="rg_number" name="rg_number" value={formData.rg_number} onChange={handleChange} required />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <div className="space-y-2">
-                      <Label htmlFor="gender">Gênero *</Label>
-                      <Select value={formData.gender} onValueChange={(val) => handleSelectChange("gender", val)} required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Masculino">Masculino</SelectItem>
-                          <SelectItem value="Feminino">Feminino</SelectItem>
-                          <SelectItem value="Outro">Outro</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                     <div className="space-y-2">
-                      <Label htmlFor="phone">Telefone / WhatsApp *</Label>
-                      <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="(00) 00000-0000" required />
-                    </div>
-                  </div>
+        <div className="lg:col-span-2">
+          <form onSubmit={handleSubmit} className="space-y-6">
+             {error && (
+                <div className="bg-red-50 text-red-600 p-4 rounded-md flex items-center gap-2 text-sm border border-red-200">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                  {error}
                 </div>
+              )}
 
-                {/* Address */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900 border-b pb-2">Endereço</h3>
-                   <div className="grid grid-cols-1 gap-4">
+            {guests.map((guestData, index) => (
+              <Card key={index} className="overflow-hidden">
+                <CardHeader className="bg-gray-50 border-b flex flex-row items-center justify-between pb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-blue-100 p-2 rounded-full">
+                      <User className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">
+                        {getGuestTitle(index)}
+                      </CardTitle>
+                      <CardDescription>
+                        {getGuestDescription(index)}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-6">
+  
+                  {/* Personal Data */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-gray-900 border-b pb-2">Dados Pessoais</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="address">Rua / Logradouro</Label>
-                        <Input id="address" name="address" value={formData.address} onChange={handleChange} />
-                      </div>
-                   </div>
-                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="address_number">Número</Label>
-                        <Input id="address_number" name="address_number" value={formData.address_number} onChange={handleChange} />
-                      </div>
-                       <div className="md:col-span-2 space-y-2">
-                        <Label htmlFor="address_complement">Complemento</Label>
-                        <Input id="address_complement" name="address_complement" value={formData.address_complement} onChange={handleChange} />
-                      </div>
-                   </div>
-                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="city">Cidade</Label>
-                        <Input id="city" name="city" value={formData.city} onChange={handleChange} />
+                        <Label htmlFor={`name-${index}`}>Nome Completo *</Label>
+                        <Input id={`name-${index}`} name="name" value={guestData.name} onChange={(e) => handleChange(index, e)} required />
                       </div>
                        <div className="space-y-2">
-                        <Label htmlFor="state">Estado</Label>
-                        <Input id="state" name="state" value={formData.state} onChange={handleChange} maxLength={2} placeholder="UF" />
+                        <Label htmlFor={`birth_date-${index}`}>Data de Nascimento *</Label>
+                        <Input id={`birth_date-${index}`} name="birth_date" type="date" value={guestData.birth_date} onChange={(e) => handleChange(index, e)} required />
                       </div>
-                       <div className="space-y-2">
-                        <Label htmlFor="country">País</Label>
-                        <Input id="country" name="country" value={formData.country} onChange={handleChange} />
-                      </div>
-                   </div>
-                </div>
-
-                {/* Health & Emergency */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900 border-b pb-2">Saúde e Emergência</h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    </div>
+  
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="emergency_contact_name">Nome Contato Emergência</Label>
-                        <Input id="emergency_contact_name" name="emergency_contact_name" value={formData.emergency_contact_name} onChange={handleChange} />
+                        <Label htmlFor={`cpf_number-${index}`}>CPF *</Label>
+                        <Input id={`cpf_number-${index}`} name="cpf_number" value={guestData.cpf_number} onChange={(e) => handleChange(index, e)} placeholder="000.000.000-00" required />
                       </div>
                        <div className="space-y-2">
-                        <Label htmlFor="emergency_contact_phone">Telefone Emergência</Label>
-                        <Input id="emergency_contact_phone" name="emergency_contact_phone" value={formData.emergency_contact_phone} onChange={handleChange} />
+                        <Label htmlFor={`rg_number-${index}`}>RG *</Label>
+                        <Input id={`rg_number-${index}`} name="rg_number" value={guestData.rg_number} onChange={(e) => handleChange(index, e)} required />
                       </div>
-                   </div>
-                   <div className="space-y-2">
-                      <Label htmlFor="health_observations">Observações de Saúde / Alergias</Label>
-                      <Input id="health_observations" name="health_observations" value={formData.health_observations} onChange={handleChange} placeholder="Ex: Alérgico a camarão, diabetes, etc." />
-                   </div>
-                </div>
+                    </div>
+  
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       <div className="space-y-2">
+                        <Label htmlFor={`gender-${index}`}>Gênero *</Label>
+                        <Select value={guestData.gender} onValueChange={(val) => handleSelectChange(index, "gender", val)} required>
+                          <SelectTrigger id={`gender-${index}`}>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Masculino">Masculino</SelectItem>
+                            <SelectItem value="Feminino">Feminino</SelectItem>
+                            <SelectItem value="Outro">Outro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                       <div className="space-y-2">
+                        <Label htmlFor={`phone-${index}`}>Telefone / WhatsApp *</Label>
+                        <Input id={`phone-${index}`} name="phone" value={guestData.phone} onChange={(e) => handleChange(index, e)} placeholder="(00) 00000-0000" required />
+                      </div>
+                    </div>
+                  </div>
+  
+                  {/* Address */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-gray-900 border-b pb-2">Endereço</h3>
+                     <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor={`address-${index}`}>Rua / Logradouro</Label>
+                          <Input id={`address-${index}`} name="address" value={guestData.address} onChange={(e) => handleChange(index, e)} />
+                        </div>
+                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor={`address_number-${index}`}>Número</Label>
+                          <Input id={`address_number-${index}`} name="address_number" value={guestData.address_number} onChange={(e) => handleChange(index, e)} />
+                        </div>
+                         <div className="md:col-span-2 space-y-2">
+                          <Label htmlFor={`address_complement-${index}`}>Complemento</Label>
+                          <Input id={`address_complement-${index}`} name="address_complement" value={guestData.address_complement} onChange={(e) => handleChange(index, e)} />
+                        </div>
+                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor={`city-${index}`}>Cidade</Label>
+                          <Input id={`city-${index}`} name="city" value={guestData.city} onChange={(e) => handleChange(index, e)} />
+                        </div>
+                         <div className="space-y-2">
+                          <Label htmlFor={`state-${index}`}>Estado</Label>
+                          <Input id={`state-${index}`} name="state" value={guestData.state} onChange={(e) => handleChange(index, e)} maxLength={2} placeholder="UF" />
+                        </div>
+                         <div className="space-y-2">
+                          <Label htmlFor={`country-${index}`}>País</Label>
+                          <Input id={`country-${index}`} name="country" value={guestData.country} onChange={(e) => handleChange(index, e)} />
+                        </div>
+                     </div>
+                  </div>
+  
+                  {/* Health & Emergency */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-gray-900 border-b pb-2">Saúde e Emergência</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor={`emergency_contact_name-${index}`}>Nome Contato Emergência</Label>
+                          <Input id={`emergency_contact_name-${index}`} name="emergency_contact_name" value={guestData.emergency_contact_name} onChange={(e) => handleChange(index, e)} />
+                        </div>
+                         <div className="space-y-2">
+                          <Label htmlFor={`emergency_contact_phone-${index}`}>Telefone Emergência</Label>
+                          <Input id={`emergency_contact_phone-${index}`} name="emergency_contact_phone" value={guestData.emergency_contact_phone} onChange={(e) => handleChange(index, e)} />
+                        </div>
+                     </div>
+                     <div className="space-y-2">
+                        <Label htmlFor={`health_observations-${index}`}>Observações de Saúde / Alergias</Label>
+                        <Input id={`health_observations-${index}`} name="health_observations" value={guestData.health_observations} onChange={(e) => handleChange(index, e)} placeholder="Ex: Alérgico a camarão, diabetes, etc." />
+                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
 
-                <div className="pt-4">
+             <div className="pt-4 sticky bottom-4 z-10">
+                 <div className="bg-white p-4 rounded-xl shadow-xl border">
+                   <div className="flex justify-between items-center mb-4">
+                      <span className="font-semibold text-gray-700">Total ({guests.length} hóspedes):</span>
+                      <span className="text-xl font-bold text-blue-600">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalPrice)}
+                      </span>
+                   </div>
                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-6" disabled={isLoading}>
                       {isLoading ? (
                         <>
@@ -263,10 +398,9 @@ export default function CheckoutPage({ room, user, guestProfile }) {
                         "Confirmar Inscrição"
                       )}
                    </Button>
-                </div>
+                 </div>
+             </div>
 
-              </CardContent>
-            </Card>
           </form>
         </div>
       </div>

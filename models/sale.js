@@ -1,7 +1,6 @@
 import database from "infra/database.js"
 import { ValidationError, NotFoundError } from "infra/errors.js"
 import { validateRequiredFields, validateUUID } from "infra/validator.js"
-import { v4 as uuidv4 } from "uuid"
 
 const REQUIRED_FIELDS = [
   "guest_id",
@@ -41,7 +40,7 @@ async function create(saleInputValues) {
             (
               SELECT json_agg(pp.* ORDER BY pp.max_age ASC)
               FROM "price_policies" pp
-              WHERE pp.room_category_id = r.room_category_id
+              WHERE pp.hotel_id = r.hotel_id
             ),
             '[]'::json
           ) as price_policies
@@ -75,17 +74,7 @@ async function create(saleInputValues) {
       })
     }
 
-    // 3. Check room capacity
-    const totalCapacity = (targetRoom.max_adults || 0) + (targetRoom.max_children || 0)
-    if (guest_ids.length > totalCapacity) {
-      throw new ValidationError({
-        message: `O número de hóspedes (${guest_ids.length}) excede a capacidade máxima do quarto (${totalCapacity}).`,
-        action: "Selecione um quarto maior ou remova convidados.",
-      })
-    }
-
-    // 4. Calculate Total Amount based on Age Policies
-    let calculatedTotalAmount = 0
+    // 3. Fetch Guest Data (needed for both capacity and pricing)
     const guests = await client.query({
         text: `SELECT id, birth_date FROM guests WHERE id = ANY($1)`,
         values: [guest_ids]
@@ -98,29 +87,85 @@ async function create(saleInputValues) {
         })
     }
 
+    // 3.5 Check for overlapping registrations for these guests in this hotel
+    const overlapResults = await client.query({
+        text: `
+            SELECT 
+                g.name
+            FROM 
+                sales_guests sg
+            JOIN 
+                sales s ON sg.sale_id = s.id
+            JOIN 
+                rooms r ON s.room_id = r.id
+            JOIN
+                guests g ON sg.guest_id = g.id
+            WHERE 
+                sg.guest_id = ANY($1) 
+                AND r.hotel_id = $2
+            LIMIT 1;`,
+        values: [guest_ids, targetRoom.hotel_id]
+    })
+
+    if (overlapResults.rowCount > 0) {
+        throw new ValidationError({
+            message: `O hóspede ${overlapResults.rows[0].name} já possui uma inscrição para este hotel neste período.`,
+            action: "Verifique os dados da inscrição ou entre em contato com o suporte."
+        })
+    }
+
+    // 4. Check room capacity (Adults vs Children)
+    const referenceDate = new Date(targetRoom.hotel_check_in_date || new Date())
+    let adultCount = 0
+    let childCount = 0
+    
+    const guestAges = guests.rows.map(guest => {
+        const birth = new Date(guest.birth_date)
+        let age = referenceDate.getUTCFullYear() - birth.getUTCFullYear()
+        const m = referenceDate.getUTCMonth() - birth.getUTCMonth()
+        if (m < 0 || (m === 0 && referenceDate.getUTCDate() < birth.getUTCDate())) {
+            age--
+        }
+        
+        if (age >= 18) {
+            adultCount++
+        } else {
+            childCount++
+        }
+        return { guest, age }
+    })
+
+    if (adultCount > (targetRoom.max_adults || 0)) {
+        throw new ValidationError({
+            message: `O número de adultos (${adultCount}) excede a capacidade máxima do quarto (${targetRoom.max_adults}).`,
+            action: "Selecione um quarto com maior capacidade para adultos.",
+        })
+    }
+
+    if (childCount > (targetRoom.max_children || 0)) {
+        throw new ValidationError({
+            message: `O número de crianças (${childCount}) excede a capacidade máxima do quarto (${targetRoom.max_children}).`,
+            action: "Selecione um quarto com maior capacidade para crianças.",
+        })
+    }
+
+    // 5. Calculate Total Amount based on Age Policies
+    let calculatedTotalAmount = 0
     const policies = targetRoom.price_policies || []
 
-    for (const guest of guests.rows) {
-        let guestPrice = Number(targetRoom.price_per_night)
+    for (const { guest, age } of guestAges) {
+        let percentage = 100 // Default to 100% of price
         
         if (policies.length > 0) {
-            const birth = new Date(guest.birth_date)
-            // Age should be calculated based on check_in_date
-            const referenceDate = new Date(targetRoom.hotel_check_in_date || new Date())
-            
-            let age = referenceDate.getFullYear() - birth.getFullYear()
-            const m = referenceDate.getMonth() - birth.getMonth()
-            if (m < 0 || (m === 0 && referenceDate.getDate() < birth.getDate())) {
-                age--
-            }
-
             for (const policy of policies) {
                 if (age <= policy.max_age) {
-                    guestPrice = Number(policy.price)
+                    percentage = Number(policy.percentage)
                     break
                 }
             }
         }
+        
+        const guestPrice = Number(targetRoom.price_per_night) * (percentage / 100)
         calculatedTotalAmount += guestPrice
     }
 
@@ -132,7 +177,7 @@ async function create(saleInputValues) {
       company_id = null,
     } = saleInputValues
 
-    const sale_number = uuidv4()
+    const sale_number = generateOrderNumber()
     const lead_guest_id = guest_ids[0]
 
     const saleResults = await client.query({
@@ -240,15 +285,73 @@ async function findAllByHotelId(hotelId) {
   return results.rows
 }
 
+async function findOneByIdWithDetails(saleId) {
+  validateUUID(saleId)
+  const results = await database.query({
+    text: `
+      SELECT 
+        sales.*,
+        hotels.name as hotel_name,
+        hotels.address as hotel_address,
+        hotels.city as hotel_city,
+        hotels.state as hotel_state,
+        hotels.phone as hotel_phone,
+        rooms.name as room_name,
+        rooms.description as room_description,
+        "room-types".name as room_type,
+        "room-categories".name as room_category,
+        (
+          SELECT json_agg(g.*)
+          FROM sales_guests sg
+          JOIN guests g ON sg.guest_id = g.id
+          WHERE sg.sale_id = sales.id
+        ) as guests
+      FROM 
+        sales
+      JOIN
+        hotels ON sales.hotel_id = hotels.id
+      JOIN
+        rooms ON sales.room_id = rooms.id
+      JOIN
+        "room-types" ON rooms.room_type_id = "room-types".id
+      JOIN
+        "room-categories" ON rooms.room_category_id = "room-categories".id
+      WHERE 
+        sales.id = $1
+    `,
+    values: [saleId],
+  })
+
+  if (results.rowCount === 0) {
+    throw new NotFoundError({
+      message: "O ID da venda informado não foi encontrado no sistema.",
+      action: "Verifique se o ID está digitado corretamente.",
+    })
+  }
+
+  return results.rows[0]
+}
+
 async function findAllByGuestId(guestId) {
   const results = await database.query({
     text: `
       SELECT 
         sales.*,
         hotels.name as hotel_name,
+        hotels.address as hotel_address,
+        hotels.city as hotel_city,
+        hotels.state as hotel_state,
+        hotels.phone as hotel_phone,
         rooms.name as room_name,
+        rooms.description as room_description,
         "room-types".name as room_type,
-        "room-categories".name as room_category
+        "room-categories".name as room_category,
+        (
+          SELECT json_agg(g.*)
+          FROM sales_guests sg
+          JOIN guests g ON sg.guest_id = g.id
+          WHERE sg.sale_id = sales.id
+        ) as guests
       FROM 
         sales
       JOIN
@@ -265,6 +368,44 @@ async function findAllByGuestId(guestId) {
         sales.created_at DESC
     `,
     values: [guestId],
+  })
+
+  return results.rows
+}
+
+async function findAll() {
+  const results = await database.query({
+    text: `
+      SELECT 
+        sales.*,
+        hotels.name as hotel_name,
+        hotels.address as hotel_address,
+        hotels.city as hotel_city,
+        hotels.state as hotel_state,
+        hotels.phone as hotel_phone,
+        rooms.name as room_name,
+        rooms.description as room_description,
+        "room-types".name as room_type,
+        "room-categories".name as room_category,
+        (
+          SELECT json_agg(g.*)
+          FROM sales_guests sg
+          JOIN guests g ON sg.guest_id = g.id
+          WHERE sg.sale_id = sales.id
+        ) as guests
+      FROM 
+        sales
+      JOIN
+        hotels ON sales.hotel_id = hotels.id
+      JOIN
+        rooms ON sales.room_id = rooms.id
+      JOIN
+        "room-types" ON rooms.room_type_id = "room-types".id
+      JOIN
+        "room-categories" ON rooms.room_category_id = "room-categories".id
+      ORDER BY 
+        sales.created_at DESC
+    `,
   })
 
   return results.rows
@@ -345,9 +486,20 @@ async function deleteById(saleId, hotelId) {
   })
 }
 
+function generateOrderNumber() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 const sale = {
   create,
   findOneById,
+  findOneByIdWithDetails,
+  findAll,
   findAllByHotelId,
   findAllByGuestId,
   update,

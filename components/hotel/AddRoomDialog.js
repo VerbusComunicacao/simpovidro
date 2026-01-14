@@ -21,6 +21,7 @@ import {
 import { Plus, Trash2, Bold, Italic, Superscript } from "lucide-react";
 import ErrorDialog from "@/components/ui/ErrorDialog";
 
+
 export function AddRoomDialog({
   children,
   hotelId,
@@ -204,6 +205,7 @@ export function AddRoomDialog({
                   className="col-span-3"
                 />
               </div>
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">
                   Nome (opcional)

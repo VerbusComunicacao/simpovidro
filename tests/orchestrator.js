@@ -77,7 +77,8 @@ async function createHotel(userId, hotelData) {
       address: hotelData?.address || faker.location.streetAddress(),
       state: hotelData?.state || faker.location.state(),
       check_in_date: hotelData?.check_in_date || new Date().toISOString(),
-      check_out_date: hotelData?.check_out_date || new Date(Date.now() + 86400000 * 3).toISOString()
+      check_out_date: hotelData?.check_out_date || new Date(Date.now() + 86400000 * 3).toISOString(),
+      price_policies: hotelData?.price_policies || [],
     },
     userId,
   )
@@ -109,7 +110,7 @@ async function createRoom(userId, roomData) {
       total_rooms:
         roomData?.total_rooms ?? faker.number.int({ min: 1, max: 10 }),
       available_rooms:
-        roomData?.available_rooms ?? faker.number.int({ min: 0, max: 5 }),
+        roomData?.available_rooms ?? faker.number.int({ min: 1, max: 5 }),
       blocked_rooms:
         roomData?.blocked_rooms ?? faker.number.int({ min: 0, max: 3 }),
     },
@@ -196,22 +197,22 @@ const orchestrator = {
   setUserFeatures,
   activateHotel,
   injectPasswordRecoveryToken,
-  injectPasswordRecoveryToken,
+
   createPricePolicy,
   webserverUrl,
 }
 
-async function createPricePolicy(roomCategoryId, policyData) {
+async function createPricePolicy(hotelId, policyData) {
   return await database.query({
     text: `
-      INSERT INTO price_policies (room_category_id, max_age, price, description)
+      INSERT INTO price_policies (hotel_id, max_age, percentage, description)
       VALUES ($1, $2, $3, $4)
       RETURNING *
     `,
     values: [
-      roomCategoryId, 
+      hotelId, 
       policyData.max_age, 
-      policyData.price, 
+      policyData.percentage, 
       policyData.description
     ]
   })

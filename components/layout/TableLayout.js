@@ -10,12 +10,19 @@ export default function TableLayout({ children, pageActions }) {
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.replace("/login")
+    if (!isLoading) {
+      if (!user) {
+        router.replace("/login")
+        return
+      }
+
+      if (!user.features?.includes("read:content")) {
+        router.replace("/inscricao")
+      }
     }
   }, [user, isLoading, router])
 
-  if (isLoading || !user) {
+  if (isLoading || !user || !user.features?.includes("read:content")) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         Carregando...
@@ -32,6 +39,16 @@ export default function TableLayout({ children, pageActions }) {
             <Link href="/table" legacyBehavior>
               <a className="text-gray-600 hover:text-gray-900 font-medium">
                 Hotéis
+              </a>
+            </Link>
+            <Link href="/table/inscricoes" legacyBehavior>
+              <a className="text-gray-600 hover:text-gray-900 font-medium">
+                Inscrições
+              </a>
+            </Link>
+            <Link href="/table/empresas" legacyBehavior>
+              <a className="text-gray-600 hover:text-gray-900 font-medium">
+                Empresas
               </a>
             </Link>
             <Link href="/table/room-types" legacyBehavior>

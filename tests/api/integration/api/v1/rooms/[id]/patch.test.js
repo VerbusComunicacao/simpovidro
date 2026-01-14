@@ -116,7 +116,14 @@ describe("PATCH /api/v1/rooms/[id]", () => {
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
+      const hotel = await orchestrator.createHotel(createdUser.id)
+      const roomType = await orchestrator.createRoomType(createdUser.id)
+      const roomCategory = await orchestrator.createRoomCategory(createdUser.id)
+
       const created = await orchestrator.createRoom(createdUser.id, {
+        hotel_id: hotel.id,
+        room_type_id: roomType.id,
+        room_category_id: roomCategory.id,
         price_per_night: 150.0,
         total_rooms: 5,
         blocked_rooms: 2,
@@ -151,12 +158,20 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         room_type_id: created.room_type_id,
         room_category_id: created.room_category_id,
         price_per_night: "200.00",
+        price_policies: [],
         total_rooms: 8,
         available_rooms: 6,
         blocked_rooms: 2,
         user_id: createdUser.id,
         created_at: created.created_at.toISOString(),
         updated_at: expect.any(String),
+        hotel_name: hotel.name,
+        hotel_check_in_date: hotel.check_in_date.toISOString(),
+        hotel_check_out_date: hotel.check_out_date.toISOString(),
+        room_type: roomType.name,
+        room_category: roomCategory.name,
+        max_adults: roomCategory.max_adults,
+        max_children: roomCategory.max_children,
       })
     })
 
@@ -256,12 +271,29 @@ describe("PATCH /api/v1/rooms/[id]", () => {
 
       expect(patchResponse.status).toBe(200)
       const roomUpdated = await patchResponse.json()
-      expect(roomUpdated).toMatchObject({
+      expect(roomUpdated).toEqual({
         id: roomCreated.id,
+        hotel_id: hotel.id,
+        name: null,
+        description: null,
+        photos: [],
+        room_type_id: roomType.id,
+        room_category_id: roomCategory.id,
+        price_per_night: roomCreated.price_per_night,
+        price_policies: [],
         total_rooms: 12,
         available_rooms: 10,
         blocked_rooms: 2,
         user_id: createdUser.id,
+        created_at: expect.any(String),
+        updated_at: expect.any(String),
+        hotel_name: hotel.name,
+        hotel_check_in_date: hotel.check_in_date.toISOString(),
+        hotel_check_out_date: hotel.check_out_date.toISOString(),
+        room_type: roomType.name,
+        room_category: roomCategory.name,
+        max_adults: roomCategory.max_adults,
+        max_children: roomCategory.max_children
       })
 
       const patchResponse2 = await fetch(
@@ -278,12 +310,29 @@ describe("PATCH /api/v1/rooms/[id]", () => {
 
       expect(patchResponse2.status).toBe(200)
       const roomUpdated2 = await patchResponse2.json()
-      expect(roomUpdated2).toMatchObject({
+      expect(roomUpdated2).toEqual({
         id: roomCreated.id,
+        hotel_id: hotel.id,
+        name: null,
+        description: null,
+        photos: [],
+        room_type_id: roomType.id,
+        room_category_id: roomCategory.id,
+        price_per_night: roomCreated.price_per_night,
+        price_policies: [],
         total_rooms: 2,
         available_rooms: 0,
         blocked_rooms: 2,
         user_id: createdUser.id,
+        created_at: expect.any(String),
+        updated_at: expect.any(String),
+        hotel_name: hotel.name,
+        hotel_check_in_date: hotel.check_in_date.toISOString(),
+        hotel_check_out_date: hotel.check_out_date.toISOString(),
+        room_type: roomType.name,
+        room_category: roomCategory.name,
+        max_adults: roomCategory.max_adults,
+        max_children: roomCategory.max_children
       })
 
       const patchResponse3 = await fetch(
@@ -395,5 +444,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         action: "Ajuste os valores e tente novamente.",
       })
     })
+
+
   })
 })

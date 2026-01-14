@@ -14,6 +14,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import TableLayout from "@/components/layout/TableLayout";
 import ErrorDialog from "@/components/ui/ErrorDialog";
+import { PricePolicyManager } from "@/components/hotel/PricePolicyManager";
 
 export default function AddHotelPage() {
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function AddHotelPage() {
   const [action, setAction] = useState("");
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pricePolicies, setPricePolicies] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,6 +54,7 @@ export default function AddHotelPage() {
         country,
         check_in_date: checkInDate,
         check_out_date: checkOutDate,
+        price_policies: pricePolicies,
       }),
     });
 
@@ -169,6 +172,15 @@ export default function AddHotelPage() {
                     required
                   />
                 </div>
+              </div>
+              
+              <div className="my-6 border-t pt-6">
+                <h3 className="text-sm font-medium mb-4">Políticas de Preço por Idade</h3>
+                <PricePolicyManager 
+                  policies={pricePolicies} 
+                  onChange={setPricePolicies} 
+                  hideSideLabel={true}
+                />
               </div>
               <div className="flex justify-end mt-6">
                 <Button type="submit" disabled={loading}>
