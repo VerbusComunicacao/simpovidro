@@ -98,9 +98,10 @@ function filterOutput(user, feature, output) {
     const clonedOutput = { ...output }
 
     // Se o usuário não é o dono do recurso, remove campos sensíveis
-    const isOwner = feature === "read:user" 
-      ? user.id === output.id 
-      : user.id === output.user_id
+    const isOwner =
+      feature === "read:user"
+        ? user.id === output.id
+        : user.id === output.user_id
 
     if (!isOwner) {
       // Remove campos que só o dono deve ver

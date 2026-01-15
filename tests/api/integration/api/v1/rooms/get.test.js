@@ -85,11 +85,17 @@ describe("GET /api/v1/rooms", () => {
     test("Only returns user's own rooms", async () => {
       const user1 = await orchestrator.createUser()
       await orchestrator.activateUser(user1.id)
-      await orchestrator.setUserFeatures(user1.id, ["create:content", "read:content"])
+      await orchestrator.setUserFeatures(user1.id, [
+        "create:content",
+        "read:content",
+      ])
 
       const user2 = await orchestrator.createUser()
       await orchestrator.activateUser(user2.id)
-      await orchestrator.setUserFeatures(user2.id, ["create:content", "read:content"])
+      await orchestrator.setUserFeatures(user2.id, [
+        "create:content",
+        "read:content",
+      ])
 
       const session1 = await orchestrator.createSession(user1.id)
       const session2 = await orchestrator.createSession(user2.id)

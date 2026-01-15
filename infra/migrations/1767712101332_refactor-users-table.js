@@ -5,9 +5,9 @@ exports.up = (pgm) => {
       notNull: true,
       default: "Usuário",
     },
-  });
+  })
 
-  pgm.alterColumn("users", "full_name", {notNull: true});
+  pgm.alterColumn("users", "full_name", { notNull: true })
 
-  pgm.dropColumn("users", "username");
-};
+  pgm.dropColumn("users", "username")
+}

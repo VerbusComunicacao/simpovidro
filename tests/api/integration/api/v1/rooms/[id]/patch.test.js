@@ -293,7 +293,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         room_type: roomType.name,
         room_category: roomCategory.name,
         max_adults: roomCategory.max_adults,
-        max_children: roomCategory.max_children
+        max_children: roomCategory.max_children,
       })
 
       const patchResponse2 = await fetch(
@@ -332,7 +332,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         room_type: roomType.name,
         room_category: roomCategory.name,
         max_adults: roomCategory.max_adults,
-        max_children: roomCategory.max_children
+        max_children: roomCategory.max_children,
       })
 
       const patchResponse3 = await fetch(
@@ -444,7 +444,5 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         action: "Ajuste os valores e tente novamente.",
       })
     })
-
-
   })
 })

@@ -107,7 +107,6 @@ async function update(userId, userInputNewValues) {
     await validateUniqueEmail(userInputNewValues.email)
   }
 
-
   if ("password" in userInputNewValues) {
     await hashPasswordInObject(userInputNewValues)
   }
@@ -178,7 +177,6 @@ async function validateUniqueEmail(email) {
     })
   }
 }
-
 
 async function hashPasswordInObject(userInputNewValues) {
   const passwordHashed = await password.hash(userInputNewValues.password)

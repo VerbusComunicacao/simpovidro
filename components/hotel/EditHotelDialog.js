@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -7,48 +7,56 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import ErrorDialog from "@/components/ui/ErrorDialog";
-import { PricePolicyManager } from "./PricePolicyManager";
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import ErrorDialog from "@/components/ui/ErrorDialog"
+import { PricePolicyManager } from "./PricePolicyManager"
 
 export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState(hotel.name);
-  const [email, setEmail] = useState(hotel.email);
-  const [phone, setPhone] = useState(hotel.phone);
-  const [address, setAddress] = useState(hotel.address);
-  const [city, setCity] = useState(hotel.city);
-  const [state, setState] = useState(hotel.state);
-  const [country, setCountry] = useState(hotel.country);
-  const [checkInDate, setCheckInDate] = useState("");
-  const [checkOutDate, setCheckOutDate] = useState("");
-  const [error, setError] = useState("");
-  const [action, setAction] = useState("");
-  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [pricePolicies, setPricePolicies] = useState(hotel.price_policies || []);
+  const [open, setOpen] = useState(false)
+  const [name, setName] = useState(hotel.name)
+  const [email, setEmail] = useState(hotel.email)
+  const [phone, setPhone] = useState(hotel.phone)
+  const [address, setAddress] = useState(hotel.address)
+  const [city, setCity] = useState(hotel.city)
+  const [state, setState] = useState(hotel.state)
+  const [country, setCountry] = useState(hotel.country)
+  const [checkInDate, setCheckInDate] = useState("")
+  const [checkOutDate, setCheckOutDate] = useState("")
+  const [error, setError] = useState("")
+  const [action, setAction] = useState("")
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [pricePolicies, setPricePolicies] = useState(hotel.price_policies || [])
 
   useEffect(() => {
-    setName(hotel.name || "");
-    setEmail(hotel.email || "");
-    setPhone(hotel.phone || "");
-    setAddress(hotel.address || "");
-    setCity(hotel.city || "");
-    setState(hotel.state || "");
-    setCountry(hotel.country || "Brasil");
-    setCheckInDate(hotel.check_in_date ? new Date(hotel.check_in_date).toISOString().slice(0, 16) : "");
-    setCheckOutDate(hotel.check_out_date ? new Date(hotel.check_out_date).toISOString().slice(0, 16) : "");
-    setPricePolicies(hotel.price_policies || []);
-  }, [hotel]);
+    setName(hotel.name || "")
+    setEmail(hotel.email || "")
+    setPhone(hotel.phone || "")
+    setAddress(hotel.address || "")
+    setCity(hotel.city || "")
+    setState(hotel.state || "")
+    setCountry(hotel.country || "Brasil")
+    setCheckInDate(
+      hotel.check_in_date
+        ? new Date(hotel.check_in_date).toISOString().slice(0, 16)
+        : "",
+    )
+    setCheckOutDate(
+      hotel.check_out_date
+        ? new Date(hotel.check_out_date).toISOString().slice(0, 16)
+        : "",
+    )
+    setPricePolicies(hotel.price_policies || [])
+  }, [hotel])
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setAction("");
-    setLoading(true);
+    e.preventDefault()
+    setError("")
+    setAction("")
+    setLoading(true)
 
     const response = await fetch(`/api/v1/hotels/${hotel.id}`, {
       method: "PATCH",
@@ -67,22 +75,22 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
         check_out_date: checkOutDate,
         price_policies: pricePolicies,
       }),
-    });
+    })
 
-    setLoading(false);
+    setLoading(false)
 
     if (response.ok) {
-      onHotelUpdated();
-      setOpen(false);
+      onHotelUpdated()
+      setOpen(false)
     } else {
-      const data = await response.json();
-      setError(data.message || "Ocorreu um erro ao editar o hotel.");
+      const data = await response.json()
+      setError(data.message || "Ocorreu um erro ao editar o hotel.")
       if (data.action) {
-        setAction(data.action);
+        setAction(data.action)
       }
-      setIsErrorDialogOpen(true);
+      setIsErrorDialogOpen(true)
     }
-  };
+  }
 
   return (
     <>
@@ -91,9 +99,7 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Editar Hotel</DialogTitle>
-            <DialogDescription>
-              Atualize os dados do hotel.
-            </DialogDescription>
+            <DialogDescription>Atualize os dados do hotel.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="max-h-[70vh] overflow-y-auto px-1">
@@ -226,5 +232,5 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
         actionMessage={action}
       />
     </>
-  );
+  )
 }

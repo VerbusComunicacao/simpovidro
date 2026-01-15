@@ -164,7 +164,10 @@ async function upsert(guestData, userId = null) {
     "birth_date",
   ])
 
-  const existingGuest = await findOneByCpfOrRg(guestData.cpf_number, guestData.rg_number)
+  const existingGuest = await findOneByCpfOrRg(
+    guestData.cpf_number,
+    guestData.rg_number,
+  )
 
   if (existingGuest) {
     return await update(existingGuest.id, guestData)
@@ -388,7 +391,6 @@ const guest = {
   findOneByUserId,
   findOneByCpfOrRg,
   findAll,
-  update,
   deleteById,
 }
 

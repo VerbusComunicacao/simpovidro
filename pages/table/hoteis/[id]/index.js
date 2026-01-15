@@ -1,16 +1,16 @@
-import { useRouter } from "next/router";
-import useSWR from "swr";
-import TableLayout from "@/components/layout/TableLayout";
+import { useRouter } from "next/router"
+import useSWR from "swr"
+import TableLayout from "@/components/layout/TableLayout"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { Badge } from "@/components/ui/badge"
 import {
   ArrowLeft,
   Pencil,
@@ -18,12 +18,12 @@ import {
   Plus,
   BedDouble,
   CheckCircle,
-} from "lucide-react";
-import ErrorDialog from "@/components/ui/ErrorDialog";
-import { useEffect, useState } from "react";
-import { AddRoomDialog } from "@/components/hotel/AddRoomDialog";
-import { EditHotelDialog } from "@/components/hotel/EditHotelDialog";
-import { EditRoomDialog } from "@/components/hotel/EditRoomDialog";
+} from "lucide-react"
+import ErrorDialog from "@/components/ui/ErrorDialog"
+import { useEffect, useState } from "react"
+import { AddRoomDialog } from "@/components/hotel/AddRoomDialog"
+import { EditHotelDialog } from "@/components/hotel/EditHotelDialog"
+import { EditRoomDialog } from "@/components/hotel/EditRoomDialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,63 +34,63 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import useUser from "@/hooks/useUser";
+} from "@/components/ui/alert-dialog"
+import useUser from "@/hooks/useUser"
 
 const fetcher = async (url) => {
-  const res = await fetch(url);
+  const res = await fetch(url)
   if (!res.ok) {
-    const error = new Error("An error occurred while fetching the data.");
-    error.info = await res.json();
-    error.status = res.status;
-    throw error;
+    const error = new Error("An error occurred while fetching the data.")
+    error.info = await res.json()
+    error.status = res.status
+    throw error
   }
-  return res.json();
-};
+  return res.json()
+}
 
 export default function HotelPage() {
-  const router = useRouter();
-  const { id: hotelId } = router.query;
-  const { user } = useUser();
+  const router = useRouter()
+  const { id: hotelId } = router.query
+  const { user } = useUser()
 
   const {
     data: hotel,
     error: hotelError,
     mutate: mutateHotel,
-  } = useSWR(hotelId ? `/api/v1/hotels/${hotelId}` : null, fetcher);
+  } = useSWR(hotelId ? `/api/v1/hotels/${hotelId}` : null, fetcher)
 
   const {
     data: rooms,
     error: roomsError,
     mutate: mutateRooms,
-  } = useSWR(hotelId ? `/api/v1/rooms?hotel_id=${hotelId}` : null, fetcher);
+  } = useSWR(hotelId ? `/api/v1/rooms?hotel_id=${hotelId}` : null, fetcher)
 
   const { data: roomTypes, error: roomTypesError } = useSWR(
     "/api/v1/room-types",
-    fetcher
-  );
+    fetcher,
+  )
   const { data: roomCategories, error: roomCategoriesError } = useSWR(
     "/api/v1/room-categories",
-    fetcher
-  );
+    fetcher,
+  )
 
-  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
-  const [errorInfo, setErrorInfo] = useState(null);
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
+  const [errorInfo, setErrorInfo] = useState(null)
 
   useEffect(() => {
     const error =
-      hotelError || roomsError || roomTypesError || roomCategoriesError;
+      hotelError || roomsError || roomTypesError || roomCategoriesError
     if (error) {
       setErrorInfo({
         title: "Erro ao carregar dados",
         message: error.info?.message || "Ocorreu um erro ao buscar os dados.",
         actionMessage: error.info?.action,
         retry: () => {
-          if (hotelError) mutateHotel();
-          if (roomsError) mutateRooms();
+          if (hotelError) mutateHotel()
+          if (roomsError) mutateRooms()
         },
-      });
-      setIsErrorDialogOpen(true);
+      })
+      setIsErrorDialogOpen(true)
     }
   }, [
     hotelError,
@@ -99,7 +99,7 @@ export default function HotelPage() {
     roomCategoriesError,
     mutateHotel,
     mutateRooms,
-  ]);
+  ])
 
   const handleActivate = async () => {
     try {
@@ -109,56 +109,59 @@ export default function HotelPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ active: true }),
-      });
+      })
       if (response.ok) {
-        mutateHotel();
+        mutateHotel()
       } else {
-        const data = await response.json();
+        const data = await response.json()
         setErrorInfo({
           title: "Erro ao Ativar Hotel",
           message: data.message || "Ocorreu um erro.",
           actionMessage: data.action,
-        });
-        setIsErrorDialogOpen(true);
+        })
+        setIsErrorDialogOpen(true)
       }
     } catch (error) {
       setErrorInfo({
         title: "Erro ao Ativar Hotel",
         message: "Ocorreu um erro de conexão.",
-      });
-      setIsErrorDialogOpen(true);
+      })
+      setIsErrorDialogOpen(true)
     }
-  };
+  }
 
   const handleDelete = async () => {
     try {
       const response = await fetch(`/api/v1/hotels/${hotelId}`, {
         method: "DELETE",
-      });
+      })
       if (response.ok) {
-        router.push("/table");
+        router.push("/table")
       } else {
-        const data = await response.json();
+        const data = await response.json()
         setErrorInfo({
           title: "Erro ao Deletar Hotel",
           message: data.message || "Ocorreu um erro.",
           actionMessage: data.action,
-        });
-        setIsErrorDialogOpen(true);
+        })
+        setIsErrorDialogOpen(true)
       }
     } catch (error) {
       setErrorInfo({
         title: "Erro ao Deletar Hotel",
         message: "Ocorreu um erro de conexão.",
-      });
-      setIsErrorDialogOpen(true);
+      })
+      setIsErrorDialogOpen(true)
     }
-  };
+  }
 
   const pageActions = hotel && (
     <>
       {!hotel.active && (
-        <Button onClick={handleActivate} className="bg-green-600 hover:bg-green-700">
+        <Button
+          onClick={handleActivate}
+          className="bg-green-600 hover:bg-green-700"
+        >
           <CheckCircle className="mr-2 h-4 w-4" /> Ativar Hotel
         </Button>
       )}
@@ -178,8 +181,8 @@ export default function HotelPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
               <AlertDialogDescription>
-                Esta ação não pode ser desfeita. Isso irá deletar permanentemente o
-                hotel e todos os seus quartos.
+                Esta ação não pode ser desfeita. Isso irá deletar
+                permanentemente o hotel e todos os seus quartos.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -197,11 +200,11 @@ export default function HotelPage() {
         </Button>
       </Link>
     </>
-  );
+  )
 
   const renderEmptyState = () => {
     if (!roomTypes || !roomCategories) {
-      return <div>Carregando pré-requisitos...</div>;
+      return <div>Carregando pré-requisitos...</div>
     }
 
     if (roomTypes.length === 0 || roomCategories.length === 0) {
@@ -222,15 +225,13 @@ export default function HotelPage() {
             </Link>
           )}
         </div>
-      );
+      )
     }
 
     return (
       <div className="flex flex-col items-center justify-center text-center p-10 border-2 border-dashed rounded-lg">
         <BedDouble className="h-12 w-12 text-gray-400 mb-4" />
-        <h2 className="text-xl font-semibold mb-2">
-          Nenhum quarto cadastrado
-        </h2>
+        <h2 className="text-xl font-semibold mb-2">Nenhum quarto cadastrado</h2>
         <p className="text-gray-500 mb-4">
           Comece adicionando um novo quarto para este hotel.
         </p>
@@ -245,8 +246,8 @@ export default function HotelPage() {
           </Button>
         </AddRoomDialog>
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <TableLayout pageActions={pageActions}>
@@ -348,5 +349,5 @@ export default function HotelPage() {
         onRetry={errorInfo?.retry}
       />
     </TableLayout>
-  );
+  )
 }

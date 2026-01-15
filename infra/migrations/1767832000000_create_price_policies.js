@@ -37,5 +37,5 @@ exports.up = (pgm) => {
 }
 
 exports.down = (pgm) => {
-    pgm.dropTable("price_policies")
+  pgm.dropTable("price_policies")
 }

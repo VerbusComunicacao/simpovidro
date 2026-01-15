@@ -1,22 +1,22 @@
-import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
-import useUser from "../../../hooks/useUser";
-import TableLayout from "../../../components/layout/TableLayout";
-import availableFeatures from "../../../models/user-features";
-import { Spinner } from "../../../components/ui/spinner";
-import { Button } from "../../../components/ui/button";
-import { Label } from "../../../components/ui/label";
-import { Input } from "../../../components/ui/input"; // Import Input component
+import { useState, useEffect } from "react"
+import { useRouter } from "next/router"
+import useUser from "../../../hooks/useUser"
+import TableLayout from "../../../components/layout/TableLayout"
+import availableFeatures from "../../../models/user-features"
+import { Spinner } from "../../../components/ui/spinner"
+import { Button } from "../../../components/ui/button"
+import { Label } from "../../../components/ui/label"
+import { Input } from "../../../components/ui/input" // Import Input component
 
 export default function FeaturesSettings() {
-  const router = useRouter();
-  const { user, isLoading: userLoading } = useUser();
-  const [searchUsername, setSearchUsername] = useState("");
-  const [selectedUser, setSelectedUser] = useState(null); // Store the full user object
-  const [features, setFeatures] = useState([]);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const router = useRouter()
+  const { user, isLoading: userLoading } = useUser()
+  const [searchUsername, setSearchUsername] = useState("")
+  const [selectedUser, setSelectedUser] = useState(null) // Store the full user object
+  const [features, setFeatures] = useState([])
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState("")
+  const [error, setError] = useState("")
 
   useEffect(() => {
     if (selectedUser) {
@@ -25,32 +25,32 @@ export default function FeaturesSettings() {
         .then((res) => res.json())
         .then((data) => {
           if (data.features) {
-            setFeatures(data.features);
+            setFeatures(data.features)
           } else {
-            setFeatures([]);
+            setFeatures([])
           }
         })
         .catch((err) => {
-          console.error("Error fetching user features:", err);
-          setError("Erro ao carregar funcionalidades do usuário.");
-          setFeatures([]);
-        });
+          console.error("Error fetching user features:", err)
+          setError("Erro ao carregar funcionalidades do usuário.")
+          setFeatures([])
+        })
     } else {
-      setFeatures([]);
+      setFeatures([])
     }
-  }, [selectedUser]);
+  }, [selectedUser])
 
   if (userLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Spinner size="large" />
       </div>
-    );
+    )
   }
 
   if (!user) {
-    router.push("/login");
-    return null;
+    router.push("/login")
+    return null
   }
 
   if (!user.features.includes("update:user")) {
@@ -60,54 +60,54 @@ export default function FeaturesSettings() {
           <p>Você não tem permissão para ver esta página.</p>
         </div>
       </TableLayout>
-    );
+    )
   }
 
   const handleSearch = async () => {
-    setError("");
-    setMessage("");
-    setSelectedUser(null);
-    setFeatures([]);
+    setError("")
+    setMessage("")
+    setSelectedUser(null)
+    setFeatures([])
 
     if (!searchUsername) {
-      setError("Por favor, digite um nome de usuário para buscar.");
-      return;
+      setError("Por favor, digite um nome de usuário para buscar.")
+      return
     }
 
     try {
-      const response = await fetch(`/api/v1/users/${searchUsername}`);
+      const response = await fetch(`/api/v1/users/${searchUsername}`)
       if (response.ok) {
-        const userData = await response.json();
-        setSelectedUser(userData);
+        const userData = await response.json()
+        setSelectedUser(userData)
       } else if (response.status === 404) {
-        setError(`Usuário "${searchUsername}" não encontrado.`);
+        setError(`Usuário "${searchUsername}" não encontrado.`)
       } else {
-        const errorData = await response.json();
-        setError(errorData.error?.message || "Erro ao buscar usuário.");
+        const errorData = await response.json()
+        setError(errorData.error?.message || "Erro ao buscar usuário.")
       }
     } catch (err) {
-      console.error("Error during user search:", err);
-      setError("Erro de conexão ao buscar usuário.");
+      console.error("Error during user search:", err)
+      setError("Erro de conexão ao buscar usuário.")
     }
-  };
+  }
 
   const handleFeatureChange = (feature) => {
     setFeatures((prevFeatures) =>
       prevFeatures.includes(feature)
         ? prevFeatures.filter((f) => f !== feature)
-        : [...prevFeatures, feature]
-    );
-  };
+        : [...prevFeatures, feature],
+    )
+  }
 
   const handleSave = async () => {
-    setSaving(true);
-    setMessage("");
-    setError("");
+    setSaving(true)
+    setMessage("")
+    setError("")
 
     if (!selectedUser) {
-      setError("Nenhum usuário selecionado para salvar.");
-      setSaving(false);
-      return;
+      setError("Nenhum usuário selecionado para salvar.")
+      setSaving(false)
+      return
     }
 
     const response = await fetch(
@@ -118,23 +118,21 @@ export default function FeaturesSettings() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ features }),
-      }
-    );
+      },
+    )
 
     if (response.ok) {
-      setMessage("Funcionalidades salvas com sucesso!");
+      setMessage("Funcionalidades salvas com sucesso!")
       // Re-fetch user data to ensure features are updated in the UI
-      handleSearch();
-      setTimeout(() => setMessage(""), 3000);
+      handleSearch()
+      setTimeout(() => setMessage(""), 3000)
     } else {
-      const errorData = await response.json();
-      setError(
-        errorData.error?.message || "Erro ao salvar funcionalidades."
-      );
+      const errorData = await response.json()
+      setError(errorData.error?.message || "Erro ao salvar funcionalidades.")
     }
 
-    setSaving(false);
-  };
+    setSaving(false)
+  }
 
   return (
     <TableLayout>
@@ -159,7 +157,7 @@ export default function FeaturesSettings() {
               placeholder="Digite o username"
               onKeyPress={(e) => {
                 if (e.key === "Enter") {
-                  handleSearch();
+                  handleSearch()
                 }
               }}
             />
@@ -204,5 +202,5 @@ export default function FeaturesSettings() {
         )}
       </div>
     </TableLayout>
-  );
+  )
 }

@@ -2,19 +2,13 @@ import database from "infra/database.js"
 import { ValidationError, NotFoundError } from "infra/errors.js"
 import { validateRequiredFields, validateUUID } from "infra/validator.js"
 
-const REQUIRED_FIELDS = [
-  "guest_id",
-  "room_id",
-]
+const REQUIRED_FIELDS = ["guest_id", "room_id"]
 
 async function create(saleInputValues) {
-  validateRequiredFields(saleInputValues, [
-    "guest_ids",
-    "room_id",
-  ])
-  
+  validateRequiredFields(saleInputValues, ["guest_ids", "room_id"])
+
   const { guest_ids, room_id } = saleInputValues
-  
+
   if (!Array.isArray(guest_ids) || guest_ids.length === 0) {
     throw new ValidationError({
       message: "A lista de hóspedes não pode estar vazia.",
@@ -23,7 +17,7 @@ async function create(saleInputValues) {
   }
 
   const client = await database.getNewClient()
-  
+
   try {
     await client.query("BEGIN")
 
@@ -76,20 +70,20 @@ async function create(saleInputValues) {
 
     // 3. Fetch Guest Data (needed for both capacity and pricing)
     const guests = await client.query({
-        text: `SELECT id, birth_date FROM guests WHERE id = ANY($1)`,
-        values: [guest_ids]
+      text: `SELECT id, birth_date FROM guests WHERE id = ANY($1)`,
+      values: [guest_ids],
     })
 
     if (guests.rowCount !== guest_ids.length) {
-        throw new NotFoundError({
-            message: "Um ou mais hóspedes informados não foram encontrados.",
-            action: "Verifique os dados dos hóspedes."
-        })
+      throw new NotFoundError({
+        message: "Um ou mais hóspedes informados não foram encontrados.",
+        action: "Verifique os dados dos hóspedes.",
+      })
     }
 
     // 3.5 Check for overlapping registrations for these guests in this hotel
     const overlapResults = await client.query({
-        text: `
+      text: `
             SELECT 
                 g.name
             FROM 
@@ -104,75 +98,80 @@ async function create(saleInputValues) {
                 sg.guest_id = ANY($1) 
                 AND r.hotel_id = $2
             LIMIT 1;`,
-        values: [guest_ids, targetRoom.hotel_id]
+      values: [guest_ids, targetRoom.hotel_id],
     })
 
     if (overlapResults.rowCount > 0) {
-        throw new ValidationError({
-            message: `O hóspede ${overlapResults.rows[0].name} já possui uma inscrição para este hotel neste período.`,
-            action: "Verifique os dados da inscrição ou entre em contato com o suporte."
-        })
+      throw new ValidationError({
+        message: `O hóspede ${overlapResults.rows[0].name} já possui uma inscrição para este hotel neste período.`,
+        action:
+          "Verifique os dados da inscrição ou entre em contato com o suporte.",
+      })
     }
 
     // 4. Check room capacity (Adults vs Children)
     const referenceDate = new Date(targetRoom.hotel_check_in_date || new Date())
     let adultCount = 0
     let childCount = 0
-    
-    const guestAges = guests.rows.map(guest => {
-        const birth = new Date(guest.birth_date)
-        let age = referenceDate.getUTCFullYear() - birth.getUTCFullYear()
-        const m = referenceDate.getUTCMonth() - birth.getUTCMonth()
-        if (m < 0 || (m === 0 && referenceDate.getUTCDate() < birth.getUTCDate())) {
-            age--
-        }
-        
-        if (age >= 18) {
-            adultCount++
-        } else {
-            childCount++
-        }
-        return { guest, age }
+
+    const guestAges = guests.rows.map((guest) => {
+      const birth = new Date(guest.birth_date)
+      let age = referenceDate.getUTCFullYear() - birth.getUTCFullYear()
+      const m = referenceDate.getUTCMonth() - birth.getUTCMonth()
+      if (
+        m < 0 ||
+        (m === 0 && referenceDate.getUTCDate() < birth.getUTCDate())
+      ) {
+        age--
+      }
+
+      if (age >= 18) {
+        adultCount++
+      } else {
+        childCount++
+      }
+      return { guest, age }
     })
 
     if (adultCount > (targetRoom.max_adults || 0)) {
-        throw new ValidationError({
-            message: `O número de adultos (${adultCount}) excede a capacidade máxima do quarto (${targetRoom.max_adults}).`,
-            action: "Selecione um quarto com maior capacidade para adultos.",
-        })
+      throw new ValidationError({
+        message: `O número de adultos (${adultCount}) excede a capacidade máxima do quarto (${targetRoom.max_adults}).`,
+        action: "Selecione um quarto com maior capacidade para adultos.",
+      })
     }
 
     if (childCount > (targetRoom.max_children || 0)) {
-        throw new ValidationError({
-            message: `O número de crianças (${childCount}) excede a capacidade máxima do quarto (${targetRoom.max_children}).`,
-            action: "Selecione um quarto com maior capacidade para crianças.",
-        })
+      throw new ValidationError({
+        message: `O número de crianças (${childCount}) excede a capacidade máxima do quarto (${targetRoom.max_children}).`,
+        action: "Selecione um quarto com maior capacidade para crianças.",
+      })
     }
 
     // 5. Calculate Total Amount based on Age Policies
     let calculatedTotalAmount = 0
     const policies = targetRoom.price_policies || []
 
-    for (const { guest, age } of guestAges) {
-        let percentage = 100 // Default to 100% of price
-        
-        if (policies.length > 0) {
-            for (const policy of policies) {
-                if (age <= policy.max_age) {
-                    percentage = Number(policy.percentage)
-                    break
-                }
-            }
+    for (const { age } of guestAges) {
+      let percentage = 100 // Default to 100% of price
+
+      if (policies.length > 0) {
+        for (const policy of policies) {
+          if (age <= policy.max_age) {
+            percentage = Number(policy.percentage)
+            break
+          }
         }
-        
-        const guestPrice = Number(targetRoom.price_per_night) * (percentage / 100)
-        calculatedTotalAmount += guestPrice
+      }
+
+      const guestPrice = Number(targetRoom.price_per_night) * (percentage / 100)
+      calculatedTotalAmount += guestPrice
     }
 
     // 5. Create Sale
     const {
       check_in_date = targetRoom.hotel_check_in_date || new Date(),
-      check_out_date = targetRoom.hotel_check_out_date || new Date(new Date().setDate(new Date().getDate() + 3)),
+      check_out_date = targetRoom.hotel_check_out_date ||
+        new Date(new Date().setDate(new Date().getDate() + 3)),
       total_amount = calculatedTotalAmount,
       company_id = null,
     } = saleInputValues
@@ -215,7 +214,7 @@ async function create(saleInputValues) {
       })
     }
 
-    // 5. Update Room Availability 
+    // 5. Update Room Availability
     await client.query({
       text: `
         UPDATE "rooms"
@@ -234,7 +233,6 @@ async function create(saleInputValues) {
     await client.end()
   }
 }
-
 
 async function findOneById(saleId) {
   validateUUID(saleId)
@@ -487,12 +485,12 @@ async function deleteById(saleId, hotelId) {
 }
 
 function generateOrderNumber() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  let result = ""
   for (let i = 0; i < 8; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
   }
-  return result;
+  return result
 }
 
 const sale = {

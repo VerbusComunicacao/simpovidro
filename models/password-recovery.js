@@ -1,6 +1,6 @@
 import database from "infra/database.js"
 import crypto from "node:crypto"
-import { ValidationError, NotFoundError } from "infra/errors.js"
+import { ValidationError } from "infra/errors.js"
 import email from "infra/email.js"
 import webserver from "infra/webserver"
 import password from "models/password.js"
@@ -42,7 +42,7 @@ async function sendRecoveryEmail(user, token) {
   const recoveryLink = `${webserver.origin}/reset-password/${token}`
 
   await email.send({
-    from: "Peregrinos <contato@peregrinos.com.br>",
+    from: "Abravidro <contato@resend.dev>",
     to: user.email,
     subject: "Recuperação de Senha",
     text: `Olá ${user.full_name}, você solicitou a recuperação de sua senha no Simpovidro.
@@ -114,8 +114,10 @@ async function resetPassword(token, newPassword) {
   }
 }
 
-export default {
+const passwordRecovery = {
   createToken,
   findValidToken,
   resetPassword,
 }
+
+export default passwordRecovery

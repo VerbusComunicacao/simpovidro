@@ -26,6 +26,7 @@ async function postHandler(request, response) {
 
   // Sempre retornamos 202 para evitar enumeração de usuários
   return response.status(202).json({
-    message: "Se o e-mail informado estiver cadastrado em nossa base, um link de recuperação será enviado.",
+    message:
+      "Se o e-mail informado estiver cadastrado em nossa base, um link de recuperação será enviado.",
   })
 }

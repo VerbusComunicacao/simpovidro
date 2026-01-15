@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/router"
 import {
   Card,
@@ -19,14 +19,7 @@ export default function Activate() {
   const [actionMessage, setActionMessage] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
 
-  useEffect(() => {
-    if (!router.isReady) return
-    if (token) {
-      activateAccount()
-    }
-  }, [token, router.isReady])
-
-  const activateAccount = async () => {
+  const activateAccount = useCallback(async () => {
     try {
       const response = await fetch(`/api/v1/activations/${token}`, {
         method: "PATCH",
@@ -34,7 +27,9 @@ export default function Activate() {
 
       if (response.ok) {
         setStatus("success")
-        setMessage("Sua conta foi ativada com sucesso! Agora você já pode fazer login.")
+        setMessage(
+          "Sua conta foi ativada com sucesso! Agora você já pode fazer login.",
+        )
       } else {
         const data = await response.json()
         setMessage(data.message || "Erro ao ativar a conta.")
@@ -47,7 +42,14 @@ export default function Activate() {
       setStatus("error")
       setIsErrorDialogOpen(true)
     }
-  }
+  }, [token])
+
+  useEffect(() => {
+    if (!router.isReady) return
+    if (token) {
+      activateAccount()
+    }
+  }, [token, router.isReady, activateAccount])
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
@@ -55,7 +57,9 @@ export default function Activate() {
         <CardHeader className="text-center">
           <CardTitle>Ativação de Conta</CardTitle>
           <CardDescription>
-            {status === "loading" ? "Aguarde um momento..." : "Resultado da ativação"}
+            {status === "loading"
+              ? "Aguarde um momento..."
+              : "Resultado da ativação"}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center py-6 text-center">
@@ -64,8 +68,19 @@ export default function Activate() {
           )}
           {status === "success" && (
             <div className="mx-auto w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4 transition-all scale-110">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4.5 12.75l6 6 9-13.5"
+                />
               </svg>
             </div>
           )}

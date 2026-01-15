@@ -32,7 +32,7 @@ async function sendEmailToUser(user, activationToken) {
   const activationLink = `${webserver.origin}/cadastro/ativar/${activationToken}`
 
   await email.send({
-    from: "Peregrinos <contato@peregrinos.com.br>",
+    from: "Abravidro <contato@resend.dev>",
     to: user.email,
     subject: "Ative seu cadastro!",
     text: `${user.full_name}, clique no link abaixo para ativar o seu cadastro no Simpovidro:

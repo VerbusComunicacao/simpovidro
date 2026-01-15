@@ -1,3 +1,3 @@
 exports.up = (pgm) => {
-  pgm.dropColumn("guests", "email");
-};
+  pgm.dropColumn("guests", "email")
+}

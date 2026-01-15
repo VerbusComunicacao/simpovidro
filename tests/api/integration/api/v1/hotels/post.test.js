@@ -59,7 +59,8 @@ describe("POST /api/v1/hotels", () => {
       const hotelCreated = await response.json()
       expect(hotelCreated).toEqual({
         action: "Envie todos os campos obrigatórios e tente novamente.",
-        message: "Campos obrigatórios ausentes: name, city, country, check_in_date, check_out_date.",
+        message:
+          "Campos obrigatórios ausentes: name, city, country, check_in_date, check_out_date.",
         name: "ValidationError",
         status_code: 400,
       })

@@ -18,14 +18,17 @@ describe("PATCH /api/v1/guests/[id]", () => {
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
-      const createdGuest = await guest.create({
-        name: "Guest to Update",
-        phone: "+5511999999904",
-        gender: "Male",
-        rg_number: "444444444",
-        cpf_number: "444.444.444-04",
-        birth_date: "1994-01-01",
-      }, createdUser.id)
+      const createdGuest = await guest.create(
+        {
+          name: "Guest to Update",
+          phone: "+5511999999904",
+          gender: "Male",
+          rg_number: "444444444",
+          cpf_number: "444.444.444-04",
+          birth_date: "1994-01-01",
+        },
+        createdUser.id,
+      )
 
       const response = await fetch(
         `http://localhost:3000/api/v1/guests/${createdGuest.id}`,
@@ -90,23 +93,29 @@ describe("PATCH /api/v1/guests/[id]", () => {
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
-      await guest.create({
-        name: "Existing Guest",
-        phone: "+5511999999905",
-        gender: "Female",
-        rg_number: "555555555",
-        cpf_number: "555.555.555-05",
-        birth_date: "1995-01-01",
-      }, createdUser.id)
+      await guest.create(
+        {
+          name: "Existing Guest",
+          phone: "+5511999999905",
+          gender: "Female",
+          rg_number: "555555555",
+          cpf_number: "555.555.555-05",
+          birth_date: "1995-01-01",
+        },
+        createdUser.id,
+      )
 
-      const guestToUpdate = await guest.create({
-        name: "Another Guest",
-        phone: "+5511999999906",
-        gender: "Male",
-        rg_number: "666666666",
-        cpf_number: "666.666.666-06",
-        birth_date: "1996-01-01",
-      }, createdUser.id)
+      const guestToUpdate = await guest.create(
+        {
+          name: "Another Guest",
+          phone: "+5511999999906",
+          gender: "Male",
+          rg_number: "666666666",
+          cpf_number: "666.666.666-06",
+          birth_date: "1996-01-01",
+        },
+        createdUser.id,
+      )
 
       const response = await fetch(
         `http://localhost:3000/api/v1/guests/${guestToUpdate.id}`,

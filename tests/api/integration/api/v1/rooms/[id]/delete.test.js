@@ -66,7 +66,10 @@ describe("DELETE /api/v1/rooms/[id]", () => {
     test("Delete room successfully", async () => {
       const createdUser = await orchestrator.createUser()
       await orchestrator.activateUser(createdUser.id)
-      await orchestrator.setUserFeatures(createdUser.id, ["create:content", "delete:content"])
+      await orchestrator.setUserFeatures(createdUser.id, [
+        "create:content",
+        "delete:content",
+      ])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 

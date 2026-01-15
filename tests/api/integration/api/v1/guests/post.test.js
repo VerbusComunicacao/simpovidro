@@ -1,6 +1,5 @@
 import { version as uuidVersion } from "uuid"
 import orchestrator from "tests/orchestrator.js"
-import guest from "models/guest.js"
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
@@ -76,7 +75,7 @@ describe("POST /api/v1/guests", () => {
         has_diabetes: false,
         has_high_blood_pressure: false,
         has_low_blood_pressure: false,
-        birth_date: "1990-01-01T02:00:00.000Z",
+        birth_date: "1990-01-01",
         nationality: "Brasileira",
         address: null,
         address_number: null,

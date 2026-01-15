@@ -1,7 +1,7 @@
 exports.up = (pgm) => {
   // Remove reference to room-categories
   pgm.dropColumns("price_policies", ["room_category_id"], { cascade: true })
-  
+
   // Add reference to hotels
   pgm.addColumns("price_policies", {
     hotel_id: {

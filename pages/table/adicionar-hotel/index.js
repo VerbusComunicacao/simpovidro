@@ -1,43 +1,43 @@
-import { useState } from "react";
-import { useRouter } from "next/router";
-import { Button } from "@/components/ui/button";
+import { useState } from "react"
+import { useRouter } from "next/router"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import TableLayout from "@/components/layout/TableLayout";
-import ErrorDialog from "@/components/ui/ErrorDialog";
-import { PricePolicyManager } from "@/components/hotel/PricePolicyManager";
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
+import TableLayout from "@/components/layout/TableLayout"
+import ErrorDialog from "@/components/ui/ErrorDialog"
+import { PricePolicyManager } from "@/components/hotel/PricePolicyManager"
 
 export default function AddHotelPage() {
-  const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [country, setCountry] = useState("Brasil");
-  const [checkInDate, setCheckInDate] = useState("");
-  const [checkOutDate, setCheckOutDate] = useState("");
-  const [error, setError] = useState("");
-  const [action, setAction] = useState("");
-  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [pricePolicies, setPricePolicies] = useState([]);
+  const router = useRouter()
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [address, setAddress] = useState("")
+  const [city, setCity] = useState("")
+  const [state, setState] = useState("")
+  const [country, setCountry] = useState("Brasil")
+  const [checkInDate, setCheckInDate] = useState("")
+  const [checkOutDate, setCheckOutDate] = useState("")
+  const [error, setError] = useState("")
+  const [action, setAction] = useState("")
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [pricePolicies, setPricePolicies] = useState([])
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setAction("");
-    setLoading(true);
+    e.preventDefault()
+    setError("")
+    setAction("")
+    setLoading(true)
 
     const response = await fetch("/api/v1/hotels", {
       method: "POST",
@@ -56,21 +56,21 @@ export default function AddHotelPage() {
         check_out_date: checkOutDate,
         price_policies: pricePolicies,
       }),
-    });
+    })
 
-    setLoading(false);
+    setLoading(false)
 
     if (response.ok) {
-      router.push("/table");
+      router.push("/table")
     } else {
-      const data = await response.json();
-      setError(data.message || "Ocorreu um erro ao adicionar o hotel.");
+      const data = await response.json()
+      setError(data.message || "Ocorreu um erro ao adicionar o hotel.")
       if (data.action) {
-        setAction(data.action);
+        setAction(data.action)
       }
-      setIsErrorDialogOpen(true);
+      setIsErrorDialogOpen(true)
     }
-  };
+  }
 
   const pageActions = (
     <Link href="/table" passHref>
@@ -78,7 +78,7 @@ export default function AddHotelPage() {
         <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
       </Button>
     </Link>
-  );
+  )
 
   return (
     <TableLayout pageActions={pageActions}>
@@ -86,9 +86,7 @@ export default function AddHotelPage() {
         <Card className="w-full max-w-2xl">
           <CardHeader>
             <CardTitle>Adicionar Novo Hotel</CardTitle>
-            <CardDescription>
-              Preencha os dados do novo hotel.
-            </CardDescription>
+            <CardDescription>Preencha os dados do novo hotel.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit}>
@@ -165,7 +163,7 @@ export default function AddHotelPage() {
                 <div className="space-y-1.5">
                   <Label htmlFor="check_out_date">Fim do evento</Label>
                   <Input
-                    id="check_out_date" 
+                    id="check_out_date"
                     type="datetime-local"
                     value={checkOutDate}
                     onChange={(e) => setCheckOutDate(e.target.value)}
@@ -173,12 +171,14 @@ export default function AddHotelPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="my-6 border-t pt-6">
-                <h3 className="text-sm font-medium mb-4">Políticas de Preço por Idade</h3>
-                <PricePolicyManager 
-                  policies={pricePolicies} 
-                  onChange={setPricePolicies} 
+                <h3 className="text-sm font-medium mb-4">
+                  Políticas de Preço por Idade
+                </h3>
+                <PricePolicyManager
+                  policies={pricePolicies}
+                  onChange={setPricePolicies}
                   hideSideLabel={true}
                 />
               </div>
@@ -200,5 +200,5 @@ export default function AddHotelPage() {
         actionMessage={action}
       />
     </TableLayout>
-  );
+  )
 }

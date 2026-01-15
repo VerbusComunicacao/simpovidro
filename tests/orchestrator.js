@@ -77,7 +77,9 @@ async function createHotel(userId, hotelData) {
       address: hotelData?.address || faker.location.streetAddress(),
       state: hotelData?.state || faker.location.state(),
       check_in_date: hotelData?.check_in_date || new Date().toISOString(),
-      check_out_date: hotelData?.check_out_date || new Date(Date.now() + 86400000 * 3).toISOString(),
+      check_out_date:
+        hotelData?.check_out_date ||
+        new Date(Date.now() + 86400000 * 3).toISOString(),
       price_policies: hotelData?.price_policies || [],
     },
     userId,
@@ -210,11 +212,11 @@ async function createPricePolicy(hotelId, policyData) {
       RETURNING *
     `,
     values: [
-      hotelId, 
-      policyData.max_age, 
-      policyData.percentage, 
-      policyData.description
-    ]
+      hotelId,
+      policyData.max_age,
+      policyData.percentage,
+      policyData.description,
+    ],
   })
 }
 

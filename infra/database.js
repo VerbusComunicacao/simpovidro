@@ -1,4 +1,8 @@
-import { Client } from "pg"
+import { Client, types } from "pg"
+
+// Force DATE (OID 1082) to be returned as string to avoid timezone shifts
+// https://github.com/brianc/node-pg-types
+types.setTypeParser(1082, (val) => val)
 import { ServiceError } from "./errors.js"
 
 async function query(queryObject) {

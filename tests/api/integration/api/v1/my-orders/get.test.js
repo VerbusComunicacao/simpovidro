@@ -38,39 +38,44 @@ describe("GET /api/v1/my-orders", () => {
       await orchestrator.activateUser(user.id)
       const session = await orchestrator.createSession(user.id)
       const token = session.token
-      
+
       // 2. Create Hotel & Room
       const hotel = await orchestrator.createHotel(user.id)
-      const room = await orchestrator.createRoom(user.id, { 
+      const room = await orchestrator.createRoom(user.id, {
         hotel_id: hotel.id,
-        available_rooms: 5 // Ensure availability
+        available_rooms: 5, // Ensure availability
       })
 
       // 3. Register Guest & Create Sale (via existing flow or direct DB insertion)
-      
-      // Insert Sale manually or via orchestrator helper if available. 
-      // Since orchestrator might not have createSale, we rely on the API flow or modify orchestrator. 
+
+      // Insert Sale manually or via orchestrator helper if available.
+      // Since orchestrator might not have createSale, we rely on the API flow or modify orchestrator.
       // For this test, let's use the POST /registrations endpoint to simulate real flow.
-      
-      const registrationResponse = await fetch("http://localhost:3000/api/v1/registrations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          cookie: `session_id=${token}`,
+
+      const registrationResponse = await fetch(
+        "http://localhost:3000/api/v1/registrations",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            cookie: `session_id=${token}`,
+          },
+          body: JSON.stringify({
+            room_id: room.id,
+            guests_data: [
+              {
+                name: "Test Guest",
+                email: "test@example.com",
+                phone: "123456789",
+                gender: "Masculino",
+                rg_number: "123456789",
+                cpf_number: "123.456.789-00",
+                birth_date: "1990-01-01",
+              },
+            ],
+          }),
         },
-        body: JSON.stringify({
-          room_id: room.id,
-          guests_data: [{
-             name: "Test Guest",
-             email: "test@example.com",
-             phone: "123456789",
-             gender: "Masculino",
-             rg_number: "123456789",
-             cpf_number: "123.456.789-00",
-             birth_date: "1990-01-01"
-          }]
-        })
-      })
+      )
 
       expect(registrationResponse.status).toBe(201)
 

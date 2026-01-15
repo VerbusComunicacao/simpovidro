@@ -11,7 +11,6 @@ import {
   ValidationError,
 } from "infra/errors"
 import user from "models/user.js"
-import authorization from "models/authorization"
 
 function onErrorHandler(error, request, response) {
   if (

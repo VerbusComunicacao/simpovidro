@@ -22,7 +22,7 @@ async function create(companyInputValues) {
     "permission",
     "discount_status",
   ])
-  
+
   if (companyInputValues.cnpj) {
     await verifyIfCompanyAlreadyExists(companyInputValues.cnpj)
   }
@@ -41,10 +41,10 @@ async function create(companyInputValues) {
       neighborhood = null,
       city,
       state = null,
-      country = 'Brasil',
+      country = "Brasil",
       phone = null,
-      permission = 'A',
-      discount_status = 'N',
+      permission = "A",
+      discount_status = "N",
       email = null,
       responsible_person = null,
       zip_code = null,
@@ -65,10 +65,22 @@ async function create(companyInputValues) {
           *
       `,
       values: [
-        corporate_name, badge, cnpj, address, address_number, 
-        address_complement, neighborhood, city, state, country, 
-        phone, permission, discount_status, email, responsible_person, 
-        zip_code
+        corporate_name,
+        badge,
+        cnpj,
+        address,
+        address_number,
+        address_complement,
+        neighborhood,
+        city,
+        state,
+        country,
+        phone,
+        permission,
+        discount_status,
+        email,
+        responsible_person,
+        zip_code,
       ],
     })
 
@@ -180,10 +192,23 @@ async function update(companyId, companyInputNewValues) {
           *
       `,
       values: [
-        id, corporate_name, badge, cnpj, address, address_number, 
-        address_complement, neighborhood, city, state, country, 
-        phone, permission, discount_status, email, responsible_person, 
-        zip_code
+        id,
+        corporate_name,
+        badge,
+        cnpj,
+        address,
+        address_number,
+        address_complement,
+        neighborhood,
+        city,
+        state,
+        country,
+        phone,
+        permission,
+        discount_status,
+        email,
+        responsible_person,
+        zip_code,
       ],
     })
 
