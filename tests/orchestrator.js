@@ -47,7 +47,13 @@ async function waitForAllServices() {
 }
 
 async function clearDatabase() {
-  await database.query("drop schema public cascade; create schema public;")
+  if (process.env.NODE_ENV === "test" || process.env.DATABASE_ENV === "test") {
+    await database.query(
+      "drop schema if exists test cascade; create schema test;",
+    )
+  } else {
+    await database.query("drop schema public cascade; create schema public;")
+  }
 }
 
 async function runPendingMigrations() {

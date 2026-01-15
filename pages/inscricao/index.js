@@ -119,7 +119,6 @@ export default function RegistrationPage({ activeHotels }) {
                     </span>
                   </div>
                 )}
-                {activeHotel.email && <div>{activeHotel.email}</div>}
               </div>
             </div>
           </div>

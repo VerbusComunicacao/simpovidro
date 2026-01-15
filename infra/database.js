@@ -9,6 +9,7 @@ async function query(queryObject) {
   let client
   try {
     client = await getNewClient()
+
     const result = await client.query(queryObject)
     return result
   } catch (error) {
@@ -33,6 +34,11 @@ async function getNewClient() {
   })
 
   await client.connect()
+
+  if (process.env.NODE_ENV === "test" || process.env.DATABASE_ENV === "test") {
+    await client.query("SET search_path TO test, public")
+  }
+
   return client
 }
 

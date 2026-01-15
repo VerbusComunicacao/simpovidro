@@ -19,6 +19,10 @@ async function listPendingMigrations() {
     const pendingMigrations = await migrationRunner({
       ...defaultMigrationOptions,
       dbClient,
+      schema:
+        process.env.NODE_ENV === "test" || process.env.DATABASE_ENV === "test"
+          ? "test"
+          : "public",
     })
 
     return pendingMigrations
@@ -37,6 +41,10 @@ async function runPendingMigrations() {
       ...defaultMigrationOptions,
       dbClient,
       dryRun: false,
+      schema:
+        process.env.NODE_ENV === "test" || process.env.DATABASE_ENV === "test"
+          ? "test"
+          : "public",
     })
 
     return migratedMigrations

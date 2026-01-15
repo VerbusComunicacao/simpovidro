@@ -16,7 +16,7 @@ async function runTestsWithCleanup() {
       "-k",
       "--success",
       "command-jest",
-      '"next dev"',
+      '"DATABASE_ENV=test next dev"',
       `"jest --runInBand --verbose ${process.argv.slice(2).join(" ")}"`,
     ],
     {
