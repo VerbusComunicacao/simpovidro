@@ -70,6 +70,10 @@ describe("Use case: Registration flow (all successful)", () => {
       "delete:user",
       "delete:user:others",
       "read:user:others",
+      "create:company",
+      "read:company",
+      "update:company",
+      "delete:company",
     ])
   })
 

@@ -27,6 +27,10 @@ export default function AddHotelPage() {
   const [country, setCountry] = useState("Brasil")
   const [checkInDate, setCheckInDate] = useState("")
   const [checkOutDate, setCheckOutDate] = useState("")
+  const [
+    associatedCompanyDiscountPercentage,
+    setAssociatedCompanyDiscountPercentage,
+  ] = useState("20.00")
   const [error, setError] = useState("")
   const [action, setAction] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
@@ -54,6 +58,8 @@ export default function AddHotelPage() {
         country,
         check_in_date: checkInDate,
         check_out_date: checkOutDate,
+        associated_company_discount_percentage:
+          associatedCompanyDiscountPercentage,
         price_policies: pricePolicies,
       }),
     })
@@ -168,6 +174,21 @@ export default function AddHotelPage() {
                     value={checkOutDate}
                     onChange={(e) => setCheckOutDate(e.target.value)}
                     required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="associated_discount">
+                    Desconto p/ Empresa (%)
+                  </Label>
+                  <Input
+                    id="associated_discount"
+                    type="number"
+                    step="0.01"
+                    value={associatedCompanyDiscountPercentage}
+                    onChange={(e) =>
+                      setAssociatedCompanyDiscountPercentage(e.target.value)
+                    }
+                    placeholder="20.00"
                   />
                 </div>
               </div>

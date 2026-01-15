@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { FormattedText } from "@/components/ui/FormattedText"
-import { Users, CheckCircle, BedDouble, Calendar } from "lucide-react"
+import { Users, CheckCircle, BedDouble } from "lucide-react"
 import { useState } from "react"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 import Image from "next/image"
@@ -123,7 +123,7 @@ export default function RoomDetailsPage({ room }) {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div>
                     <span className="text-sm text-gray-500 uppercase font-semibold">
-                      Valor
+                      Valor por pessoa
                     </span>
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-bold text-gray-900">
@@ -161,37 +161,19 @@ export default function RoomDetailsPage({ room }) {
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-50 rounded-full">
-                  <Calendar className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">Período do Evento</p>
-                  <p className="text-sm text-gray-500">
-                    {room.hotel_check_in_date
-                      ? new Date(room.hotel_check_in_date).toLocaleDateString(
-                          "pt-BR",
-                        )
-                      : "--"}{" "}
-                    até{" "}
-                    {room.hotel_check_out_date
-                      ? new Date(room.hotel_check_out_date).toLocaleDateString(
-                          "pt-BR",
-                        )
-                      : "--"}
-                  </p>
-                </div>
-              </div>
+
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-green-50 rounded-full">
                   <CheckCircle className="h-4 w-4 text-green-600" />
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">
-                    Cancelamento Simples
+                    Desconto associado
                   </p>
                   <p className="text-sm text-gray-500">
-                    Regras de cancelamento flexíveis conforme edital.
+                    Desconto de{" "}
+                    {Number(room.hotel_associated_discount_percentage)}% para
+                    empresas associadas da Abravidro
                   </p>
                 </div>
               </div>

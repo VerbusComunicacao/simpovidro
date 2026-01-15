@@ -23,11 +23,14 @@ async function create(companyInputValues) {
     "discount_status",
   ])
 
-  if (companyInputValues.cnpj) {
-    await verifyIfCompanyAlreadyExists(companyInputValues.cnpj)
+  const cleanCnpj = companyInputValues.cnpj?.replace(/\D/g, "")
+  const valuesWithCleanCnpj = { ...companyInputValues, cnpj: cleanCnpj }
+
+  if (cleanCnpj) {
+    await verifyIfCompanyAlreadyExists(cleanCnpj)
   }
 
-  const newCompany = await runInsertQuery(companyInputValues)
+  const newCompany = await runInsertQuery(valuesWithCleanCnpj)
   return newCompany
 
   async function runInsertQuery(values) {
@@ -130,15 +133,17 @@ async function update(companyId, companyInputNewValues) {
 
   const currentCompany = await findOneById(companyId)
 
-  if (
-    "cnpj" in companyInputNewValues &&
-    companyInputNewValues.cnpj &&
-    companyInputNewValues.cnpj !== currentCompany.cnpj
-  ) {
-    await verifyIfCompanyAlreadyExists(companyInputNewValues.cnpj)
+  const cleanCnpj = companyInputNewValues.cnpj?.replace(/\D/g, "")
+
+  if (cleanCnpj && cleanCnpj !== currentCompany.cnpj) {
+    await verifyIfCompanyAlreadyExists(cleanCnpj)
   }
 
-  const companyWithNewValues = { ...currentCompany, ...companyInputNewValues }
+  const companyWithNewValues = {
+    ...currentCompany,
+    ...companyInputNewValues,
+    cnpj: cleanCnpj || currentCompany.cnpj,
+  }
 
   const updatedCompany = await runUpdateQuery(companyWithNewValues)
   return updatedCompany
@@ -226,6 +231,7 @@ async function deleteById(companyId) {
 }
 
 async function verifyIfCompanyAlreadyExists(cnpj) {
+  const cleanCnpj = cnpj.replace(/\D/g, "")
   const results = await database.query({
     text: `
       SELECT id
@@ -233,7 +239,7 @@ async function verifyIfCompanyAlreadyExists(cnpj) {
       WHERE cnpj = $1
       LIMIT 1
     `,
-    values: [cnpj],
+    values: [cleanCnpj],
   })
 
   if (results.rowCount > 0) {
@@ -252,9 +258,11 @@ async function findOneByCnpj(cnpj) {
     })
   }
 
+  const cleanCnpj = cnpj.replace(/\D/g, "")
+
   const results = await database.query({
     text: `SELECT * FROM companies WHERE cnpj = $1 LIMIT 1;`,
-    values: [cnpj],
+    values: [cleanCnpj],
   })
 
   if (results.rowCount === 0) {
