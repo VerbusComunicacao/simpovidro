@@ -23,6 +23,15 @@ import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 
 import { CompanyDialog } from "@/components/company/CompanyDialog"
+import { CSVImportDialog } from "@/components/company/CSVImportDialog"
+import { FileUp, Filter } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -45,6 +54,8 @@ export default function CompaniesTable() {
   } = useSWR("/api/v1/companies", fetcher)
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [discountFilter, setDiscountFilter] = useState("all")
 
   useEffect(() => {
     if (companiesError) {
@@ -54,12 +65,27 @@ export default function CompaniesTable() {
 
   const filteredCompanies = companies?.filter((company) => {
     const searchLower = searchTerm.toLowerCase()
-    return (
+
+    // Filtro de Texto
+    const matchesSearch =
       company.corporate_name?.toLowerCase().includes(searchLower) ||
       company.cnpj?.includes(searchTerm) ||
       company.city?.toLowerCase().includes(searchLower) ||
       company.responsible_person?.toLowerCase().includes(searchLower)
-    )
+
+    // Filtro de Status (Ativa/Inativa)
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && company.permission === "A") ||
+      (statusFilter === "inactive" && company.permission === "I")
+
+    // Filtro de Desconto
+    const matchesDiscount =
+      discountFilter === "all" ||
+      (discountFilter === "with" && company.discount_status === "S") ||
+      (discountFilter === "without" && company.discount_status === "N")
+
+    return matchesSearch && matchesStatus && matchesDiscount
   })
 
   return (
@@ -71,14 +97,67 @@ export default function CompaniesTable() {
             Listagem de todas as empresas cadastradas no sistema.
           </p>
         </div>
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Buscar por nome, CNPJ, cidade..."
-            className="pl-9"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-400" />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[140px] bg-white">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos Status</SelectItem>
+                <SelectItem value="active">Ativas</SelectItem>
+                <SelectItem value="inactive">Inativas</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={discountFilter} onValueChange={setDiscountFilter}>
+              <SelectTrigger className="w-[150px] bg-white">
+                <SelectValue placeholder="Desconto" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos Descontos</SelectItem>
+                <SelectItem value="with">Com Desconto</SelectItem>
+                <SelectItem value="without">Sem Desconto</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="h-8 w-px bg-gray-200 mx-1 hidden md:block" />
+
+          <Button
+            variant="outline"
+            className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+            onClick={async () => {
+              if (
+                window.confirm(
+                  "TEM CERTEZA? Isso apagará TODAS as empresas do sistema permanentemente.",
+                )
+              ) {
+                await fetch("/api/v1/companies/batch", { method: "DELETE" })
+                mutate()
+              }
+            }}
+          >
+            Apagar Todas
+          </Button>
+          <CSVImportDialog onImportSuccess={mutate}>
+            <Button
+              variant="outline"
+              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+            >
+              <FileUp className="mr-2 h-4 w-4" /> Importar CSV
+            </Button>
+          </CSVImportDialog>
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Buscar..."
+              className="pl-9 bg-white"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 

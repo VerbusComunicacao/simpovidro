@@ -17,10 +17,7 @@ async function create(companyInputValues) {
     "state",
     "phone",
     "email",
-    "responsible_person",
     "zip_code",
-    "permission",
-    "discount_status",
   ])
 
   const cleanCnpj = companyInputValues.cnpj?.replace(/\D/g, "")
@@ -51,6 +48,7 @@ async function create(companyInputValues) {
       email = null,
       responsible_person = null,
       zip_code = null,
+      last_registration_date = null,
     } = values
 
     const results = await database.query({
@@ -60,10 +58,10 @@ async function create(companyInputValues) {
             corporate_name, badge, cnpj, address, address_number, 
             address_complement, neighborhood, city, state, country, 
             phone, permission, discount_status, email, responsible_person, 
-            zip_code
+            zip_code, last_registration_date
           )
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
         RETURNING
           *
       `,
@@ -84,6 +82,7 @@ async function create(companyInputValues) {
         email,
         responsible_person,
         zip_code,
+        last_registration_date,
       ],
     })
 
@@ -167,6 +166,7 @@ async function update(companyId, companyInputNewValues) {
       email,
       responsible_person,
       zip_code,
+      last_registration_date,
     } = values
 
     const results = await database.query({
@@ -190,6 +190,7 @@ async function update(companyId, companyInputNewValues) {
           email = $15,
           responsible_person = $16,
           zip_code = $17,
+          last_registration_date = $18,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
@@ -214,6 +215,7 @@ async function update(companyId, companyInputNewValues) {
         email,
         responsible_person,
         zip_code,
+        last_registration_date,
       ],
     })
 
@@ -275,12 +277,19 @@ async function findOneByCnpj(cnpj) {
   return results.rows[0]
 }
 
+async function deleteAll() {
+  await database.query({
+    text: `DELETE FROM companies`,
+  })
+}
+
 const company = {
   create,
   findOneById,
   findAll,
   update,
   deleteById,
+  deleteAll,
   findOneByCnpj,
 }
 
