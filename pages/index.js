@@ -45,6 +45,17 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  const scrollToSection = (e, id) => {
+    e.preventDefault()
+    const element = document.getElementById(id)
+    if (element) {
+      window.scrollTo({
+        top: element.offsetTop - 80, // Offset for sticky header
+        behavior: "smooth",
+      })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 overflow-x-hidden">
       <Head>
@@ -79,22 +90,23 @@ export default function Home() {
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
             {[
-              "Sobre",
-              "Palestrantes",
-              "Programação",
-              "Preços",
-              "Logística",
+              { name: "Sobre", id: "sobre" },
+              { name: "Palestrantes", id: "palestrantes" },
+              { name: "Programação", id: "programacao" },
+              { name: "Preços", id: "precos" },
+              { name: "Dicas e lembretes", id: "dicas" },
             ].map((item) => (
               <a
-                key={item}
-                href={`#${item.toLowerCase()}`}
+                key={item.name}
+                href={`#${item.id}`}
+                onClick={(e) => scrollToSection(e, item.id)}
                 className={`${
                   scrolled
                     ? "text-slate-600 hover:text-blue-600"
                     : "text-white/80 hover:text-white"
-                } transition-colors`}
+                } transition-colors cursor-pointer`}
               >
-                {item}
+                {item.name}
               </a>
             ))}
             <Button
@@ -151,11 +163,7 @@ export default function Home() {
               size="lg"
               variant="outline"
               className="bg-white/10 backdrop-blur-lg border-white/20 text-white hover:bg-white/20 rounded-full h-14 px-10 text-lg transition-all"
-              onClick={() =>
-                document
-                  .getElementById("programacao")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
+              onClick={(e) => scrollToSection(e, "programacao")}
             >
               Ver Programação
             </Button>
@@ -269,10 +277,10 @@ export default function Home() {
                 image: "/images/ricardo-amorim.jpg",
               },
               {
-                name: "Pedro Doria",
-                role: "Inovação & Tecnologia",
-                specialty: "Transformação Digital",
-                image: "/images/pedro-doria.jpg",
+                name: "Menzinho",
+                role: "Criatividade & Performance",
+                specialty: "Comunicação Disruptiva",
+                image: "/images/menzinho.jpg",
               },
             ].map((p, i) => (
               <div key={i} className="group relative">
@@ -310,7 +318,7 @@ export default function Home() {
       </section>
 
       {/* Programming Preview */}
-      <section id="programação" className="py-24 bg-white">
+      <section id="programacao" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col lg:flex-row justify-between items-end gap-6 mb-16">
             <div className="max-w-2xl">
@@ -375,7 +383,10 @@ export default function Home() {
       </section>
 
       {/* Pricing / Acomodações Sidebar */}
-      <section id="preços" className="py-24 bg-slate-50">
+      <section
+        id="precos"
+        className="py-24 bg-slate-50 border-y border-slate-200"
+      >
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 space-y-8">
@@ -435,7 +446,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div id="logística" className="space-y-6">
+            <div id="logistica" className="space-y-6">
               <Card className="bg-blue-600 text-white border-none shadow-2xl">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -578,7 +589,7 @@ export default function Home() {
       </section>
 
       {/* Sponsors - Partners Area */}
-      <section className="py-24 bg-white">
+      <section id="patrocinadores" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-slate-400 font-bold uppercase tracking-widest text-xs mb-2">
@@ -710,24 +721,40 @@ export default function Home() {
               <h4 className="text-white font-bold mb-6 italic tracking-tight uppercase text-xs">
                 Menu
               </h4>
-              <ul className="space-y-4 text-sm">
+              <ul className="space-y-4 text-slate-400">
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#sobre"
+                    onClick={(e) => scrollToSection(e, "sobre")}
+                    className="hover:text-white transition-colors"
+                  >
                     Sobre
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#palestrantes"
+                    onClick={(e) => scrollToSection(e, "palestrantes")}
+                    className="hover:text-white transition-colors"
+                  >
                     Palestrantes
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#programacao"
+                    onClick={(e) => scrollToSection(e, "programacao")}
+                    className="hover:text-white transition-colors"
+                  >
                     Programação
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#patrocinadores"
+                    onClick={(e) => scrollToSection(e, "patrocinadores")}
+                    className="hover:text-white transition-colors"
+                  >
                     Patrocinadores
                   </a>
                 </li>
@@ -740,22 +767,38 @@ export default function Home() {
               </h4>
               <ul className="space-y-4 text-sm">
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Tabela de Preços
+                  <a
+                    href="#precos"
+                    onClick={(e) => scrollToSection(e, "precos")}
+                    className="hover:text-white transition-colors"
+                  >
+                    Benfícios & Investimento
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#logistica"
+                    onClick={(e) => scrollToSection(e, "logistica")}
+                    className="hover:text-white transition-colors"
+                  >
                     Acomodações
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#logistica"
+                    onClick={(e) => scrollToSection(e, "logistica")}
+                    className="hover:text-white transition-colors"
+                  >
                     Passagens
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#dicas"
+                    onClick={(e) => scrollToSection(e, "dicas")}
+                    className="hover:text-white transition-colors"
+                  >
                     Dicas & Lembretes
                   </a>
                 </li>
