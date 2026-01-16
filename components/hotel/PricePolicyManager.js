@@ -70,7 +70,7 @@ export function PricePolicyManager({
                   onChange={(e) =>
                     handlePolicyChange(index, "description", e.target.value)
                   }
-                  placeholder="Ex: Crianças até 5 anos"
+                  placeholder="Ex: Crianças até 5 anos não pagam"
                   className="h-8"
                 />
               </div>

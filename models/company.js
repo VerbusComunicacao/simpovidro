@@ -17,17 +17,17 @@ async function create(companyInputValues) {
     "state",
     "phone",
     "email",
-    "responsible_person",
     "zip_code",
-    "permission",
-    "discount_status",
   ])
 
-  if (companyInputValues.cnpj) {
-    await verifyIfCompanyAlreadyExists(companyInputValues.cnpj)
+  const cleanCnpj = companyInputValues.cnpj?.replace(/\D/g, "")
+  const valuesWithCleanCnpj = { ...companyInputValues, cnpj: cleanCnpj }
+
+  if (cleanCnpj) {
+    await verifyIfCompanyAlreadyExists(cleanCnpj)
   }
 
-  const newCompany = await runInsertQuery(companyInputValues)
+  const newCompany = await runInsertQuery(valuesWithCleanCnpj)
   return newCompany
 
   async function runInsertQuery(values) {
@@ -48,6 +48,7 @@ async function create(companyInputValues) {
       email = null,
       responsible_person = null,
       zip_code = null,
+      last_registration_date = null,
     } = values
 
     const results = await database.query({
@@ -57,10 +58,10 @@ async function create(companyInputValues) {
             corporate_name, badge, cnpj, address, address_number, 
             address_complement, neighborhood, city, state, country, 
             phone, permission, discount_status, email, responsible_person, 
-            zip_code
+            zip_code, last_registration_date
           )
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
         RETURNING
           *
       `,
@@ -81,6 +82,7 @@ async function create(companyInputValues) {
         email,
         responsible_person,
         zip_code,
+        last_registration_date,
       ],
     })
 
@@ -130,15 +132,17 @@ async function update(companyId, companyInputNewValues) {
 
   const currentCompany = await findOneById(companyId)
 
-  if (
-    "cnpj" in companyInputNewValues &&
-    companyInputNewValues.cnpj &&
-    companyInputNewValues.cnpj !== currentCompany.cnpj
-  ) {
-    await verifyIfCompanyAlreadyExists(companyInputNewValues.cnpj)
+  const cleanCnpj = companyInputNewValues.cnpj?.replace(/\D/g, "")
+
+  if (cleanCnpj && cleanCnpj !== currentCompany.cnpj) {
+    await verifyIfCompanyAlreadyExists(cleanCnpj)
   }
 
-  const companyWithNewValues = { ...currentCompany, ...companyInputNewValues }
+  const companyWithNewValues = {
+    ...currentCompany,
+    ...companyInputNewValues,
+    cnpj: cleanCnpj || currentCompany.cnpj,
+  }
 
   const updatedCompany = await runUpdateQuery(companyWithNewValues)
   return updatedCompany
@@ -162,6 +166,7 @@ async function update(companyId, companyInputNewValues) {
       email,
       responsible_person,
       zip_code,
+      last_registration_date,
     } = values
 
     const results = await database.query({
@@ -185,6 +190,7 @@ async function update(companyId, companyInputNewValues) {
           email = $15,
           responsible_person = $16,
           zip_code = $17,
+          last_registration_date = $18,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
@@ -209,6 +215,7 @@ async function update(companyId, companyInputNewValues) {
         email,
         responsible_person,
         zip_code,
+        last_registration_date,
       ],
     })
 
@@ -226,6 +233,7 @@ async function deleteById(companyId) {
 }
 
 async function verifyIfCompanyAlreadyExists(cnpj) {
+  const cleanCnpj = cnpj.replace(/\D/g, "")
   const results = await database.query({
     text: `
       SELECT id
@@ -233,7 +241,7 @@ async function verifyIfCompanyAlreadyExists(cnpj) {
       WHERE cnpj = $1
       LIMIT 1
     `,
-    values: [cnpj],
+    values: [cleanCnpj],
   })
 
   if (results.rowCount > 0) {
@@ -252,9 +260,11 @@ async function findOneByCnpj(cnpj) {
     })
   }
 
+  const cleanCnpj = cnpj.replace(/\D/g, "")
+
   const results = await database.query({
     text: `SELECT * FROM companies WHERE cnpj = $1 LIMIT 1;`,
-    values: [cnpj],
+    values: [cleanCnpj],
   })
 
   if (results.rowCount === 0) {
@@ -267,12 +277,19 @@ async function findOneByCnpj(cnpj) {
   return results.rows[0]
 }
 
+async function deleteAll() {
+  await database.query({
+    text: `DELETE FROM companies`,
+  })
+}
+
 const company = {
   create,
   findOneById,
   findAll,
   update,
   deleteById,
+  deleteAll,
   findOneByCnpj,
 }
 

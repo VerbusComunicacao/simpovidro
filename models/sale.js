@@ -28,6 +28,7 @@ async function create(saleInputValues) {
           r.*,
           h.check_in_date as hotel_check_in_date,
           h.check_out_date as hotel_check_out_date,
+          h.associated_company_discount_percentage as hotel_associated_discount_percentage,
           rc.max_adults,
           rc.max_children,
           COALESCE(
@@ -176,15 +177,37 @@ async function create(saleInputValues) {
       company_id = null,
     } = saleInputValues
 
+    let final_discount_percentage = 0
+    let final_discount_amount = 0
+
+    if (company_id) {
+      const companyResults = await client.query({
+        text: `SELECT discount_status FROM companies WHERE id = $1 LIMIT 1`,
+        values: [company_id],
+      })
+
+      if (
+        companyResults.rows[0]?.discount_status === "S" ||
+        companyResults.rows[0]?.discount_status === "true"
+      ) {
+        final_discount_percentage = Number(
+          targetRoom.hotel_associated_discount_percentage,
+        )
+        final_discount_amount = total_amount * (final_discount_percentage / 100)
+      }
+    }
+
+    const final_amount = total_amount - final_discount_amount
+
     const sale_number = generateOrderNumber()
     const lead_guest_id = guest_ids[0]
 
     const saleResults = await client.query({
       text: `
         INSERT INTO
-          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, final_amount, sale_number, company_id)
+          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, discount_percentage, discount_amount, final_amount, sale_number, company_id)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING
           *
       `,
@@ -195,7 +218,9 @@ async function create(saleInputValues) {
         check_in_date,
         check_out_date,
         total_amount,
-        total_amount, // final_amount
+        final_discount_percentage,
+        final_discount_amount,
+        final_amount,
         sale_number,
         company_id,
       ],

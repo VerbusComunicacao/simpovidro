@@ -25,6 +25,10 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
   const [country, setCountry] = useState(hotel.country)
   const [checkInDate, setCheckInDate] = useState("")
   const [checkOutDate, setCheckOutDate] = useState("")
+  const [
+    associatedCompanyDiscountPercentage,
+    setAssociatedCompanyDiscountPercentage,
+  ] = useState(hotel.associated_company_discount_percentage || "0.00")
   const [error, setError] = useState("")
   const [action, setAction] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
@@ -48,6 +52,9 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
       hotel.check_out_date
         ? new Date(hotel.check_out_date).toISOString().slice(0, 16)
         : "",
+    )
+    setAssociatedCompanyDiscountPercentage(
+      hotel.associated_company_discount_percentage || "0.00",
     )
     setPricePolicies(hotel.price_policies || [])
   }, [hotel])
@@ -73,6 +80,8 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
         country,
         check_in_date: checkInDate,
         check_out_date: checkOutDate,
+        associated_company_discount_percentage:
+          associatedCompanyDiscountPercentage,
         price_policies: pricePolicies,
       }),
     })
@@ -208,6 +217,24 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
                     onChange={(e) => setCheckOutDate(e.target.value)}
                     className="col-span-3"
                     required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label
+                    htmlFor="associated-discount-edit"
+                    className="text-right"
+                  >
+                    Desconto Empresa (%)
+                  </Label>
+                  <Input
+                    id="associated-discount-edit"
+                    type="number"
+                    step="0.01"
+                    value={associatedCompanyDiscountPercentage}
+                    onChange={(e) =>
+                      setAssociatedCompanyDiscountPercentage(e.target.value)
+                    }
+                    className="col-span-3"
                   />
                 </div>
               </div>

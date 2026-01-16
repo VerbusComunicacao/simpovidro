@@ -46,21 +46,23 @@ async function create(guestInputValues, userId) {
       country = "Brasil",
       emergency_contact_name = null,
       emergency_contact_phone = null,
+      company_cnpj = null,
     } = guestInputValues
+
+    const cleanCompanyCnpj = company_cnpj?.replace(/\D/g, "")
 
     const results = await database.query({
       text: `
         INSERT INTO
-          guests (user_id, name, phone, badge_name, gender, rg_number, cpf_number, passport_number, medication_details, blood_type, blood_rh_factor, health_observations, special_needs_details, has_heart_condition, has_diabetes, has_high_blood_pressure, has_low_blood_pressure, birth_date, nationality, address, address_number, address_complement, neighborhood, city, state, country, emergency_contact_name, emergency_contact_phone, email)
+          guests (user_id, name, phone, badge_name, gender, rg_number, cpf_number, passport_number, medication_details, blood_type, blood_rh_factor, health_observations, special_needs_details, has_heart_condition, has_diabetes, has_high_blood_pressure, has_low_blood_pressure, birth_date, nationality, address, address_number, address_complement, neighborhood, city, state, country, emergency_contact_name, emergency_contact_phone, email, company_cnpj)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)
         RETURNING
           *
       `,
       values: [
         userId,
         name,
-
         phone,
         badge_name,
         gender,
@@ -88,6 +90,7 @@ async function create(guestInputValues, userId) {
         emergency_contact_name,
         emergency_contact_phone,
         email,
+        cleanCompanyCnpj,
       ],
     })
 
@@ -257,7 +260,10 @@ async function update(guestId, guestInputNewValues) {
       country,
       emergency_contact_name,
       emergency_contact_phone,
+      company_cnpj,
     } = guestWithNewValues
+
+    const cleanCompanyCnpj = company_cnpj?.replace(/\D/g, "")
 
     const results = await database.query({
       text: `
@@ -292,7 +298,8 @@ async function update(guestId, guestInputNewValues) {
           emergency_contact_name = $27,
           emergency_contact_phone = $28,
           updated_at = timezone('utc', now()),
-          email = $29
+          email = $29,
+          company_cnpj = $30
         WHERE
           id = $1
         RETURNING
@@ -328,23 +335,12 @@ async function update(guestId, guestInputNewValues) {
         emergency_contact_name,
         emergency_contact_phone,
         email,
+        cleanCompanyCnpj,
       ],
     })
 
     return results.rows[0]
   }
-}
-
-async function deleteById(guestId) {
-  validateUUID(guestId)
-
-  await database.query({
-    text: `
-    DELETE FROM guests
-    WHERE id = $1
-    `,
-    values: [guestId],
-  })
 }
 
 async function checkUniqueFields(guestData, currentGuestId = null) {
@@ -381,6 +377,18 @@ async function checkUniqueFields(guestData, currentGuestId = null) {
       }
     }
   }
+}
+
+async function deleteById(guestId) {
+  validateUUID(guestId)
+
+  await database.query({
+    text: `
+    DELETE FROM guests
+    WHERE id = $1
+    `,
+    values: [guestId],
+  })
 }
 
 const guest = {

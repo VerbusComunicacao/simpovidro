@@ -152,6 +152,7 @@ describe("PATCH /api/v1/hotels/[id]", () => {
             email: "updated@hotel.com",
             check_in_date: "2026-01-07T20:43:12.021Z",
             check_out_date: "2026-01-10T20:43:12.021Z",
+            associated_company_discount_percentage: "25.00",
           }),
           headers: {
             "Content-Type": "application/json",
@@ -171,6 +172,7 @@ describe("PATCH /api/v1/hotels/[id]", () => {
         phone: "+55 2199999999",
         state: "Rio de Janeiro",
         address: "Av. Copacabana, 123",
+        associated_company_discount_percentage: "25.00",
         email: "updated@hotel.com",
         check_in_date: "2026-01-07T20:43:12.021Z",
         check_out_date: "2026-01-10T20:43:12.021Z",

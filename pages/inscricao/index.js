@@ -119,7 +119,6 @@ export default function RegistrationPage({ activeHotels }) {
                     </span>
                   </div>
                 )}
-                {activeHotel.email && <div>{activeHotel.email}</div>}
               </div>
             </div>
           </div>
@@ -234,7 +233,7 @@ export default function RegistrationPage({ activeHotels }) {
                       <div className="pt-4 border-t flex items-center justify-between">
                         <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
-                            Valor
+                            Valor por pessoa
                           </p>
                           <p className="text-2xl font-bold text-gray-900">
                             {new Intl.NumberFormat("pt-BR", {

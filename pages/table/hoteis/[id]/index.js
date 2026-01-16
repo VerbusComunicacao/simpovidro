@@ -165,11 +165,6 @@ export default function HotelPage() {
           <CheckCircle className="mr-2 h-4 w-4" /> Ativar Hotel
         </Button>
       )}
-      <EditHotelDialog hotel={hotel} onHotelUpdated={mutateHotel}>
-        <Button variant="outline">
-          <Pencil className="mr-2 h-4 w-4" /> Editar Hotel
-        </Button>
-      </EditHotelDialog>
       {user?.features?.includes("delete:content") && (
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -263,16 +258,41 @@ export default function HotelPage() {
                   {hotel.city}, {hotel.state} - {hotel.country}
                 </CardDescription>
               </div>
-              {hotel.active && (
-                <Badge variant="success">Este hotel está ativo no site</Badge>
-              )}
+              <div className="flex flex-col items-end gap-2">
+                {hotel.active && (
+                  <Badge variant="success">Este hotel está ativo no site</Badge>
+                )}
+                <EditHotelDialog hotel={hotel} onHotelUpdated={mutateHotel}>
+                  <Button variant="outline" size="sm">
+                    <Pencil className="mr-2 h-4 w-4" /> Editar Hotel
+                  </Button>
+                </EditHotelDialog>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
             <p>{hotel.address}</p>
             <p>
-              {hotel.email} | {hotel.phone}
+              {hotel.email && hotel.email + " | "} {hotel.phone}
             </p>
+            <div className="mt-2 text-sm text-green-600 font-medium">
+              Desconto para empresas parceiras:{" "}
+              {hotel.associated_company_discount_percentage}%
+            </div>
+            <p className="mt-4 font-medium text-sm">Políticas de idade:</p>
+            <ul className="mt-2 space-y-1">
+              {hotel.price_policies && hotel.price_policies.length > 0 ? (
+                hotel.price_policies.map((policy, index) => (
+                  <li key={index} className="text-sm text-gray-600">
+                    • {policy.description || `Até ${policy.max_age} anos`}
+                  </li>
+                ))
+              ) : (
+                <li className="text-sm text-gray-400 italic">
+                  Nenhuma política de idade configurada.
+                </li>
+              )}
+            </ul>
           </CardContent>
         </Card>
       )}

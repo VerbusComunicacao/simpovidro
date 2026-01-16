@@ -156,6 +156,7 @@ describe("POST /api/v1/rooms", () => {
         created_at: expect.any(String),
         updated_at: expect.any(String),
         hotel_name: hotel.name,
+        hotel_associated_discount_percentage: "0.00",
         hotel_check_in_date: hotel.check_in_date.toISOString(),
         hotel_check_out_date: hotel.check_out_date.toISOString(),
         room_type: roomType.name,

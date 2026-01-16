@@ -65,6 +65,7 @@ describe("POST /api/v1/guests", () => {
         gender: "Male",
         rg_number: "123456789",
         cpf_number: "123.456.789-00",
+        company_cnpj: null,
         passport_number: null,
         medication_details: null,
         blood_type: null,
