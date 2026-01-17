@@ -168,13 +168,14 @@ async function create(saleInputValues) {
       calculatedTotalAmount += guestPrice
     }
 
-    // 5. Create Sale
     const {
       check_in_date = targetRoom.hotel_check_in_date || new Date(),
       check_out_date = targetRoom.hotel_check_out_date ||
         new Date(new Date().setDate(new Date().getDate() + 3)),
       total_amount = calculatedTotalAmount,
       company_id = null,
+      payment_method = "cash",
+      installments_count = 1,
     } = saleInputValues
 
     let final_discount_percentage = 0
@@ -205,9 +206,9 @@ async function create(saleInputValues) {
     const saleResults = await client.query({
       text: `
         INSERT INTO
-          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, discount_percentage, discount_amount, final_amount, sale_number, company_id)
+          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, discount_percentage, discount_amount, final_amount, sale_number, company_id, payment_method, installments_count)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING
           *
       `,
@@ -223,6 +224,8 @@ async function create(saleInputValues) {
         final_amount,
         sale_number,
         company_id,
+        payment_method,
+        installments_count,
       ],
     })
 
@@ -462,6 +465,8 @@ async function update(saleId, saleInputNewValues) {
       check_out_date,
       total_amount,
       company_id,
+      payment_method,
+      installments_count,
     } = saleWithNewValues
 
     const results = await database.query({
@@ -475,6 +480,8 @@ async function update(saleId, saleInputNewValues) {
           check_out_date = $5,
           total_amount = $6,
           company_id = $7,
+          payment_method = $8,
+          installments_count = $9,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
@@ -489,6 +496,8 @@ async function update(saleId, saleInputNewValues) {
         check_out_date,
         total_amount,
         company_id,
+        payment_method,
+        installments_count,
       ],
     })
 
@@ -518,6 +527,25 @@ function generateOrderNumber() {
   return result
 }
 
+function calculateMaxInstallments(targetDate) {
+  if (!targetDate) return 1
+  const target = new Date(targetDate)
+  const now = new Date()
+
+  // Calculate difference in months
+  let months = (target.getFullYear() - now.getFullYear()) * 12
+  months -= now.getMonth()
+  months += target.getMonth()
+
+  // We want the last installment to be at the month of the event
+  // If today is Jan 15 and event is Oct 31:
+  // (2026-2026)*12 - 0 + 9 = 9 months.
+  // Actually, if it's Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct -> 10 installments.
+  // So we add 1.
+  const max = Math.max(1, months + 1)
+  return max
+}
+
 const sale = {
   create,
   findOneById,
@@ -527,6 +555,7 @@ const sale = {
   findAllByGuestId,
   update,
   deleteById,
+  calculateMaxInstallments,
 }
 
 export default sale

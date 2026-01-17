@@ -15,7 +15,13 @@ export default router.handler(controller.errorHandlers)
 
 async function postHandler(request, response) {
   const user = request.context.user
-  const { room_id, guests_data, company_cnpj } = request.body
+  const {
+    room_id,
+    guests_data,
+    company_cnpj,
+    payment_method,
+    installments_count,
+  } = request.body
 
   if (!user.id) {
     throw new UnauthorizedError({
@@ -93,6 +99,8 @@ async function postHandler(request, response) {
     guest_ids: savedGuestIds,
     room_id: room_id,
     company_id: companyId,
+    payment_method: payment_method,
+    installments_count: installments_count,
   })
 
   // 3. Send Confirmation Email
