@@ -129,7 +129,7 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-32 md:py-32">
         <div className="absolute inset-0 z-0">
           <Image
             src={HERO_IMAGE}
@@ -179,7 +179,7 @@ export default function Home() {
             </Button>
           </div>
 
-          <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="mt-12 md:mt-20 grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               { icon: Calendar, label: "31 Out - 03 Nov", sub: "2026" },
               {
