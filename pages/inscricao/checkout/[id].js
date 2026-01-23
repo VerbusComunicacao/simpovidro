@@ -53,6 +53,8 @@ export default function CheckoutPage({ room, user, guestProfile }) {
     permission: "A",
     discount_status: "N",
   })
+  const [paymentMethod, setPaymentMethod] = useState("cash")
+  const [installmentsCount, setInstallmentsCount] = useState(1)
 
   const initialGuest = {
     // Personal
@@ -236,6 +238,21 @@ export default function CheckoutPage({ room, user, guestProfile }) {
     childCount,
   } = calculateTotalPrice()
 
+  const calculateMaxInstallments = () => {
+    if (!room.hotel_check_in_date) return 1
+    const target = new Date(room.hotel_check_in_date)
+    const now = new Date()
+
+    let months = (target.getFullYear() - now.getFullYear()) * 12
+    months -= now.getMonth()
+    months += target.getMonth()
+
+    return Math.max(1, months + 1)
+  }
+
+  const maxInstallments = calculateMaxInstallments()
+  const installmentValue = finalTotal / installmentsCount
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
@@ -270,6 +287,8 @@ export default function CheckoutPage({ room, user, guestProfile }) {
           room_id: room.id,
           guests_data: guests,
           company_cnpj: foundCompany?.cnpj || newCompanyData.cnpj || cnpj,
+          payment_method: paymentMethod,
+          installments_count: installmentsCount,
         }),
       })
 
@@ -1238,6 +1257,85 @@ export default function CheckoutPage({ room, user, guestProfile }) {
                             </p>
                           </div>
                         </div>
+                      </div>
+
+                      <div className="space-y-4 pt-4 border-t">
+                        <h3 className="font-semibold text-gray-900">
+                          Forma de Pagamento
+                        </h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <Button
+                            type="button"
+                            variant={
+                              paymentMethod === "cash" ? "default" : "outline"
+                            }
+                            className={
+                              paymentMethod === "cash" ? "bg-blue-600" : ""
+                            }
+                            onClick={() => {
+                              setPaymentMethod("cash")
+                              setInstallmentsCount(1)
+                            }}
+                          >
+                            À Vista
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={
+                              paymentMethod === "installments"
+                                ? "default"
+                                : "outline"
+                            }
+                            className={
+                              paymentMethod === "installments"
+                                ? "bg-blue-600"
+                                : ""
+                            }
+                            onClick={() => setPaymentMethod("installments")}
+                          >
+                            Parcelado
+                          </Button>
+                        </div>
+
+                        {paymentMethod === "installments" && (
+                          <div className="space-y-2">
+                            <Label>Número de Parcelas</Label>
+                            <Select
+                              value={String(installmentsCount)}
+                              onValueChange={(val) =>
+                                setInstallmentsCount(Number(val))
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione as parcelas" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.from(
+                                  { length: maxInstallments },
+                                  (_, i) => (
+                                    <SelectItem
+                                      key={i + 1}
+                                      value={String(i + 1)}
+                                    >
+                                      {i + 1}x de{" "}
+                                      {new Intl.NumberFormat("pt-BR", {
+                                        style: "currency",
+                                        currency: "BRL",
+                                      }).format(finalTotal / (i + 1))}
+                                    </SelectItem>
+                                  ),
+                                )}
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-gray-500 italic">
+                              * Parcelamento sem juros até a data do evento (
+                              {new Date(
+                                room.hotel_check_in_date,
+                              ).toLocaleDateString("pt-BR")}
+                              )
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex gap-4">

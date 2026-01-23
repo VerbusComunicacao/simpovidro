@@ -63,30 +63,32 @@ export default function CompaniesTable() {
     }
   }, [companiesError])
 
-  const filteredCompanies = companies?.filter((company) => {
-    const searchLower = searchTerm.toLowerCase()
+  const filteredCompanies = Array.isArray(companies)
+    ? companies.filter((company) => {
+        const searchLower = searchTerm.toLowerCase()
 
-    // Filtro de Texto
-    const matchesSearch =
-      company.corporate_name?.toLowerCase().includes(searchLower) ||
-      company.cnpj?.includes(searchTerm) ||
-      company.city?.toLowerCase().includes(searchLower) ||
-      company.responsible_person?.toLowerCase().includes(searchLower)
+        // Filtro de Texto
+        const matchesSearch =
+          company.corporate_name?.toLowerCase().includes(searchLower) ||
+          company.cnpj?.includes(searchTerm) ||
+          company.city?.toLowerCase().includes(searchLower) ||
+          company.responsible_person?.toLowerCase().includes(searchLower)
 
-    // Filtro de Status (Ativa/Inativa)
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" && company.permission === "A") ||
-      (statusFilter === "inactive" && company.permission === "I")
+        // Filtro de Status (Ativa/Inativa)
+        const matchesStatus =
+          statusFilter === "all" ||
+          (statusFilter === "active" && company.permission === "A") ||
+          (statusFilter === "inactive" && company.permission === "I")
 
-    // Filtro de Desconto
-    const matchesDiscount =
-      discountFilter === "all" ||
-      (discountFilter === "with" && company.discount_status === "S") ||
-      (discountFilter === "without" && company.discount_status === "N")
+        // Filtro de Desconto
+        const matchesDiscount =
+          discountFilter === "all" ||
+          (discountFilter === "with" && company.discount_status === "S") ||
+          (discountFilter === "without" && company.discount_status === "N")
 
-    return matchesSearch && matchesStatus && matchesDiscount
-  })
+        return matchesSearch && matchesStatus && matchesDiscount
+      })
+    : []
 
   return (
     <TableLayout>
@@ -141,7 +143,7 @@ export default function CompaniesTable() {
           >
             Apagar Todas
           </Button>
-          <CSVImportDialog onImportSuccess={mutate}>
+          <CSVImportDialog onImportSuccess={() => mutate()}>
             <Button
               variant="outline"
               className="text-blue-600 border-blue-200 hover:bg-blue-50"
@@ -167,13 +169,16 @@ export default function CompaniesTable() {
         </div>
       )}
 
-      {filteredCompanies && filteredCompanies.length === 0 && (
-        <div className="bg-white rounded-xl border p-12 text-center text-gray-500">
-          Nenhuma empresa encontrada para a busca &quot;{searchTerm}&quot;.
-        </div>
-      )}
+      {filteredCompanies.length === 0 &&
+        companies &&
+        !companiesError &&
+        Array.isArray(companies) && (
+          <div className="bg-white rounded-xl border p-12 text-center text-gray-500">
+            Nenhuma empresa encontrada para a busca &quot;{searchTerm}&quot;.
+          </div>
+        )}
 
-      {filteredCompanies && filteredCompanies.length > 0 && (
+      {filteredCompanies.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCompanies.map((company) => (
             <Card
@@ -199,7 +204,7 @@ export default function CompaniesTable() {
                       </Badge>
                     )}
                     <CompanyDialog
-                      onCompanySuccess={mutate}
+                      onCompanySuccess={() => mutate()}
                       companyToEdit={company}
                     >
                       <Button
@@ -286,7 +291,7 @@ export default function CompaniesTable() {
 
       {/* Floating Action Button */}
       <div className="fixed bottom-8 right-8 z-50">
-        <CompanyDialog onCompanySuccess={mutate}>
+        <CompanyDialog onCompanySuccess={() => mutate()}>
           <Button
             size="lg"
             className="h-14 w-14 rounded-full shadow-2xl hover:scale-110 transition-transform p-0"
@@ -304,7 +309,7 @@ export default function CompaniesTable() {
           companiesError?.info?.message || "Ocorreu um erro ao buscar os dados."
         }
         actionMessage={companiesError?.info?.action}
-        onRetry={mutate}
+        onRetry={() => mutate()}
       />
     </TableLayout>
   )

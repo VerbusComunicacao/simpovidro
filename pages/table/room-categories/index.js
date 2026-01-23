@@ -33,7 +33,7 @@ export default function RoomCategoriesPage() {
   } = useSWR("/api/v1/room-categories", fetcher)
 
   const pageActions = (
-    <AddRoomCategoryDialog onRoomCategoryAdded={mutate}>
+    <AddRoomCategoryDialog onRoomCategoryAdded={() => mutate()}>
       <Button>
         <Plus className="mr-2 h-4 w-4" /> Adicionar Categoria de Quarto
       </Button>
@@ -52,7 +52,7 @@ export default function RoomCategoriesPage() {
         <CardContent>
           {error && <div>Falha ao carregar os dados.</div>}
           {!roomCategories && !error && <div>Carregando...</div>}
-          {roomCategories && (
+          {Array.isArray(roomCategories) && (
             <div className="border rounded-md">
               <div className="grid grid-cols-4 gap-4 font-medium border-b p-4 bg-gray-50">
                 <div>Nome</div>
@@ -76,7 +76,7 @@ export default function RoomCategoriesPage() {
                   <div className="flex gap-2">
                     <EditRoomCategoryDialog
                       roomCategory={category}
-                      onRoomCategoryUpdated={mutate}
+                      onRoomCategoryUpdated={() => mutate()}
                     >
                       <Button variant="outline" size="sm">
                         <Pencil className="h-4 w-4" />

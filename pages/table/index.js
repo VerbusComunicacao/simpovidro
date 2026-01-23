@@ -72,7 +72,7 @@ export default function Table() {
         </div>
       )}
 
-      {hotels && hotels.length > 0 && (
+      {Array.isArray(hotels) && hotels.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {hotels.map((hotel) => (
             <Link href={`/table/hoteis/${hotel.id}`} key={hotel.id} passHref>
@@ -105,7 +105,7 @@ export default function Table() {
           hotelsError?.info?.message || "Ocorreu um erro ao buscar os dados."
         }
         actionMessage={hotelsError?.info?.action}
-        onRetry={mutate}
+        onRetry={() => mutate()}
       />
     </TableLayout>
   )

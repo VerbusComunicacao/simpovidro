@@ -25,13 +25,17 @@ import {
   Info,
   History,
   ShieldCheck,
+  TrendingUp,
+  HardHat,
+  Trophy,
+  Sparkles,
 } from "lucide-react"
 import Image from "next/image"
 import Head from "next/head"
 import router from "next/router"
 import { useState, useEffect } from "react"
 
-const HERO_IMAGE = "/images/hero_banner.png"
+const HERO_IMAGE = "/images/simpovidro.webp"
 const RESORT_IMAGE = "/images/resort.png"
 
 export default function Home() {
@@ -45,13 +49,24 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  const scrollToSection = (e, id) => {
+    e.preventDefault()
+    const element = document.getElementById(id)
+    if (element) {
+      window.scrollTo({
+        top: element.offsetTop - 80, // Offset for sticky header
+        behavior: "smooth",
+      })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 overflow-x-hidden">
       <Head>
         <title>17º Simpovidro | O Encontro do Setor Vidreiro</title>
         <meta
           name="description"
-          content="O maior encontro do setor vidreiro da América do Sul. Inovação, networking e excelência profissional."
+          content="Onde o mercado vidreiro se encontra para redefinir o amanhã."
         />
       </Head>
 
@@ -79,22 +94,24 @@ export default function Home() {
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
             {[
-              "Sobre",
-              "Palestrantes",
-              "Programação",
-              "Preços",
-              "Logística",
+              { name: "Sobre", id: "sobre" },
+              { name: "Palestrantes", id: "palestrantes" },
+              { name: "Painéis", id: "paineis" },
+              { name: "Programação", id: "programacao" },
+              { name: "Preços", id: "precos" },
+              { name: "Dicas e lembretes", id: "dicas" },
             ].map((item) => (
               <a
-                key={item}
-                href={`#${item.toLowerCase()}`}
+                key={item.name}
+                href={`#${item.id}`}
+                onClick={(e) => scrollToSection(e, item.id)}
                 className={`${
                   scrolled
                     ? "text-slate-600 hover:text-blue-600"
                     : "text-white/80 hover:text-white"
-                } transition-colors`}
+                } transition-colors cursor-pointer`}
               >
-                {item}
+                {item.name}
               </a>
             ))}
             <Button
@@ -112,7 +129,7 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-32 md:py-32">
         <div className="absolute inset-0 z-0">
           <Image
             src={HERO_IMAGE}
@@ -136,8 +153,13 @@ export default function Home() {
             17º SIMPOVIDRO
           </h1>
           <p className="text-xl md:text-2xl text-blue-50 max-w-3xl mx-auto mb-10 font-bold leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-            Redefinindo os horizontes da indústria vidreira. Um encontro de
-            exclusividade, negócios e alto nível técnico no paraíso de Alagoas.
+            Onde o mercado vidreiro se encontra para redefinir o amanhã!
+            <br />
+            <span className="font-normal leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+              Venha antecipar tendências e gerar conexões de valor com quem
+              lidera o setor de vidros na América Latina! Garanta seu lugar e
+              transforme o rumo da sua empresa!
+            </span>
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
@@ -151,17 +173,13 @@ export default function Home() {
               size="lg"
               variant="outline"
               className="bg-white/10 backdrop-blur-lg border-white/20 text-white hover:bg-white/20 rounded-full h-14 px-10 text-lg transition-all"
-              onClick={() =>
-                document
-                  .getElementById("programacao")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
+              onClick={(e) => scrollToSection(e, "programacao")}
             >
               Ver Programação
             </Button>
           </div>
 
-          <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="mt-12 md:mt-20 grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               { icon: Calendar, label: "31 Out - 03 Nov", sub: "2026" },
               {
@@ -169,8 +187,16 @@ export default function Home() {
                 label: "Vila Galé Alagoas",
                 sub: "Barra de Santo Antônio",
               },
-              { icon: Users, label: "+1.000", sub: "Participantes" },
-              { icon: Star, label: "Excelência", sub: "Abravidro" },
+              {
+                icon: Users,
+                label: "Público decisor",
+                sub: "Empresários, gestores e líderes",
+              },
+              {
+                icon: Star,
+                label: "Conteúdo qualificado",
+                sub: "Grandes personalidades e profissionais do setor",
+              },
             ].map((stat, i) => (
               <div key={i} className="flex flex-col items-center">
                 <stat.icon className="h-6 w-6 text-blue-400 mb-2" />
@@ -193,28 +219,41 @@ export default function Home() {
                 O Evento
               </h2>
               <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight">
-                Mais que um simpósio, uma experiência transformadora.
+                A mesma tradição, uma nova experiência!
               </h3>
               <p className="text-lg text-slate-600 leading-relaxed">
-                Organizado pela Abravidro, o Simpovidro consolida sua posição
-                como o ambiente estratégico central para networking, debates e
-                atualização do setor vidreiro brasileiro.
+                O conteúdo do principal encontro do setor vidreiro nacional está
+                com um novo formato, que valoriza o debate entre líderes do
+                mercado em meio a palestras inspiradoras e oportunidades de
+                negócios. Lazer e networking seguem na programação!
               </p>
               <div className="space-y-4 pt-4">
                 {[
-                  "Desenvolvimento Técnico de Ponta",
-                  "Networking de Alto Nível",
-                  "Experiência Internacional",
-                  "Ambiente Familiar Exclusivo",
+                  "Painéis temáticos com líderes do mercado",
+                  "Palestras com grandes nomes dos negócios e economia",
+                  "Feira de Negócios",
+                  "Networking de alto nível",
+                  "Lazer com a família em um resort <i>all inclusive</i>",
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">
                       <Zap className="w-3 h-3 text-blue-600" />
                     </div>
-                    <span className="font-medium text-slate-700">{item}</span>
+                    <span
+                      className="font-medium text-slate-700"
+                      dangerouslySetInnerHTML={{ __html: item }}
+                    />
                   </div>
                 ))}
               </div>
+              <Button
+                size="lg"
+                variant="outline"
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-full h-14 px-10 text-lg transition-all"
+                onClick={(e) => scrollToSection(e, "programacao")}
+              >
+                Confira a Programação!
+              </Button>
             </div>
             <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl">
               <Image
@@ -246,11 +285,11 @@ export default function Home() {
               Mentes Brilhantes
             </h2>
             <h3 className="text-4xl md:text-5xl font-black mb-6">
-              Palestrantes Confirmados
+              Palestrantes
             </h3>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              Líderes de pensamento e especialistas globais compartilhando
-              insights que moldarão o futuro do nosso setor.
+              Oportunidade única para ouvir ouvir personalidades que você admira
+              e que inspiram o futuro dos seus negócios e carreira
             </p>
           </div>
 
@@ -269,10 +308,10 @@ export default function Home() {
                 image: "/images/ricardo-amorim.jpg",
               },
               {
-                name: "Pedro Doria",
-                role: "Inovação & Tecnologia",
-                specialty: "Transformação Digital",
-                image: "/images/pedro-doria.jpg",
+                name: "Menzinho",
+                role: "Humor",
+                specialty: "Empreendedorismo e Gestão",
+                image: "/images/menzinho.jpg",
               },
             ].map((p, i) => (
               <div key={i} className="group relative">
@@ -309,8 +348,88 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Panels Section */}
+      <section
+        id="paineis"
+        className="py-24 bg-[#0a0f1e] relative overflow-hidden"
+      >
+        {/* Subtle background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-20">
+            <h2 className="text-blue-400 font-bold uppercase tracking-[0.3em] text-xs mb-4">
+              Conteúdo & Debate
+            </h2>
+            <h3 className="text-5xl md:text-7xl font-black text-white mb-6 italic tracking-tighter uppercase">
+              Painéis
+            </h3>
+            <p className="text-slate-400 max-w-2xl mx-auto text-xl font-medium">
+              Os temas que movimentam o mercado debatidos por líderes que estão{" "}
+              <span className="text-blue-400">transformando o segmento</span>
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {[
+              {
+                theme: "Gestão que faz a diferença",
+                icon: TrendingUp,
+                color: "text-blue-400",
+                bg: "bg-blue-400/10",
+              },
+              {
+                theme: "Mão de obra: como solucionar esse gargalo",
+                icon: HardHat,
+                color: "text-amber-400",
+                bg: "bg-amber-400/10",
+              },
+              {
+                theme: "Competitividade: bons exemplos da cadeia vidreira",
+                icon: Trophy,
+                color: "text-emerald-400",
+                bg: "bg-emerald-400/10",
+              },
+              {
+                theme: "Gere valor: uma nova relação do vidro com o consumidor",
+                icon: Sparkles,
+                color: "text-purple-400",
+                bg: "bg-purple-400/10",
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="group relative flex items-center gap-8 p-10 bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] hover:bg-white/[0.08] hover:border-blue-500/30 transition-all duration-700 hover:-translate-y-2 overflow-hidden shadow-2xl"
+              >
+                {/* Accent glow on hover */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-[2.5rem] blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+
+                <div
+                  className={`relative w-16 h-16 ${item.bg} rounded-2xl flex items-center justify-center shrink-0 border border-white/10 group-hover:scale-110 transition-transform duration-500`}
+                >
+                  <item.icon className={`h-8 w-8 ${item.color}`} />
+                </div>
+                <span className="relative text-2xl font-normal text-white leading-tight tracking-tight group-hover:text-blue-300 transition-colors">
+                  {item.theme}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-20 text-center">
+            <Button
+              size="lg"
+              className="bg-white text-slate-900 hover:bg-blue-500 hover:text-white rounded-full h-16 px-12 text-xl font-black transition-all duration-500 shadow-2xl shadow-blue-500/10"
+              onClick={(e) => scrollToSection(e, "palestrantes")}
+            >
+              Conheça os painelistas <ChevronRight className="ml-2 h-6 w-6" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Programming Preview */}
-      <section id="programação" className="py-24 bg-white">
+      <section id="programacao" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col lg:flex-row justify-between items-end gap-6 mb-16">
             <div className="max-w-2xl">
@@ -375,7 +494,10 @@ export default function Home() {
       </section>
 
       {/* Pricing / Acomodações Sidebar */}
-      <section id="preços" className="py-24 bg-slate-50">
+      <section
+        id="precos"
+        className="py-24 bg-slate-50 border-y border-slate-200"
+      >
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 space-y-8">
@@ -435,7 +557,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div id="logística" className="space-y-6">
+            <div id="logistica" className="space-y-6">
               <Card className="bg-blue-600 text-white border-none shadow-2xl">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -556,7 +678,7 @@ export default function Home() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="aspect-square bg-slate-200 rounded-3xl overflow-hidden relative shadow-lg grayscale">
+              <div className="aspect-square bg-slate-200 rounded-3xl overflow-hidden relative shadow-lg">
                 <Image
                   src={HERO_IMAGE}
                   alt="History"
@@ -578,7 +700,7 @@ export default function Home() {
       </section>
 
       {/* Sponsors - Partners Area */}
-      <section className="py-24 bg-white">
+      <section id="patrocinadores" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-slate-400 font-bold uppercase tracking-widest text-xs mb-2">
@@ -612,11 +734,11 @@ export default function Home() {
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.1)_0%,transparent_50%)]"></div>
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
           <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
-            Pronto para o maior evento da sua carreira?
+            Pronto para embarcar em um evento fundamental para a sua empresa?
           </h2>
           <p className="text-lg text-blue-100 mb-10 opacity-80">
-            Junte-se à elite do setor vidreiro e transforme seu futuro. Vagas
-            limitadas.
+            Junte-se aos grandes líderes do setor vidreiro e transforme seu
+            futuro. Vagas limitadas!
           </p>
           <Button
             size="lg"
@@ -710,24 +832,40 @@ export default function Home() {
               <h4 className="text-white font-bold mb-6 italic tracking-tight uppercase text-xs">
                 Menu
               </h4>
-              <ul className="space-y-4 text-sm">
+              <ul className="space-y-4 text-slate-400">
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#sobre"
+                    onClick={(e) => scrollToSection(e, "sobre")}
+                    className="hover:text-white transition-colors"
+                  >
                     Sobre
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#palestrantes"
+                    onClick={(e) => scrollToSection(e, "palestrantes")}
+                    className="hover:text-white transition-colors"
+                  >
                     Palestrantes
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#programacao"
+                    onClick={(e) => scrollToSection(e, "programacao")}
+                    className="hover:text-white transition-colors"
+                  >
                     Programação
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#patrocinadores"
+                    onClick={(e) => scrollToSection(e, "patrocinadores")}
+                    className="hover:text-white transition-colors"
+                  >
                     Patrocinadores
                   </a>
                 </li>
@@ -740,22 +878,38 @@ export default function Home() {
               </h4>
               <ul className="space-y-4 text-sm">
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Tabela de Preços
+                  <a
+                    href="#precos"
+                    onClick={(e) => scrollToSection(e, "precos")}
+                    className="hover:text-white transition-colors"
+                  >
+                    Benfícios & Investimento
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#logistica"
+                    onClick={(e) => scrollToSection(e, "logistica")}
+                    className="hover:text-white transition-colors"
+                  >
                     Acomodações
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#logistica"
+                    onClick={(e) => scrollToSection(e, "logistica")}
+                    className="hover:text-white transition-colors"
+                  >
                     Passagens
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a
+                    href="#dicas"
+                    onClick={(e) => scrollToSection(e, "dicas")}
+                    className="hover:text-white transition-colors"
+                  >
                     Dicas & Lembretes
                   </a>
                 </li>

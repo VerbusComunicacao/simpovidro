@@ -2,11 +2,92 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/router"
 import useUser from "../../../hooks/useUser"
 import TableLayout from "../../../components/layout/TableLayout"
-import availableFeatures from "../../../models/user-features"
 import { Spinner } from "../../../components/ui/spinner"
 import { Button } from "../../../components/ui/button"
 import { Label } from "../../../components/ui/label"
 import { Input } from "../../../components/ui/input" // Import Input component
+
+const featureTranslations = {
+  "create:user": "Criar usuários",
+  "read:user": "Visualizar usuários",
+  "read:user:self": "Visualizar próprio perfil",
+  "read:user:others": "Visualizar outros usuários",
+  "update:user": "Atualizar usuários",
+  "update:user:others": "Atualizar outros usuários",
+  "read:migration": "Visualizar migrações",
+  "create:migration": "Criar migrações",
+  "read:activation_token": "Visualizar tokens de ativação",
+  "read:recovery_token": "Visualizar tokens de recuperação",
+  "read:email_confirmation_token": "Visualizar tokens de confirmação de e-mail",
+  "create:session": "Criar sessões (Login)",
+  "read:session": "Visualizar sessões",
+  "read:content": "Acessar conteúdo administrativo",
+  "update:content": "Atualizar conteúdo",
+  "create:content": "Criar conteúdo",
+  "delete:content": "Remover conteúdo",
+  "read:public-content": "Visualizar conteúdo público",
+  "read:company": "Visualizar empresas",
+  "update:company": "Atualizar empresas",
+  "create:company": "Criar empresas",
+  "delete:company": "Remover empresas",
+  "read:guest": "Visualizar hóspedes",
+  "update:guest": "Atualizar hóspedes",
+  "create:guest": "Criar hóspedes",
+  "delete:guest": "Remover hóspedes",
+  nuked: "BANIDO (Sem acesso)",
+  "read:ad:list": "Visualizar lista de anúncios",
+}
+
+const featureGroups = [
+  {
+    name: "Usuários",
+    features: [
+      "create:user",
+      "read:user",
+      "read:user:self",
+      "read:user:others",
+      "update:user",
+      "update:user:others",
+    ],
+  },
+  {
+    name: "Sessão e Segurança",
+    features: [
+      "create:session",
+      "read:session",
+      "read:activation_token",
+      "read:recovery_token",
+      "read:email_confirmation_token",
+    ],
+  },
+  {
+    name: "Conteúdo Administrativo",
+    features: [
+      "read:content",
+      "update:content",
+      "create:content",
+      "delete:content",
+      "read:public-content",
+    ],
+  },
+  {
+    name: "Empresas",
+    features: [
+      "read:company",
+      "update:company",
+      "create:company",
+      "delete:company",
+    ],
+  },
+  {
+    name: "Hóspedes",
+    features: ["read:guest", "update:guest", "create:guest", "delete:guest"],
+  },
+  {
+    name: "Sistema e Outros",
+    features: ["read:migration", "create:migration", "read:ad:list", "nuked"],
+  },
+]
 
 export default function FeaturesSettings() {
   const router = useRouter()
@@ -21,7 +102,7 @@ export default function FeaturesSettings() {
   useEffect(() => {
     if (selectedUser) {
       // When a user is selected (after search), fetch their features
-      fetch(`/api/v1/users/${selectedUser.username}`)
+      fetch(`/api/v1/users/${selectedUser.id}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.features) {
@@ -53,7 +134,7 @@ export default function FeaturesSettings() {
     return null
   }
 
-  if (!user.features.includes("update:user")) {
+  if (!user.features.includes("update:user:others")) {
     return (
       <TableLayout>
         <div className="container mx-auto px-4 py-8">
@@ -70,17 +151,19 @@ export default function FeaturesSettings() {
     setFeatures([])
 
     if (!searchUsername) {
-      setError("Por favor, digite um nome de usuário para buscar.")
+      setError("Por favor, digite um e-mail de usuário para buscar.")
       return
     }
 
     try {
-      const response = await fetch(`/api/v1/users/${searchUsername}`)
+      const response = await fetch(
+        `/api/v1/users?email=${encodeURIComponent(searchUsername)}`,
+      )
       if (response.ok) {
         const userData = await response.json()
         setSelectedUser(userData)
       } else if (response.status === 404) {
-        setError(`Usuário "${searchUsername}" não encontrado.`)
+        setError(`Usuário com o e-mail "${searchUsername}" não encontrado.`)
       } else {
         const errorData = await response.json()
         setError(errorData.error?.message || "Erro ao buscar usuário.")
@@ -110,16 +193,13 @@ export default function FeaturesSettings() {
       return
     }
 
-    const response = await fetch(
-      `/api/v1/users/${selectedUser.username}/features`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ features }),
+    const response = await fetch(`/api/v1/users/${selectedUser.id}/features`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
       },
-    )
+      body: JSON.stringify({ features }),
+    })
 
     if (response.ok) {
       setMessage("Funcionalidades salvas com sucesso!")
@@ -146,15 +226,15 @@ export default function FeaturesSettings() {
 
         <div className="mb-6 max-w-sm flex gap-2">
           <div className="flex-grow">
-            <Label htmlFor="username-search" className="mb-2 block">
-              Buscar usuário por username
+            <Label htmlFor="email-search" className="mb-2 block">
+              Buscar usuário por e-mail
             </Label>
             <Input
-              id="username-search"
-              type="text"
+              id="email-search"
+              type="email"
               value={searchUsername}
               onChange={(e) => setSearchUsername(e.target.value)}
-              placeholder="Digite o username"
+              placeholder="Digite o e-mail"
               onKeyPress={(e) => {
                 if (e.key === "Enter") {
                   handleSearch()
@@ -169,33 +249,54 @@ export default function FeaturesSettings() {
 
         {selectedUser && (
           <div>
-            <h2 className="text-2xl font-bold mb-4">
-              Funcionalidades para {selectedUser.username}
+            <h2 className="text-2xl font-bold mb-6">
+              Funcionalidades para {selectedUser.full_name}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...availableFeatures].sort().map((feature) => (
-                <div key={feature} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={feature}
-                    checked={features.includes(feature)}
-                    onChange={() => handleFeatureChange(feature)}
-                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                  />
-                  <Label htmlFor={feature} className="ml-2">
-                    {feature}
-                  </Label>
+
+            <div className="space-y-8">
+              {featureGroups.map((group) => (
+                <div key={group.name} className="border-b pb-6 last:border-0">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-700">
+                    {group.name}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {group.features.map((feature) => (
+                      <div
+                        key={feature}
+                        className="flex items-center space-x-3"
+                      >
+                        <input
+                          type="checkbox"
+                          id={feature}
+                          checked={features.includes(feature)}
+                          onChange={() => handleFeatureChange(feature)}
+                          className="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 transition duration-150 ease-in-out cursor-pointer"
+                        />
+                        <Label
+                          htmlFor={feature}
+                          className="text-sm font-medium text-gray-600 cursor-pointer hover:text-gray-900 transition duration-150 ease-in-out"
+                        >
+                          {featureTranslations[feature] || feature}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
-            <Button onClick={handleSave} disabled={saving} className="mt-6">
+
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="mt-8 px-8"
+            >
               {saving ? (
                 <>
                   <Spinner className="mr-2 h-4 w-4 animate-spin" />
                   Salvando...
                 </>
               ) : (
-                "Salvar"
+                "Salvar Alterações"
               )}
             </Button>
           </div>

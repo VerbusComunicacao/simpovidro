@@ -33,7 +33,7 @@ export default function RoomTypesPage() {
   } = useSWR("/api/v1/room-types", fetcher)
 
   const pageActions = (
-    <AddRoomTypeDialog onRoomTypeAdded={mutate}>
+    <AddRoomTypeDialog onRoomTypeAdded={() => mutate()}>
       <Button>
         <Plus className="mr-2 h-4 w-4" /> Adicionar Tipo de Quarto
       </Button>
@@ -52,7 +52,7 @@ export default function RoomTypesPage() {
         <CardContent>
           {error && <div>Falha ao carregar os dados.</div>}
           {!roomTypes && !error && <div>Carregando...</div>}
-          {roomTypes && (
+          {Array.isArray(roomTypes) && (
             <div className="border rounded-md">
               <div className="grid grid-cols-[1fr_2fr_auto] gap-4 font-medium border-b p-4 bg-gray-50">
                 <div>Nome</div>
@@ -74,7 +74,7 @@ export default function RoomTypesPage() {
                   <div className="flex gap-2">
                     <EditRoomTypeDialog
                       roomType={type}
-                      onRoomTypeUpdated={mutate}
+                      onRoomTypeUpdated={() => mutate()}
                     >
                       <Button variant="outline" size="sm">
                         <Pencil className="h-4 w-4" />

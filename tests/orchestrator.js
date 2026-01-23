@@ -172,6 +172,11 @@ async function setUserFeatures(userId, features) {
   await user.setFeatures(userId, features)
 }
 
+async function addFeatureToUser(userObject, features) {
+  const updatedUser = await user.addFeatures(userObject.id, features)
+  return updatedUser
+}
+
 async function activateHotel(hotelId) {
   await hotel.activate(hotelId)
 }
@@ -205,6 +210,7 @@ const orchestrator = {
   setUserFeatures,
   activateHotel,
   injectPasswordRecoveryToken,
+  addFeatureToUser,
 
   createPricePolicy,
   webserverUrl,
