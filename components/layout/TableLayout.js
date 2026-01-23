@@ -61,6 +61,13 @@ export default function TableLayout({ children, pageActions }) {
                 Categorias de Quarto
               </a>
             </Link>
+            {user.features?.includes("update:user:others") && (
+              <Link href="/table/features" legacyBehavior>
+                <a className="text-gray-600 hover:text-gray-900 font-medium">
+                  Funcionalidades
+                </a>
+              </Link>
+            )}
           </nav>
         </div>
         <div className="flex items-center gap-4">

@@ -71,18 +71,20 @@ export default function RegistrationsTable() {
     }
   }
 
-  const filteredSales = sales?.filter((sale) => {
-    const searchLower = searchTerm.toLowerCase()
-    return (
-      sale.sale_number?.toLowerCase().includes(searchLower) ||
-      sale.hotel_name?.toLowerCase().includes(searchLower) ||
-      sale.guests?.some(
-        (g) =>
-          g.name.toLowerCase().includes(searchLower) ||
-          g.cpf_number?.includes(searchTerm),
-      )
-    )
-  })
+  const filteredSales = Array.isArray(sales)
+    ? sales.filter((sale) => {
+        const searchLower = searchTerm.toLowerCase()
+        return (
+          sale.sale_number?.toLowerCase().includes(searchLower) ||
+          sale.hotel_name?.toLowerCase().includes(searchLower) ||
+          sale.guests?.some(
+            (g) =>
+              g.name.toLowerCase().includes(searchLower) ||
+              g.cpf_number?.includes(searchTerm),
+          )
+        )
+      })
+    : []
 
   return (
     <TableLayout>
@@ -110,13 +112,16 @@ export default function RegistrationsTable() {
         </div>
       )}
 
-      {filteredSales && filteredSales.length === 0 && (
-        <div className="bg-white rounded-xl border p-12 text-center text-gray-500">
-          Nenhuma inscrição encontrada para a busca &quot;{searchTerm}&quot;.
-        </div>
-      )}
+      {filteredSales.length === 0 &&
+        sales &&
+        !salesError &&
+        Array.isArray(sales) && (
+          <div className="bg-white rounded-xl border p-12 text-center text-gray-500">
+            Nenhuma inscrição encontrada para a busca &quot;{searchTerm}&quot;.
+          </div>
+        )}
 
-      {filteredSales && filteredSales.length > 0 && (
+      {filteredSales.length > 0 && (
         <div className="space-y-4">
           {filteredSales.map((sale) => (
             <Card key={sale.id} className="overflow-hidden">
@@ -204,7 +209,7 @@ export default function RegistrationsTable() {
           salesError?.info?.message || "Ocorreu um erro ao buscar os dados."
         }
         actionMessage={salesError?.info?.action}
-        onRetry={mutate}
+        onRetry={() => mutate()}
       />
     </TableLayout>
   )

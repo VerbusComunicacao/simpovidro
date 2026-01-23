@@ -1,4 +1,7 @@
 const availableFeatures = new Set([
+  //Featueres do usuário, sempre considerar o padrão:
+  // ação:objeto:modificador
+
   // USER
   "create:user",
   "read:user",
