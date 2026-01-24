@@ -16,15 +16,20 @@ import {
   Mail,
   User,
   Pencil,
+  FileUp,
+  Filter,
+  LayoutGrid,
+  List,
+  X,
 } from "lucide-react"
 import TableLayout from "@/components/layout/TableLayout"
 import ErrorDialog from "@/components/ui/ErrorDialog"
 import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
-
 import { CompanyDialog } from "@/components/company/CompanyDialog"
 import { CSVImportDialog } from "@/components/company/CSVImportDialog"
-import { FileUp, Filter } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { CompanyRow } from "@/components/company/CompanyRow"
 import {
   Select,
   SelectContent,
@@ -56,12 +61,31 @@ export default function CompaniesTable() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [discountFilter, setDiscountFilter] = useState("all")
+  const [viewMode, setViewMode] = useState("list")
 
   useEffect(() => {
     if (companiesError) {
       setIsErrorDialogOpen(true)
     }
   }, [companiesError])
+
+  const handleDeleteCompany = async (company) => {
+    if (
+      window.confirm(
+        `Tem certeza que deseja apagar a empresa ${company.corporate_name}? Isso removerá o vínculo de todas as inscrições associadas.`,
+      )
+    ) {
+      try {
+        const response = await fetch(`/api/v1/companies/${company.id}`, {
+          method: "DELETE",
+        })
+        if (!response.ok) throw new Error()
+        mutate()
+      } catch (error) {
+        alert("Erro ao excluir empresa.")
+      }
+    }
+  }
 
   const filteredCompanies = Array.isArray(companies)
     ? companies.filter((company) => {
@@ -83,8 +107,12 @@ export default function CompaniesTable() {
         // Filtro de Desconto
         const matchesDiscount =
           discountFilter === "all" ||
-          (discountFilter === "with" && company.discount_status === "S") ||
-          (discountFilter === "without" && company.discount_status === "N")
+          (discountFilter === "with" &&
+            (company.discount_id !== null ||
+              company.custom_discount_percentage !== null)) ||
+          (discountFilter === "without" &&
+            company.discount_id === null &&
+            company.custom_discount_percentage === null)
 
         return matchesSearch && matchesStatus && matchesDiscount
       })
@@ -100,6 +128,38 @@ export default function CompaniesTable() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-gray-100 p-1 rounded-lg">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-8 w-8 p-0 rounded-md transition-all",
+                viewMode === "grid"
+                  ? "bg-white shadow-sm text-blue-600"
+                  : "text-gray-500 hover:text-gray-900",
+              )}
+              onClick={() => setViewMode("grid")}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-8 w-8 p-0 rounded-md transition-all",
+                viewMode === "list"
+                  ? "bg-white shadow-sm text-blue-600"
+                  : "text-gray-500 hover:text-gray-900",
+              )}
+              onClick={() => setViewMode("list")}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="h-8 w-px bg-gray-200 mx-1 hidden md:block" />
+
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-gray-400" />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -178,7 +238,7 @@ export default function CompaniesTable() {
           </div>
         )}
 
-      {filteredCompanies.length > 0 && (
+      {filteredCompanies.length > 0 && viewMode === "grid" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCompanies.map((company) => (
             <Card
@@ -203,18 +263,28 @@ export default function CompaniesTable() {
                         {company.badge}
                       </Badge>
                     )}
-                    <CompanyDialog
-                      onCompanySuccess={() => mutate()}
-                      companyToEdit={company}
-                    >
+                    <div className="flex items-center gap-1">
+                      <CompanyDialog
+                        onCompanySuccess={() => mutate()}
+                        companyToEdit={company}
+                      >
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-white hover:bg-white/20"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </CompanyDialog>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-white hover:bg-white/20"
+                        className="h-8 w-8 text-white hover:bg-white/20 hover:text-red-200"
+                        onClick={() => handleDeleteCompany(company)}
                       >
-                        <Pencil className="h-4 w-4" />
+                        <X className="h-4 w-4" />
                       </Button>
-                    </CompanyDialog>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -274,18 +344,62 @@ export default function CompaniesTable() {
                     {company.permission === "A" ? "Ativa" : "Inativa"}
                   </Badge>
 
-                  {company.discount_status === "S" && (
+                  {(company.discount_name ||
+                    company.custom_discount_percentage !== null) && (
                     <Badge
                       variant="outline"
-                      className="border-gray-200 text-gray-700 bg-gray-50 px-4 py-1"
+                      className="border-orange-200 text-orange-700 bg-orange-50 px-4 py-1"
                     >
-                      Desconto
+                      {company.custom_discount_percentage !== null
+                        ? `Exclusivo: ${Number(company.custom_discount_percentage)}%`
+                        : `${company.discount_name}: ${Number(company.discount_value)}%`}
                     </Badge>
                   )}
                 </div>
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {filteredCompanies.length > 0 && viewMode === "list" && (
+        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-b">
+                  <th className="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Razão Social
+                  </th>
+                  <th className="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    CNPJ
+                  </th>
+                  <th className="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Cidade
+                  </th>
+                  <th className="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Contato
+                  </th>
+                  <th className="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">
+                    Desconto
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCompanies.map((company) => (
+                  <CompanyRow
+                    key={company.id}
+                    company={company}
+                    onUpdate={() => mutate()}
+                    onDelete={() => handleDeleteCompany(company)}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

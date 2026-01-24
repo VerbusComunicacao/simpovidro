@@ -43,17 +43,19 @@ describe("GET /api/v1/hotels/active", () => {
 
       expect(response.status).toBe(200)
 
-      const hotelsList = await response.json()
+      const { hotels, discounts } = await response.json()
 
-      expect(hotelsList).toHaveLength(1)
-      expect(hotelsList[0].name).toBe("Hotel Ativo")
+      expect(hotels).toHaveLength(1)
+      expect(hotels[0].name).toBe("Hotel Ativo")
 
       // Verify nested rooms data
-      expect(hotelsList[0].rooms).toHaveLength(1)
-      const room = hotelsList[0].rooms[0]
+      expect(hotels[0].rooms).toHaveLength(1)
+      const room = hotels[0].rooms[0]
       expect(room.price_per_night).toBe(200)
       expect(room.room_type).toBe("Suite")
       expect(room.room_category).toBe("Deluxe")
+
+      expect(Array.isArray(discounts)).toBe(true)
     })
   })
 })

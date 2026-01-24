@@ -18,7 +18,8 @@ async function getHandler(request, response) {
         id: foundCompany.id,
         corporate_name: foundCompany.corporate_name,
         badge: foundCompany.badge,
-        discount_status: foundCompany.discount_status,
+        discount_id: foundCompany.discount_id,
+        custom_discount_percentage: foundCompany.custom_discount_percentage,
         cnpj: foundCompany.cnpj,
       })
     } catch (error) {
@@ -43,9 +44,10 @@ async function postHandler(request, response) {
   const user = request.context.user
   const companyData = { ...request.body }
 
-  // Se o usuário não tiver permissão para configurar desconto, forçamos 'N'
+  // Se o usuário não tiver permissão para configurar desconto, limpamos os campos
   if (!user.features.includes("create:company")) {
-    companyData.discount_status = "N"
+    companyData.discount_id = null
+    companyData.custom_discount_percentage = null
   }
 
   const newCompany = await company.create(companyData)

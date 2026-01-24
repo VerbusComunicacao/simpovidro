@@ -85,7 +85,6 @@ describe("POST /api/v1/registrations", () => {
             country: "Brasil",
             check_in_date: "2026-11-01",
             check_out_date: "2026-11-10",
-            associated_company_discount_percentage: 25.0,
           }),
         },
       )
@@ -181,7 +180,7 @@ describe("POST /api/v1/registrations", () => {
             responsible_person: "Admin",
             zip_code: "01001-000",
             permission: "A",
-            discount_status: "S",
+            custom_discount_percentage: 25.0,
           }),
         },
       )
@@ -262,7 +261,7 @@ describe("POST /api/v1/registrations", () => {
             responsible_person: "Cheater",
             zip_code: "20000-000",
             permission: "A",
-            discount_status: "S",
+            custom_discount_percentage: 50.0,
           }),
         },
       )
@@ -272,7 +271,7 @@ describe("POST /api/v1/registrations", () => {
         throw new Error(`Sneaky company creation failed: ${compText}`)
 
       const companyData = JSON.parse(compText)
-      expect(companyData.discount_status).toBe("N")
+      expect(companyData.custom_discount_percentage).toBe(null)
     })
 
     test("should NOT apply discount when company is NOT eligible", async () => {
@@ -298,7 +297,7 @@ describe("POST /api/v1/registrations", () => {
           responsible_person: "Nobody",
           zip_code: "30000-000",
           permission: "A",
-          discount_status: "N",
+          custom_discount_percentage: null,
         }),
       })
 

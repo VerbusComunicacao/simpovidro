@@ -28,7 +28,6 @@ async function create(saleInputValues) {
           r.*,
           h.check_in_date as hotel_check_in_date,
           h.check_out_date as hotel_check_out_date,
-          h.associated_company_discount_percentage as hotel_associated_discount_percentage,
           rc.max_adults,
           rc.max_children,
           COALESCE(
@@ -183,17 +182,31 @@ async function create(saleInputValues) {
 
     if (company_id) {
       const companyResults = await client.query({
-        text: `SELECT discount_status FROM companies WHERE id = $1 LIMIT 1`,
+        text: `
+          SELECT 
+            c.custom_discount_percentage,
+            d.value as global_discount_value
+          FROM 
+            companies c
+          LEFT JOIN 
+            discounts d ON c.discount_id = d.id
+          WHERE 
+            c.id = $1 
+          LIMIT 1`,
         values: [company_id],
       })
 
-      if (
-        companyResults.rows[0]?.discount_status === "S" ||
-        companyResults.rows[0]?.discount_status === "true"
-      ) {
-        final_discount_percentage = Number(
-          targetRoom.hotel_associated_discount_percentage,
-        )
+      const companyData = companyResults.rows[0]
+
+      if (companyData) {
+        if (companyData.custom_discount_percentage !== null) {
+          final_discount_percentage = Number(
+            companyData.custom_discount_percentage,
+          )
+        } else if (companyData.global_discount_value !== null) {
+          final_discount_percentage = Number(companyData.global_discount_value)
+        }
+
         final_discount_amount = total_amount * (final_discount_percentage / 100)
       }
     }

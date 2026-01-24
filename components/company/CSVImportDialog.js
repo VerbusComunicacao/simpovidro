@@ -42,7 +42,6 @@ export function CSVImportDialog({ children, onImportSuccess }) {
       "Estado",
       "Data Último Registro",
       "Permissão (A/I)",
-      "Desconto (S/N)",
     ]
     const example = [
       "Empresa Exemplo LTDA",
@@ -60,7 +59,6 @@ export function CSVImportDialog({ children, onImportSuccess }) {
       "SP",
       "15/01/2026",
       "A",
-      "S",
     ]
     const csvContent = Papa.unparse([headers, example])
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
@@ -127,7 +125,6 @@ export function CSVImportDialog({ children, onImportSuccess }) {
               state: getCol("Estado"),
               last_registration_date: getCol("Data Último Registro"),
               permission: getCol("Permissão (A/I)"),
-              discount_status: getCol("Desconto (S/N)"),
             }
           })
         } else {
@@ -156,7 +153,6 @@ export function CSVImportDialog({ children, onImportSuccess }) {
               responsible_person: cleanRow[13],
               zip_code: cleanRow[14],
               last_registration_date: cleanRow[15],
-              discount_status: cleanRow[16],
               permission: "A",
             }
           })
@@ -176,15 +172,8 @@ export function CSVImportDialog({ children, onImportSuccess }) {
                 val === undefined ||
                 val === null
               ) {
-                if (key === "discount_status") val = "N"
-                else if (key === "permission") val = "A"
+                if (key === "permission") val = "A"
                 else val = ""
-              }
-
-              // Forçar status S/N para uppercase e remover espaços
-              if (key === "discount_status") {
-                const upper = val.toString().toUpperCase().trim()
-                val = upper === "S" ? "S" : "N"
               }
 
               // Normalizar last_registration_date para formato que o Postgres aceite

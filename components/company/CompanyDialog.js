@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import useSWR from "swr"
 import {
   Dialog,
   DialogContent,
@@ -20,6 +21,17 @@ import {
 } from "@/components/ui/select"
 import ErrorDialog from "@/components/ui/ErrorDialog"
 import { maskPhone, maskCNPJ, maskCEP } from "@/lib/masks"
+
+const fetcher = async (url) => {
+  const res = await fetch(url)
+  if (!res.ok) {
+    const error = new Error("An error occurred while fetching the data.")
+    error.info = await res.json()
+    error.status = res.status
+    throw error
+  }
+  return res.json()
+}
 
 export function CompanyDialog({
   children,
@@ -43,8 +55,11 @@ export function CompanyDialog({
     responsible_person: "",
     zip_code: "",
     permission: "A",
-    discount_status: "N",
+    discount_id: "none",
+    custom_discount_percentage: "",
   })
+
+  const { data: discounts } = useSWR("/api/v1/discounts", fetcher)
 
   useEffect(() => {
     if (companyToEdit) {
@@ -63,7 +78,9 @@ export function CompanyDialog({
         responsible_person: companyToEdit.responsible_person || "",
         zip_code: companyToEdit.zip_code || "",
         permission: companyToEdit.permission || "A",
-        discount_status: companyToEdit.discount_status || "N",
+        discount_id: companyToEdit.discount_id || "none",
+        custom_discount_percentage:
+          companyToEdit.custom_discount_percentage || "",
       })
     } else {
       setFormData({
@@ -81,7 +98,8 @@ export function CompanyDialog({
         responsible_person: "",
         zip_code: "",
         permission: "A",
-        discount_status: "N",
+        discount_id: "none",
+        custom_discount_percentage: "",
       })
     }
   }, [companyToEdit, open])
@@ -123,7 +141,15 @@ export function CompanyDialog({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(formData),
+      body: JSON.stringify({
+        ...formData,
+        discount_id:
+          formData.discount_id === "none" ? null : formData.discount_id,
+        custom_discount_percentage:
+          formData.custom_discount_percentage === ""
+            ? null
+            : Number(formData.custom_discount_percentage),
+      }),
     })
 
     setLoading(false)
@@ -349,26 +375,46 @@ export function CompanyDialog({
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="discount_status">
-                      Status de Desconto *
-                    </Label>
+                    <Label htmlFor="discount_id">Tipo de Desconto Global</Label>
                     <Select
                       onValueChange={(val) =>
-                        handleSelectChange("discount_status", val)
+                        handleSelectChange("discount_id", val)
                       }
-                      value={formData.discount_status}
-                      required
+                      value={formData.discount_id}
                     >
-                      <SelectTrigger id="discount_status">
-                        <SelectValue placeholder="Selecione" />
+                      <SelectTrigger id="discount_id">
+                        <SelectValue placeholder="Nenhum (padrão)" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="S">
-                          Sim (Atribuir desconto)
-                        </SelectItem>
-                        <SelectItem value="N">Não (Sem desconto)</SelectItem>
+                        <SelectItem value="none">Nenhum (padrão)</SelectItem>
+                        {discounts &&
+                          discounts.map((d) => (
+                            <SelectItem key={d.id} value={d.id}>
+                              {d.name} ({Number(d.value)}%)
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="custom_discount_percentage">
+                      Desconto Exclusivo (%) -{" "}
+                      <span className="text-xs text-orange-600 font-normal italic">
+                        Possui prioridade sobre o desconto global
+                      </span>
+                    </Label>
+                    <Input
+                      id="custom_discount_percentage"
+                      name="custom_discount_percentage"
+                      type="number"
+                      step="0.01"
+                      value={formData.custom_discount_percentage}
+                      onChange={handleChange}
+                      placeholder="Ex: 25.00"
+                    />
                   </div>
                 </div>
               </div>

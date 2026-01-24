@@ -44,7 +44,8 @@ async function create(companyInputValues) {
       country = "Brasil",
       phone = null,
       permission = "A",
-      discount_status = "N",
+      discount_id = null,
+      custom_discount_percentage = null,
       email = null,
       responsible_person = null,
       zip_code = null,
@@ -57,11 +58,11 @@ async function create(companyInputValues) {
           companies (
             corporate_name, badge, cnpj, address, address_number, 
             address_complement, neighborhood, city, state, country, 
-            phone, permission, discount_status, email, responsible_person, 
-            zip_code, last_registration_date
+            phone, permission, discount_id, custom_discount_percentage, email, 
+            responsible_person, zip_code, last_registration_date
           )
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
         RETURNING
           *
       `,
@@ -78,7 +79,8 @@ async function create(companyInputValues) {
         country,
         phone,
         permission,
-        discount_status,
+        discount_id,
+        custom_discount_percentage,
         email,
         responsible_person,
         zip_code,
@@ -111,11 +113,15 @@ async function findAll() {
   const results = await database.query({
     text: `
       SELECT 
-        *
+        c.*,
+        d.name as discount_name,
+        d.value as discount_value
       FROM 
-        companies
+        companies c
+      LEFT JOIN
+        discounts d ON c.discount_id = d.id
       ORDER BY 
-        corporate_name ASC
+        c.corporate_name ASC
     `,
   })
 
@@ -162,7 +168,8 @@ async function update(companyId, companyInputNewValues) {
       country,
       phone,
       permission,
-      discount_status,
+      discount_id,
+      custom_discount_percentage,
       email,
       responsible_person,
       zip_code,
@@ -186,11 +193,12 @@ async function update(companyId, companyInputNewValues) {
           country = $11,
           phone = $12,
           permission = $13,
-          discount_status = $14,
-          email = $15,
-          responsible_person = $16,
-          zip_code = $17,
-          last_registration_date = $18,
+          discount_id = $14,
+          custom_discount_percentage = $15,
+          email = $16,
+          responsible_person = $17,
+          zip_code = $18,
+          last_registration_date = $19,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
@@ -211,7 +219,8 @@ async function update(companyId, companyInputNewValues) {
         country,
         phone,
         permission,
-        discount_status,
+        discount_id,
+        custom_discount_percentage,
         email,
         responsible_person,
         zip_code,

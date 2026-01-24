@@ -86,9 +86,6 @@ export default function RoomDetailsPage({ room }) {
                 >
                   {room.room_category}
                 </Badge>
-                <span className="text-sm font-medium text-gray-500">
-                  {room.available_rooms} disponíveis
-                </span>
               </div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
                 {room.name || room.room_type}
@@ -96,7 +93,7 @@ export default function RoomDetailsPage({ room }) {
               <div className="flex items-center gap-6 text-gray-600">
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  <span>Até {room.max_adults} adultos</span>
+                  <span>Acomoda {room.max_adults} adultos</span>
                 </div>
                 {room.max_children > 0 && (
                   <div className="flex items-center gap-2">

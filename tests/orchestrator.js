@@ -9,6 +9,7 @@ import roomType from "models/room-type.js"
 import roomCategory from "models/room-category.js"
 import room from "models/room.js"
 import activation from "models/activation"
+import discount from "models/discount"
 
 const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`
 const webserverUrl = "http://localhost:3000"
@@ -193,6 +194,15 @@ async function injectPasswordRecoveryToken(tokenObject) {
   })
 }
 
+async function createDiscount(discountData) {
+  return await discount.create({
+    name: discountData?.name || faker.commerce.productName(),
+    value:
+      discountData?.value ??
+      faker.number.float({ min: 5, max: 50, fractionDigits: 2 }),
+  })
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
@@ -211,6 +221,7 @@ const orchestrator = {
   activateHotel,
   injectPasswordRecoveryToken,
   addFeatureToUser,
+  createDiscount,
 
   createPricePolicy,
   webserverUrl,
