@@ -275,10 +275,6 @@ export default function HotelPage() {
             <p>
               {hotel.email && hotel.email + " | "} {hotel.phone}
             </p>
-            <div className="mt-2 text-sm text-green-600 font-medium">
-              Desconto para empresas parceiras:{" "}
-              {hotel.associated_company_discount_percentage}%
-            </div>
             <p className="mt-4 font-medium text-sm">Políticas de idade:</p>
             <ul className="mt-2 space-y-1">
               {hotel.price_policies && hotel.price_policies.length > 0 ? (

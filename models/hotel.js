@@ -37,15 +37,14 @@ async function create(hotelInputValues, userId) {
       country = null,
       check_in_date = null,
       check_out_date = null,
-      associated_company_discount_percentage = 0,
     } = hotelInputValues
 
     const results = await database.query({
       text: `
         INSERT INTO
-          hotels (user_id, name, email, phone, address, city, state, country, active, check_in_date, check_out_date, associated_company_discount_percentage)
+          hotels (user_id, name, email, phone, address, city, state, country, active, check_in_date, check_out_date)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING
           *
       `,
@@ -61,7 +60,6 @@ async function create(hotelInputValues, userId) {
         false,
         check_in_date,
         check_out_date,
-        associated_company_discount_percentage,
       ],
     })
 
@@ -199,7 +197,6 @@ async function update(hotelId, hotelInputNewValues, userId) {
       active,
       check_in_date,
       check_out_date,
-      associated_company_discount_percentage,
     } = hotelWithNewValues
 
     const client = await database.getNewClient()
@@ -226,7 +223,6 @@ async function update(hotelId, hotelInputNewValues, userId) {
             active = $9,
             check_in_date = $10,
             check_out_date = $11,
-            associated_company_discount_percentage = $12,
             updated_at = timezone('utc', now())
           WHERE
             id = $1
@@ -245,7 +241,6 @@ async function update(hotelId, hotelInputNewValues, userId) {
           active,
           check_in_date,
           check_out_date,
-          associated_company_discount_percentage,
         ],
       })
 

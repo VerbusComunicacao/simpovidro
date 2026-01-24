@@ -80,7 +80,6 @@ async function findOneById(roomId) {
           h.name as hotel_name,
           h.check_in_date as hotel_check_in_date,
           h.check_out_date as hotel_check_out_date,
-          h.associated_company_discount_percentage as hotel_associated_discount_percentage,
           rt.name as room_type,
           rc.name as room_category,
           rc.max_adults,

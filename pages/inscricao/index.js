@@ -30,12 +30,12 @@ import Link from "next/link"
 import Image from "next/image"
 import webserver from "infra/webserver"
 
-export default function RegistrationPage({ activeHotels }) {
+export default function RegistrationPage({ hotels, discounts }) {
   const router = useRouter()
   const [selectedType, setSelectedType] = useState("all")
   const [selectedCategory, setSelectedCategory] = useState("all")
 
-  const activeHotel = activeHotels?.[0]
+  const activeHotel = hotels?.[0]
 
   const { roomTypes, roomCategories, filteredRooms } = useMemo(() => {
     if (!activeHotel)
@@ -202,12 +202,6 @@ export default function RegistrationPage({ activeHotels }) {
                       >
                         {room.room_category}
                       </Badge>
-                      <span className="text-sm font-medium text-gray-500">
-                        {room.available_rooms}{" "}
-                        {room.available_rooms === 1
-                          ? "disponível"
-                          : "disponíveis"}
-                      </span>
                     </div>
                     <CardTitle className="text-xl">
                       {room.name || room.room_type}
@@ -221,7 +215,7 @@ export default function RegistrationPage({ activeHotels }) {
                       <div className="flex items-center gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
-                          <span>Até {room.max_adults} adultos</span>
+                          <span> {room.max_adults} adultos</span>
                         </div>
                         {room.max_children > 0 && (
                           <div className="flex items-center gap-1">
@@ -230,26 +224,50 @@ export default function RegistrationPage({ activeHotels }) {
                         )}
                       </div>
 
-                      <div className="pt-4 border-t flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
-                            Valor por pessoa
-                          </p>
-                          <p className="text-2xl font-bold text-gray-900">
-                            {new Intl.NumberFormat("pt-BR", {
-                              style: "currency",
-                              currency: "BRL",
-                            }).format(room.price_per_night)}
-                          </p>
+                      <div className="pt-4 border-t space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                              Valor por pessoa
+                            </p>
+                            <p className="text-lg font-bold">
+                              {new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(room.price_per_night)}
+                            </p>
+                          </div>
+                          <Button
+                            className="bg-blue-600 hover:bg-blue-700"
+                            onClick={() =>
+                              router.push(`/inscricao/quarto/${room.id}`)
+                            }
+                          >
+                            Selecionar
+                          </Button>
                         </div>
-                        <Button
-                          className="bg-blue-600 hover:bg-blue-700"
-                          onClick={() =>
-                            router.push(`/inscricao/quarto/${room.id}`)
-                          }
-                        >
-                          Selecionar
-                        </Button>
+
+                        <div className="flex flex-wrap gap-2">
+                          {discounts.map((discount) => (
+                            <div
+                              key={discount.id}
+                              className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-2 rounded-full text-xs"
+                            >
+                              <span className="font-medium">
+                                {discount.name}:
+                              </span>
+                              <span className="font-bold">
+                                {new Intl.NumberFormat("pt-BR", {
+                                  style: "currency",
+                                  currency: "BRL",
+                                }).format(
+                                  room.price_per_night *
+                                    (1 - discount.value / 100),
+                                )}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -273,18 +291,20 @@ export default function RegistrationPage({ activeHotels }) {
 export async function getServerSideProps() {
   try {
     const response = await fetch(`${webserver.origin}/api/v1/hotels/active`)
-    const activeHotels = await response.json()
+    const { hotels, discounts } = await response.json()
 
     return {
       props: {
-        activeHotels: activeHotels || [],
+        hotels: hotels || [],
+        discounts: discounts || [],
       },
     }
   } catch (error) {
     console.error("Error fetching active hotels:", error)
     return {
       props: {
-        activeHotels: [],
+        hotels: [],
+        discounts: [],
       },
     }
   }

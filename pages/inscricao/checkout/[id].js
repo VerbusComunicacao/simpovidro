@@ -27,9 +27,15 @@ import session from "models/session"
 import guest from "models/guest"
 import room from "models/room"
 import userModel from "models/user"
+import discountModel from "models/discount"
 import { maskCPF, maskPhone, maskRG, maskCNPJ, maskCEP } from "@/lib/masks"
 
-export default function CheckoutPage({ room, user, guestProfile }) {
+export default function CheckoutPage({
+  room,
+  user,
+  guestProfile,
+  initialDiscounts,
+}) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -55,6 +61,7 @@ export default function CheckoutPage({ room, user, guestProfile }) {
   })
   const [paymentMethod, setPaymentMethod] = useState("cash")
   const [installmentsCount, setInstallmentsCount] = useState(1)
+  const [globalDiscounts, setGlobalDiscounts] = useState(initialDiscounts || [])
 
   const initialGuest = {
     // Personal
@@ -207,13 +214,17 @@ export default function CheckoutPage({ room, user, guestProfile }) {
     })
 
     let discountPercentage = 0
-    if (
-      foundCompany &&
-      (foundCompany.discount_status === "S" ||
-        foundCompany.discount_status === "true")
-    ) {
-      discountPercentage =
-        Number(room.hotel_associated_discount_percentage) || 0
+    if (foundCompany) {
+      if (foundCompany.custom_discount_percentage !== null) {
+        discountPercentage = Number(foundCompany.custom_discount_percentage)
+      } else if (foundCompany.discount_id) {
+        const matchingDiscount = globalDiscounts.find(
+          (d) => d.id === foundCompany.discount_id,
+        )
+        if (matchingDiscount) {
+          discountPercentage = Number(matchingDiscount.value)
+        }
+      }
     }
 
     const discountAmount = total * (discountPercentage / 100)
@@ -1224,7 +1235,12 @@ export default function CheckoutPage({ room, user, guestProfile }) {
                         {discountPercentage > 0 && (
                           <div className="flex justify-between text-sm text-green-600 font-medium">
                             <span>
-                              Desconto Empresa Associada ({discountPercentage}%)
+                              {foundCompany?.custom_discount_percentage !== null
+                                ? "Desconto Exclusivo"
+                                : globalDiscounts.find(
+                                    (d) => d.id === foundCompany?.discount_id,
+                                  )?.name || "Desconto"}{" "}
+                              ({discountPercentage}%)
                             </span>
                             <span>
                               -
@@ -1403,14 +1419,17 @@ export async function getServerSideProps(context) {
     // 3. Fetch Guest Profile
     const guestProfile = await guest.findOneByUserId(user.id)
 
+    // 4. Fetch Global Discounts for real-time calculation
+    const allDiscounts = await discountModel.getAllActiveDiscounts()
+
     return {
       props: {
         room: JSON.parse(JSON.stringify(targetRoom)),
-        // Serialization: Dates might need JSON stringify if not handled automatically
         user: JSON.parse(JSON.stringify(user)),
         guestProfile: guestProfile
           ? JSON.parse(JSON.stringify(guestProfile))
           : null,
+        initialDiscounts: JSON.parse(JSON.stringify(allDiscounts)),
       },
     }
   } catch (error) {

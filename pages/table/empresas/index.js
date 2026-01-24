@@ -83,8 +83,12 @@ export default function CompaniesTable() {
         // Filtro de Desconto
         const matchesDiscount =
           discountFilter === "all" ||
-          (discountFilter === "with" && company.discount_status === "S") ||
-          (discountFilter === "without" && company.discount_status === "N")
+          (discountFilter === "with" &&
+            (company.discount_id !== null ||
+              company.custom_discount_percentage !== null)) ||
+          (discountFilter === "without" &&
+            company.discount_id === null &&
+            company.custom_discount_percentage === null)
 
         return matchesSearch && matchesStatus && matchesDiscount
       })
@@ -274,12 +278,15 @@ export default function CompaniesTable() {
                     {company.permission === "A" ? "Ativa" : "Inativa"}
                   </Badge>
 
-                  {company.discount_status === "S" && (
+                  {(company.discount_name ||
+                    company.custom_discount_percentage !== null) && (
                     <Badge
                       variant="outline"
-                      className="border-gray-200 text-gray-700 bg-gray-50 px-4 py-1"
+                      className="border-orange-200 text-orange-700 bg-orange-50 px-4 py-1"
                     >
-                      Desconto
+                      {company.custom_discount_percentage !== null
+                        ? `Exclusivo: ${Number(company.custom_discount_percentage)}%`
+                        : `${company.discount_name}: ${Number(company.discount_value)}%`}
                     </Badge>
                   )}
                 </div>
