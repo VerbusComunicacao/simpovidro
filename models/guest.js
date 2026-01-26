@@ -13,7 +13,9 @@ async function create(guestInputValues, userId) {
   ])
   await checkUniqueFields(guestInputValues)
 
-  const newGuest = await runInsertQuery(guestInputValues, userId)
+  const resolvedUserId = await resolveUserId(guestInputValues.email, userId)
+
+  const newGuest = await runInsertQuery(guestInputValues, resolvedUserId)
   return newGuest
 
   async function runInsertQuery(guestInputValues, userId) {
@@ -226,6 +228,13 @@ async function update(guestId, guestInputNewValues) {
 
   await checkUniqueFields(guestWithNewValues, guestId)
 
+  if (guestInputNewValues.email) {
+    guestWithNewValues.user_id = await resolveUserId(
+      guestWithNewValues.email,
+      guestWithNewValues.user_id,
+    )
+  }
+
   const updatedGuest = await runUpdateQuery(guestWithNewValues)
   return updatedGuest
 
@@ -261,6 +270,7 @@ async function update(guestId, guestInputNewValues) {
       emergency_contact_name,
       emergency_contact_phone,
       company_cnpj,
+      user_id,
     } = guestWithNewValues
 
     const cleanCompanyCnpj = company_cnpj?.replace(/\D/g, "")
@@ -299,7 +309,8 @@ async function update(guestId, guestInputNewValues) {
           emergency_contact_phone = $28,
           updated_at = timezone('utc', now()),
           email = $29,
-          company_cnpj = $30
+          company_cnpj = $30,
+          user_id = $31
         WHERE
           id = $1
         RETURNING
@@ -336,6 +347,7 @@ async function update(guestId, guestInputNewValues) {
         emergency_contact_phone,
         email,
         cleanCompanyCnpj,
+        user_id,
       ],
     })
 
@@ -389,6 +401,15 @@ async function deleteById(guestId) {
     `,
     values: [guestId],
   })
+}
+
+async function resolveUserId(guestEmail, providedUserId) {
+  if (!guestEmail) return providedUserId
+  const results = await database.query({
+    text: "SELECT id FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1",
+    values: [guestEmail],
+  })
+  return results.rows[0]?.id || providedUserId
 }
 
 const guest = {

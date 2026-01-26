@@ -29,6 +29,17 @@ async function getHandler(request, response) {
 async function patchHandler(request, response) {
   const { id } = request.query
 
+  const guestFound = await guest.findOneById(id)
+
+  if (!authorization.can(request.context.user, "update:guest", guestFound)) {
+    return response.status(403).json({
+      name: "ForbiddenError",
+      message: "Você não possui permissão para atualizar este convidado.",
+      action: "Verifique se você possui permissão para executar esta ação.",
+      status_code: 403,
+    })
+  }
+
   const guestInputValues = request.body
 
   const guestUpdated = await guest.update(id, guestInputValues)

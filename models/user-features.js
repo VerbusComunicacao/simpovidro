@@ -44,6 +44,7 @@ const availableFeatures = new Set([
   // Guests
   "read:guest",
   "update:guest",
+  "update:guest:others",
   "create:guest",
   "delete:guest",
 

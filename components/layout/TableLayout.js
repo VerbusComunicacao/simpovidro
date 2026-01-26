@@ -7,6 +7,7 @@ import {
   Hotel,
   ClipboardList,
   Building2,
+  Users,
   BedDouble,
   Layers,
   ShieldCheck,
@@ -19,6 +20,7 @@ import Link from "next/link"
 const navItems = [
   { href: "/table", label: "Hotéis", icon: Hotel },
   { href: "/table/inscricoes", label: "Inscrições", icon: ClipboardList },
+  { href: "/table/hospedes", label: "Hóspedes", icon: Users },
   { href: "/table/empresas", label: "Empresas", icon: Building2 },
   { href: "/table/discounts", label: "Descontos", icon: Tag },
   { href: "/table/room-types", label: "Tipos de Quarto", icon: BedDouble },
