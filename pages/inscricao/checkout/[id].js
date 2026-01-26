@@ -94,10 +94,10 @@ export default function CheckoutPage({
     medication_details: guestProfile?.medication_details || "",
     special_needs_details: guestProfile?.special_needs_details || "",
     health_observations: guestProfile?.health_observations || "",
-    has_heart_condition: guestProfile?.has_heart_condition || false,
-    has_diabetes: guestProfile?.has_diabetes || false,
-    has_high_blood_pressure: guestProfile?.has_high_blood_pressure || false,
-    has_low_blood_pressure: guestProfile?.has_low_blood_pressure || false,
+    has_heart_condition: guestProfile?.has_heart_condition ?? false,
+    has_diabetes: guestProfile?.has_diabetes ?? false,
+    has_high_blood_pressure: guestProfile?.has_high_blood_pressure ?? false,
+    has_low_blood_pressure: guestProfile?.has_low_blood_pressure ?? false,
   }
 
   const emptyGuest = {
@@ -823,13 +823,9 @@ export default function CheckoutPage({
                                   <SelectValue placeholder="Selecione" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="Masculino">
-                                    Masculino
-                                  </SelectItem>
-                                  <SelectItem value="Feminino">
-                                    Feminino
-                                  </SelectItem>
-                                  <SelectItem value="Outro">Outro</SelectItem>
+                                  <SelectItem value="M">Masculino</SelectItem>
+                                  <SelectItem value="F">Feminino</SelectItem>
+                                  <SelectItem value="O">Outro</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>

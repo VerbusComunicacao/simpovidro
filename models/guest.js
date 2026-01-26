@@ -409,7 +409,7 @@ async function resolveUserId(guestEmail, providedUserId) {
     text: "SELECT id FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1",
     values: [guestEmail],
   })
-  return results.rows[0]?.id || providedUserId
+  return results.rows[0]?.id || null
 }
 
 const guest = {

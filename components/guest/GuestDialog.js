@@ -339,8 +339,8 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
                           <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="positive">Positivo (+)</SelectItem>
-                          <SelectItem value="negative">Negativo (-)</SelectItem>
+                          <SelectItem value="+">Positivo (+)</SelectItem>
+                          <SelectItem value="-">Negativo (-)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

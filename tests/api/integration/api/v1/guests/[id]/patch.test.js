@@ -141,4 +141,103 @@ describe("PATCH /api/v1/guests/[id]", () => {
       })
     })
   })
+
+  describe("Authenticated user", () => {
+    test("Can't update other user's guest", async () => {
+      // 1. Create User A (Owner)
+      const userA = await orchestrator.createUser({ email: "userA@test.com" })
+      await orchestrator.activateUser(userA.id)
+
+      // 2. Create User B (Attacker)
+      const userB = await orchestrator.createUser({ email: "userB@test.com" })
+      await orchestrator.activateUser(userB.id)
+      await orchestrator.setUserFeatures(userB.id, ["update:guest"])
+
+      const sessionB = await orchestrator.createSession(userB.id)
+
+      // 3. Create a guest belonging to User A
+      const guestOfA = await guest.create(
+        {
+          name: "Guest of A",
+          phone: "+5511999999910",
+          gender: "M",
+          rg_number: "RG_A_10",
+          cpf_number: "000.000.000-10",
+          birth_date: "1980-01-01",
+        },
+        userA.id,
+      )
+
+      // 4. Try to update User A's guest as User B
+      const response = await fetch(
+        `http://localhost:3000/api/v1/guests/${guestOfA.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionB.token}`,
+          },
+          body: JSON.stringify({
+            name: "Hacked Name",
+          }),
+        },
+      )
+
+      expect(response.status).toBe(403)
+      const responseBody = await response.json()
+      expect(responseBody.name).toBe("ForbiddenError")
+    })
+
+    test("With feature 'update:guest:others' should update other user's guest", async () => {
+      // 1. Create User A (Owner)
+      const userA = await orchestrator.createUser({
+        email: "userA_others@test.com",
+      })
+      await orchestrator.activateUser(userA.id)
+
+      // 2. Create User B (Admin)
+      const userB = await orchestrator.createUser({
+        email: "userB_admin@test.com",
+      })
+      await orchestrator.activateUser(userB.id)
+      await orchestrator.setUserFeatures(userB.id, [
+        "update:guest",
+        "update:guest:others",
+      ])
+
+      const sessionB = await orchestrator.createSession(userB.id)
+
+      // 3. Create a guest belonging to User A
+      const guestOfA = await guest.create(
+        {
+          name: "Guest of A",
+          phone: "+5511999999911",
+          gender: "F",
+          rg_number: "RG_A_11",
+          cpf_number: "000.000.000-11",
+          birth_date: "1981-01-01",
+        },
+        userA.id,
+      )
+
+      // 4. Update User A's guest as User B (Admin)
+      const response = await fetch(
+        `http://localhost:3000/api/v1/guests/${guestOfA.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionB.token}`,
+          },
+          body: JSON.stringify({
+            name: "Updated by Admin",
+          }),
+        },
+      )
+
+      expect(response.status).toBe(200)
+      const responseBody = await response.json()
+      expect(responseBody.name).toBe("Updated by Admin")
+    })
+  })
 })
