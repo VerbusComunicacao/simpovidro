@@ -161,8 +161,8 @@ async function addFeatures(userId, features) {
   const updatedUser = await runUpdateQuery(userId, features)
   return updatedUser
 
-  function runUpdateQuery(userId, features) {
-    const results = database.query({
+  async function runUpdateQuery(userId, features) {
+    const results = await database.query({
       text: `
     UPDATE
       users

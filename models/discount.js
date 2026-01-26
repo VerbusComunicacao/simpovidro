@@ -109,6 +109,25 @@ async function deleteById(discountId) {
   })
 }
 
+async function findOneByName(discountName) {
+  if (!discountName) return null
+
+  const results = await database.query({
+    text: `SELECT * FROM discounts WHERE name = $1 LIMIT 1;`,
+    values: [discountName],
+  })
+
+  if (results.rowCount === 0) {
+    throw new NotFoundError({
+      message: `O desconto "${discountName}" não foi encontrado no sistema.`,
+      action:
+        "Verifique se o nome do desconto no CSV é idêntico ao cadastrado.",
+    })
+  }
+
+  return results.rows[0]
+}
+
 async function getAllActiveDiscounts() {
   const results = await database.query({
     text: `
@@ -130,6 +149,7 @@ const discount = {
   findAll,
   update,
   deleteById,
+  findOneByName,
   getAllActiveDiscounts,
 }
 

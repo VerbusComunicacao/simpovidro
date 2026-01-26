@@ -1,6 +1,7 @@
 import { createRouter } from "next-connect"
 import controller from "infra/controller"
 import company from "models/company"
+import discount from "models/discount"
 
 const router = createRouter()
 router.use(controller.injectAnnonymousOrUser)
@@ -26,9 +27,16 @@ async function postHandler(request, response) {
   }
 
   for (let i = 0; i < companiesToCreate.length; i++) {
-    const companyData = companiesToCreate[i]
+    const companyData = { ...companiesToCreate[i] }
+    const discountName = companyData.discount_name
 
     try {
+      if (discountName) {
+        const foundDiscount = await discount.findOneByName(discountName)
+        companyData.discount_id = foundDiscount.id
+      }
+      delete companyData.discount_name // Remove from object to avoid postgres error
+
       await company.create(companyData)
       results.successCount++
     } catch (error) {

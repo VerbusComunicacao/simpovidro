@@ -42,6 +42,7 @@ export function CSVImportDialog({ children, onImportSuccess }) {
       "Estado",
       "Data Último Registro",
       "Permissão (A/I)",
+      "Desconto",
     ]
     const example = [
       "Empresa Exemplo LTDA",
@@ -59,6 +60,7 @@ export function CSVImportDialog({ children, onImportSuccess }) {
       "SP",
       "15/01/2026",
       "A",
+      "Nome do Desconto",
     ]
     const csvContent = Papa.unparse([headers, example])
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
@@ -125,6 +127,7 @@ export function CSVImportDialog({ children, onImportSuccess }) {
               state: getCol("Estado"),
               last_registration_date: getCol("Data Último Registro"),
               permission: getCol("Permissão (A/I)"),
+              discount_name: getCol("Desconto"),
             }
           })
         } else {
@@ -154,6 +157,7 @@ export function CSVImportDialog({ children, onImportSuccess }) {
               zip_code: cleanRow[14],
               last_registration_date: cleanRow[15],
               permission: "A",
+              discount_name: cleanRow[16],
             }
           })
         }
