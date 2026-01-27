@@ -14,12 +14,14 @@ import {
   Tag,
   Menu,
   X,
+  FileText,
 } from "lucide-react"
 import Link from "next/link"
 
 const navItems = [
   { href: "/table", label: "Hotéis", icon: Hotel },
   { href: "/table/inscricoes", label: "Inscrições", icon: ClipboardList },
+  { href: "/table/relatorios", label: "Relatórios", icon: FileText },
   { href: "/table/hospedes", label: "Hóspedes", icon: Users },
   { href: "/table/empresas", label: "Empresas", icon: Building2 },
   { href: "/table/discounts", label: "Descontos", icon: Tag },
