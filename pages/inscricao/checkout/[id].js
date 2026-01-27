@@ -264,8 +264,8 @@ export default function CheckoutPage({
   const maxInstallments = calculateMaxInstallments()
   const installmentValue = finalTotal / installmentsCount
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  // Renamed from handleSubmit to handleFinalSubmit
+  const handleFinalSubmit = async () => {
     setIsLoading(true)
     setError("")
 
@@ -351,8 +351,7 @@ export default function CheckoutPage({
     }
   }
 
-  const handleCompanySubmit = async (e) => {
-    e.preventDefault()
+  const handleCompanySubmit = async () => {
     setIsLoading(true)
     setError("")
 
@@ -377,6 +376,27 @@ export default function CheckoutPage({
       setError(err.message)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleMasterSubmit = async (e) => {
+    e.preventDefault()
+
+    switch (currentStep) {
+      case 1:
+        await handleCnpjStep()
+        break
+      case 2:
+        await handleCompanySubmit()
+        break
+      case 3:
+        handleGuestsNext()
+        break
+      case 4:
+        await handleFinalSubmit()
+        break
+      default:
+        break
     }
   }
 
@@ -464,7 +484,7 @@ export default function CheckoutPage({
 
           {/* Guest Form */}
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleMasterSubmit} className="space-y-6">
               {error && (
                 <div className="bg-red-50 text-red-600 p-4 rounded-md flex items-center gap-2 text-sm border border-red-200">
                   <AlertCircle className="h-5 w-5 flex-shrink-0" />
@@ -490,11 +510,12 @@ export default function CheckoutPage({
                         placeholder="00.000.000/0000-00"
                         value={cnpj}
                         onChange={(e) => setCnpj(maskCNPJ(e.target.value))}
+                        required
+                        minLength={14}
                       />
                     </div>
                     <Button
-                      type="button"
-                      onClick={handleCnpjStep}
+                      type="submit"
                       className="w-full bg-blue-600"
                       disabled={isLoading}
                     >
@@ -711,8 +732,7 @@ export default function CheckoutPage({
                       </div>
                     </div>
                     <Button
-                      type="button"
-                      onClick={handleCompanySubmit}
+                      type="submit"
                       className="w-full bg-blue-600"
                       disabled={isLoading}
                     >
@@ -878,26 +898,28 @@ export default function CheckoutPage({
                           <div className="grid grid-cols-1 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor={`address-${index}`}>
-                                Rua / Logradouro
+                                Rua / Logradouro *
                               </Label>
                               <Input
                                 id={`address-${index}`}
                                 name="address"
                                 value={guestData.address}
                                 onChange={(e) => handleChange(index, e)}
+                                required
                               />
                             </div>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor={`address_number-${index}`}>
-                                Número
+                                Número *
                               </Label>
                               <Input
                                 id={`address_number-${index}`}
                                 name="address_number"
                                 value={guestData.address_number}
                                 onChange={(e) => handleChange(index, e)}
+                                required
                               />
                             </div>
                             <div className="md:col-span-2 space-y-2">
@@ -914,16 +936,17 @@ export default function CheckoutPage({
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
-                              <Label htmlFor={`city-${index}`}>Cidade</Label>
+                              <Label htmlFor={`city-${index}`}>Cidade *</Label>
                               <Input
                                 id={`city-${index}`}
                                 name="city"
                                 value={guestData.city}
                                 onChange={(e) => handleChange(index, e)}
+                                required
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor={`state-${index}`}>Estado</Label>
+                              <Label htmlFor={`state-${index}`}>Estado *</Label>
                               <Input
                                 id={`state-${index}`}
                                 name="state"
@@ -931,15 +954,17 @@ export default function CheckoutPage({
                                 onChange={(e) => handleChange(index, e)}
                                 maxLength={2}
                                 placeholder="UF"
+                                required
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor={`country-${index}`}>País</Label>
+                              <Label htmlFor={`country-${index}`}>País *</Label>
                               <Input
                                 id={`country-${index}`}
                                 name="country"
                                 value={guestData.country}
                                 onChange={(e) => handleChange(index, e)}
+                                required
                               />
                             </div>
                           </div>
@@ -955,26 +980,28 @@ export default function CheckoutPage({
                               <Label
                                 htmlFor={`emergency_contact_name-${index}`}
                               >
-                                Nome Contato Emergência
+                                Nome Contato Emergência *
                               </Label>
                               <Input
                                 id={`emergency_contact_name-${index}`}
                                 name="emergency_contact_name"
                                 value={guestData.emergency_contact_name}
                                 onChange={(e) => handleChange(index, e)}
+                                required
                               />
                             </div>
                             <div className="space-y-2">
                               <Label
                                 htmlFor={`emergency_contact_phone-${index}`}
                               >
-                                Telefone Emergência
+                                Telefone Emergência *
                               </Label>
                               <Input
                                 id={`emergency_contact_phone-${index}`}
                                 name="emergency_contact_phone"
                                 value={guestData.emergency_contact_phone}
                                 onChange={(e) => handleChange(index, e)}
+                                required
                               />
                             </div>
                           </div>
@@ -1164,8 +1191,7 @@ export default function CheckoutPage({
                         </div>
                       </div>
                       <Button
-                        type="button"
-                        onClick={handleGuestsNext}
+                        type="submit"
                         className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-6"
                         disabled={isLoading}
                       >
