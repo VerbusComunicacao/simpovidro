@@ -22,6 +22,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import ErrorDialog from "@/components/ui/ErrorDialog"
 import { maskPhone, maskCPF, maskRG } from "@/lib/masks"
+import { validateCPF, validatePhone } from "@/lib/validators"
+import { LocationSelector } from "@/components/ui/LocationSelector"
+import { getInitialLocationState } from "@/lib/location-utils"
 
 export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
   const isEditMode = !!guestToEdit
@@ -43,6 +46,8 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     city: "",
     state: "",
     country: "Brasil",
+    countryCode: "BR",
+    stateCode: "",
     medication_details: "",
     blood_type: "",
     blood_rh_factor: "",
@@ -56,6 +61,7 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
 
   useEffect(() => {
     if (guestToEdit) {
+      const locationState = getInitialLocationState(guestToEdit)
       setFormData({
         name: guestToEdit.name || "",
         email: guestToEdit.email || "",
@@ -72,9 +78,7 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
         address_number: guestToEdit.address_number || "",
         address_complement: guestToEdit.address_complement || "",
         neighborhood: guestToEdit.neighborhood || "",
-        city: guestToEdit.city || "",
-        state: guestToEdit.state || "",
-        country: guestToEdit.country || "Brasil",
+        ...locationState,
         medication_details: guestToEdit.medication_details || "",
         blood_type: guestToEdit.blood_type || "",
         blood_rh_factor: guestToEdit.blood_rh_factor || "",
@@ -103,6 +107,8 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
         city: "",
         state: "",
         country: "Brasil",
+        countryCode: "BR",
+        stateCode: "",
         medication_details: "",
         blood_type: "",
         blood_rh_factor: "",
@@ -140,10 +146,27 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     setFormData((prev) => ({ ...prev, [name]: !!checked }))
   }
 
+  const handleLocationChange = (location) => {
+    setFormData((prev) => ({ ...prev, ...location }))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
     setAction("")
+    setAction("")
+
+    // Validation
+    if (formData.cpf_number && !validateCPF(formData.cpf_number)) {
+      setError("CPF inválido.")
+      return
+    }
+
+    if (formData.phone && !validatePhone(formData.phone)) {
+      setError("Telefone inválido.")
+      return
+    }
+
     setLoading(true)
 
     const url = isEditMode
@@ -475,28 +498,13 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="city">Cidade</Label>
-                      <Input
-                        id="city"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleChange}
-                        placeholder="Nome da cidade"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="state">Estado (UF)</Label>
-                      <Input
-                        id="state"
-                        name="state"
-                        value={formData.state}
-                        onChange={handleChange}
-                        placeholder="Ex: SP"
-                        maxLength={100}
-                      />
-                    </div>
+                  <div className="mt-4">
+                    <LocationSelector
+                      countryCode={formData.countryCode}
+                      stateCode={formData.stateCode}
+                      cityName={formData.city}
+                      onLocationChange={handleLocationChange}
+                    />
                   </div>
                 </div>
               </div>

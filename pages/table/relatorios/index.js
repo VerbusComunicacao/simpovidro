@@ -12,14 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Download,
-  FileText,
-  Loader2,
-  BarChart3,
-  PieChart,
-  Map,
-} from "lucide-react"
+import { Download, FileText, Loader2 } from "lucide-react"
 import { exportToCSV, flattenDataForExport } from "@/lib/exportUtils"
 import { useEffect } from "react"
 import {

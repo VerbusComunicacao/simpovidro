@@ -15,6 +15,9 @@ import { ArrowLeft } from "lucide-react"
 import TableLayout from "@/components/layout/TableLayout"
 import ErrorDialog from "@/components/ui/ErrorDialog"
 import { PricePolicyManager } from "@/components/hotel/PricePolicyManager"
+import { maskPhone } from "@/lib/masks"
+import { validatePhone } from "@/lib/validators"
+import { LocationSelector } from "@/components/ui/LocationSelector"
 
 export default function AddHotelPage() {
   const router = useRouter()
@@ -24,7 +27,9 @@ export default function AddHotelPage() {
   const [address, setAddress] = useState("")
   const [city, setCity] = useState("")
   const [state, setState] = useState("")
+  const [stateCode, setStateCode] = useState("")
   const [country, setCountry] = useState("Brasil")
+  const [countryCode, setCountryCode] = useState("BR")
   const [checkInDate, setCheckInDate] = useState("")
   const [checkOutDate, setCheckOutDate] = useState("")
   const [error, setError] = useState("")
@@ -33,10 +38,29 @@ export default function AddHotelPage() {
   const [loading, setLoading] = useState(false)
   const [pricePolicies, setPricePolicies] = useState([])
 
+  const handleLocationChange = (loc) => {
+    if (loc.country !== undefined) setCountry(loc.country)
+    if (loc.countryCode !== undefined) setCountryCode(loc.countryCode)
+    if (loc.state !== undefined) setState(loc.state)
+    if (loc.stateCode !== undefined) setStateCode(loc.stateCode)
+    if (loc.city !== undefined) setCity(loc.city)
+  }
+
+  const handlePhoneChange = (e) => {
+    setPhone(maskPhone(e.target.value))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
     setAction("")
+    setAction("")
+
+    if (phone && !validatePhone(phone)) {
+      setError("Telefone inválido.")
+      return
+    }
+
     setLoading(true)
 
     const response = await fetch("/api/v1/hotels", {
@@ -114,7 +138,7 @@ export default function AddHotelPage() {
                   <Input
                     id="phone"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={handlePhoneChange}
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -125,29 +149,14 @@ export default function AddHotelPage() {
                     onChange={(e) => setAddress(e.target.value)}
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="city">Cidade</Label>
-                  <Input
-                    id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
+
+                <div className="md:col-span-2 mt-2">
+                  <LocationSelector
+                    countryCode={countryCode}
+                    stateCode={stateCode}
+                    cityName={city}
+                    onLocationChange={handleLocationChange}
                     required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="state">Estado</Label>
-                  <Input
-                    id="state"
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="country">País</Label>
-                  <Input
-                    id="country"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
                   />
                 </div>
                 <div className="space-y-1.5">

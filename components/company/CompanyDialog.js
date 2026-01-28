@@ -21,6 +21,9 @@ import {
 } from "@/components/ui/select"
 import ErrorDialog from "@/components/ui/ErrorDialog"
 import { maskPhone, maskCNPJ, maskCEP } from "@/lib/masks"
+import { validateCNPJ, validatePhone } from "@/lib/validators"
+import { LocationSelector } from "@/components/ui/LocationSelector"
+import { getInitialLocationState } from "@/lib/location-utils"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -30,7 +33,6 @@ const fetcher = async (url) => {
     error.status = res.status
     throw error
   }
-  return res.json()
 }
 
 export function CompanyDialog({
@@ -57,12 +59,16 @@ export function CompanyDialog({
     permission: "A",
     discount_id: "none",
     custom_discount_percentage: "",
+    country: "Brasil",
+    countryCode: "BR",
+    stateCode: "",
   })
 
   const { data: discounts } = useSWR("/api/v1/discounts", fetcher)
 
   useEffect(() => {
     if (companyToEdit) {
+      const locationState = getInitialLocationState(companyToEdit)
       setFormData({
         corporate_name: companyToEdit.corporate_name || "",
         badge: companyToEdit.badge || "",
@@ -71,8 +77,6 @@ export function CompanyDialog({
         address_number: companyToEdit.address_number || "",
         address_complement: companyToEdit.address_complement || "",
         neighborhood: companyToEdit.neighborhood || "",
-        city: companyToEdit.city || "",
-        state: companyToEdit.state || "",
         phone: companyToEdit.phone || "",
         email: companyToEdit.email || "",
         responsible_person: companyToEdit.responsible_person || "",
@@ -81,6 +85,7 @@ export function CompanyDialog({
         discount_id: companyToEdit.discount_id || "none",
         custom_discount_percentage:
           companyToEdit.custom_discount_percentage || "",
+        ...locationState,
       })
     } else {
       setFormData({
@@ -100,6 +105,9 @@ export function CompanyDialog({
         permission: "A",
         discount_id: "none",
         custom_discount_percentage: "",
+        country: "Brasil",
+        countryCode: "BR",
+        stateCode: "",
       })
     }
   }, [companyToEdit, open])
@@ -124,10 +132,27 @@ export function CompanyDialog({
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleLocationChange = (location) => {
+    setFormData((prev) => ({ ...prev, ...location }))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
     setAction("")
+    setAction("")
+
+    // Validation
+    if (!validateCNPJ(formData.cnpj)) {
+      setError("CNPJ inválido.")
+      return
+    }
+
+    if (formData.phone && !validatePhone(formData.phone)) {
+      setError("Telefone inválido.")
+      return
+    }
+
     setLoading(true)
 
     const url = isEditMode
@@ -328,30 +353,14 @@ export function CompanyDialog({
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="city">Cidade *</Label>
-                      <Input
-                        id="city"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleChange}
-                        placeholder="Nome da cidade"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="state">Estado (UF) *</Label>
-                      <Input
-                        id="state"
-                        name="state"
-                        value={formData.state}
-                        onChange={handleChange}
-                        placeholder="Ex: SP"
-                        maxLength={100}
-                        required
-                      />
-                    </div>
+                  <div className="mt-4">
+                    <LocationSelector
+                      countryCode={formData.countryCode}
+                      stateCode={formData.stateCode}
+                      cityName={formData.city}
+                      onLocationChange={handleLocationChange}
+                      required
+                    />
                   </div>
                 </div>
 

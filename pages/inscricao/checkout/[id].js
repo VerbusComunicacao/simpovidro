@@ -29,6 +29,9 @@ import room from "models/room"
 import userModel from "models/user"
 import discountModel from "models/discount"
 import { maskCPF, maskPhone, maskRG, maskCNPJ, maskCEP } from "@/lib/masks"
+import { validateCPF, validateCNPJ, validatePhone } from "@/lib/validators"
+import { LocationSelector } from "@/components/ui/LocationSelector"
+import { getInitialLocationState } from "@/lib/location-utils"
 
 export default function CheckoutPage({
   room,
@@ -58,10 +61,19 @@ export default function CheckoutPage({
     zip_code: "",
     permission: "A",
     discount_status: "N",
+    stateCode: "",
+    country: "Brazil",
+    countryCode: "BR",
   })
   const [paymentMethod, setPaymentMethod] = useState("cash")
   const [installmentsCount, setInstallmentsCount] = useState(1)
-  const [globalDiscounts, setGlobalDiscounts] = useState(initialDiscounts || [])
+  const [globalDiscounts] = useState(initialDiscounts || [])
+  const [guestErrors, setGuestErrors] = useState({})
+
+  // No longer needed: countries, getStates, getCities helpers here
+
+  // Determine initial codes for Guest Profile
+  const locationState = getInitialLocationState(guestProfile)
 
   const initialGuest = {
     // Personal
@@ -81,9 +93,7 @@ export default function CheckoutPage({
     address_number: guestProfile?.address_number || "",
     address_complement: guestProfile?.address_complement || "",
     neighborhood: guestProfile?.neighborhood || "",
-    city: guestProfile?.city || "",
-    state: guestProfile?.state || "",
-    country: guestProfile?.country || "Brasil",
+    ...locationState,
 
     // Health / Emergency
     emergency_contact_name: guestProfile?.emergency_contact_name || "",
@@ -115,7 +125,9 @@ export default function CheckoutPage({
     neighborhood: "",
     city: "",
     state: "",
-    country: "Brasil",
+    stateCode: "",
+    country: "Brazil",
+    countryCode: "BR",
     emergency_contact_name: "",
     emergency_contact_phone: "",
     blood_type: "",
@@ -165,6 +177,24 @@ export default function CheckoutPage({
       [name]: e.target.type === "checkbox" ? e.target.checked : value,
     }
     setGuests(newGuests)
+
+    // Clear error when user types
+    if (guestErrors[index]?.[name]) {
+      const newErrors = { ...guestErrors }
+      delete newErrors[index][name]
+      if (Object.keys(newErrors[index]).length === 0) delete newErrors[index]
+      setGuestErrors(newErrors)
+    }
+  }
+
+  const handleLocationChange = (index, location) => {
+    const newGuests = [...guests]
+    newGuests[index] = { ...newGuests[index], ...location }
+    setGuests(newGuests)
+  }
+
+  const handleCompanyLocationChange = (location) => {
+    setNewCompanyData((prev) => ({ ...prev, ...location }))
   }
 
   const handleSelectChange = (index, name, value) => {
@@ -262,7 +292,6 @@ export default function CheckoutPage({
   }
 
   const maxInstallments = calculateMaxInstallments()
-  const installmentValue = finalTotal / installmentsCount
 
   // Renamed from handleSubmit to handleFinalSubmit
   const handleFinalSubmit = async () => {
@@ -316,13 +345,57 @@ export default function CheckoutPage({
   }
 
   const handleGuestsNext = () => {
-    // Basic validation of guests could happen here
+    const newErrors = {}
+    let hasError = false
+
+    guests.forEach((guest, index) => {
+      // Validate CPF
+      if (guest.cpf_number && !validateCPF(guest.cpf_number)) {
+        if (!newErrors[index]) newErrors[index] = {}
+        newErrors[index].cpf_number = "CPF inválido."
+        hasError = true
+      }
+
+      // Validate Phone/WhatsApp
+      if (guest.phone && !validatePhone(guest.phone)) {
+        if (!newErrors[index]) newErrors[index] = {}
+        newErrors[index].phone = "Telefone inválido."
+        hasError = true
+      }
+
+      // Validate Emergency Phone
+      if (
+        guest.emergency_contact_phone &&
+        !validatePhone(guest.emergency_contact_phone)
+      ) {
+        if (!newErrors[index]) newErrors[index] = {}
+        newErrors[index].emergency_contact_phone = "Telefone inválido."
+        hasError = true
+      }
+
+      // Basic Required Fields (already handled by HTML 'required', but good to double check or if we switch to non-form submit)
+      if (!guest.name) {
+        if (!newErrors[index]) newErrors[index] = {}
+        newErrors[index].name = "Nome é obrigatório."
+        hasError = true
+      }
+    })
+
+    if (hasError) {
+      setGuestErrors(newErrors)
+      const firstErrorIndex = Object.keys(newErrors)[0]
+      const element = document.getElementById(`guest-card-${firstErrorIndex}`)
+      if (element) element.scrollIntoView({ behavior: "smooth" })
+      setError("Por favor, corrija os erros no formulário de hóspedes.")
+      return
+    }
+
     setCurrentStep(4)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const handleCnpjStep = async () => {
-    if (!cnpj || cnpj.length < 14) {
+    if (!cnpj || !validateCNPJ(cnpj)) {
       setError("CNPJ inválido.")
       return
     }
@@ -351,7 +424,23 @@ export default function CheckoutPage({
     }
   }
 
-  const handleCompanySubmit = async () => {
+  const handleCompanySubmit = async (e) => {
+    e.preventDefault() // Prevent default form submission
+
+    // Validate Phone in Company Form
+    if (newCompanyData.phone && !validatePhone(newCompanyData.phone)) {
+      setError("Telefone da empresa inválido.")
+      return
+    }
+
+    // Validate CEP (Basic length check)
+    if (
+      newCompanyData.zip_code &&
+      newCompanyData.zip_code.replace(/\D/g, "").length !== 8
+    ) {
+      setError("CEP inválido.")
+      return
+    }
     setIsLoading(true)
     setError("")
 
@@ -387,7 +476,7 @@ export default function CheckoutPage({
         await handleCnpjStep()
         break
       case 2:
-        await handleCompanySubmit()
+        await handleCompanySubmit(e)
         break
       case 3:
         handleGuestsNext()
@@ -686,50 +775,29 @@ export default function CheckoutPage({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="neighborhood">Bairro *</Label>
-                        <Input
-                          id="neighborhood"
-                          value={newCompanyData.neighborhood}
-                          onChange={(e) =>
-                            setNewCompanyData({
-                              ...newCompanyData,
-                              neighborhood: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="city">Cidade *</Label>
-                        <Input
-                          id="city"
-                          value={newCompanyData.city}
-                          onChange={(e) =>
-                            setNewCompanyData({
-                              ...newCompanyData,
-                              city: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="state">Estado *</Label>
-                        <Input
-                          id="state"
-                          value={newCompanyData.state}
-                          onChange={(e) =>
-                            setNewCompanyData({
-                              ...newCompanyData,
-                              state: e.target.value,
-                            })
-                          }
-                          placeholder="UF"
-                          required
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="neighborhood">Bairro *</Label>
+                      <Input
+                        id="neighborhood"
+                        value={newCompanyData.neighborhood}
+                        onChange={(e) =>
+                          setNewCompanyData({
+                            ...newCompanyData,
+                            neighborhood: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+
+                    <div className="mt-4">
+                      <LocationSelector
+                        countryCode={newCompanyData.countryCode}
+                        stateCode={newCompanyData.stateCode}
+                        cityName={newCompanyData.city}
+                        onLocationChange={handleCompanyLocationChange}
+                        required
+                      />
                     </div>
                     <Button
                       type="submit"
@@ -750,7 +818,11 @@ export default function CheckoutPage({
               {currentStep === 3 && (
                 <>
                   {guests.map((guestData, index) => (
-                    <Card key={index} className="overflow-hidden">
+                    <Card
+                      key={index}
+                      id={`guest-card-${index}`}
+                      className={`overflow-hidden ${guestErrors[index] ? "border-red-500" : ""}`}
+                    >
                       <CardHeader className="bg-gray-50 border-b flex flex-row items-center justify-between pb-4">
                         <div className="flex items-center gap-2">
                           <div className="bg-blue-100 p-2 rounded-full">
@@ -813,7 +885,17 @@ export default function CheckoutPage({
                                 onChange={(e) => handleChange(index, e)}
                                 placeholder="000.000.000-00"
                                 required
+                                className={
+                                  guestErrors[index]?.cpf_number
+                                    ? "border-red-500"
+                                    : ""
+                                }
                               />
+                              {guestErrors[index]?.cpf_number && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {guestErrors[index].cpf_number}
+                                </p>
+                              )}
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor={`rg_number-${index}`}>RG *</Label>
@@ -860,7 +942,17 @@ export default function CheckoutPage({
                                 onChange={(e) => handleChange(index, e)}
                                 placeholder="(00) 00000-0000"
                                 required
+                                className={
+                                  guestErrors[index]?.phone
+                                    ? "border-red-500"
+                                    : ""
+                                }
                               />
+                              {guestErrors[index]?.phone && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {guestErrors[index].phone}
+                                </p>
+                              )}
                             </div>
                           </div>
 
@@ -934,39 +1026,16 @@ export default function CheckoutPage({
                               />
                             </div>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor={`city-${index}`}>Cidade *</Label>
-                              <Input
-                                id={`city-${index}`}
-                                name="city"
-                                value={guestData.city}
-                                onChange={(e) => handleChange(index, e)}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor={`state-${index}`}>Estado *</Label>
-                              <Input
-                                id={`state-${index}`}
-                                name="state"
-                                value={guestData.state}
-                                onChange={(e) => handleChange(index, e)}
-                                maxLength={2}
-                                placeholder="UF"
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor={`country-${index}`}>País *</Label>
-                              <Input
-                                id={`country-${index}`}
-                                name="country"
-                                value={guestData.country}
-                                onChange={(e) => handleChange(index, e)}
-                                required
-                              />
-                            </div>
+                          <div className="mt-4">
+                            <LocationSelector
+                              countryCode={guestData.countryCode}
+                              stateCode={guestData.stateCode}
+                              cityName={guestData.city}
+                              onLocationChange={(loc) =>
+                                handleLocationChange(index, loc)
+                              }
+                              required
+                            />
                           </div>
                         </div>
 
@@ -1002,7 +1071,17 @@ export default function CheckoutPage({
                                 value={guestData.emergency_contact_phone}
                                 onChange={(e) => handleChange(index, e)}
                                 required
+                                className={
+                                  guestErrors[index]?.emergency_contact_phone
+                                    ? "border-red-500"
+                                    : ""
+                                }
                               />
+                              {guestErrors[index]?.emergency_contact_phone && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {guestErrors[index].emergency_contact_phone}
+                                </p>
+                              )}
                             </div>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
