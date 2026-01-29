@@ -254,7 +254,7 @@ async function update(roomId, roomInputNewValues, userId) {
     "available_rooms" in roomInputNewValues ||
     "blocked_rooms" in roomInputNewValues
   ) {
-    normalizedRoomWithNewValues = validateAndNormalizeRoomAvailability(
+    normalizedRoomWithNewValues = await validateAndNormalizeRoomAvailability(
       currentRoom,
       roomInputNewValues,
     )
@@ -321,37 +321,40 @@ async function update(roomId, roomInputNewValues, userId) {
     return results.rows[0]
   }
 
-  function validateAndNormalizeRoomAvailability(currentRoom, newValues) {
-    const currentAvailable = currentRoom.available_rooms
-    const currentBlocked = currentRoom.blocked_rooms
+  async function validateAndNormalizeRoomAvailability(currentRoom, newValues) {
+    const roomId = currentRoom.id
     const currentTotal = currentRoom.total_rooms
+    const currentBlocked = currentRoom.blocked_rooms
 
-    let available = newValues.available_rooms ?? currentAvailable
-    let blocked = newValues.blocked_rooms ?? currentBlocked
     let total = newValues.total_rooms ?? currentTotal
+    let blocked = newValues.blocked_rooms ?? currentBlocked
 
-    if (
-      "total_rooms" in newValues &&
-      !("available_rooms" in newValues) &&
-      !("blocked_rooms" in newValues)
-    ) {
-      const calculatedAvailable = total - blocked
+    // Calculate sold rooms from "sales" table (Source of Truth)
+    const salesResults = await database.query({
+      text: `
+        SELECT count(*)::int as sold_rooms
+        FROM "sales"
+        WHERE room_id = $1 AND status != 'cancelled'
+      `,
+      values: [roomId],
+    })
 
-      available = Math.max(0, calculatedAvailable)
-    }
+    const soldRooms = salesResults.rows[0].sold_rooms
 
-    if (available < 0 || blocked < 0 || total < 0) {
+    let available = total - blocked - soldRooms
+
+    if (total < 0 || blocked < 0) {
       throw new ValidationError({
         message: "Os valores de quartos não podem ser negativos.",
         action: "Verifique os campos e tente novamente.",
       })
     }
 
-    if (available + blocked !== total) {
+    if (available < 0) {
       throw new ValidationError({
         message:
-          "A soma de quartos disponíveis e bloqueados deve ser igual ao total.",
-        action: "Ajuste os valores e tente novamente.",
+          "O novo total/bloqueio de quartos é insuficiente para as vendas já realizadas.",
+        action: "Aumente o total de quartos ou diminua os bloqueados.",
       })
     }
 

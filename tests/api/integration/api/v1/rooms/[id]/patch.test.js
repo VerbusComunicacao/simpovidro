@@ -353,8 +353,8 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         name: "ValidationError",
         status_code: 400,
         message:
-          "A soma de quartos disponíveis e bloqueados deve ser igual ao total.",
-        action: "Ajuste os valores e tente novamente.",
+          "O novo total/bloqueio de quartos é insuficiente para as vendas já realizadas.",
+        action: "Aumente o total de quartos ou diminua os bloqueados.",
       })
     })
 
@@ -394,8 +394,9 @@ describe("PATCH /api/v1/rooms/[id]", () => {
       expect(errorBody).toEqual({
         name: "ValidationError",
         status_code: 400,
-        message: "Os valores de quartos não podem ser negativos.",
-        action: "Verifique os campos e tente novamente.",
+        message: expect.stringContaining("diverge do calculado pelo sistema"),
+        action:
+          "Permita que o sistema calcule a disponibilidade automaticamente.",
       })
     })
 
@@ -439,9 +440,9 @@ describe("PATCH /api/v1/rooms/[id]", () => {
       expect(errorBody).toEqual({
         name: "ValidationError",
         status_code: 400,
-        message:
-          "A soma de quartos disponíveis e bloqueados deve ser igual ao total.",
-        action: "Ajuste os valores e tente novamente.",
+        message: expect.stringContaining("diverge do calculado pelo sistema"),
+        action:
+          "Permita que o sistema calcule a disponibilidade automaticamente.",
       })
     })
   })
