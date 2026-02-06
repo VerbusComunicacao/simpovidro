@@ -1,5 +1,7 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { useRouter } from "next/router"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -279,19 +281,38 @@ export default function CheckoutPage({
     childCount,
   } = calculateTotalPrice()
 
-  const calculateMaxInstallments = () => {
-    if (!room.hotel_check_in_date) return 1
-    const target = new Date(room.hotel_check_in_date)
-    const now = new Date()
+  const calculateMaxInstallments = (eventDate) => {
+    try {
+      const today = Temporal.Now.plainDateISO()
 
-    let months = (target.getFullYear() - now.getFullYear()) * 12
-    months -= now.getMonth()
-    months += target.getMonth()
+      if (Temporal.PlainDate.compare(eventDate, today) < 0) return 1
 
-    return Math.max(1, months + 1)
+      const monthsBetween = today
+        .with({ day: 1 })
+        .until(eventDate.with({ day: 1 }), { largestUnit: "months" }).months
+
+      return monthsBetween + 1
+    } catch (error) {
+      console.error("Error calculating installments with Temporal:", error)
+      return 1
+    }
   }
 
-  const maxInstallments = calculateMaxInstallments()
+  const maxInstallments = room.hotel_check_in_date
+    ? calculateMaxInstallments(
+        Temporal.PlainDate.from(
+          typeof room.hotel_check_in_date === "string"
+            ? room.hotel_check_in_date.split("T")[0]
+            : room.hotel_check_in_date.toISOString().split("T")[0],
+        ),
+      )
+    : 1
+
+  useEffect(() => {
+    if (paymentMethod === "installments") {
+      setInstallmentsCount(maxInstallments)
+    }
+  }, [paymentMethod, maxInstallments])
 
   // Renamed from handleSubmit to handleFinalSubmit
   const handleFinalSubmit = async () => {
@@ -1408,44 +1429,42 @@ export default function CheckoutPage({
                                 ? "bg-blue-600"
                                 : ""
                             }
-                            onClick={() => setPaymentMethod("installments")}
+                            onClick={() => {
+                              setPaymentMethod("installments")
+                              setInstallmentsCount(maxInstallments)
+                            }}
                           >
                             Parcelado
                           </Button>
                         </div>
 
                         {paymentMethod === "installments" && (
-                          <div className="space-y-2">
-                            <Label>Número de Parcelas</Label>
-                            <Select
-                              value={String(installmentsCount)}
-                              onValueChange={(val) =>
-                                setInstallmentsCount(Number(val))
-                              }
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione as parcelas" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Array.from(
-                                  { length: maxInstallments },
-                                  (_, i) => (
-                                    <SelectItem
-                                      key={i + 1}
-                                      value={String(i + 1)}
-                                    >
-                                      {i + 1}x de{" "}
-                                      {new Intl.NumberFormat("pt-BR", {
-                                        style: "currency",
-                                        currency: "BRL",
-                                      }).format(finalTotal / (i + 1))}
-                                    </SelectItem>
-                                  ),
-                                )}
-                              </SelectContent>
-                            </Select>
-                            <p className="text-xs text-gray-500 italic">
-                              * Parcelamento sem juros até a data do evento (
+                          <div className="space-y-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-blue-900 font-bold">
+                                Plano de Parcelamento
+                              </Label>
+                              <Badge
+                                variant="secondary"
+                                className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
+                              >
+                                {maxInstallments}x Fixas
+                              </Badge>
+                            </div>
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-2xl font-black text-blue-600">
+                                {new Intl.NumberFormat("pt-BR", {
+                                  style: "currency",
+                                  currency: "BRL",
+                                }).format(finalTotal / maxInstallments)}
+                              </span>
+                              <span className="text-sm text-blue-400 font-medium">
+                                por parcela
+                              </span>
+                            </div>
+                            <p className="text-xs text-blue-500 italic">
+                              * Parcelamento automático sem juros até a data do
+                              evento (
                               {new Date(
                                 room.hotel_check_in_date,
                               ).toLocaleDateString("pt-BR")}

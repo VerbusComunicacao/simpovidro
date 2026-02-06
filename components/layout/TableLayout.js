@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   FileText,
+  CreditCard,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -31,6 +32,7 @@ const navItems = [
     label: "Categorias de Quarto",
     icon: Layers,
   },
+  { href: "/table/pagamentos", label: "Pagamentos", icon: CreditCard },
 ]
 
 export default function TableLayout({ children, pageActions }) {

@@ -358,6 +358,18 @@ async function update(roomId, roomInputNewValues, userId) {
       })
     }
 
+    if (
+      "available_rooms" in newValues &&
+      newValues.available_rooms !== available
+    ) {
+      throw new ValidationError({
+        message:
+          "O valor de quartos disponíveis informado diverge do calculado pelo sistema.",
+        action:
+          "Permita que o sistema calcule a disponibilidade automaticamente.",
+      })
+    }
+
     return {
       ...newValues,
       available_rooms: available,
