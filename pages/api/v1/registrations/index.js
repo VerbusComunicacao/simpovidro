@@ -1,8 +1,7 @@
 import { createRouter } from "next-connect"
 import controller from "infra/controller.js"
-import guest from "models/guest.js"
+import registration from "models/registration.js"
 import sale from "models/sale.js"
-import company from "models/company.js"
 import { ValidationError, UnauthorizedError } from "infra/errors.js"
 import email from "infra/email.js"
 
@@ -15,13 +14,7 @@ export default router.handler(controller.errorHandlers)
 
 async function postHandler(request, response) {
   const user = request.context.user
-  const {
-    room_id,
-    guests_data,
-    company_cnpj,
-    payment_method,
-    installments_count,
-  } = request.body
+  const { guests_data } = request.body
 
   if (!user.id) {
     throw new UnauthorizedError({
@@ -61,51 +54,13 @@ async function postHandler(request, response) {
     if (currentGuestData.rg_number) usedRGs.add(currentGuestData.rg_number)
   }
 
-  let companyId = null
-  if (company_cnpj) {
-    const cleanCnpj = company_cnpj.replace(/\D/g, "")
-    try {
-      const foundCompany = await company.findOneByCnpj(cleanCnpj)
-      companyId = foundCompany.id
-    } catch (error) {
-      if (error.name !== "NotFoundError") throw error
-      // Se não encontrar a empresa e o CNPJ foi passado, pode ser que
-      // a empresa tenha acabado de ser criada ou ainda não existe.
-      // No fluxo ideal, a empresa já foi criada ou encontrada no step anterior.
-    }
-  }
-
-  // 1. Process all guests
-  const savedGuestIds = []
-
-  for (let i = 0; i < guests_data.length; i++) {
-    const currentGuestData = guests_data[i]
-
-    // First guest is associated with the logged-in user if it's a new record
-    const guestUserId = i === 0 ? user.id : null
-
-    // Add company_cnpj to each guest data so it's saved in the profile
-    const guestDataWithCnpj = {
-      ...currentGuestData,
-      company_cnpj: company_cnpj,
-    }
-
-    const savedGuest = await guest.upsert(guestDataWithCnpj, guestUserId)
-    savedGuestIds.push(savedGuest.id)
-  }
-
-  // 2. Create Sale (Transactions handling: Validate room, Check availability, Create Sale, Update Room Availability)
-  const newSale = await sale.create({
-    guest_ids: savedGuestIds,
-    room_id: room_id,
-    company_id: companyId,
-    payment_method: payment_method,
-    installments_count: installments_count,
-  })
+  // 2. Delegate registration logic to model
+  const registrationResult = await registration.create(user.id, request.body)
+  const { saleId, guestIds } = registrationResult
 
   // 3. Send Confirmation Email
   try {
-    const saleDetails = await sale.findOneByIdWithDetails(newSale.id)
+    const saleDetails = await sale.findOneByIdWithDetails(saleId)
 
     const formatDate = (date) => new Date(date).toLocaleDateString("pt-BR")
     const formatCurrency = (val) =>
@@ -197,7 +152,7 @@ async function postHandler(request, response) {
   }
 
   return response.status(201).json({
-    saleId: newSale.id,
-    guestIds: savedGuestIds,
+    saleId: saleId,
+    guestIds: guestIds,
   })
 }

@@ -1,5 +1,7 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { useRouter } from "next/router"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -29,6 +31,9 @@ import room from "models/room"
 import userModel from "models/user"
 import discountModel from "models/discount"
 import { maskCPF, maskPhone, maskRG, maskCNPJ, maskCEP } from "@/lib/masks"
+import { validateCPF, validateCNPJ, validatePhone } from "@/lib/validators"
+import { LocationSelector } from "@/components/ui/LocationSelector"
+import { getInitialLocationState } from "@/lib/location-utils"
 
 export default function CheckoutPage({
   room,
@@ -58,10 +63,19 @@ export default function CheckoutPage({
     zip_code: "",
     permission: "A",
     discount_status: "N",
+    stateCode: "",
+    country: "Brazil",
+    countryCode: "BR",
   })
   const [paymentMethod, setPaymentMethod] = useState("cash")
   const [installmentsCount, setInstallmentsCount] = useState(1)
-  const [globalDiscounts, setGlobalDiscounts] = useState(initialDiscounts || [])
+  const [globalDiscounts] = useState(initialDiscounts || [])
+  const [guestErrors, setGuestErrors] = useState({})
+
+  // No longer needed: countries, getStates, getCities helpers here
+
+  // Determine initial codes for Guest Profile
+  const locationState = getInitialLocationState(guestProfile)
 
   const initialGuest = {
     // Personal
@@ -81,9 +95,7 @@ export default function CheckoutPage({
     address_number: guestProfile?.address_number || "",
     address_complement: guestProfile?.address_complement || "",
     neighborhood: guestProfile?.neighborhood || "",
-    city: guestProfile?.city || "",
-    state: guestProfile?.state || "",
-    country: guestProfile?.country || "Brasil",
+    ...locationState,
 
     // Health / Emergency
     emergency_contact_name: guestProfile?.emergency_contact_name || "",
@@ -94,10 +106,10 @@ export default function CheckoutPage({
     medication_details: guestProfile?.medication_details || "",
     special_needs_details: guestProfile?.special_needs_details || "",
     health_observations: guestProfile?.health_observations || "",
-    has_heart_condition: guestProfile?.has_heart_condition || false,
-    has_diabetes: guestProfile?.has_diabetes || false,
-    has_high_blood_pressure: guestProfile?.has_high_blood_pressure || false,
-    has_low_blood_pressure: guestProfile?.has_low_blood_pressure || false,
+    has_heart_condition: guestProfile?.has_heart_condition ?? false,
+    has_diabetes: guestProfile?.has_diabetes ?? false,
+    has_high_blood_pressure: guestProfile?.has_high_blood_pressure ?? false,
+    has_low_blood_pressure: guestProfile?.has_low_blood_pressure ?? false,
   }
 
   const emptyGuest = {
@@ -115,7 +127,9 @@ export default function CheckoutPage({
     neighborhood: "",
     city: "",
     state: "",
-    country: "Brasil",
+    stateCode: "",
+    country: "Brazil",
+    countryCode: "BR",
     emergency_contact_name: "",
     emergency_contact_phone: "",
     blood_type: "",
@@ -165,6 +179,24 @@ export default function CheckoutPage({
       [name]: e.target.type === "checkbox" ? e.target.checked : value,
     }
     setGuests(newGuests)
+
+    // Clear error when user types
+    if (guestErrors[index]?.[name]) {
+      const newErrors = { ...guestErrors }
+      delete newErrors[index][name]
+      if (Object.keys(newErrors[index]).length === 0) delete newErrors[index]
+      setGuestErrors(newErrors)
+    }
+  }
+
+  const handleLocationChange = (index, location) => {
+    const newGuests = [...guests]
+    newGuests[index] = { ...newGuests[index], ...location }
+    setGuests(newGuests)
+  }
+
+  const handleCompanyLocationChange = (location) => {
+    setNewCompanyData((prev) => ({ ...prev, ...location }))
   }
 
   const handleSelectChange = (index, name, value) => {
@@ -249,23 +281,41 @@ export default function CheckoutPage({
     childCount,
   } = calculateTotalPrice()
 
-  const calculateMaxInstallments = () => {
-    if (!room.hotel_check_in_date) return 1
-    const target = new Date(room.hotel_check_in_date)
-    const now = new Date()
+  const calculateMaxInstallments = (eventDate) => {
+    try {
+      const today = Temporal.Now.plainDateISO()
 
-    let months = (target.getFullYear() - now.getFullYear()) * 12
-    months -= now.getMonth()
-    months += target.getMonth()
+      if (Temporal.PlainDate.compare(eventDate, today) < 0) return 1
 
-    return Math.max(1, months + 1)
+      const monthsBetween = today
+        .with({ day: 1 })
+        .until(eventDate.with({ day: 1 }), { largestUnit: "months" }).months
+
+      return monthsBetween + 1
+    } catch (error) {
+      console.error("Error calculating installments with Temporal:", error)
+      return 1
+    }
   }
 
-  const maxInstallments = calculateMaxInstallments()
-  const installmentValue = finalTotal / installmentsCount
+  const maxInstallments = room.hotel_check_in_date
+    ? calculateMaxInstallments(
+        Temporal.PlainDate.from(
+          typeof room.hotel_check_in_date === "string"
+            ? room.hotel_check_in_date.split("T")[0]
+            : room.hotel_check_in_date.toISOString().split("T")[0],
+        ),
+      )
+    : 1
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  useEffect(() => {
+    if (paymentMethod === "installments") {
+      setInstallmentsCount(maxInstallments)
+    }
+  }, [paymentMethod, maxInstallments])
+
+  // Renamed from handleSubmit to handleFinalSubmit
+  const handleFinalSubmit = async () => {
     setIsLoading(true)
     setError("")
 
@@ -316,13 +366,57 @@ export default function CheckoutPage({
   }
 
   const handleGuestsNext = () => {
-    // Basic validation of guests could happen here
+    const newErrors = {}
+    let hasError = false
+
+    guests.forEach((guest, index) => {
+      // Validate CPF
+      if (guest.cpf_number && !validateCPF(guest.cpf_number)) {
+        if (!newErrors[index]) newErrors[index] = {}
+        newErrors[index].cpf_number = "CPF inválido."
+        hasError = true
+      }
+
+      // Validate Phone/WhatsApp
+      if (guest.phone && !validatePhone(guest.phone)) {
+        if (!newErrors[index]) newErrors[index] = {}
+        newErrors[index].phone = "Telefone inválido."
+        hasError = true
+      }
+
+      // Validate Emergency Phone
+      if (
+        guest.emergency_contact_phone &&
+        !validatePhone(guest.emergency_contact_phone)
+      ) {
+        if (!newErrors[index]) newErrors[index] = {}
+        newErrors[index].emergency_contact_phone = "Telefone inválido."
+        hasError = true
+      }
+
+      // Basic Required Fields (already handled by HTML 'required', but good to double check or if we switch to non-form submit)
+      if (!guest.name) {
+        if (!newErrors[index]) newErrors[index] = {}
+        newErrors[index].name = "Nome é obrigatório."
+        hasError = true
+      }
+    })
+
+    if (hasError) {
+      setGuestErrors(newErrors)
+      const firstErrorIndex = Object.keys(newErrors)[0]
+      const element = document.getElementById(`guest-card-${firstErrorIndex}`)
+      if (element) element.scrollIntoView({ behavior: "smooth" })
+      setError("Por favor, corrija os erros no formulário de hóspedes.")
+      return
+    }
+
     setCurrentStep(4)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const handleCnpjStep = async () => {
-    if (!cnpj || cnpj.length < 14) {
+    if (!cnpj || !validateCNPJ(cnpj)) {
       setError("CNPJ inválido.")
       return
     }
@@ -352,7 +446,22 @@ export default function CheckoutPage({
   }
 
   const handleCompanySubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault() // Prevent default form submission
+
+    // Validate Phone in Company Form
+    if (newCompanyData.phone && !validatePhone(newCompanyData.phone)) {
+      setError("Telefone da empresa inválido.")
+      return
+    }
+
+    // Validate CEP (Basic length check)
+    if (
+      newCompanyData.zip_code &&
+      newCompanyData.zip_code.replace(/\D/g, "").length !== 8
+    ) {
+      setError("CEP inválido.")
+      return
+    }
     setIsLoading(true)
     setError("")
 
@@ -377,6 +486,27 @@ export default function CheckoutPage({
       setError(err.message)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleMasterSubmit = async (e) => {
+    e.preventDefault()
+
+    switch (currentStep) {
+      case 1:
+        await handleCnpjStep()
+        break
+      case 2:
+        await handleCompanySubmit(e)
+        break
+      case 3:
+        handleGuestsNext()
+        break
+      case 4:
+        await handleFinalSubmit()
+        break
+      default:
+        break
     }
   }
 
@@ -464,7 +594,7 @@ export default function CheckoutPage({
 
           {/* Guest Form */}
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleMasterSubmit} className="space-y-6">
               {error && (
                 <div className="bg-red-50 text-red-600 p-4 rounded-md flex items-center gap-2 text-sm border border-red-200">
                   <AlertCircle className="h-5 w-5 flex-shrink-0" />
@@ -490,11 +620,12 @@ export default function CheckoutPage({
                         placeholder="00.000.000/0000-00"
                         value={cnpj}
                         onChange={(e) => setCnpj(maskCNPJ(e.target.value))}
+                        required
+                        minLength={14}
                       />
                     </div>
                     <Button
-                      type="button"
-                      onClick={handleCnpjStep}
+                      type="submit"
                       className="w-full bg-blue-600"
                       disabled={isLoading}
                     >
@@ -665,54 +796,32 @@ export default function CheckoutPage({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="neighborhood">Bairro *</Label>
-                        <Input
-                          id="neighborhood"
-                          value={newCompanyData.neighborhood}
-                          onChange={(e) =>
-                            setNewCompanyData({
-                              ...newCompanyData,
-                              neighborhood: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="city">Cidade *</Label>
-                        <Input
-                          id="city"
-                          value={newCompanyData.city}
-                          onChange={(e) =>
-                            setNewCompanyData({
-                              ...newCompanyData,
-                              city: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="state">Estado *</Label>
-                        <Input
-                          id="state"
-                          value={newCompanyData.state}
-                          onChange={(e) =>
-                            setNewCompanyData({
-                              ...newCompanyData,
-                              state: e.target.value,
-                            })
-                          }
-                          placeholder="UF"
-                          required
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="neighborhood">Bairro *</Label>
+                      <Input
+                        id="neighborhood"
+                        value={newCompanyData.neighborhood}
+                        onChange={(e) =>
+                          setNewCompanyData({
+                            ...newCompanyData,
+                            neighborhood: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+
+                    <div className="mt-4">
+                      <LocationSelector
+                        countryCode={newCompanyData.countryCode}
+                        stateCode={newCompanyData.stateCode}
+                        cityName={newCompanyData.city}
+                        onLocationChange={handleCompanyLocationChange}
+                        required
+                      />
                     </div>
                     <Button
-                      type="button"
-                      onClick={handleCompanySubmit}
+                      type="submit"
                       className="w-full bg-blue-600"
                       disabled={isLoading}
                     >
@@ -730,7 +839,11 @@ export default function CheckoutPage({
               {currentStep === 3 && (
                 <>
                   {guests.map((guestData, index) => (
-                    <Card key={index} className="overflow-hidden">
+                    <Card
+                      key={index}
+                      id={`guest-card-${index}`}
+                      className={`overflow-hidden ${guestErrors[index] ? "border-red-500" : ""}`}
+                    >
                       <CardHeader className="bg-gray-50 border-b flex flex-row items-center justify-between pb-4">
                         <div className="flex items-center gap-2">
                           <div className="bg-blue-100 p-2 rounded-full">
@@ -793,7 +906,17 @@ export default function CheckoutPage({
                                 onChange={(e) => handleChange(index, e)}
                                 placeholder="000.000.000-00"
                                 required
+                                className={
+                                  guestErrors[index]?.cpf_number
+                                    ? "border-red-500"
+                                    : ""
+                                }
                               />
+                              {guestErrors[index]?.cpf_number && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {guestErrors[index].cpf_number}
+                                </p>
+                              )}
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor={`rg_number-${index}`}>RG *</Label>
@@ -823,13 +946,9 @@ export default function CheckoutPage({
                                   <SelectValue placeholder="Selecione" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="Masculino">
-                                    Masculino
-                                  </SelectItem>
-                                  <SelectItem value="Feminino">
-                                    Feminino
-                                  </SelectItem>
-                                  <SelectItem value="Outro">Outro</SelectItem>
+                                  <SelectItem value="M">Masculino</SelectItem>
+                                  <SelectItem value="F">Feminino</SelectItem>
+                                  <SelectItem value="O">Outro</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -844,7 +963,17 @@ export default function CheckoutPage({
                                 onChange={(e) => handleChange(index, e)}
                                 placeholder="(00) 00000-0000"
                                 required
+                                className={
+                                  guestErrors[index]?.phone
+                                    ? "border-red-500"
+                                    : ""
+                                }
                               />
+                              {guestErrors[index]?.phone && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {guestErrors[index].phone}
+                                </p>
+                              )}
                             </div>
                           </div>
 
@@ -882,26 +1011,28 @@ export default function CheckoutPage({
                           <div className="grid grid-cols-1 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor={`address-${index}`}>
-                                Rua / Logradouro
+                                Rua / Logradouro *
                               </Label>
                               <Input
                                 id={`address-${index}`}
                                 name="address"
                                 value={guestData.address}
                                 onChange={(e) => handleChange(index, e)}
+                                required
                               />
                             </div>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor={`address_number-${index}`}>
-                                Número
+                                Número *
                               </Label>
                               <Input
                                 id={`address_number-${index}`}
                                 name="address_number"
                                 value={guestData.address_number}
                                 onChange={(e) => handleChange(index, e)}
+                                required
                               />
                             </div>
                             <div className="md:col-span-2 space-y-2">
@@ -916,36 +1047,16 @@ export default function CheckoutPage({
                               />
                             </div>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor={`city-${index}`}>Cidade</Label>
-                              <Input
-                                id={`city-${index}`}
-                                name="city"
-                                value={guestData.city}
-                                onChange={(e) => handleChange(index, e)}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor={`state-${index}`}>Estado</Label>
-                              <Input
-                                id={`state-${index}`}
-                                name="state"
-                                value={guestData.state}
-                                onChange={(e) => handleChange(index, e)}
-                                maxLength={2}
-                                placeholder="UF"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor={`country-${index}`}>País</Label>
-                              <Input
-                                id={`country-${index}`}
-                                name="country"
-                                value={guestData.country}
-                                onChange={(e) => handleChange(index, e)}
-                              />
-                            </div>
+                          <div className="mt-4">
+                            <LocationSelector
+                              countryCode={guestData.countryCode}
+                              stateCode={guestData.stateCode}
+                              cityName={guestData.city}
+                              onLocationChange={(loc) =>
+                                handleLocationChange(index, loc)
+                              }
+                              required
+                            />
                           </div>
                         </div>
 
@@ -959,27 +1070,39 @@ export default function CheckoutPage({
                               <Label
                                 htmlFor={`emergency_contact_name-${index}`}
                               >
-                                Nome Contato Emergência
+                                Nome Contato Emergência *
                               </Label>
                               <Input
                                 id={`emergency_contact_name-${index}`}
                                 name="emergency_contact_name"
                                 value={guestData.emergency_contact_name}
                                 onChange={(e) => handleChange(index, e)}
+                                required
                               />
                             </div>
                             <div className="space-y-2">
                               <Label
                                 htmlFor={`emergency_contact_phone-${index}`}
                               >
-                                Telefone Emergência
+                                Telefone Emergência *
                               </Label>
                               <Input
                                 id={`emergency_contact_phone-${index}`}
                                 name="emergency_contact_phone"
                                 value={guestData.emergency_contact_phone}
                                 onChange={(e) => handleChange(index, e)}
+                                required
+                                className={
+                                  guestErrors[index]?.emergency_contact_phone
+                                    ? "border-red-500"
+                                    : ""
+                                }
                               />
+                              {guestErrors[index]?.emergency_contact_phone && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {guestErrors[index].emergency_contact_phone}
+                                </p>
+                              )}
                             </div>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1168,8 +1291,7 @@ export default function CheckoutPage({
                         </div>
                       </div>
                       <Button
-                        type="button"
-                        onClick={handleGuestsNext}
+                        type="submit"
                         className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-6"
                         disabled={isLoading}
                       >
@@ -1307,44 +1429,42 @@ export default function CheckoutPage({
                                 ? "bg-blue-600"
                                 : ""
                             }
-                            onClick={() => setPaymentMethod("installments")}
+                            onClick={() => {
+                              setPaymentMethod("installments")
+                              setInstallmentsCount(maxInstallments)
+                            }}
                           >
                             Parcelado
                           </Button>
                         </div>
 
                         {paymentMethod === "installments" && (
-                          <div className="space-y-2">
-                            <Label>Número de Parcelas</Label>
-                            <Select
-                              value={String(installmentsCount)}
-                              onValueChange={(val) =>
-                                setInstallmentsCount(Number(val))
-                              }
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione as parcelas" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Array.from(
-                                  { length: maxInstallments },
-                                  (_, i) => (
-                                    <SelectItem
-                                      key={i + 1}
-                                      value={String(i + 1)}
-                                    >
-                                      {i + 1}x de{" "}
-                                      {new Intl.NumberFormat("pt-BR", {
-                                        style: "currency",
-                                        currency: "BRL",
-                                      }).format(finalTotal / (i + 1))}
-                                    </SelectItem>
-                                  ),
-                                )}
-                              </SelectContent>
-                            </Select>
-                            <p className="text-xs text-gray-500 italic">
-                              * Parcelamento sem juros até a data do evento (
+                          <div className="space-y-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-blue-900 font-bold">
+                                Plano de Parcelamento
+                              </Label>
+                              <Badge
+                                variant="secondary"
+                                className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
+                              >
+                                {maxInstallments}x Fixas
+                              </Badge>
+                            </div>
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-2xl font-black text-blue-600">
+                                {new Intl.NumberFormat("pt-BR", {
+                                  style: "currency",
+                                  currency: "BRL",
+                                }).format(finalTotal / maxInstallments)}
+                              </span>
+                              <span className="text-sm text-blue-400 font-medium">
+                                por parcela
+                              </span>
+                            </div>
+                            <p className="text-xs text-blue-500 italic">
+                              * Parcelamento automático sem juros até a data do
+                              evento (
                               {new Date(
                                 room.hotel_check_in_date,
                               ).toLocaleDateString("pt-BR")}

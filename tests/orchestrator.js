@@ -10,6 +10,7 @@ import roomCategory from "models/room-category.js"
 import room from "models/room.js"
 import activation from "models/activation"
 import discount from "models/discount"
+import registration from "models/registration.js"
 
 const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`
 const webserverUrl = "http://localhost:3000"
@@ -203,6 +204,36 @@ async function createDiscount(discountData) {
   })
 }
 
+async function createRegistration(userId, registrationData) {
+  const data = {
+    room_id: registrationData?.room_id || (await createRoom(userId)).id,
+    guests_data: registrationData?.guests_data || [
+      {
+        name: faker.person.fullName(),
+        email:
+          (
+            await database.query({
+              text: "SELECT email FROM users WHERE id = $1",
+              values: [userId],
+            })
+          ).rows[0]?.email || faker.internet.email(),
+        phone: faker.string.numeric(11),
+        gender: faker.helpers.arrayElement(["Masculino", "Feminino"]),
+        rg_number: faker.string.numeric(9),
+        cpf_number: faker.string.numeric(11),
+        birth_date: faker.date
+          .birthdate({ min: 18, max: 80, mode: "age" })
+          .toISOString()
+          .split("T")[0],
+      },
+    ],
+    company_cnpj: registrationData?.company_cnpj || null,
+    payment_method: registrationData?.payment_method || "installments",
+    installments_count: registrationData?.installments_count || 3,
+  }
+  return await registration.create(userId, data)
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
@@ -222,6 +253,7 @@ const orchestrator = {
   injectPasswordRecoveryToken,
   addFeatureToUser,
   createDiscount,
+  createRegistration,
 
   createPricePolicy,
   webserverUrl,

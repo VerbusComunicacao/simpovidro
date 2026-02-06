@@ -207,6 +207,23 @@ async function hashPasswordInObject(userInputNewValues) {
   userInputNewValues.password = passwordHashed
 }
 
+async function syncGuestId(userId) {
+  const userToSync = await findOneById(userId)
+
+  await database.query({
+    text: `
+      UPDATE 
+        guests
+      SET 
+        user_id = $1
+      WHERE 
+        LOWER(email) = LOWER($2)
+        AND user_id IS NULL
+      ;`,
+    values: [userId, userToSync.email],
+  })
+}
+
 const user = {
   create,
   findOneById,
@@ -214,6 +231,7 @@ const user = {
   update,
   setFeatures,
   addFeatures,
+  syncGuestId,
 }
 
 export default user

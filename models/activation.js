@@ -114,7 +114,7 @@ async function activateAdmAccount(token) {
         UPDATE 
           users 
         SET
-          features = ARRAY['create:session', 'read:session', 'create:guest', 'read:guest', 'create:hotel', 'read:hotel', 'create:user', 'read:user', 'create:content', 'read:content', 'update:content', 'update:user', 'update:user:others', 'delete:content', 'delete:user', 'delete:user:others', 'read:user:others', 'create:company', 'read:company', 'update:company', 'delete:company'],
+          features = ARRAY['create:session', 'read:session', 'create:guest', 'read:guest', 'update:guest', 'update:guest:others', 'delete:guest', 'create:hotel', 'read:hotel', 'create:user', 'read:user', 'create:content', 'read:content', 'update:content', 'update:user', 'update:user:others', 'delete:content', 'delete:user', 'delete:user:others', 'read:user:others', 'create:company', 'read:company', 'update:company', 'delete:company'],
           updated_at = NOW()
         WHERE
           id = $1

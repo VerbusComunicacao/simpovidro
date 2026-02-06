@@ -291,5 +291,48 @@ describe("POST /api/v1/guests", () => {
         status_code: 400,
       })
     })
+
+    test("With email that belongs to an existing user", async () => {
+      // 1. Create a "target" user that has the email we want to sync with
+      const targetUser = await orchestrator.createUser({
+        full_name: "Target User",
+        email: "target@user.com",
+      })
+
+      // 2. Create an "actor" user who will actually perform the POST request
+      const actorUser = await orchestrator.createUser({
+        full_name: "Actor User",
+        email: "actor@user.com",
+      })
+      await orchestrator.setUserFeatures(actorUser.id, ["create:guest"])
+      await orchestrator.activateUser(actorUser.id)
+
+      const sessionObject = await orchestrator.createSession(actorUser.id)
+
+      // 3. Post a guest with the target user's email
+      const response = await fetch("http://localhost:3000/api/v1/guests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({
+          name: "Synced Guest",
+          email: "target@user.com",
+          phone: "+5511999999999",
+          gender: "Male",
+          rg_number: "998877665",
+          cpf_number: "998.877.665-00",
+          birth_date: "1990-01-01",
+        }),
+      })
+
+      const responseBody = await response.json()
+
+      expect(response.status).toBe(201)
+      // The guest should be linked to targetUser.id, not actorUser.id
+      expect(responseBody.user_id).toBe(targetUser.id)
+      expect(responseBody.email).toBe("target@user.com")
+    })
   })
 })

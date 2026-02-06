@@ -353,8 +353,8 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         name: "ValidationError",
         status_code: 400,
         message:
-          "A soma de quartos disponíveis e bloqueados deve ser igual ao total.",
-        action: "Ajuste os valores e tente novamente.",
+          "O novo total/bloqueio de quartos é insuficiente para as vendas já realizadas.",
+        action: "Aumente o total de quartos ou diminua os bloqueados.",
       })
     })
 
@@ -394,8 +394,9 @@ describe("PATCH /api/v1/rooms/[id]", () => {
       expect(errorBody).toEqual({
         name: "ValidationError",
         status_code: 400,
-        message: "Os valores de quartos não podem ser negativos.",
-        action: "Verifique os campos e tente novamente.",
+        message: expect.stringContaining("diverge do calculado pelo sistema"),
+        action:
+          "Permita que o sistema calcule a disponibilidade automaticamente.",
       })
     })
 
@@ -439,10 +440,69 @@ describe("PATCH /api/v1/rooms/[id]", () => {
       expect(errorBody).toEqual({
         name: "ValidationError",
         status_code: 400,
-        message:
-          "A soma de quartos disponíveis e bloqueados deve ser igual ao total.",
-        action: "Ajuste os valores e tente novamente.",
+        message: expect.stringContaining("diverge do calculado pelo sistema"),
+        action:
+          "Permita que o sistema calcule a disponibilidade automaticamente.",
       })
+    })
+
+    test("availability should update correctly with sales and prevent divergent overrides", async () => {
+      const createdUser = await orchestrator.createUser()
+      await orchestrator.activateAdmUser(createdUser.id)
+      const sessionObject = await orchestrator.createSession(createdUser.id)
+
+      // 1. Create Room with 10 total rooms
+      const roomCreated = await orchestrator.createRoom(createdUser.id, {
+        total_rooms: 10,
+        available_rooms: 10,
+        blocked_rooms: 0,
+      })
+
+      // 2. Register 5 sales
+      for (let i = 0; i < 5; i++) {
+        await orchestrator.createRegistration(createdUser.id, {
+          room_id: roomCreated.id,
+        })
+      }
+
+      // 3. Alter total_rooms from 10 to 8
+      const patchResponse = await fetch(
+        `http://localhost:3000/api/v1/rooms/${roomCreated.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ total_rooms: 8, blocked_rooms: 1 }),
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionObject.token}`,
+          },
+        },
+      )
+
+      expect(patchResponse.status).toBe(200)
+      const roomUpdated = await patchResponse.json()
+
+      // 4. Verify availability is 3 (8 total - 0 blocked - 5 sales = 3)
+      expect(roomUpdated.available_rooms).toBe(2)
+      expect(roomUpdated.total_rooms).toBe(8)
+
+      // 5. Try to alter available_rooms to 4 (divergent)
+      const patchResponse2 = await fetch(
+        `http://localhost:3000/api/v1/rooms/${roomCreated.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ available_rooms: 4 }),
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${sessionObject.token}`,
+          },
+        },
+      )
+
+      // 6. Must fail and not permit
+      expect(patchResponse2.status).toBe(400)
+      const errorBody = await patchResponse2.json()
+      expect(errorBody.name).toBe("ValidationError")
+      expect(errorBody.message).toContain("diverge do calculado pelo sistema")
     })
   })
 })

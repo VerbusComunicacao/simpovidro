@@ -32,13 +32,9 @@ describe("GET /api/v1/guests", () => {
       expect(responseBody).toEqual([])
     })
 
-    test("Should return all guests", async () => {
+    test("Should return 403", async () => {
       const createdUser = await orchestrator.createUser()
       await orchestrator.activateUser(createdUser.id)
-      await orchestrator.setUserFeatures(createdUser.id, [
-        "read:content",
-        "create:guest",
-      ])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
@@ -65,6 +61,30 @@ describe("GET /api/v1/guests", () => {
         },
         createdUser.id,
       )
+
+      const response = await fetch("http://localhost:3000/api/v1/guests", {
+        headers: {
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+      })
+      expect(response.status).toBe(403)
+      const responseBody = await response.json()
+
+      expect(responseBody).toEqual({
+        name: "ForbiddenError",
+        message: "Você não possui permissão para executar esta ação.",
+        action: 'Verifique se este usuário possui a feature "read:content".',
+        status_code: 403,
+      })
+    })
+  })
+
+  describe("Admin user", () => {
+    test("Should return all guests", async () => {
+      const createdUser = await orchestrator.createUser()
+      await orchestrator.activateAdmUser(createdUser.id)
+
+      const sessionObject = await orchestrator.createSession(createdUser.id)
 
       const response = await fetch("http://localhost:3000/api/v1/guests", {
         headers: {

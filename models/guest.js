@@ -2,7 +2,7 @@ import database from "infra/database.js"
 import { ConflictError, ValidationError, NotFoundError } from "infra/errors.js"
 import { validateRequiredFields, validateUUID } from "infra/validator.js"
 
-async function create(guestInputValues, userId) {
+async function create(guestInputValues, userId, client) {
   validateRequiredFields(guestInputValues, [
     "name",
     "phone",
@@ -11,12 +11,22 @@ async function create(guestInputValues, userId) {
     "cpf_number",
     "birth_date",
   ])
-  await checkUniqueFields(guestInputValues)
+  await checkUniqueFields(guestInputValues, null, client)
 
-  const newGuest = await runInsertQuery(guestInputValues, userId)
+  const resolvedUserId = await resolveUserId(
+    guestInputValues.email,
+    userId,
+    client,
+  )
+
+  const newGuest = await runInsertQuery(
+    guestInputValues,
+    resolvedUserId,
+    client,
+  )
   return newGuest
 
-  async function runInsertQuery(guestInputValues, userId) {
+  async function runInsertQuery(guestInputValues, userId, client) {
     const {
       name,
       email,
@@ -51,7 +61,8 @@ async function create(guestInputValues, userId) {
 
     const cleanCompanyCnpj = company_cnpj?.replace(/\D/g, "")
 
-    const results = await database.query({
+    const db = client || database
+    const results = await db.query({
       text: `
         INSERT INTO
           guests (user_id, name, phone, badge_name, gender, rg_number, cpf_number, passport_number, medication_details, blood_type, blood_rh_factor, health_observations, special_needs_details, has_heart_condition, has_diabetes, has_high_blood_pressure, has_low_blood_pressure, birth_date, nationality, address, address_number, address_complement, neighborhood, city, state, country, emergency_contact_name, emergency_contact_phone, email, company_cnpj)
@@ -98,13 +109,14 @@ async function create(guestInputValues, userId) {
   }
 }
 
-async function findOneById(guestId) {
+async function findOneById(guestId, client) {
   validateUUID(guestId)
-  const guestFound = await runSelectQuery()
+  const guestFound = await runSelectQuery(client)
   return guestFound
 
-  async function runSelectQuery() {
-    const results = await database.query({
+  async function runSelectQuery(client) {
+    const db = client || database
+    const results = await db.query({
       text: `
         SELECT
           *
@@ -129,13 +141,14 @@ async function findOneById(guestId) {
   }
 }
 
-async function findOneByUserId(userId) {
+async function findOneByUserId(userId, client) {
   validateUUID(userId)
-  const guestFound = await runSelectQuery(userId)
+  const guestFound = await runSelectQuery(userId, client)
   return guestFound
 
-  async function runSelectQuery(userId) {
-    const results = await database.query({
+  async function runSelectQuery(userId, client) {
+    const db = client || database
+    const results = await db.query({
       text: `
         SELECT
           *
@@ -157,7 +170,7 @@ async function findOneByUserId(userId) {
   }
 }
 
-async function upsert(guestData, userId = null) {
+async function upsert(guestData, userId = null, client) {
   validateRequiredFields(guestData, [
     "name",
     "phone",
@@ -170,17 +183,19 @@ async function upsert(guestData, userId = null) {
   const existingGuest = await findOneByCpfOrRg(
     guestData.cpf_number,
     guestData.rg_number,
+    client,
   )
 
   if (existingGuest) {
-    return await update(existingGuest.id, guestData)
+    return await update(existingGuest.id, guestData, client)
   }
 
-  return await create(guestData, userId)
+  return await create(guestData, userId, client)
 }
 
-async function findOneByCpfOrRg(cpf_number, rg_number) {
-  const results = await database.query({
+async function findOneByCpfOrRg(cpf_number, rg_number, client) {
+  const db = client || database
+  const results = await db.query({
     text: `
       SELECT
         *
@@ -212,7 +227,7 @@ async function findAll() {
   return results.rows
 }
 
-async function update(guestId, guestInputNewValues) {
+async function update(guestId, guestInputNewValues, client) {
   if (Object.keys(guestInputNewValues).length === 0) {
     throw new ValidationError({
       message: `Nenhum campo enviado para atualização.`,
@@ -220,16 +235,24 @@ async function update(guestId, guestInputNewValues) {
     })
   }
 
-  const currentGuest = await findOneById(guestId)
+  const currentGuest = await findOneById(guestId, client)
 
   const guestWithNewValues = { ...currentGuest, ...guestInputNewValues }
 
-  await checkUniqueFields(guestWithNewValues, guestId)
+  await checkUniqueFields(guestWithNewValues, guestId, client)
 
-  const updatedGuest = await runUpdateQuery(guestWithNewValues)
+  if (guestInputNewValues.email) {
+    guestWithNewValues.user_id = await resolveUserId(
+      guestWithNewValues.email,
+      guestWithNewValues.user_id,
+      client,
+    )
+  }
+
+  const updatedGuest = await runUpdateQuery(guestWithNewValues, client)
   return updatedGuest
 
-  async function runUpdateQuery(guestWithNewValues) {
+  async function runUpdateQuery(guestWithNewValues, client) {
     const {
       id,
       name,
@@ -261,11 +284,13 @@ async function update(guestId, guestInputNewValues) {
       emergency_contact_name,
       emergency_contact_phone,
       company_cnpj,
+      user_id,
     } = guestWithNewValues
 
     const cleanCompanyCnpj = company_cnpj?.replace(/\D/g, "")
 
-    const results = await database.query({
+    const db = client || database
+    const results = await db.query({
       text: `
         UPDATE
           guests
@@ -299,7 +324,8 @@ async function update(guestId, guestInputNewValues) {
           emergency_contact_phone = $28,
           updated_at = timezone('utc', now()),
           email = $29,
-          company_cnpj = $30
+          company_cnpj = $30,
+          user_id = $31
         WHERE
           id = $1
         RETURNING
@@ -336,6 +362,7 @@ async function update(guestId, guestInputNewValues) {
         emergency_contact_phone,
         email,
         cleanCompanyCnpj,
+        user_id,
       ],
     })
 
@@ -343,7 +370,7 @@ async function update(guestId, guestInputNewValues) {
   }
 }
 
-async function checkUniqueFields(guestData, currentGuestId = null) {
+async function checkUniqueFields(guestData, currentGuestId = null, client) {
   const { rg_number, cpf_number } = guestData
   const query = {
     text: `
@@ -359,7 +386,8 @@ async function checkUniqueFields(guestData, currentGuestId = null) {
     query.values.push(currentGuestId)
   }
 
-  const results = await database.query(query)
+  const db = client || database
+  const results = await db.query(query)
 
   if (results.rowCount > 0) {
     for (const row of results.rows) {
@@ -389,6 +417,16 @@ async function deleteById(guestId) {
     `,
     values: [guestId],
   })
+}
+
+async function resolveUserId(guestEmail, providedUserId, client) {
+  if (!guestEmail) return providedUserId
+  const db = client || database
+  const results = await db.query({
+    text: "SELECT id FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1",
+    values: [guestEmail],
+  })
+  return results.rows[0]?.id || null
 }
 
 const guest = {

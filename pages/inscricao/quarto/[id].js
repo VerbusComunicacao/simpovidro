@@ -168,9 +168,7 @@ export default function RoomDetailsPage({ room }) {
                     Desconto associado
                   </p>
                   <p className="text-sm text-gray-500">
-                    Desconto de{" "}
-                    {Number(room.hotel_associated_discount_percentage)}% para
-                    empresas associadas da Abravidro
+                    Desconto de 20% para empresas associadas da Abravidro
                   </p>
                 </div>
               </div>

@@ -7,18 +7,23 @@ import {
   Hotel,
   ClipboardList,
   Building2,
+  Users,
   BedDouble,
   Layers,
   ShieldCheck,
   Tag,
   Menu,
   X,
+  FileText,
+  CreditCard,
 } from "lucide-react"
 import Link from "next/link"
 
 const navItems = [
   { href: "/table", label: "Hotéis", icon: Hotel },
   { href: "/table/inscricoes", label: "Inscrições", icon: ClipboardList },
+  { href: "/table/relatorios", label: "Relatórios", icon: FileText },
+  { href: "/table/hospedes", label: "Hóspedes", icon: Users },
   { href: "/table/empresas", label: "Empresas", icon: Building2 },
   { href: "/table/discounts", label: "Descontos", icon: Tag },
   { href: "/table/room-types", label: "Tipos de Quarto", icon: BedDouble },
@@ -27,6 +32,7 @@ const navItems = [
     label: "Categorias de Quarto",
     icon: Layers,
   },
+  { href: "/table/pagamentos", label: "Pagamentos", icon: CreditCard },
 ]
 
 export default function TableLayout({ children, pageActions }) {

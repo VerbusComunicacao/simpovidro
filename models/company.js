@@ -261,7 +261,7 @@ async function verifyIfCompanyAlreadyExists(cnpj) {
   }
 }
 
-async function findOneByCnpj(cnpj) {
+async function findOneByCnpj(cnpj, client) {
   if (!cnpj) {
     throw new ValidationError({
       message: "CNPJ não informado para busca.",
@@ -271,7 +271,8 @@ async function findOneByCnpj(cnpj) {
 
   const cleanCnpj = cnpj.replace(/\D/g, "")
 
-  const results = await database.query({
+  const db = client || database
+  const results = await db.query({
     text: `SELECT * FROM companies WHERE cnpj = $1 LIMIT 1;`,
     values: [cleanCnpj],
   })

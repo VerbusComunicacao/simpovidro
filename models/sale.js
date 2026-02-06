@@ -1,10 +1,12 @@
+import { Temporal } from "@js-temporal/polyfill"
 import database from "infra/database.js"
 import { ValidationError, NotFoundError } from "infra/errors.js"
 import { validateRequiredFields, validateUUID } from "infra/validator.js"
+import saleInstallment from "models/sale-installment.js"
 
 const REQUIRED_FIELDS = ["guest_id", "room_id"]
 
-async function create(saleInputValues) {
+async function create(saleInputValues, externalClient) {
   validateRequiredFields(saleInputValues, ["guest_ids", "room_id"])
 
   const { guest_ids, room_id } = saleInputValues
@@ -16,10 +18,11 @@ async function create(saleInputValues) {
     })
   }
 
-  const client = await database.getNewClient()
+  const client = externalClient || (await database.getNewClient())
+  const isInternalTransaction = !externalClient
 
   try {
-    await client.query("BEGIN")
+    if (isInternalTransaction) await client.query("BEGIN")
 
     // 1. Validate if room exists and fetch hotel_id, capacity and policies
     const roomResults = await client.query({
@@ -167,7 +170,7 @@ async function create(saleInputValues) {
       calculatedTotalAmount += guestPrice
     }
 
-    const {
+    let {
       check_in_date = targetRoom.hotel_check_in_date || new Date(),
       check_out_date = targetRoom.hotel_check_out_date ||
         new Date(new Date().setDate(new Date().getDate() + 3)),
@@ -176,6 +179,20 @@ async function create(saleInputValues) {
       payment_method = "cash",
       installments_count = 1,
     } = saleInputValues
+
+    // Enforce fixed installments count if payment method is 'installments'
+    if (payment_method === "installments") {
+      const dateSource = targetRoom.hotel_check_in_date
+      const dateString =
+        dateSource instanceof Date
+          ? dateSource.toISOString().split("T")[0]
+          : dateSource.split("T")[0]
+
+      const eventDate = Temporal.PlainDate.from(dateString)
+      installments_count = calculateMaxInstallments(eventDate)
+    } else {
+      installments_count = 1
+    }
 
     let final_discount_percentage = 0
     let final_discount_amount = 0
@@ -265,13 +282,39 @@ async function create(saleInputValues) {
       values: [room_id],
     })
 
-    await client.query("COMMIT")
+    // 6. Generate and Create Installments
+    const installmentAmount = (final_amount / installments_count).toFixed(2)
+    const installmentDates =
+      saleInstallment.generateInstallmentDates(installments_count)
+
+    const installmentsToCreate = installmentDates.map((date, index) => ({
+      sale_id: newSale.id,
+      installment_number: index + 1,
+      amount: installmentAmount,
+      due_date: date,
+    }))
+
+    // Adjust the last installment for rounding differences
+    const totalInstallmentsAmount = (
+      Number(installmentAmount) * installments_count
+    ).toFixed(2)
+    const diff = (final_amount - Number(totalInstallmentsAmount)).toFixed(2)
+    if (Number(diff) !== 0) {
+      installmentsToCreate[installments_count - 1].amount = (
+        Number(installmentsToCreate[installments_count - 1].amount) +
+        Number(diff)
+      ).toFixed(2)
+    }
+
+    await saleInstallment.createMany(installmentsToCreate, client)
+
+    if (isInternalTransaction) await client.query("COMMIT")
     return newSale
   } catch (error) {
-    await client.query("ROLLBACK")
+    if (isInternalTransaction) await client.query("ROLLBACK")
     throw error
   } finally {
-    await client.end()
+    if (isInternalTransaction) await client.end()
   }
 }
 
@@ -344,7 +387,12 @@ async function findOneByIdWithDetails(saleId) {
           FROM sales_guests sg
           JOIN guests g ON sg.guest_id = g.id
           WHERE sg.sale_id = sales.id
-        ) as guests
+        ) as guests,
+        (
+          SELECT json_agg(si.* ORDER BY si.installment_number ASC)
+          FROM sale_installments si
+          WHERE si.sale_id = sales.id
+        ) as installments
       FROM 
         sales
       JOIN
@@ -390,7 +438,12 @@ async function findAllByGuestId(guestId) {
           FROM sales_guests sg
           JOIN guests g ON sg.guest_id = g.id
           WHERE sg.sale_id = sales.id
-        ) as guests
+        ) as guests,
+        (
+          SELECT json_agg(si.* ORDER BY si.installment_number ASC)
+          FROM sale_installments si
+          WHERE si.sale_id = sales.id
+        ) as installments
       FROM 
         sales
       JOIN
@@ -431,7 +484,12 @@ async function findAll() {
           FROM sales_guests sg
           JOIN guests g ON sg.guest_id = g.id
           WHERE sg.sale_id = sales.id
-        ) as guests
+        ) as guests,
+        (
+          SELECT json_agg(si.* ORDER BY si.installment_number ASC)
+          FROM sale_installments si
+          WHERE si.sale_id = sales.id
+        ) as installments
       FROM 
         sales
       JOIN
@@ -540,23 +598,16 @@ function generateOrderNumber() {
   return result
 }
 
-function calculateMaxInstallments(targetDate) {
-  if (!targetDate) return 1
-  const target = new Date(targetDate)
-  const now = new Date()
+function calculateMaxInstallments(eventDate) {
+  const today = Temporal.Now.plainDateISO()
 
-  // Calculate difference in months
-  let months = (target.getFullYear() - now.getFullYear()) * 12
-  months -= now.getMonth()
-  months += target.getMonth()
+  if (Temporal.PlainDate.compare(eventDate, today) < 0) return 1
 
-  // We want the last installment to be at the month of the event
-  // If today is Jan 15 and event is Oct 31:
-  // (2026-2026)*12 - 0 + 9 = 9 months.
-  // Actually, if it's Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct -> 10 installments.
-  // So we add 1.
-  const max = Math.max(1, months + 1)
-  return max
+  const monthsBetween = today
+    .with({ day: 1 })
+    .until(eventDate.with({ day: 1 }), { largestUnit: "months" }).months
+
+  return monthsBetween + 1
 }
 
 const sale = {

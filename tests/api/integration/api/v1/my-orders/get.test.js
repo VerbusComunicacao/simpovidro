@@ -65,7 +65,7 @@ describe("GET /api/v1/my-orders", () => {
             guests_data: [
               {
                 name: "Test Guest",
-                email: "test@example.com",
+                email: user.email,
                 phone: "123456789",
                 gender: "Masculino",
                 rg_number: "123456789",

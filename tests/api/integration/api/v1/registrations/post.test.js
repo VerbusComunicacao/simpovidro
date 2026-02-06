@@ -1,4 +1,5 @@
 import orchestrator from "tests/orchestrator.js"
+import database from "infra/database.js"
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
@@ -346,6 +347,152 @@ describe("POST /api/v1/registrations", () => {
       expect(Number(saleData.discount_percentage)).toBe(0)
       expect(Number(saleData.discount_amount)).toBe(0)
       expect(Number(saleData.final_amount)).toBe(1000.0)
+    })
+
+    test("should NOT associate guest with logged-in user when a different email is provided (Regression)", async () => {
+      const guestEmail = "regression-other-guest@example.com"
+
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${userToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomId,
+            guests_data: [
+              {
+                name: "Regression Guest",
+                email: guestEmail,
+                phone: "11977777777",
+                gender: "Masculino",
+                rg_number: "777888999",
+                cpf_number: "777.888.999-77",
+                birth_date: "1990-07-07",
+              },
+            ],
+          }),
+        },
+      )
+
+      expect(response.status).toBe(201)
+
+      // Query database to check if user_id is null
+      const guestResult = await database.query({
+        text: "SELECT user_id, email FROM guests WHERE email = $1",
+        values: [guestEmail],
+      })
+
+      expect(guestResult.rows[0].user_id).toBe(null)
+      expect(guestResult.rows[0].email).toBe(guestEmail)
+    })
+
+    test("should enforce backend-calculated installments_count even if client sends different value", async () => {
+      // Hotel setup in beforeAll has check_in_date: "2026-11-01"
+      // Assuming today is Feb 2026 (for the sake of the test environment stability/knowledge)
+      // The calculation is: (2026-2026)*12 - now.getMonth() + 10 + 1
+      const now = new Date()
+      const expectedInstallments = Math.max(
+        1,
+        (2026 - now.getFullYear()) * 12 - now.getMonth() + 10 + 1,
+      )
+
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${userToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomId,
+            payment_method: "installments",
+            installments_count: 5, // Client tries to set 5, but backend should enforce the calculated value
+            guests_data: [
+              {
+                name: "Installment Guest",
+                email: "installment@example.com",
+                phone: "11966666666",
+                gender: "Masculino",
+                rg_number: "666555444",
+                cpf_number: "666.555.444-66",
+                birth_date: "1985-12-12",
+              },
+            ],
+          }),
+        },
+      )
+
+      expect(response.status).toBe(201)
+      const data = JSON.parse(await response.text())
+
+      const saleResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/sales/${data.saleId}`,
+        {
+          headers: { Cookie: `session_id=${userToken}` },
+        },
+      )
+      const saleData = JSON.parse(await saleResp.text())
+
+      expect(saleData.payment_method).toBe("installments")
+      expect(saleData.installments_count).toBe(expectedInstallments)
+    })
+
+    test("should rollback all changes if an error occurs during sale creation (Transaction Atomicity)", async () => {
+      // 1. Manually set room as unavailable to trigger a validation error in sale.create
+      // but AFTER guest.upsert has been called in registration.create.
+      await database.query({
+        text: `UPDATE rooms SET available_rooms = 0 WHERE id = $1`,
+        values: [roomId],
+      })
+
+      const orphanCpf = "999.888.777-66"
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${userToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomId,
+            guests_data: [
+              {
+                name: "Orphan Guest",
+                email: "orphan@example.com",
+                phone: "11999999999",
+                gender: "Feminino",
+                rg_number: "998877665",
+                cpf_number: orphanCpf,
+                birth_date: "1990-05-05",
+              },
+            ],
+          }),
+        },
+      )
+
+      // 2. Expect failure
+      expect(response.status).toBe(400)
+      const errorData = JSON.parse(await response.text())
+      expect(errorData.message).toBe("Este quarto não está mais disponível.")
+
+      // 3. Verify that the guest was NOT created (it should have been rolled back)
+      const guestResults = await database.query({
+        text: `SELECT id FROM guests WHERE cpf_number = $1`,
+        values: [orphanCpf],
+      })
+
+      expect(guestResults.rowCount).toBe(0)
+
+      // Cleanup: restore room availability
+      await database.query({
+        text: `UPDATE rooms SET available_rooms = 10 WHERE id = $1`,
+        values: [roomId],
+      })
     })
   })
 })
