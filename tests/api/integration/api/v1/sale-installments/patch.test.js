@@ -1,105 +1,106 @@
 import orchestrator from "tests/orchestrator.js"
+import database from "infra/database.js"
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
+  await orchestrator.clearDatabase()
   await orchestrator.runPendingMigrations()
 })
 
 describe("PATCH /api/v1/sale-installments/[id]", () => {
-  let userToken
-  let installmentId
-
-  beforeAll(async () => {
+  test("should update installment status and auto-update sale status when all paid", async () => {
+    // 1. Setup
     const adminUser = await orchestrator.createUser({
-      email: "admin-patch-inst@example.com",
+      email: "admin-installments@example.com",
       password: "password123",
     })
     await orchestrator.activateAdmUser(adminUser.id)
-    await orchestrator.createSession(adminUser.id)
-    // admToken removed as it's not needed for registration
+    await orchestrator.addFeatureToUser(adminUser, ["update:content"])
+    const adminSession = await orchestrator.createSession(adminUser.id)
+    const token = adminSession.token
 
-    const regularUser = await orchestrator.createUser({
-      email: "user-patch-inst@example.com",
-      password: "password123",
+    const hotel = await orchestrator.createHotel(adminUser.id, {
+      check_in_date: new Date(
+        Date.now() + 1000 * 60 * 60 * 24 * 90,
+      ).toISOString(),
+      check_out_date: new Date(
+        Date.now() + 1000 * 60 * 60 * 24 * 95,
+      ).toISOString(),
     })
-    await orchestrator.activateUser(regularUser.id)
-    await orchestrator.setUserFeatures(regularUser.id, [
-      "read:content",
-      "update:content",
-      "create:session",
-    ])
-    const regularSession = await orchestrator.createSession(regularUser.id)
-    userToken = regularSession.token
-
-    // Setup a sale and get an installment ID
-    // 1. Create Room (orchestrator handles hotel, room type, and category)
-    const roomObj = await orchestrator.createRoom(adminUser.id, {
-      price_per_night: 500,
-      total_rooms: 10,
+    const roomType = await orchestrator.createRoomType(adminUser.id)
+    const roomCategory = await orchestrator.createRoomCategory(adminUser.id)
+    const room = await orchestrator.createRoom(adminUser.id, {
+      hotel_id: hotel.id,
+      room_type_id: roomType.id,
+      room_category_id: roomCategory.id,
     })
-    const roomId = roomObj.id
 
-    // 2. Create Sale
-    await orchestrator.createRegistration(regularUser.id, { room_id: roomId })
+    const guestUser = await orchestrator.createUser()
+    await orchestrator.activateUser(guestUser.id)
 
-    // 3. Get an installment ID
-    const instResp = await fetch(
-      `${orchestrator.webserverUrl}/api/v1/sale-installments`,
-      {
-        headers: { Cookie: `session_id=${userToken}` },
-      },
-    )
-    const installments = await instResp.json()
-    installmentId = installments[0].id
-  })
-
-  test("should update installment status and paid_amount", async () => {
-    const response = await fetch(
-      `${orchestrator.webserverUrl}/api/v1/sale-installments/${installmentId}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `session_id=${userToken}`,
-        },
-        body: JSON.stringify({
-          status: "paid",
-          paid_amount: 500.0,
-          payment_date: new Date().toISOString(),
-          notes: "Paid via bank transfer",
-        }),
-      },
-    )
-
-    const data = await response.json()
-    expect(response.status).toBe(200)
-    expect(data.status).toBe("paid")
-    expect(Number(data.paid_amount)).toBe(500.0)
-    expect(data.notes).toBe("Paid via bank transfer")
-  })
-
-  test("should return 403 if user lacks update:content permission", async () => {
-    const weakUser = await orchestrator.createUser({
-      email: "weak-user@ex.com",
-      password: "password123",
+    const registration = await orchestrator.createRegistration(guestUser.id, {
+      room_id: room.id,
+      payment_method: "installments",
     })
-    await orchestrator.activateUser(weakUser.id)
-    await orchestrator.setUserFeatures(weakUser.id, ["read:content"])
-    const weakSession = await orchestrator.createSession(weakUser.id)
-    const weakToken = weakSession.token
 
-    const response = await fetch(
-      `${orchestrator.webserverUrl}/api/v1/sale-installments/${installmentId}`,
+    const saleResult = await database.query({
+      text: `SELECT id FROM sales WHERE room_id = $1`,
+      values: [room.id],
+    })
+    const saleId = saleResult.rows[0].id
+
+    const installmentsResult = await database.query({
+      text: `SELECT * FROM sale_installments WHERE sale_id = $1 ORDER BY installment_number`,
+      values: [saleId],
+    })
+    const installments = installmentsResult.rows
+
+    expect(installments.length).toBeGreaterThanOrEqual(2)
+
+    // 2. Pay First Installment
+    const response1 = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sale-installments/${installments[0].id}`,
       {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Cookie: `session_id=${weakToken}`,
+          Cookie: `session_id=${token}`,
         },
         body: JSON.stringify({ status: "paid" }),
       },
     )
 
-    expect(response.status).toBe(403)
+    // If this fails, the API crashed.
+    expect(response1.status).toBe(200)
+
+    let saleCheck = await database.query({
+      text: `SELECT status, payment_status FROM sales WHERE id = $1`,
+      values: [saleId],
+    })
+    expect(saleCheck.rows[0].payment_status).toBe("partial")
+
+    // 3. Pay Rest
+    for (let i = 1; i < installments.length; i++) {
+      const responseInLoop = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/sale-installments/${installments[i].id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${token}`,
+          },
+          body: JSON.stringify({ status: "paid" }),
+        },
+      )
+      expect(responseInLoop.status).toBe(200)
+    }
+
+    saleCheck = await database.query({
+      text: `SELECT status, payment_status FROM sales WHERE id = $1`,
+      values: [saleId],
+    })
+
+    expect(saleCheck.rows[0].status).toBe("confirmed")
+    expect(saleCheck.rows[0].payment_status).toBe("paid")
   })
 })

@@ -4,8 +4,6 @@ import { ValidationError, NotFoundError } from "infra/errors.js"
 import { validateRequiredFields, validateUUID } from "infra/validator.js"
 import saleInstallment from "models/sale-installment.js"
 
-const REQUIRED_FIELDS = ["guest_id", "room_id"]
-
 async function create(saleInputValues, externalClient) {
   validateRequiredFields(saleInputValues, ["guest_ids", "room_id"])
 
@@ -330,11 +328,14 @@ async function findOneById(saleId) {
     const results = await database.query({
       text: `
         SELECT 
-          * 
+          sales.*,
+          guests.user_id as user_id
         FROM 
           sales
+        LEFT JOIN
+          guests ON sales.guest_id = guests.id
         WHERE 
-          id = $1
+          sales.id = $1
         LIMIT
           1
         ;`,
@@ -376,6 +377,7 @@ async function findOneByIdWithDetails(saleId) {
     text: `
       SELECT 
         sales.*,
+        guests.user_id as user_id,
         hotels.name as hotel_name,
         hotels.address as hotel_address,
         hotels.city as hotel_city,
@@ -398,6 +400,8 @@ async function findOneByIdWithDetails(saleId) {
         ) as installments
       FROM 
         sales
+      JOIN
+        guests ON sales.guest_id = guests.id
       JOIN
         hotels ON sales.hotel_id = hotels.id
       JOIN
@@ -468,7 +472,11 @@ async function findAllByGuestId(guestId) {
   return results.rows
 }
 
-async function findAll() {
+async function findAll(options = {}) {
+  const whereClause = options.hideCancelled
+    ? "WHERE sales.status != 'cancelled'"
+    : ""
+
   const results = await database.query({
     text: `
       SELECT 
@@ -503,6 +511,7 @@ async function findAll() {
         "room-types" ON rooms.room_type_id = "room-types".id
       JOIN
         "room-categories" ON rooms.room_category_id = "room-categories".id
+      ${whereClause}
       ORDER BY 
         sales.created_at DESC
     `,
@@ -521,10 +530,6 @@ async function update(saleId, saleInputNewValues) {
 
   const currentSale = await findOneById(saleId)
 
-  if (Object.keys(saleInputNewValues).length > 0) {
-    validateRequiredFields(saleInputNewValues, REQUIRED_FIELDS)
-  }
-
   const saleWithNewValues = { ...currentSale, ...saleInputNewValues }
 
   const updatedSale = await runUpdateQuery(saleWithNewValues)
@@ -541,6 +546,8 @@ async function update(saleId, saleInputNewValues) {
       company_id,
       payment_method,
       installments_count,
+      status,
+      payment_status,
     } = saleWithNewValues
 
     const results = await database.query({
@@ -556,6 +563,8 @@ async function update(saleId, saleInputNewValues) {
           company_id = $7,
           payment_method = $8,
           installments_count = $9,
+          status = $10,
+          payment_status = $11,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
@@ -572,6 +581,8 @@ async function update(saleId, saleInputNewValues) {
         company_id,
         payment_method,
         installments_count,
+        status,
+        payment_status,
       ],
     })
 
@@ -613,6 +624,67 @@ function calculateMaxInstallments(eventDate) {
   return monthsBetween + 1
 }
 
+async function cancel(saleId) {
+  validateUUID(saleId)
+  const client = await database.getNewClient()
+
+  try {
+    await client.query("BEGIN")
+
+    // 1. Lock and fetch sale
+    const saleResult = await client.query({
+      text: `SELECT * FROM sales WHERE id = $1 FOR UPDATE`,
+      values: [saleId],
+    })
+
+    const sale = saleResult.rows[0]
+
+    if (!sale) {
+      throw new NotFoundError({
+        message: "Venda não encontrada.",
+        action: "Verifique o ID da venda.",
+      })
+    }
+
+    if (sale.status === "cancelled") {
+      throw new ValidationError({
+        message: "Esta venda já está cancelada.",
+        action: "Nenhuma ação necessária.",
+      })
+    }
+
+    // 2. Update Sale Status
+    await client.query({
+      text: `
+        UPDATE sales
+        SET 
+          status = 'cancelled',
+          payment_status = 'cancelled',
+          updated_at = timezone('utc', now())
+        WHERE id = $1
+      `,
+      values: [saleId],
+    })
+
+    // 3. Restore Room Availability
+    await client.query({
+      text: `
+        UPDATE "rooms"
+        SET available_rooms = available_rooms + 1
+        WHERE id = $1
+      `,
+      values: [sale.room_id],
+    })
+
+    await client.query("COMMIT")
+  } catch (error) {
+    await client.query("ROLLBACK")
+    throw error
+  } finally {
+    await client.end()
+  }
+}
+
 const sale = {
   create,
   findOneById,
@@ -623,6 +695,7 @@ const sale = {
   update,
   deleteById,
   calculateMaxInstallments,
+  cancel,
 }
 
 export default sale
