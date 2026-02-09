@@ -8,6 +8,12 @@ beforeAll(async () => {
 })
 
 describe("POST /api/v1/registrations", () => {
+  jest.useFakeTimers()
+
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
   describe("Anonymous user", () => {
     test("should return 401", async () => {
       const response = await fetch(
@@ -390,13 +396,20 @@ describe("POST /api/v1/registrations", () => {
     })
 
     test("should enforce backend-calculated installments_count even if client sends different value", async () => {
-      // Hotel setup in beforeAll has check_in_date: "2026-11-01"
-      // Assuming today is Feb 2026 (for the sake of the test environment stability/knowledge)
-      // The calculation is: (2026-2026)*12 - now.getMonth() + 10 + 1
-      const now = new Date()
-      const expectedInstallments = Math.max(
-        1,
-        (2026 - now.getFullYear()) * 12 - now.getMonth() + 10 + 1,
+      // Logic from models/sale.js and models/sale-installment.js to calculate expected values
+      // We cannot use jest.useFakeTimers() here because the API runs in a separate process (next dev)
+      // and won't respect the mocked time. So we must assert against the logic dynamically based on real time.
+
+      const { Temporal } = require("@js-temporal/polyfill")
+      const sale = require("models/sale.js").default
+      const saleInstallment = require("models/sale-installment.js").default
+
+      const checkInDate = Temporal.PlainDate.from("2026-11-01")
+      const expectedInstallmentsCount =
+        sale.calculateMaxInstallments(checkInDate)
+      const expectedDates = saleInstallment.generateInstallmentDates(
+        expectedInstallmentsCount,
+        checkInDate,
       )
 
       const response = await fetch(
@@ -438,7 +451,14 @@ describe("POST /api/v1/registrations", () => {
       const saleData = JSON.parse(await saleResp.text())
 
       expect(saleData.payment_method).toBe("installments")
-      expect(saleData.installments_count).toBe(expectedInstallments)
+      expect(saleData.installments_count).toBe(expectedInstallmentsCount)
+
+      const installments = saleData.installments
+      expect(installments).toHaveLength(expectedInstallmentsCount)
+
+      installments.forEach((installment, index) => {
+        expect(installment.due_date).toBe(expectedDates[index])
+      })
     })
 
     test("should rollback all changes if an error occurs during sale creation (Transaction Atomicity)", async () => {

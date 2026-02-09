@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import useSWR from "swr"
@@ -73,7 +74,9 @@ export default function PaymentsTable() {
 
   const formatDate = (dateString) => {
     if (!dateString) return ""
-    return new Date(dateString).toLocaleDateString("pt-BR")
+    // Ensure we only take the date part to avoid any timezone/time shifts
+    const cleanDate = dateString.split("T")[0]
+    return Temporal.PlainDate.from(cleanDate).toLocaleString("pt-BR")
   }
 
   const getStatusBadge = (status) => {

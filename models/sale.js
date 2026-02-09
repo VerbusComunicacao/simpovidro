@@ -180,15 +180,16 @@ async function create(saleInputValues, externalClient) {
       installments_count = 1,
     } = saleInputValues
 
+    const dateSource = targetRoom.hotel_check_in_date
+    const dateString =
+      dateSource instanceof Date
+        ? dateSource.toISOString().split("T")[0]
+        : dateSource.split("T")[0]
+
+    const eventDate = Temporal.PlainDate.from(dateString)
+
     // Enforce fixed installments count if payment method is 'installments'
     if (payment_method === "installments") {
-      const dateSource = targetRoom.hotel_check_in_date
-      const dateString =
-        dateSource instanceof Date
-          ? dateSource.toISOString().split("T")[0]
-          : dateSource.split("T")[0]
-
-      const eventDate = Temporal.PlainDate.from(dateString)
       installments_count = calculateMaxInstallments(eventDate)
     } else {
       installments_count = 1
@@ -284,8 +285,10 @@ async function create(saleInputValues, externalClient) {
 
     // 6. Generate and Create Installments
     const installmentAmount = (final_amount / installments_count).toFixed(2)
-    const installmentDates =
-      saleInstallment.generateInstallmentDates(installments_count)
+    const installmentDates = saleInstallment.generateInstallmentDates(
+      installments_count,
+      eventDate,
+    )
 
     const installmentsToCreate = installmentDates.map((date, index) => ({
       sale_id: newSale.id,
