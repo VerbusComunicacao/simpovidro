@@ -27,7 +27,9 @@ async function postHandler(request, response) {
       })
     }
 
-    const validTokens = await activation.findAllValidTokensByUserId(existingUser.id)
+    const validTokens = await activation.findAllValidTokensByUserId(
+      existingUser.id,
+    )
 
     if (validTokens.length === 0) {
       const activationToken = await activation.generateToken(existingUser.id)

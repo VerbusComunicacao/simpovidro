@@ -1,4 +1,4 @@
-import { Info } from "lucide-react";
+import { Info } from "lucide-react"
 
 export default function Tips() {
   const tips = [
@@ -18,7 +18,7 @@ export default function Tips() {
       title: "Exclusividade",
       desc: "Lembre-se de portar seu crachá em todas as áreas do evento e refeições.",
     },
-  ];
+  ]
 
   return (
     <section id="dicas" className="py-24 bg-white">
@@ -49,5 +49,5 @@ export default function Tips() {
         </div>
       </div>
     </section>
-  );
+  )
 }

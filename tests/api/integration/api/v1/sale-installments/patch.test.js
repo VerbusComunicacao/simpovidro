@@ -38,7 +38,7 @@ describe("PATCH /api/v1/sale-installments/[id]", () => {
     const guestUser = await orchestrator.createUser()
     await orchestrator.activateUser(guestUser.id)
 
-    const registration = await orchestrator.createRegistration(guestUser.id, {
+    await orchestrator.createRegistration(guestUser.id, {
       room_id: room.id,
       payment_method: "installments",
     })

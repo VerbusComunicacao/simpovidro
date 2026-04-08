@@ -1,5 +1,11 @@
-import { Button } from "@/components/ui/button";
-import { ChevronRight, TrendingUp, HardHat, Trophy, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button"
+import {
+  ChevronRight,
+  TrendingUp,
+  HardHat,
+  Trophy,
+  Sparkles,
+} from "lucide-react"
 
 export default function Panels({ scrollToSection }) {
   const panelThemes = [
@@ -27,10 +33,13 @@ export default function Panels({ scrollToSection }) {
       color: "text-purple-400",
       bg: "bg-purple-400/10",
     },
-  ];
+  ]
 
   return (
-    <section id="paineis" className="py-24 bg-[#0a0f1e] relative overflow-hidden">
+    <section
+      id="paineis"
+      className="py-24 bg-[#0a0f1e] relative overflow-hidden"
+    >
       {/* Subtle background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -80,5 +89,5 @@ export default function Panels({ scrollToSection }) {
         </div>
       </div>
     </section>
-  );
+  )
 }

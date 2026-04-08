@@ -1,7 +1,7 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ChevronRight } from "lucide-react"
 
 export default function Schedule() {
   const days = [
@@ -23,7 +23,7 @@ export default function Schedule() {
       time: "02 Nov",
       desc: "Encerramento técnico e jantar de gala comemorativo.",
     },
-  ];
+  ]
 
   return (
     <section id="programacao" className="py-24 bg-white">
@@ -70,5 +70,5 @@ export default function Schedule() {
         </div>
       </div>
     </section>
-  );
+  )
 }

@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button"
+import { Menu } from "lucide-react"
 
 export default function Navbar({ scrolled, scrollToSection, router }) {
   const navItems = [
@@ -9,7 +9,7 @@ export default function Navbar({ scrolled, scrollToSection, router }) {
     { name: "Programação", id: "programacao" },
     { name: "Preços", id: "precos" },
     { name: "Dicas e lembretes", id: "dicas" },
-  ];
+  ]
 
   return (
     <nav
@@ -61,5 +61,5 @@ export default function Navbar({ scrolled, scrollToSection, router }) {
         </button>
       </div>
     </nav>
-  );
+  )
 }

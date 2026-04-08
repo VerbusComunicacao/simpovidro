@@ -1,7 +1,7 @@
-import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ChevronRight, Calendar, MapPin, Users, Star } from "lucide-react";
+import Image from "next/image"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ChevronRight, Calendar, MapPin, Users, Star } from "lucide-react"
 
 export default function Hero({ scrollToSection, router, HERO_IMAGE }) {
   const stats = [
@@ -21,7 +21,7 @@ export default function Hero({ scrollToSection, router, HERO_IMAGE }) {
       label: "Conteúdo qualificado",
       sub: "Grandes personalidades e profissionais do setor",
     },
-  ];
+  ]
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-32 md:py-32">
@@ -49,9 +49,9 @@ export default function Hero({ scrollToSection, router, HERO_IMAGE }) {
           Onde o mercado vidreiro se encontra para redefinir o amanhã!
           <br />
           <span className="font-normal leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-            Venha antecipar tendências e gerar conexões de valor com quem
-            lidera o setor de vidros na América Latina! Garanta seu lugar e
-            transforme o rumo da sua empresa!
+            Venha antecipar tendências e gerar conexões de valor com quem lidera
+            o setor de vidros na América Latina! Garanta seu lugar e transforme
+            o rumo da sua empresa!
           </span>
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -85,5 +85,5 @@ export default function Hero({ scrollToSection, router, HERO_IMAGE }) {
         </div>
       </div>
     </section>
-  );
+  )
 }

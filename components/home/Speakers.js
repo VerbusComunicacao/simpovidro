@@ -1,5 +1,5 @@
-import Image from "next/image";
-import { Users } from "lucide-react";
+import Image from "next/image"
+import { Users } from "lucide-react"
 
 export default function Speakers() {
   const speakers = [
@@ -21,7 +21,7 @@ export default function Speakers() {
       specialty: "Empreendedorismo e Gestão",
       image: "/images/menzinho.jpg",
     },
-  ];
+  ]
 
   return (
     <section
@@ -74,5 +74,5 @@ export default function Speakers() {
         </div>
       </div>
     </section>
-  );
+  )
 }

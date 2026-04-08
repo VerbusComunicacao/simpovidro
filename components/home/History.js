@@ -347,18 +347,18 @@ export default function History() {
 
       {/* Fullscreen Preview Modal */}
       {previewImage && (
-        <div 
+        <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/90 backdrop-blur-md p-4 animate-in fade-in duration-300"
           onClick={() => setPreviewImage(null)}
         >
-          <button 
+          <button
             className="absolute top-6 right-6 text-white hover:rotate-90 transition-transform p-2 bg-white/10 rounded-full backdrop-blur-lg"
             onClick={() => setPreviewImage(null)}
           >
             <X className="w-8 h-8" />
           </button>
-          
-          <div 
+
+          <div
             className="relative w-full max-w-5xl aspect-video rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500"
             onClick={(e) => e.stopPropagation()}
           >

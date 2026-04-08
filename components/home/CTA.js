@@ -1,6 +1,6 @@
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { ShieldCheck } from "lucide-react";
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { ShieldCheck } from "lucide-react"
 
 export default function CTA({ router, HERO_IMAGE }) {
   return (
@@ -84,5 +84,5 @@ export default function CTA({ router, HERO_IMAGE }) {
         </div>
       </section>
     </>
-  );
+  )
 }

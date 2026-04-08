@@ -52,43 +52,40 @@ export default function Home() {
         />
       </Head>
 
-      <Navbar 
-        scrolled={scrolled} 
-        scrollToSection={scrollToSection} 
-        router={router} 
+      <Navbar
+        scrolled={scrolled}
+        scrollToSection={scrollToSection}
+        router={router}
       />
 
       <main>
-        <Hero 
-          scrollToSection={scrollToSection} 
-          router={router} 
-          HERO_IMAGE={HERO_IMAGE} 
+        <Hero
+          scrollToSection={scrollToSection}
+          router={router}
+          HERO_IMAGE={HERO_IMAGE}
         />
-        
+
         <Sponsors variant="compact" />
-        
+
         <AboutEvent scrollToSection={scrollToSection} />
-        
+
         <Location />
-        
+
         <Speakers />
-        
+
         <Panels scrollToSection={scrollToSection} />
-        
+
         <Schedule />
-        
+
         <Pricing />
-        
+
         <Tips />
-        
+
         <History />
-        
+
         <Sponsors variant="full" />
-        
-        <CTA 
-          router={router} 
-          HERO_IMAGE={HERO_IMAGE} 
-        />
+
+        <CTA router={router} HERO_IMAGE={HERO_IMAGE} />
       </main>
 
       <Footer scrollToSection={scrollToSection} />
