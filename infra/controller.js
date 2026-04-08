@@ -30,7 +30,7 @@ function onErrorHandler(error, request, response) {
   const publicErrorObject = new InternalServerError({
     cause: error,
   })
-  2
+
   console.log(publicErrorObject)
 
   response.status(publicErrorObject.statusCode).json(publicErrorObject)

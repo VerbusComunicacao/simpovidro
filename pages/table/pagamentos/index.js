@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import useSWR from "swr"
@@ -11,6 +12,7 @@ import {
   ChevronRight,
   Info,
   Hotel,
+  Trash2,
 } from "lucide-react"
 import TableLayout from "@/components/layout/TableLayout"
 import ErrorDialog from "@/components/ui/ErrorDialog"
@@ -48,7 +50,7 @@ export default function PaymentsTable() {
     data: sales,
     error: salesError,
     mutate,
-  } = useSWR("/api/v1/sales", fetcher)
+  } = useSWR("/api/v1/sales?hide_cancelled=true", fetcher)
   const { data: hotels } = useSWR("/api/v1/hotels", fetcher)
 
   const [searchTerm, setSearchTerm] = useState("")
@@ -73,7 +75,9 @@ export default function PaymentsTable() {
 
   const formatDate = (dateString) => {
     if (!dateString) return ""
-    return new Date(dateString).toLocaleDateString("pt-BR")
+    // Ensure we only take the date part to avoid any timezone/time shifts
+    const cleanDate = dateString.split("T")[0]
+    return Temporal.PlainDate.from(cleanDate).toLocaleString("pt-BR")
   }
 
   const getStatusBadge = (status) => {
@@ -126,6 +130,37 @@ export default function PaymentsTable() {
     } catch (error) {
       console.error(error)
       alert("Erro ao atualizar status da parcela.")
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleCancelSale = async () => {
+    if (
+      !confirm(
+        "Tem certeza que deseja cancelar este pedido? Esta ação irá restaurar a disponibilidade do quarto e não pode ser desfeita.",
+      )
+    ) {
+      return
+    }
+
+    setIsUpdating(true)
+    try {
+      const response = await fetch(`/api/v1/sales/${selectedSale.id}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || "Falha ao cancelar pedido")
+      }
+
+      alert("Pedido cancelado com sucesso!")
+      setIsDetailsOpen(false)
+      mutate()
+    } catch (error) {
+      console.error(error)
+      alert(error.message)
     } finally {
       setIsUpdating(false)
     }
@@ -423,7 +458,23 @@ export default function PaymentsTable() {
                     )}
                 </div>
 
-                <div className="pt-4 flex justify-end gap-3">
+                <div className="pt-4 flex justify-between gap-3">
+                  {selectedSale.status !== "cancelled" ? (
+                    <Button
+                      variant="destructive"
+                      onClick={handleCancelSale}
+                      disabled={isUpdating}
+                    >
+                      {isUpdating ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Trash2 className="h-4 w-4 mr-2" />
+                      )}
+                      Cancelar Pedido
+                    </Button>
+                  ) : (
+                    <div></div> // Spacer
+                  )}
                   <Button
                     variant="outline"
                     onClick={() => setIsDetailsOpen(false)}

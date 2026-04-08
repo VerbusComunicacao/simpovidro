@@ -4,7 +4,7 @@ import crypto from "node:crypto"
 import { ValidationError } from "infra/errors.js"
 import webserver from "infra/webserver"
 
-const EXPIRATION_IN_MILLISECONDS = 60 * 15 * 1000 // 15 minutos
+const EXPIRATION_IN_MILLISECONDS = 60 * 60 * 24 * 1000 // 24 horas
 
 async function generateToken(userId) {
   const token = crypto.randomBytes(48).toString("hex")
@@ -32,7 +32,7 @@ async function sendEmailToUser(user, activationToken) {
   const activationLink = `${webserver.origin}/cadastro/ativar/${activationToken}`
 
   await email.send({
-    from: "Abravidro <contato@resend.dev>",
+    from: "Abravidro <contato@simpovidro.com.br>",
     to: user.email,
     subject: "Ative seu cadastro!",
     text: `${user.full_name}, clique no link abaixo para ativar o seu cadastro no Simpovidro:
@@ -160,6 +160,24 @@ async function findValidToken(token) {
   return results.rows[0]
 }
 
+async function findAllValidTokensByUserId(userId) {
+  const results = await database.query({
+    text: `
+      SELECT
+      *
+      FROM
+        user_activation_tokens
+      WHERE
+        user_id = $1 
+        AND expires_at > NOW()
+        AND used_at IS NULL
+    `,
+    values: [userId],
+  })
+
+  return results.rows
+}
+
 async function isFirstActivation() {
   const activationCountResult = await database.query(
     "SELECT count(*) FROM user_activation_tokens WHERE used_at IS NOT NULL;",
@@ -173,6 +191,7 @@ const activation = {
   sendEmailToUser,
   activateAccount,
   findValidToken,
+  findAllValidTokensByUserId,
   activateAdmAccount,
   isFirstActivation,
 }

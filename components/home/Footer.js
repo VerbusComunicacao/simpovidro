@@ -1,0 +1,145 @@
+import { Facebook, Instagram, Linkedin, Phone, Mail } from "lucide-react"
+
+export default function Footer({ scrollToSection }) {
+  return (
+    <footer className="bg-slate-950 text-slate-400 py-20 border-t border-slate-900">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid md:grid-cols-4 gap-12 mb-16">
+          <div className="col-span-2 md:col-span-1 space-y-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold">
+                S
+              </div>
+              <span className="text-white font-bold text-xl">Simpovidro</span>
+            </div>
+            <p className="text-sm leading-relaxed">
+              Referência nacional e internacional no setor vidreiro. Excelência
+              em organização pela Abravidro.
+            </p>
+            <div className="flex gap-4">
+              <Facebook className="h-5 w-5 hover:text-white cursor-pointer transition-colors" />
+              <Instagram className="h-5 w-5 hover:text-white cursor-pointer transition-colors" />
+              <Linkedin className="h-5 w-5 hover:text-white cursor-pointer transition-colors" />
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-white font-bold mb-6 italic tracking-tight uppercase text-xs">
+              Menu
+            </h4>
+            <ul className="space-y-4 text-slate-400">
+              <li>
+                <a
+                  href="#sobre"
+                  onClick={(e) => scrollToSection(e, "sobre")}
+                  className="hover:text-white transition-colors"
+                >
+                  Sobre
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#palestrantes"
+                  onClick={(e) => scrollToSection(e, "palestrantes")}
+                  className="hover:text-white transition-colors"
+                >
+                  Palestrantes
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#programacao"
+                  onClick={(e) => scrollToSection(e, "programacao")}
+                  className="hover:text-white transition-colors"
+                >
+                  Programação
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#patrocinadores"
+                  onClick={(e) => scrollToSection(e, "patrocinadores")}
+                  className="hover:text-white transition-colors"
+                >
+                  Patrocinadores
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-white font-bold mb-6 italic tracking-tight uppercase text-xs">
+              Logística
+            </h4>
+            <ul className="space-y-4 text-sm">
+              <li>
+                <a
+                  href="#precos"
+                  onClick={(e) => scrollToSection(e, "precos")}
+                  className="hover:text-white transition-colors"
+                >
+                  Benefícios & Investimento
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#logistica"
+                  onClick={(e) => scrollToSection(e, "logistica")}
+                  className="hover:text-white transition-colors"
+                >
+                  Acomodações
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#logistica"
+                  onClick={(e) => scrollToSection(e, "logistica")}
+                  className="hover:text-white transition-colors"
+                >
+                  Passagens
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#dicas"
+                  onClick={(e) => scrollToSection(e, "dicas")}
+                  className="hover:text-white transition-colors"
+                >
+                  Dicas & Lembretes
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-white font-bold mb-6 italic tracking-tight uppercase text-xs">
+              Organização
+            </h4>
+            <div className="space-y-2 text-sm">
+              <p className="text-slate-200">Abravidro</p>
+              <p className="flex items-center gap-2 italic">
+                <Phone className="h-3 w-3" /> (11) 3873-9908
+              </p>
+              <p className="flex items-center gap-2 italic">
+                <Mail className="h-3 w-3" /> abravidro@abravidro.org.br
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-8 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium uppercase tracking-[0.2em]">
+          <p>
+            © 2026 Associação Brasileira de Distribuidores e Processadores de
+            Vidros Planos.
+          </p>
+          <div className="flex gap-6">
+            <span className="cursor-pointer hover:text-white">Privacidade</span>
+            <span className="cursor-pointer hover:text-white">
+              Condições Gerais
+            </span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  )
+}

@@ -15,6 +15,45 @@ export default router.handler(controller.errorHandlers)
 
 async function postHandler(request, response) {
   const userInputValues = request.body
+
+  try {
+    const existingUser = await user.findOneByEmail(userInputValues.email)
+    const isActivated = !existingUser.features.includes("read:activation_token")
+
+    if (isActivated) {
+      throw new ValidationError({
+        message: "O email informado já está sendo utilizado.",
+        action: "Utilize outro email para realizar esta operação.",
+      })
+    }
+
+    const validTokens = await activation.findAllValidTokensByUserId(
+      existingUser.id,
+    )
+
+    if (validTokens.length === 0) {
+      const activationToken = await activation.generateToken(existingUser.id)
+      await activation.sendEmailToUser(existingUser, activationToken)
+
+      const secureUser = authorization.filterOutput(
+        request.context.user,
+        "create:user",
+        existingUser,
+      )
+
+      return response.status(201).json(secureUser)
+    }
+
+    throw new ValidationError({
+      message: "O email informado já está sendo utilizado.",
+      action: "Utilize outro email para realizar esta operação.",
+    })
+  } catch (error) {
+    if (error.name !== "NotFoundError") {
+      throw error
+    }
+  }
+
   const newUser = await user.create(userInputValues)
   const activationToken = await activation.generateToken(newUser.id)
 

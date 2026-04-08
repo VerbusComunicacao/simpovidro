@@ -26,7 +26,10 @@ async function getHandler(request, response) {
     })
   }
 
-  const sales = await sale.findAll()
+  const { hide_cancelled } = request.query
+  const sales = await sale.findAll({
+    hideCancelled: hide_cancelled === "true",
+  })
 
   return response.status(200).json(sales)
 }

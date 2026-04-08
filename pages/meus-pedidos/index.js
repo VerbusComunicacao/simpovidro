@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import useSWR from "swr"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -36,7 +37,9 @@ export default function MyOrdersPage() {
 
   const formatDate = (dateString) => {
     if (!dateString) return ""
-    return new Date(dateString).toLocaleDateString("pt-BR")
+    // Ensure we only take the date part to avoid any timezone/time shifts
+    const cleanDate = dateString.split("T")[0]
+    return Temporal.PlainDate.from(cleanDate).toLocaleString("pt-BR")
   }
 
   const formatCurrency = (value) => {
@@ -301,6 +304,83 @@ export default function MyOrdersPage() {
                         </p>
                       </div>
                     </div>
+
+                    {/* Installments Table */}
+                    {order.payment_method === "installments" &&
+                      order.installments &&
+                      order.installments.length > 0 && (
+                        <div className="mt-6 border-t pt-6">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                            Parcelamento
+                          </h3>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                              <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
+                                <tr>
+                                  <th className="px-4 py-3 rounded-l-lg">
+                                    Parcela
+                                  </th>
+                                  <th className="px-4 py-3">Vencimento</th>
+                                  <th className="px-4 py-3">Valor</th>
+                                  <th className="px-4 py-3 rounded-r-lg text-right">
+                                    Status
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-100">
+                                {order.installments.map((installment) => (
+                                  <tr key={installment.id}>
+                                    <td className="px-4 py-3 font-medium text-gray-900">
+                                      {installment.installment_number} /{" "}
+                                      {order.installments_count}
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-600">
+                                      {formatDate(installment.due_date)}
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-600">
+                                      {formatCurrency(installment.amount)}
+                                    </td>
+                                    <td className="px-4 py-3 text-right">
+                                      {(() => {
+                                        switch (installment.status) {
+                                          case "paid":
+                                            return (
+                                              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">
+                                                Pago
+                                              </Badge>
+                                            )
+                                          case "overdue":
+                                            return (
+                                              <Badge variant="destructive">
+                                                Atrasado
+                                              </Badge>
+                                            )
+                                          case "cancelled":
+                                            return (
+                                              <Badge variant="destructive">
+                                                Cancelado
+                                              </Badge>
+                                            )
+                                          case "pending":
+                                          default:
+                                            return (
+                                              <Badge
+                                                variant="outline"
+                                                className="text-yellow-600 border-yellow-200 bg-yellow-50"
+                                              >
+                                                Pendente
+                                              </Badge>
+                                            )
+                                        }
+                                      })()}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
                   </div>
                 </CardContent>
               </Card>
