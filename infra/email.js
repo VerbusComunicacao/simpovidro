@@ -11,9 +11,20 @@ const transporter = nodemailer.createTransport({
 })
 
 async function send(mailOptions) {
-  console.log(`Tentando enviar e-mail para: ${mailOptions.to}`)
-  await transporter.sendMail(mailOptions)
-  console.log(`E-mail enviado com sucesso para: ${mailOptions.to}`)
+  try {
+    console.log(`[EMAIL] Tentando enviar: "${mailOptions.subject}" para ${mailOptions.to}`)
+    const info = await transporter.sendMail(mailOptions)
+    console.log(`[EMAIL] Sucesso! ID: ${info.messageId}`)
+    return info
+  } catch (error) {
+    console.error(`[EMAIL] Erro ao enviar para ${mailOptions.to}:`)
+    console.error(`  - Mensagem: ${error.message}`)
+    console.error(`  - Código: ${error.code}`)
+    if (error.response) console.error(`  - Resposta do Servidor: ${error.response}`)
+    if (error.command) console.error(`  - Comando SMTP: ${error.command}`)
+
+    throw error
+  }
 }
 
 const email = {
