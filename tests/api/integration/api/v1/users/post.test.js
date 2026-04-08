@@ -2,6 +2,7 @@ import { version as uuidVersion } from "uuid"
 import orchestrator from "tests/orchestrator.js"
 import user from "models/user.js"
 import password from "models/password.js"
+import database from "infra/database"
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
@@ -87,6 +88,84 @@ describe("POST /api/v1/users", () => {
         action: "Utilize outro email para realizar esta operação.",
         status_code: 400,
       })
+    })
+
+    test("Should resend activation email if user is unactivated and previous token expired", async () => {
+      const userPayload = {
+        full_name: "Test User Resend",
+        email: "resend_test@example.com",
+        password: "password123",
+      }
+
+      // 1. Initial registration
+      const response1 = await fetch("http://localhost:3000/api/v1/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userPayload),
+      })
+      expect(response1.status).toBe(201)
+
+      // 2. Manually expire tokens for this user in DB
+      const userFound = await database.query({
+        text: "SELECT id FROM users WHERE email = $1",
+        values: [userPayload.email],
+      })
+      const userId = userFound.rows[0].id
+
+      await database.query({
+        text: "UPDATE user_activation_tokens SET expires_at = NOW() - interval '1 hour' WHERE user_id = $1",
+        values: [userId],
+      })
+
+      // 3. Register again with same email
+      const response2 = await fetch("http://localhost:3000/api/v1/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userPayload),
+      })
+
+      expect(response2.status).toBe(201)
+      const body2 = await response2.json()
+      expect(body2.id).toBe(userId)
+
+      // 4. Check if a new token was created
+      const tokens = await database.query({
+        text: "SELECT * FROM user_activation_tokens WHERE user_id = $1 AND expires_at > NOW()",
+        values: [userId],
+      })
+      expect(tokens.rowCount).toBe(1)
+
+      // 5. Check if the email was sent
+      const lastEmail = await orchestrator.getLastEmail()
+      expect(lastEmail.sender).toBe("<contato@simpovidro.com.br>")
+      expect(lastEmail.recipients[0]).toBe(`<${userPayload.email}>`)
+      expect(lastEmail.text).toContain(`ativar/${tokens.rows[0].token}`)
+    })
+
+    test("Should NOT resend activation email if user still has a valid token", async () => {
+      const userPayload = {
+        full_name: "Test User No Resend",
+        email: "no_resend_test@example.com",
+        password: "password123",
+      }
+
+      // 1. Initial registration
+      await fetch("http://localhost:3000/api/v1/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userPayload),
+      })
+
+      // 2. Try to register again immediately (token still valid)
+      const response = await fetch("http://localhost:3000/api/v1/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userPayload),
+      })
+
+      expect(response.status).toBe(400)
+      const body = await response.json()
+      expect(body.message).toBe("O email informado já está sendo utilizado.")
     })
   })
 })
