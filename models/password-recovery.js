@@ -42,7 +42,7 @@ async function sendRecoveryEmail(user, token) {
   const recoveryLink = `${webserver.origin}/reset-password/${token}`
 
   await email.send({
-    from: "Abravidro <contato@abravidro.org.br>",
+    from: "Abravidro <contato@simpovidro.com.br>",
     to: user.email,
     subject: "Recuperação de Senha",
     text: `Olá ${user.full_name}, você solicitou a recuperação de sua senha no Simpovidro.

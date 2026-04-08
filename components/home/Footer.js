@@ -1,4 +1,4 @@
-import { Facebook, Instagram, Linkedin, Phone, Mail } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Phone, Mail } from "lucide-react"
 
 export default function Footer({ scrollToSection }) {
   return (
@@ -141,5 +141,5 @@ export default function Footer({ scrollToSection }) {
         </div>
       </div>
     </footer>
-  );
+  )
 }
