@@ -42,6 +42,7 @@ import {
   calculateTotalPrice as calculatePrice,
   calculateMaxInstallments as calculateInstallments,
   validateRoomCapacity,
+  generateInstallmentDates,
 } from "@/lib/registration-helpers"
 
 export default function CheckoutPage({
@@ -1449,15 +1450,30 @@ export default function CheckoutPage({
                                 por parcela
                               </span>
                             </div>
-                            <div className="pt-2 border-t border-blue-100 flex flex-col gap-1">
+                            <div className="pt-2 border-t border-blue-100 flex flex-col gap-2">
                               <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">
-                                Condições de Vencimento:
+                                Cronograma de Vencimentos:
                               </p>
-                              <p className="text-[11px] text-blue-600 leading-tight">
-                                • 1ª parcela: 5 dias após a inscrição<br />
-                                • Última parcela: 5 dias antes do check-in ({new Date(new Date(room.hotel_check_in_date).getTime() - 5 * 24 * 60 * 60 * 1000).toLocaleDateString("pt-BR")})<br />
-                                • Intermediárias: no último dia de cada mês
-                              </p>
+                              <div className="space-y-1">
+                                {generateInstallmentDates(
+                                  installmentsCount,
+                                  room.hotel_check_in_date,
+                                ).map((date, idx) => (
+                                  <p
+                                    key={idx}
+                                    className="text-[11px] text-blue-600 leading-tight flex justify-between"
+                                  >
+                                    <span>Parcela {idx + 1}</span>
+                                    <span className="font-medium">
+                                      Vencimento:{" "}
+                                      {new Date(date).toLocaleDateString(
+                                        "pt-BR",
+                                        { timeZone: "UTC" },
+                                      )}
+                                    </span>
+                                  </p>
+                                ))}
+                              </div>
                             </div>
                           </div>
                         )}

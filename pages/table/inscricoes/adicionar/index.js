@@ -35,6 +35,7 @@ import {
   calculateTotalPrice as calculatePrice,
   calculateMaxInstallments as calculateInstallments,
   validateRoomCapacity,
+  generateInstallmentDates,
 } from "@/lib/registration-helpers"
 import { Separator } from "@/components/ui/separator"
 
@@ -660,16 +661,34 @@ export default function AdminAddRegistrationPage() {
                       <Label className="text-gray-600 text-xs">
                         Número de Parcelas
                       </Label>
-                      <div className="h-10 bg-white border border-gray-100 rounded-md flex items-center px-3 font-medium text-blue-600 text-sm">
-                        {maxInstallments}x de{" "}
-                        {new Intl.NumberFormat("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        }).format(pricing.finalTotal / maxInstallments)}
-                      </div>
-                      <p className="text-[10px] text-gray-400 italic">
-                        Calculado automaticamente baseado na data do evento.
-                      </p>
+                        <div className="pt-2 flex flex-col gap-2 bg-white p-3 rounded-md border border-blue-50">
+                          <div className="flex justify-between items-center mb-1">
+                            <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">
+                              Parcelamento:
+                            </p>
+                            <Badge variant="secondary" className="text-[10px] bg-blue-50 text-blue-700 hover:bg-blue-50 border-none">
+                              {maxInstallments}x de {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(pricing.finalTotal / maxInstallments)}
+                            </Badge>
+                          </div>
+                          <div className="space-y-1">
+                            {generateInstallmentDates(
+                              maxInstallments,
+                              currentRoom.hotel_check_in_date,
+                            ).map((date, idx) => (
+                              <p
+                                key={idx}
+                                className="text-[11px] text-blue-600 leading-tight flex justify-between"
+                              >
+                                <span>Parcela {idx + 1}</span>
+                                <span className="font-medium">
+                                  {new Date(date).toLocaleDateString("pt-BR", {
+                                    timeZone: "UTC",
+                                  })}
+                                </span>
+                              </p>
+                            ))}
+                          </div>
+                        </div>
                     </div>
                   )}
                 </div>

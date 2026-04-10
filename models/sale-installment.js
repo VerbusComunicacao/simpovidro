@@ -1,7 +1,7 @@
-import { Temporal } from "@js-temporal/polyfill"
 import database from "infra/database.js"
 import { NotFoundError } from "infra/errors.js"
 import { validateUUID } from "infra/validator.js"
+import { generateInstallmentDates } from "../lib/registration-helpers.js"
 
 async function findAll({ sale_id, status } = {}) {
   let queryText = `SELECT * FROM sale_installments`
@@ -119,36 +119,6 @@ async function createMany(installments, client) {
       values: [sale_id, installment_number, amount, due_date],
     })
   }
-}
-
-function generateInstallmentDates(count, eventDate) {
-  const dates = []
-  const today = Temporal.Now.plainDateISO()
-
-  if (count <= 1) {
-    // Only one installment: 5 days after registration
-    // We don't cap it to 5 days before the event here because validation should happen elsewhere
-    // but typically a sale wouldn't be allowed if it's too close to the event.
-    dates.push(today.add({ days: 5 }).toString())
-    return dates
-  }
-
-  // First installment: 5 days after registration
-  dates.push(today.add({ days: 5 }).toString())
-
-  // Intermediate installments: end of each month starting from the month AFTER today
-  // until we reach the month before the last installment.
-  // Number of intermediates to add = count - 2
-  for (let i = 1; i < count - 1; i++) {
-    const monthDate = today.add({ months: i })
-    const lastDay = monthDate.with({ day: monthDate.daysInMonth })
-    dates.push(lastDay.toString())
-  }
-
-  // Last installment: 5 days before the event
-  dates.push(eventDate.subtract({ days: 5 }).toString())
-
-  return dates
 }
 
 const saleInstallment = {
