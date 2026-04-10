@@ -172,6 +172,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         room_category: roomCategory.name,
         max_adults: roomCategory.max_adults,
         max_children: roomCategory.max_children,
+        member_price_per_night: "0.00",
       })
     })
 
@@ -294,6 +295,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         room_category: roomCategory.name,
         max_adults: roomCategory.max_adults,
         max_children: roomCategory.max_children,
+        member_price_per_night: "0.00",
       })
 
       const patchResponse2 = await fetch(
@@ -333,6 +335,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         room_category: roomCategory.name,
         max_adults: roomCategory.max_adults,
         max_children: roomCategory.max_children,
+        member_price_per_night: "0.00",
       })
 
       const patchResponse3 = await fetch(

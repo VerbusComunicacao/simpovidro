@@ -122,13 +122,29 @@ export default function RoomDetailsPage({ room }) {
                     <span className="text-sm text-gray-500 uppercase font-semibold">
                       Valor por pessoa
                     </span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold text-gray-900">
-                        {new Intl.NumberFormat("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        }).format(room.price_per_night)}
-                      </span>
+                    <div className="flex flex-col">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-bold text-gray-900">
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(room.price_per_night)}
+                        </span>
+                      </div>
+                      {room.member_price_per_night &&
+                        room.member_price_per_night !==
+                          room.price_per_night && (
+                          <div className="flex items-baseline gap-1 mt-1">
+                            <span className="text-sm font-semibold text-green-600">
+                              Só{" "}
+                              {new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(room.member_price_per_night)}{" "}
+                              para associados
+                            </span>
+                          </div>
+                        )}
                     </div>
                   </div>
                   <Button

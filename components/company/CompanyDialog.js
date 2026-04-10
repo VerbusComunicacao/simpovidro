@@ -24,6 +24,10 @@ import { maskPhone, maskCNPJ, maskCEP } from "@/lib/masks"
 import { validateCNPJ, validatePhone } from "@/lib/validators"
 import { LocationSelector } from "@/components/ui/LocationSelector"
 import { getInitialLocationState } from "@/lib/location-utils"
+import {
+  isTestEnvironment,
+  generateRandomCompany,
+} from "@/lib/test-data-generator"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -33,6 +37,7 @@ const fetcher = async (url) => {
     error.status = res.status
     throw error
   }
+  return res.json()
 }
 
 export function CompanyDialog({
@@ -126,6 +131,19 @@ export function CompanyDialog({
     if (name === "zip_code") maskedValue = maskCEP(value)
 
     setFormData((prev) => ({ ...prev, [name]: maskedValue }))
+
+    // Dev Helper: Autofill on all ones
+    if (
+      name === "cnpj" &&
+      isTestEnvironment() &&
+      maskedValue.replace(/\D/g, "") === "1".repeat(14)
+    ) {
+      const randomData = generateRandomCompany()
+      setFormData((prev) => ({
+        ...prev,
+        ...randomData,
+      }))
+    }
   }
 
   const handleSelectChange = (name, value) => {

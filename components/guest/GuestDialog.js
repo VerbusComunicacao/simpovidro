@@ -25,6 +25,10 @@ import { maskPhone, maskCPF, maskRG } from "@/lib/masks"
 import { validateCPF, validatePhone } from "@/lib/validators"
 import { LocationSelector } from "@/components/ui/LocationSelector"
 import { getInitialLocationState } from "@/lib/location-utils"
+import {
+  isTestEnvironment,
+  generateRandomGuest,
+} from "@/lib/test-data-generator"
 
 export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
   const isEditMode = !!guestToEdit
@@ -136,6 +140,19 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     if (name === "rg_number") maskedValue = maskRG(value)
 
     setFormData((prev) => ({ ...prev, [name]: maskedValue }))
+
+    // Dev Helper: Autofill on all ones (CPF)
+    if (
+      name === "cpf_number" &&
+      isTestEnvironment() &&
+      value.replace(/\D/g, "") === "1".repeat(11)
+    ) {
+      const randomGuest = generateRandomGuest()
+      setFormData((prev) => ({
+        ...prev,
+        ...randomGuest,
+      }))
+    }
   }
 
   const handleSelectChange = (name, value) => {
@@ -186,7 +203,8 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     setLoading(false)
 
     if (response.ok) {
-      if (onGuestSuccess) onGuestSuccess()
+      const data = await response.json()
+      if (onGuestSuccess) onGuestSuccess(data)
       setOpen(false)
     } else {
       const data = await response.json()
@@ -500,6 +518,7 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
                   </div>
                   <div className="mt-4">
                     <LocationSelector
+                      key={`guest-admin-${formData.stateCode}-${formData.city}`}
                       countryCode={formData.countryCode}
                       stateCode={formData.stateCode}
                       cityName={formData.city}

@@ -314,10 +314,11 @@ export default function HotelPage() {
             {!rooms && !roomsError && <div>Carregando quartos...</div>}
             {rooms && rooms.length === 0 && renderEmptyState()}
             {rooms && rooms.length > 0 && (
-              <div className="grid grid-cols-[repeat(6,minmax(0,1fr))_auto] gap-4 font-medium border-b pb-2 mb-2">
+              <div className="grid grid-cols-[repeat(7,minmax(0,1fr))_auto] gap-4 font-medium border-b pb-2 mb-2">
                 <div>Tipo</div>
                 <div>Categoria</div>
                 <div>Preço</div>
+                <div>Preço Assoc.</div>
                 <div>Total</div>
                 <div>Disponível</div>
                 <div>Bloqueado</div>
@@ -327,11 +328,12 @@ export default function HotelPage() {
             {rooms?.map((room) => (
               <div
                 key={room.id}
-                className="grid grid-cols-[repeat(6,minmax(0,1fr))_auto] gap-4 py-2 border-b items-center"
+                className="grid grid-cols-[repeat(7,minmax(0,1fr))_auto] gap-4 py-2 border-b items-center"
               >
                 <div>{room.room_type}</div>
                 <div>{room.room_category}</div>
                 <div>R$ {room.price_per_night}</div>
+                <div>R$ {room.member_price_per_night}</div>
                 <div>{room.total_rooms}</div>
                 <div>{room.available_rooms}</div>
                 <div>{room.blocked_rooms}</div>

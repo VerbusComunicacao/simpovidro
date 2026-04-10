@@ -64,7 +64,7 @@ describe("GET /api/v1/my-orders", () => {
             room_id: room.id,
             guests_data: [
               {
-                name: "Test Guest",
+                name: user.full_name,
                 email: user.email,
                 phone: "123456789",
                 gender: "Masculino",

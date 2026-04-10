@@ -162,6 +162,7 @@ describe("POST /api/v1/rooms", () => {
         room_category: roomCategory.name,
         max_adults: roomCategory.max_adults,
         max_children: roomCategory.max_children,
+        member_price_per_night: "0.00",
       })
     })
 

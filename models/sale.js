@@ -148,6 +148,31 @@ async function create(saleInputValues, externalClient) {
       })
     }
 
+    // 4.1 Fetch Company/Discount early to determine if it's a member price
+    let companyData = null
+    const { company_id = null } = saleInputValues
+
+    if (company_id) {
+      const companyResults = await client.query({
+        text: `
+          SELECT 
+            c.custom_discount_percentage,
+            d.value as global_discount_value,
+            d.name as discount_name
+          FROM 
+            companies c
+          LEFT JOIN 
+            discounts d ON c.discount_id = d.id
+          WHERE 
+            c.id = $1 
+          LIMIT 1`,
+        values: [company_id],
+      })
+      companyData = companyResults.rows[0]
+    }
+
+    const isMember = companyData?.discount_name === "Associada"
+
     // 5. Calculate Total Amount based on Age Policies
     let calculatedTotalAmount = 0
     const policies = targetRoom.price_policies || []
@@ -164,7 +189,11 @@ async function create(saleInputValues, externalClient) {
         }
       }
 
-      const guestPrice = Number(targetRoom.price_per_night) * (percentage / 100)
+      const basePrice = isMember
+        ? Number(targetRoom.member_price_per_night)
+        : Number(targetRoom.price_per_night)
+
+      const guestPrice = basePrice * (percentage / 100)
       calculatedTotalAmount += guestPrice
     }
 
@@ -173,7 +202,6 @@ async function create(saleInputValues, externalClient) {
       check_out_date = targetRoom.hotel_check_out_date ||
         new Date(new Date().setDate(new Date().getDate() + 3)),
       total_amount = calculatedTotalAmount,
-      company_id = null,
       payment_method = "cash",
       installments_count = 1,
     } = saleInputValues
@@ -196,48 +224,28 @@ async function create(saleInputValues, externalClient) {
     let final_discount_percentage = 0
     let final_discount_amount = 0
 
-    if (company_id) {
-      const companyResults = await client.query({
-        text: `
-          SELECT 
-            c.custom_discount_percentage,
-            d.value as global_discount_value
-          FROM 
-            companies c
-          LEFT JOIN 
-            discounts d ON c.discount_id = d.id
-          WHERE 
-            c.id = $1 
-          LIMIT 1`,
-        values: [company_id],
-      })
-
-      const companyData = companyResults.rows[0]
-
-      if (companyData) {
-        if (companyData.custom_discount_percentage !== null) {
-          final_discount_percentage = Number(
-            companyData.custom_discount_percentage,
-          )
-        } else if (companyData.global_discount_value !== null) {
-          final_discount_percentage = Number(companyData.global_discount_value)
-        }
-
-        final_discount_amount = total_amount * (final_discount_percentage / 100)
+    if (companyData && !isMember) {
+      if (companyData.custom_discount_percentage !== null) {
+        final_discount_percentage = Number(
+          companyData.custom_discount_percentage,
+        )
+      } else if (companyData.global_discount_value !== null) {
+        final_discount_percentage = Number(companyData.global_discount_value)
       }
+
+      final_discount_amount = total_amount * (final_discount_percentage / 100)
     }
 
     const final_amount = total_amount - final_discount_amount
 
-    const sale_number = generateOrderNumber()
     const lead_guest_id = guest_ids[0]
 
     const saleResults = await client.query({
       text: `
         INSERT INTO
-          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, discount_percentage, discount_amount, final_amount, sale_number, company_id, payment_method, installments_count)
+          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, discount_percentage, discount_amount, final_amount, company_id, payment_method, installments_count)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING
           *
       `,
@@ -251,7 +259,6 @@ async function create(saleInputValues, externalClient) {
         final_discount_percentage,
         final_discount_amount,
         final_amount,
-        sale_number,
         company_id,
         payment_method,
         installments_count,
@@ -601,15 +608,6 @@ async function deleteById(saleId, hotelId) {
     `,
     values: [hotelId, saleId],
   })
-}
-
-function generateOrderNumber() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-  let result = ""
-  for (let i = 0; i < 8; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return result
 }
 
 function calculateMaxInstallments(eventDate) {

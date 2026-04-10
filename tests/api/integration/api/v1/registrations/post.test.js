@@ -48,10 +48,12 @@ describe("POST /api/v1/registrations", () => {
     let userToken
     let hotelId
     let roomId
+    let regularUserId
 
     beforeAll(async () => {
       // 1. Create and Setup Admin User
       const adminUser = await orchestrator.createUser({
+        full_name: "Admin User",
         email: "admin-registration@example.com",
         password: "password123",
       })
@@ -61,6 +63,7 @@ describe("POST /api/v1/registrations", () => {
 
       // 2. Create Regular User
       const regularUser = await orchestrator.createUser({
+        full_name: "Regular User",
         email: "user-registration@example.com",
         password: "password123",
       })
@@ -76,6 +79,7 @@ describe("POST /api/v1/registrations", () => {
       ])
       const regularSession = await orchestrator.createSession(regularUser.id)
       userToken = regularSession.token
+      regularUserId = regularUser.id
 
       // 3. Create a hotel (as admin)
       const hotelResp = await fetch(
@@ -128,7 +132,7 @@ describe("POST /api/v1/registrations", () => {
           },
           body: JSON.stringify({
             name: "Standard",
-            max_adults: 1,
+            max_adults: 2,
             max_children: 0,
           }),
         },
@@ -208,8 +212,8 @@ describe("POST /api/v1/registrations", () => {
             company_cnpj: cnpj,
             guests_data: [
               {
-                name: "Test Guest",
-                email: "guest@example.com",
+                name: "Regular User",
+                email: "user-registration@example.com",
                 phone: "11999999999",
                 gender: "Masculino",
                 rg_number: "123456789",
@@ -321,8 +325,8 @@ describe("POST /api/v1/registrations", () => {
             company_cnpj: cnpj,
             guests_data: [
               {
-                name: "Another Guest",
-                email: "another@example.com",
+                name: "Regular User",
+                email: "user-registration@example.com",
                 phone: "11988888888",
                 gender: "Feminino",
                 rg_number: "987654321",
@@ -370,6 +374,15 @@ describe("POST /api/v1/registrations", () => {
             room_id: roomId,
             guests_data: [
               {
+                name: "Regular User",
+                email: "user-registration@example.com",
+                phone: "11999999999",
+                gender: "Masculino",
+                rg_number: "111",
+                cpf_number: "111.111.111-11",
+                birth_date: "1990-01-01",
+              },
+              {
                 name: "Regression Guest",
                 email: guestEmail,
                 phone: "11977777777",
@@ -385,7 +398,7 @@ describe("POST /api/v1/registrations", () => {
 
       expect(response.status).toBe(201)
 
-      // Query database to check if user_id is null
+      // Query database to check if user_id is null for the SECOND guest
       const guestResult = await database.query({
         text: "SELECT user_id, email FROM guests WHERE email = $1",
         values: [guestEmail],
@@ -426,8 +439,8 @@ describe("POST /api/v1/registrations", () => {
             installments_count: 5, // Client tries to set 5, but backend should enforce the calculated value
             guests_data: [
               {
-                name: "Installment Guest",
-                email: "installment@example.com",
+                name: "Regular User",
+                email: "user-registration@example.com",
                 phone: "11966666666",
                 gender: "Masculino",
                 rg_number: "666555444",
@@ -482,8 +495,8 @@ describe("POST /api/v1/registrations", () => {
             room_id: roomId,
             guests_data: [
               {
-                name: "Orphan Guest",
-                email: "orphan@example.com",
+                name: "Regular User",
+                email: "user-registration@example.com",
                 phone: "11999999999",
                 gender: "Feminino",
                 rg_number: "998877665",
@@ -513,6 +526,315 @@ describe("POST /api/v1/registrations", () => {
         text: `UPDATE rooms SET available_rooms = 10 WHERE id = $1`,
         values: [roomId],
       })
+    })
+
+    test("should apply member price when company has 'Associada' discount", async () => {
+      // 1. Create a special room with different member price
+      await fetch(`${orchestrator.webserverUrl}/api/v1/rooms`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${admToken}`,
+        },
+        body: JSON.stringify({
+          hotel_id: hotelId,
+          room_type_id: 1, // Will be resolved by type name in a real flow, but here we use IDs from before
+          room_category_id: 1,
+          price_per_night: 1000.0,
+          member_price_per_night: 850.0,
+          total_rooms: 5,
+        }),
+      })
+
+      // Since the IDs 1 above might be wrong if they are UUIDs, I'll fetch the real IDs from the previous setup
+      // Wait, I have access to roomId from before, let's just update IT to have a member price
+      await database.query({
+        text: `UPDATE rooms SET member_price_per_night = 850.0 WHERE id = $1`,
+        values: [roomId],
+      })
+
+      // 2. Ensure a company with 'Associada' discount exists
+      const cnpj = "11122233000100"
+      const assocDiscountResult = await database.query(
+        "SELECT id FROM discounts WHERE name = 'Associada' LIMIT 1",
+      )
+      const assocDiscountId = assocDiscountResult.rows[0].id
+
+      await fetch(`${orchestrator.webserverUrl}/api/v1/companies`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${admToken}`,
+        },
+        body: JSON.stringify({
+          corporate_name: "Member Corp",
+          cnpj: cnpj,
+          badge: "Member",
+          phone: "11999999999",
+          email: "member@example.com",
+          address: "Rua Associada",
+          address_number: "1",
+          neighborhood: "Centro",
+          city: "São Paulo",
+          state: "SP",
+          zip_code: "01001-000",
+          discount_id: assocDiscountId,
+        }),
+      })
+
+      // 3. Perform registration
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${userToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomId,
+            company_cnpj: cnpj,
+            guests_data: [
+              {
+                name: "Regular User",
+                email: "user-registration@example.com",
+                phone: "11999999999",
+                gender: "Masculino",
+                rg_number: "112233445",
+                cpf_number: "111.222.333-44",
+                birth_date: "1985-11-10",
+              },
+            ],
+          }),
+        },
+      )
+
+      expect(response.status).toBe(201)
+      const data = JSON.parse(await response.text())
+
+      // 4. Verify Sale Pricing
+      const saleResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/sales/${data.saleId}`,
+        {
+          headers: { Cookie: `session_id=${userToken}` },
+        },
+      )
+      const saleData = JSON.parse(await saleResp.text())
+
+      // Member price (850) should be used instead of standard price (1000)
+      // And discount_percentage should be 0 because it's a fixed member price
+      expect(Number(saleData.total_amount)).toBe(850.0)
+      expect(Number(saleData.discount_percentage)).toBe(0)
+      expect(Number(saleData.discount_amount)).toBe(0)
+      expect(Number(saleData.final_amount)).toBe(850.0)
+    })
+
+    test("should force the first guest to be the logged-in user even if different data is provided", async () => {
+      // 1. Setup: Create a real guest profile for the regular user
+      const userRealName = "Real User Name"
+      const userRealEmail = "user-registration@example.com"
+      const userRealCpf = "111.111.111-11"
+
+      await orchestrator.createGuest({
+        name: userRealName,
+        email: userRealEmail,
+        phone: "11999999999",
+        gender: "Masculino",
+        rg_number: "RG123",
+        cpf_number: userRealCpf,
+        birth_date: "1990-01-01",
+        user_id: regularUserId,
+      })
+
+      // 2. Attempt to register with spoofed first guest data
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${userToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomId,
+            guests_data: [
+              {
+                name: "Imposter Guest", // Different name
+                email: "imposter@example.com", // Different email
+                phone: "11900000000",
+                gender: "Feminino",
+                rg_number: "RG999",
+                cpf_number: "999.999.999-99",
+                birth_date: "1980-01-01",
+              },
+            ],
+          }),
+        },
+      )
+
+      expect(response.status).toBe(404)
+    })
+
+    test("should reject registration with spoofed data EVEN IF the user has no previous guest profile", async () => {
+      // 1. Setup: Create a new user with NO guest profile
+      const newUser = await orchestrator.createUser({
+        full_name: "Brand New User",
+        email: "brand-new@example.com",
+      })
+      await orchestrator.activateUser(newUser.id)
+      const newSession = await orchestrator.createSession(newUser.id)
+
+      // 2. Attempt to register with "111" spoofed data
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${newSession.token}`,
+          },
+          body: JSON.stringify({
+            room_id: roomId,
+            guests_data: [
+              {
+                name: "111", // Spoofed name
+                email: "111@example.com", // Spoofed email
+                phone: "11911111111",
+                gender: "Masculino",
+                rg_number: "111",
+                cpf_number: "111.111.111-11",
+                birth_date: "1980-11-11",
+              },
+            ],
+          }),
+        },
+      )
+
+      // This is expected to BE 404 if the loophole is closed.
+      // If the loophole exists, it will return 201.
+      expect(response.status).toBe(404)
+    })
+
+    test("should generate incremental numeric sale_number starting at 100", async () => {
+      // 1. Create first registration
+      const response1 = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${userToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomId,
+            guests_data: [
+              {
+                name: "Regular User",
+                email: "user-registration@example.com",
+                phone: "11999999999",
+                gender: "Masculino",
+                rg_number: "RG-SEQ-1",
+                cpf_number: "777.777.777-71",
+                birth_date: "1990-01-01",
+              },
+            ],
+          }),
+        },
+      )
+      const { saleId: saleId1 } = await response1.json()
+      expect(response1.status).toBe(201)
+
+      // 2. Create second registration
+      const response2 = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${userToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomId,
+            guests_data: [
+              {
+                name: "Regular User",
+                email: "user-registration@example.com",
+                phone: "11999999999",
+                gender: "Masculino",
+                rg_number: "RG-SEQ-2",
+                cpf_number: "777.777.777-72",
+                birth_date: "1990-01-01",
+              },
+            ],
+          }),
+        },
+      )
+      const { saleId: saleId2 } = await response2.json()
+      expect(response2.status).toBe(201)
+
+      // 3. Query DB and verify
+      const sale1 = await database.query({
+        text: "SELECT sale_number FROM sales WHERE id = $1",
+        values: [saleId1],
+      })
+      const sale2 = await database.query({
+        text: "SELECT sale_number FROM sales WHERE id = $1",
+        values: [saleId2],
+      })
+
+      const num1 = parseInt(sale1.rows[0].sale_number)
+      const num2 = parseInt(sale2.rows[0].sale_number)
+
+      expect(num1).toBeGreaterThanOrEqual(100)
+      expect(num2).toBe(num1 + 1)
+      expect(sale1.rows[0].sale_number).toMatch(/^\d+$/)
+    })
+
+    test("Admin should be able to register ANY guest as the primary registrant (bypass identity check)", async () => {
+      // 1. Setup Admin Token (already exists in scope: admToken)
+      // 2. Attempt registration with Guest 1 identity !== Admin User
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomId,
+            guests_data: [
+              {
+                name: "Johnny Override",
+                email: "johnny@example.com",
+                phone: "11911111111",
+                gender: "Masculino",
+                rg_number: "RG-ADMIN-BYPASS",
+                cpf_number: "000.000.000-01",
+                birth_date: "1985-05-05",
+              },
+            ],
+          }),
+        },
+      )
+
+      // This should PASS (201) because the user is an admin
+      expect(response.status).toBe(201)
+      const data = await response.json()
+      expect(data.saleId).toBeDefined()
+
+      // Verify in DB that guest was created with correct name
+      const saleResult = await database.query({
+        text: `
+          SELECT g.name 
+          FROM sales_guests sg 
+          JOIN guests g ON sg.guest_id = g.id 
+          WHERE sg.sale_id = $1 
+          ORDER BY g.created_at ASC 
+          LIMIT 1`,
+        values: [data.saleId],
+      })
+      expect(saleResult.rows[0].name).toBe("Johnny Override")
     })
   })
 })

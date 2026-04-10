@@ -1,4 +1,3 @@
-import { Temporal } from "@js-temporal/polyfill"
 import { useRouter } from "next/router"
 import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { AlertCircle, Loader2, Calendar, User } from "lucide-react"
+import { AlertCircle, Loader2, Calendar, User, Lock } from "lucide-react"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 
 import * as cookie from "cookie"
@@ -34,6 +33,16 @@ import { maskCPF, maskPhone, maskRG, maskCNPJ, maskCEP } from "@/lib/masks"
 import { validateCPF, validateCNPJ, validatePhone } from "@/lib/validators"
 import { LocationSelector } from "@/components/ui/LocationSelector"
 import { getInitialLocationState } from "@/lib/location-utils"
+import {
+  isTestEnvironment,
+  generateRandomCompany,
+  generateRandomGuest,
+} from "@/lib/test-data-generator"
+import {
+  calculateTotalPrice as calculatePrice,
+  calculateMaxInstallments as calculateInstallments,
+  validateRoomCapacity,
+} from "@/lib/registration-helpers"
 
 export default function CheckoutPage({
   room,
@@ -179,6 +188,7 @@ export default function CheckoutPage({
       [name]: e.target.type === "checkbox" ? e.target.checked : value,
     }
     setGuests(newGuests)
+    setError("")
 
     // Clear error when user types
     if (guestErrors[index]?.[name]) {
@@ -187,12 +197,28 @@ export default function CheckoutPage({
       if (Object.keys(newErrors[index]).length === 0) delete newErrors[index]
       setGuestErrors(newErrors)
     }
+
+    // Dev Helper: Autofill on all ones (CPF)
+    if (
+      name === "cpf_number" &&
+      isTestEnvironment() &&
+      value.replace(/\D/g, "") === "1".repeat(11)
+    ) {
+      const randomGuest = generateRandomGuest()
+      const updatedGuests = [...guests]
+      updatedGuests[index] = {
+        ...updatedGuests[index],
+        ...randomGuest,
+      }
+      setGuests(updatedGuests)
+    }
   }
 
   const handleLocationChange = (index, location) => {
     const newGuests = [...guests]
     newGuests[index] = { ...newGuests[index], ...location }
     setGuests(newGuests)
+    setError("")
   }
 
   const handleCompanyLocationChange = (location) => {
@@ -203,73 +229,7 @@ export default function CheckoutPage({
     const newGuests = [...guests]
     newGuests[index] = { ...newGuests[index], [name]: value }
     setGuests(newGuests)
-  }
-
-  const calculateTotalPrice = () => {
-    let total = 0
-    let adultCount = 0
-    let childCount = 0
-    const policies = room.price_policies || []
-    const pricePerNight = Number(room.price_per_night)
-    const referenceDate = new Date(room.hotel_check_in_date || new Date())
-
-    guests.forEach((guest) => {
-      let percentage = 100 // Default to 100%
-      let isAdult = true
-      let age = null // Initialize age
-
-      if (guest.birth_date) {
-        const birth = new Date(guest.birth_date)
-        age = referenceDate.getUTCFullYear() - birth.getUTCFullYear()
-        const m = referenceDate.getUTCMonth() - birth.getUTCMonth()
-        if (
-          m < 0 ||
-          (m === 0 && referenceDate.getUTCDate() < birth.getUTCDate())
-        ) {
-          age--
-        }
-        isAdult = age >= 18
-        if (policies.length > 0) {
-          for (const policy of policies) {
-            if (age <= policy.max_age) {
-              percentage = Number(policy.percentage)
-              break
-            }
-          }
-        }
-      }
-
-      if (isAdult) adultCount++
-      else childCount++
-
-      total += pricePerNight * (percentage / 100)
-    })
-
-    let discountPercentage = 0
-    if (foundCompany) {
-      if (foundCompany.custom_discount_percentage !== null) {
-        discountPercentage = Number(foundCompany.custom_discount_percentage)
-      } else if (foundCompany.discount_id) {
-        const matchingDiscount = globalDiscounts.find(
-          (d) => d.id === foundCompany.discount_id,
-        )
-        if (matchingDiscount) {
-          discountPercentage = Number(matchingDiscount.value)
-        }
-      }
-    }
-
-    const discountAmount = total * (discountPercentage / 100)
-    const finalTotal = total - discountAmount
-
-    return {
-      originalTotal: total,
-      discountPercentage,
-      discountAmount,
-      finalTotal,
-      adultCount,
-      childCount,
-    }
+    setError("")
   }
 
   const {
@@ -279,34 +239,10 @@ export default function CheckoutPage({
     finalTotal,
     adultCount,
     childCount,
-  } = calculateTotalPrice()
+    isAssociate,
+  } = calculatePrice(room, guests, foundCompany, globalDiscounts)
 
-  const calculateMaxInstallments = (eventDate) => {
-    try {
-      const today = Temporal.Now.plainDateISO()
-
-      if (Temporal.PlainDate.compare(eventDate, today) < 0) return 1
-
-      const monthsBetween = today
-        .with({ day: 1 })
-        .until(eventDate.with({ day: 1 }), { largestUnit: "months" }).months
-
-      return monthsBetween + 1
-    } catch (error) {
-      console.error("Error calculating installments with Temporal:", error)
-      return 1
-    }
-  }
-
-  const maxInstallments = room.hotel_check_in_date
-    ? calculateMaxInstallments(
-        Temporal.PlainDate.from(
-          typeof room.hotel_check_in_date === "string"
-            ? room.hotel_check_in_date.split("T")[0]
-            : room.hotel_check_in_date.toISOString().split("T")[0],
-        ),
-      )
-    : 1
+  const maxInstallments = calculateInstallments(room.hotel_check_in_date)
 
   useEffect(() => {
     if (paymentMethod === "installments") {
@@ -320,19 +256,13 @@ export default function CheckoutPage({
     setError("")
 
     // 1. Client-side capacity validation
-    if (adultCount > maxAdults) {
-      setError(
-        `O número de adultos (${adultCount}) excede a capacidade máxima do quarto (${maxAdults}).`,
-      )
-      setIsLoading(false)
-      window.scrollTo({ top: 0, behavior: "smooth" })
-      return
-    }
-
-    if (childCount > maxChildren) {
-      setError(
-        `O número de crianças (${childCount}) excede a capacidade máxima do quarto (${maxChildren}).`,
-      )
+    const capacityValidation = validateRoomCapacity(
+      room,
+      adultCount,
+      childCount,
+    )
+    if (!capacityValidation.isValid) {
+      setError(capacityValidation.message)
       setIsLoading(false)
       window.scrollTo({ top: 0, behavior: "smooth" })
       return
@@ -416,6 +346,17 @@ export default function CheckoutPage({
   }
 
   const handleCnpjStep = async () => {
+    // Dev Helper: Autofill on all ones (CNPJ)
+    if (isTestEnvironment() && cnpj.replace(/\D/g, "") === "1".repeat(14)) {
+      const randomCompany = generateRandomCompany()
+      setNewCompanyData({
+        ...newCompanyData,
+        ...randomCompany,
+      })
+      setCurrentStep(2)
+      return
+    }
+
     if (!cnpj || !validateCNPJ(cnpj)) {
       setError("CNPJ inválido.")
       return
@@ -511,7 +452,16 @@ export default function CheckoutPage({
   }
 
   const getGuestTitle = (index) => {
-    if (index === 0) return "Responsável (Adulto 1)"
+    if (index === 0) {
+      return (
+        <div className="flex items-center gap-2">
+          <span>Responsável (Adulto 1)</span>
+          <Badge className="bg-blue-600 text-white border-none flex items-center gap-1">
+            <Lock className="h-3 w-3" /> Titular
+          </Badge>
+        </div>
+      )
+    }
 
     return index < maxAdults
       ? `Adulto ${index + 1}`
@@ -519,7 +469,8 @@ export default function CheckoutPage({
   }
 
   const getGuestDescription = (index) => {
-    if (index === 0) return "Seus dados principais (obrigatório)."
+    if (index === 0)
+      return "Dados do titular da conta (vinculados ao seu perfil)."
 
     return index < maxAdults
       ? "Dados do acompanhante adulto (obrigatório)."
@@ -573,12 +524,17 @@ export default function CheckoutPage({
                   <p className="text-sm text-gray-500">Valor Total</p>
                   <div className="flex flex-col">
                     {discountPercentage > 0 && (
-                      <span className="text-sm text-gray-500 line-through">
+                      <p className="text-sm text-gray-500 line-through">
                         {new Intl.NumberFormat("pt-BR", {
                           style: "currency",
                           currency: "BRL",
                         }).format(originalTotal)}
-                      </span>
+                      </p>
+                    )}
+                    {isAssociate && (
+                      <Badge className="bg-green-100 text-green-700 w-fit mb-1 hover:bg-green-100 border-none">
+                        Preço Associado Aplicado
+                      </Badge>
                     )}
                     <p className="text-3xl font-bold text-blue-600">
                       {new Intl.NumberFormat("pt-BR", {
@@ -619,7 +575,10 @@ export default function CheckoutPage({
                         id="cnpj-input"
                         placeholder="00.000.000/0000-00"
                         value={cnpj}
-                        onChange={(e) => setCnpj(maskCNPJ(e.target.value))}
+                        onChange={(e) => {
+                          setCnpj(maskCNPJ(e.target.value))
+                          setError("")
+                        }}
                         required
                         minLength={14}
                       />
@@ -660,12 +619,13 @@ export default function CheckoutPage({
                         <Input
                           id="corporate_name"
                           value={newCompanyData.corporate_name}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setNewCompanyData({
                               ...newCompanyData,
                               corporate_name: e.target.value,
                             })
-                          }
+                            setError("")
+                          }}
                           required
                         />
                       </div>
@@ -676,12 +636,13 @@ export default function CheckoutPage({
                         <Input
                           id="badge"
                           value={newCompanyData.badge}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setNewCompanyData({
                               ...newCompanyData,
                               badge: e.target.value,
                             })
-                          }
+                            setError("")
+                          }}
                           required
                         />
                       </div>
@@ -691,12 +652,13 @@ export default function CheckoutPage({
                           id="email"
                           type="email"
                           value={newCompanyData.email}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setNewCompanyData({
                               ...newCompanyData,
                               email: e.target.value,
                             })
-                          }
+                            setError("")
+                          }}
                           required
                         />
                       </div>
@@ -708,12 +670,13 @@ export default function CheckoutPage({
                         <Input
                           id="phone"
                           value={newCompanyData.phone}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setNewCompanyData({
                               ...newCompanyData,
                               phone: maskPhone(e.target.value),
                             })
-                          }
+                            setError("")
+                          }}
                           required
                         />
                       </div>
@@ -724,12 +687,13 @@ export default function CheckoutPage({
                         <Input
                           id="responsible_person"
                           value={newCompanyData.responsible_person}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setNewCompanyData({
                               ...newCompanyData,
                               responsible_person: e.target.value,
                             })
-                          }
+                            setError("")
+                          }}
                           required
                         />
                       </div>
@@ -741,12 +705,13 @@ export default function CheckoutPage({
                         <Input
                           id="zip_code"
                           value={newCompanyData.zip_code}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setNewCompanyData({
                               ...newCompanyData,
                               zip_code: maskCEP(e.target.value),
                             })
-                          }
+                            setError("")
+                          }}
                           required
                         />
                       </div>
@@ -755,12 +720,13 @@ export default function CheckoutPage({
                         <Input
                           id="address"
                           value={newCompanyData.address}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setNewCompanyData({
                               ...newCompanyData,
                               address: e.target.value,
                             })
-                          }
+                            setError("")
+                          }}
                           required
                         />
                       </div>
@@ -772,12 +738,13 @@ export default function CheckoutPage({
                         <Input
                           id="address_number"
                           value={newCompanyData.address_number}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setNewCompanyData({
                               ...newCompanyData,
                               address_number: e.target.value,
                             })
-                          }
+                            setError("")
+                          }}
                           required
                         />
                       </div>
@@ -786,12 +753,13 @@ export default function CheckoutPage({
                         <Input
                           id="address_complement"
                           value={newCompanyData.address_complement}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setNewCompanyData({
                               ...newCompanyData,
                               address_complement: e.target.value,
                             })
-                          }
+                            setError("")
+                          }}
                         />
                       </div>
                     </div>
@@ -801,18 +769,20 @@ export default function CheckoutPage({
                       <Input
                         id="neighborhood"
                         value={newCompanyData.neighborhood}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setNewCompanyData({
                             ...newCompanyData,
                             neighborhood: e.target.value,
                           })
-                        }
+                          setError("")
+                        }}
                         required
                       />
                     </div>
 
                     <div className="mt-4">
                       <LocationSelector
+                        key={`company-${newCompanyData.stateCode}-${newCompanyData.city}`}
                         countryCode={newCompanyData.countryCode}
                         stateCode={newCompanyData.stateCode}
                         cityName={newCompanyData.city}
@@ -876,6 +846,10 @@ export default function CheckoutPage({
                                 name="name"
                                 value={guestData.name}
                                 onChange={(e) => handleChange(index, e)}
+                                disabled={index === 0}
+                                className={
+                                  index === 0 ? "bg-gray-50 opacity-80" : ""
+                                }
                                 required
                               />
                             </div>
@@ -905,12 +879,13 @@ export default function CheckoutPage({
                                 value={guestData.cpf_number}
                                 onChange={(e) => handleChange(index, e)}
                                 placeholder="000.000.000-00"
-                                required
+                                disabled={false}
                                 className={
                                   guestErrors[index]?.cpf_number
                                     ? "border-red-500"
                                     : ""
                                 }
+                                required
                               />
                               {guestErrors[index]?.cpf_number && (
                                 <p className="text-red-500 text-xs mt-1">
@@ -986,6 +961,10 @@ export default function CheckoutPage({
                                 type="email"
                                 value={guestData.email}
                                 onChange={(e) => handleChange(index, e)}
+                                disabled={index === 0}
+                                className={
+                                  index === 0 ? "bg-gray-50 opacity-80" : ""
+                                }
                                 required
                               />
                             </div>
@@ -1049,6 +1028,7 @@ export default function CheckoutPage({
                           </div>
                           <div className="mt-4">
                             <LocationSelector
+                              key={`guest-${index}-${guestData.stateCode}-${guestData.city}`}
                               countryCode={guestData.countryCode}
                               stateCode={guestData.stateCode}
                               cityName={guestData.city}
@@ -1371,6 +1351,13 @@ export default function CheckoutPage({
                                 currency: "BRL",
                               }).format(discountAmount)}
                             </span>
+                          </div>
+                        )}
+
+                        {isAssociate && (
+                          <div className="flex justify-between text-sm text-green-600 font-medium">
+                            <span>Preço Especial Associado</span>
+                            <span>Já aplicado</span>
                           </div>
                         )}
                         <Separator />

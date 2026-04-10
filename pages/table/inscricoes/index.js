@@ -1,11 +1,13 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import useSWR from "swr"
-import { Hotel, Calendar, Users, Loader2, Search } from "lucide-react"
+import { Hotel, Calendar, Users, Loader2, Search, Plus } from "lucide-react"
 import TableLayout from "@/components/layout/TableLayout"
 import ErrorDialog from "@/components/ui/ErrorDialog"
 import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -90,7 +92,15 @@ export default function RegistrationsTable() {
     <TableLayout>
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Inscrições</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-bold text-gray-900">Inscrições</h2>
+            <Link href="/table/inscricoes/adicionar">
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 h-8">
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar
+              </Button>
+            </Link>
+          </div>
           <p className="text-sm text-gray-500">
             Gerencie todas as inscrições realizadas no evento.
           </p>

@@ -248,25 +248,32 @@ export default function RegistrationPage({ hotels, discounts }) {
                         </div>
 
                         <div className="flex flex-wrap gap-2">
-                          {discounts.map((discount) => (
-                            <div
-                              key={discount.id}
-                              className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-2 rounded-full text-xs"
-                            >
-                              <span className="font-medium">
-                                {discount.name}:
-                              </span>
-                              <span className="font-bold">
-                                {new Intl.NumberFormat("pt-BR", {
-                                  style: "currency",
-                                  currency: "BRL",
-                                }).format(
-                                  room.price_per_night *
-                                    (1 - discount.value / 100),
-                                )}
-                              </span>
-                            </div>
-                          ))}
+                          {discounts.map((discount) => {
+                            const isMemberDiscount =
+                              discount.name === "Associada"
+                            const displayPrice =
+                              isMemberDiscount && room.member_price_per_night
+                                ? room.member_price_per_night
+                                : room.price_per_night *
+                                  (1 - discount.value / 100)
+
+                            return (
+                              <div
+                                key={discount.id}
+                                className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-2 rounded-full text-xs"
+                              >
+                                <span className="font-medium">
+                                  {discount.name}:
+                                </span>
+                                <span className="font-bold">
+                                  {new Intl.NumberFormat("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                  }).format(displayPrice)}
+                                </span>
+                              </div>
+                            )
+                          })}
                         </div>
                       </div>
                     </div>

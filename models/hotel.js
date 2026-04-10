@@ -372,6 +372,7 @@ async function getAllActiveHotels() {
             json_build_object(
               'id', r.id,
               'price_per_night', r.price_per_night,
+              'member_price_per_night', r.member_price_per_night,
               'available_rooms', r.available_rooms,
               'room_type', rt.name,
               'room_type_description', rt.description,

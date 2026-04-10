@@ -32,6 +32,7 @@ export function AddRoomDialog({
   const [roomTypeId, setRoomTypeId] = useState("")
   const [roomCategoryId, setRoomCategoryId] = useState("")
   const [pricePerNight, setPricePerNight] = useState("")
+  const [memberPricePerNight, setMemberPricePerNight] = useState("")
   const [totalRooms, setTotalRooms] = useState("")
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
@@ -99,6 +100,7 @@ export function AddRoomDialog({
         room_type_id: roomTypeId,
         room_category_id: roomCategoryId,
         price_per_night: pricePerNight,
+        member_price_per_night: memberPricePerNight,
         total_rooms: totalRooms,
         name,
         description,
@@ -115,6 +117,7 @@ export function AddRoomDialog({
       setRoomTypeId("")
       setRoomCategoryId("")
       setPricePerNight("")
+      setMemberPricePerNight("")
       setTotalRooms("")
       setName("")
       setDescription("")
@@ -182,13 +185,25 @@ export function AddRoomDialog({
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="price" className="text-right">
-                    Preço
+                    Preço Padrão
                   </Label>
                   <Input
                     id="price"
                     type="number"
                     value={pricePerNight}
                     onChange={(e) => setPricePerNight(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="member-price" className="text-right">
+                    Preço Associado
+                  </Label>
+                  <Input
+                    id="member-price"
+                    type="number"
+                    value={memberPricePerNight}
+                    onChange={(e) => setMemberPricePerNight(e.target.value)}
                     className="col-span-3"
                   />
                 </div>

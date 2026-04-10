@@ -37,14 +37,15 @@ async function create(roomInputValues, userId) {
       name,
       description,
       photos,
+      member_price_per_night = 0,
     } = roomInputValues
 
     const results = await database.query({
       text: `
         INSERT INTO
-          "rooms" (user_id, hotel_id, room_type_id, room_category_id, price_per_night, total_rooms, available_rooms, blocked_rooms, name, description, photos)
+          "rooms" (user_id, hotel_id, room_type_id, room_category_id, price_per_night, member_price_per_night, total_rooms, available_rooms, blocked_rooms, name, description, photos)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING
           *
       `,
@@ -54,6 +55,7 @@ async function create(roomInputValues, userId) {
         room_type_id,
         room_category_id,
         price_per_night,
+        member_price_per_night,
         total_rooms,
         available_rooms,
         blocked_rooms,
@@ -77,6 +79,7 @@ async function findOneById(roomId) {
       text: `
         SELECT 
           r.*,
+          r.member_price_per_night,
           h.name as hotel_name,
           h.check_in_date as hotel_check_in_date,
           h.check_out_date as hotel_check_out_date,
@@ -158,6 +161,7 @@ async function findAllByUserId(userId) {
         room_type_id,
         room_category_id,
         price_per_night,
+        member_price_per_night,
         total_rooms,
         available_rooms,
         blocked_rooms,
@@ -193,12 +197,15 @@ async function findAllByHotelId(hotelId, userId) {
         r.room_type_id,
         r.room_category_id,
         r.price_per_night,
+        r.member_price_per_night,
         r.total_rooms,
         r.available_rooms,
         r.blocked_rooms,
         r.name,
         r.description,
         r.photos,
+        rc.max_adults,
+        rc.max_children,
         r.created_at,
         r.updated_at
       FROM 
@@ -277,6 +284,7 @@ async function update(roomId, roomInputNewValues, userId) {
       room_type_id,
       room_category_id,
       price_per_night,
+      member_price_per_night,
       total_rooms,
       available_rooms,
       blocked_rooms,
@@ -291,12 +299,13 @@ async function update(roomId, roomInputNewValues, userId) {
           room_type_id = $3,
           room_category_id = $4,
           price_per_night = $5,
-          total_rooms = $6,
-          available_rooms = $7,
-          blocked_rooms = $8,
-          name = $9,
-          description = $10,
-          photos = $11,
+          member_price_per_night = $6,
+          total_rooms = $7,
+          available_rooms = $8,
+          blocked_rooms = $9,
+          name = $10,
+          description = $11,
+          photos = $12,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
@@ -309,6 +318,7 @@ async function update(roomId, roomInputNewValues, userId) {
         room_type_id,
         room_category_id,
         price_per_night,
+        member_price_per_night,
         total_rooms,
         available_rooms,
         blocked_rooms,
