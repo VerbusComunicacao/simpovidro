@@ -206,10 +206,12 @@ async function findAllByHotelId(hotelId, userId) {
         r.photos,
         rc.max_adults,
         rc.max_children,
+        h.check_in_date as hotel_check_in_date,
         r.created_at,
         r.updated_at
       FROM 
         "rooms" r
+      JOIN "hotels" h ON r.hotel_id = h.id
       JOIN "room-types" rt ON r.room_type_id = rt.id
       JOIN "room-categories" rc ON r.room_category_id = rc.id
       WHERE 

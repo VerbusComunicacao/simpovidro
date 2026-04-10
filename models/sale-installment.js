@@ -125,21 +125,29 @@ function generateInstallmentDates(count, eventDate) {
   const dates = []
   const today = Temporal.Now.plainDateISO()
 
-  for (let i = 0; i < count; i++) {
-    let dueDate
-
-    if (i < count - 1) {
-      // Intermediate installments: last day of the month
-      // i = 0 is the current month
-      const monthDate = today.add({ months: i })
-      dueDate = monthDate.with({ day: monthDate.daysInMonth })
-    } else {
-      // Last installment: 5 days before the event
-      dueDate = eventDate.subtract({ days: 5 })
-    }
-
-    dates.push(dueDate.toString())
+  if (count <= 1) {
+    // Only one installment: 5 days after registration
+    // We don't cap it to 5 days before the event here because validation should happen elsewhere
+    // but typically a sale wouldn't be allowed if it's too close to the event.
+    dates.push(today.add({ days: 5 }).toString())
+    return dates
   }
+
+  // First installment: 5 days after registration
+  dates.push(today.add({ days: 5 }).toString())
+
+  // Intermediate installments: end of each month starting from the month AFTER today
+  // until we reach the month before the last installment.
+  // Number of intermediates to add = count - 2
+  for (let i = 1; i < count - 1; i++) {
+    const monthDate = today.add({ months: i })
+    const lastDay = monthDate.with({ day: monthDate.daysInMonth })
+    dates.push(lastDay.toString())
+  }
+
+  // Last installment: 5 days before the event
+  dates.push(eventDate.subtract({ days: 5 }).toString())
+
   return dates
 }
 

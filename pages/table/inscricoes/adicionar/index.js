@@ -87,7 +87,11 @@ export default function AdminAddRegistrationPage() {
       const res = await fetch("/api/v1/hotels/active")
       if (res.ok) {
         const data = await res.json()
-        setHotels(data.hotels || [])
+        const activeHotels = data.hotels || []
+        setHotels(activeHotels)
+        if (activeHotels.length > 0) {
+          setSelectedHotelId(activeHotels[0].id)
+        }
       }
     } catch (err) {
       console.error(err)
@@ -211,6 +215,7 @@ export default function AdminAddRegistrationPage() {
     if (selectedGuests.length === 0) {
       setError("É necessário selecionar pelo menos um hóspede.")
       setIsErrorDialogOpen(true)
+      setLoading(false)
       return
     }
 
@@ -223,6 +228,7 @@ export default function AdminAddRegistrationPage() {
     if (!validation.isValid) {
       setError(validation.message)
       setIsErrorDialogOpen(true)
+      setLoading(false)
       return
     }
 
@@ -297,6 +303,13 @@ export default function AdminAddRegistrationPage() {
       </Button>
     </Link>
   )
+
+  // Prevent Submit on Enter for search fields
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+    }
+  }
 
   if (initialLoading) {
     return (
@@ -410,6 +423,7 @@ export default function AdminAddRegistrationPage() {
                         className="pl-9 h-9 border-gray-200"
                         value={companySearchTerm}
                         onChange={(e) => setCompanySearchTerm(e.target.value)}
+                        onKeyDown={handleKeyDown}
                       />
 
                       {/* Resultados da Busca de Empresa */}
@@ -521,6 +535,7 @@ export default function AdminAddRegistrationPage() {
                       className="pl-10 h-10 border-gray-200"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyDown={handleKeyDown}
                     />
 
                     {/* Resultados da Busca */}

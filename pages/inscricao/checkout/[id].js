@@ -1449,14 +1449,16 @@ export default function CheckoutPage({
                                 por parcela
                               </span>
                             </div>
-                            <p className="text-xs text-blue-500 italic">
-                              * Parcelamento automático sem juros até a data do
-                              evento (
-                              {new Date(
-                                room.hotel_check_in_date,
-                              ).toLocaleDateString("pt-BR")}
-                              )
-                            </p>
+                            <div className="pt-2 border-t border-blue-100 flex flex-col gap-1">
+                              <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">
+                                Condições de Vencimento:
+                              </p>
+                              <p className="text-[11px] text-blue-600 leading-tight">
+                                • 1ª parcela: 5 dias após a inscrição<br />
+                                • Última parcela: 5 dias antes do check-in ({new Date(new Date(room.hotel_check_in_date).getTime() - 5 * 24 * 60 * 60 * 1000).toLocaleDateString("pt-BR")})<br />
+                                • Intermediárias: no último dia de cada mês
+                              </p>
+                            </div>
                           </div>
                         )}
                       </div>

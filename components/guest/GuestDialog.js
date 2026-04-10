@@ -169,6 +169,7 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    e.stopPropagation() // Prevent bubbling up to parent forms
     setError("")
     setAction("")
     setAction("")
