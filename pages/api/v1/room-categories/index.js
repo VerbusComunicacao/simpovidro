@@ -13,9 +13,7 @@ export default router.handler(controller.errorHandlers)
 
 async function getHandler(request, response) {
   // Busca room categories do usuário (filtro no banco)
-  const roomCategories = await roomCategory.findAllByUserId(
-    request.context.user.id,
-  )
+  const roomCategories = await roomCategory.findAll()
 
   // Aplica filtros de autorização
   const secureRoomCategories = authorization.filterOutput(

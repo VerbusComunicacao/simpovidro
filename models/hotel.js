@@ -106,40 +106,7 @@ async function findOneById(hotelId) {
   }
 }
 
-async function findOneByIdAndUserId(hotelId, userId) {
-  validateUUID(hotelId)
 
-  const results = await database.query({
-    text: `
-      SELECT 
-        h.*,
-        COALESCE(
-          (
-            SELECT json_agg(pp.* ORDER BY pp.max_age ASC)
-            FROM "price_policies" pp
-            WHERE pp.hotel_id = h.id
-          ),
-          '[]'::json
-        ) as price_policies
-      FROM 
-        hotels h
-      WHERE 
-        h.id = $1 AND h.user_id = $2
-      LIMIT
-        1
-      ;`,
-    values: [hotelId, userId],
-  })
-
-  if (results.rowCount === 0) {
-    throw new NotFoundError({
-      message: "O ID do hotel informado não foi encontrado no sistema.",
-      action: "Verifique se o ID está digitado corretamente.",
-    })
-  }
-
-  return results.rows[0]
-}
 
 async function update(hotelId, hotelInputNewValues, userId) {
   if (Object.keys(hotelInputNewValues).length === 0) {
@@ -262,13 +229,13 @@ async function deleteById(hotelId, userId) {
   await database.query({
     text: `
     DELETE FROM hotels
-    WHERE user_id = $1 and id = $2
+    WHERE id = $1
     `,
-    values: [userId, hotelId],
+    values: [hotelId],
   })
 }
 
-async function findAllByUserId(userId) {
+async function findAll() {
   const results = await database.query({
     text: `
       SELECT 
@@ -283,33 +250,29 @@ async function findAllByUserId(userId) {
         ) as price_policies
       FROM 
         hotels h
-      WHERE 
-        h.user_id = $1
       ORDER BY 
         h.created_at DESC
     `,
-    values: [userId],
   })
 
   return results.rows
 }
 
-async function verifyIHotelAlreadyExists(name, userId) {
+async function verifyIHotelAlreadyExists(name) {
   const results = await database.query({
     text: `
       SELECT *
       FROM hotels
-      WHERE user_id = $1
-        AND name = $2
+      WHERE name = $1
       LIMIT 1
     `,
-    values: [userId, name],
+    values: [name],
   })
 
   if (results.rowCount > 0) {
     throw new ConflictError({
-      message: "Já existe um hotel cadastrado com esse nome para este usuário.",
-      action: "Escolha outro nome ou edite o hotel existente.",
+      message: "Já existe um hotel cadastrado com esse nome no sistema.",
+      action: "O nome do hotel deve ser único globalmente. Escolha outro nome ou edite o hotel existente.",
     })
   }
 }
@@ -432,8 +395,7 @@ async function syncPricePolicies(hotelId, policies) {
 const hotel = {
   create,
   findOneById,
-  findOneByIdAndUserId,
-  findAllByUserId,
+  findAll,
   update,
   deleteById,
   activate,

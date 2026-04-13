@@ -131,7 +131,7 @@ describe("POST /api/v1/room-categories", () => {
         name: "ConflictError",
         status_code: 409,
         message:
-          "Já existe uma categoria de quarto cadastrada com esse nome para este usuário.",
+          "Já existe uma categoria de quarto cadastrada com esse nome.",
         action: "Escolha outro nome ou edite a categoria de quarto existente.",
       })
     })

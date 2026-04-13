@@ -93,7 +93,7 @@ describe("GET /api/v1/rooms/[id]", () => {
       expect(room).toHaveProperty("updated_at")
     })
 
-    test("Can't access room from different user", async () => {
+    test("Can access room from different user as admin", async () => {
       const user1 = await orchestrator.createUser()
       await orchestrator.activateUser(user1.id)
       await orchestrator.setUserFeatures(user1.id, ["create:content"])
@@ -117,7 +117,9 @@ describe("GET /api/v1/rooms/[id]", () => {
         },
       )
 
-      expect(response.status).toBe(404)
+      expect(response.status).toBe(200)
+      const body = await response.json()
+      expect(body.id).toBe(room.id)
     })
 
     test("Invalid UUID format", async () => {

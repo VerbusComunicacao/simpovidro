@@ -32,7 +32,7 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
         {
           method: "PATCH",
           body: JSON.stringify({
-            name: "Updated Category",
+            name: "Updated Category Forbidden",
             max_adults: 3,
             max_children: 2,
           }),
@@ -58,7 +58,7 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
         {
           method: "PATCH",
           body: JSON.stringify({
-            name: "Updated Category",
+            name: "Updated Category NotFound",
           }),
           headers: {
             "Content-Type": "application/json",
@@ -81,7 +81,7 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
       const created = await orchestrator.createRoomCategory(createdUser.id, {
-        name: "Original Category",
+        name: "Blank Category Test",
         max_adults: 2,
         max_children: 1,
       })
@@ -119,7 +119,7 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
       const created = await orchestrator.createRoomCategory(createdUser.id, {
-        name: "Original Category",
+        name: "Success Update Category",
         max_adults: 2,
         max_children: 1,
       })
@@ -129,7 +129,7 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
         {
           method: "PATCH",
           body: JSON.stringify({
-            name: "Updated Category",
+            name: "Updated Category Success",
             max_adults: 4,
             max_children: 3,
           }),
@@ -145,7 +145,7 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
       const updated = await response.json()
       expect(updated).toEqual({
         id: created.id,
-        name: "Updated Category",
+        name: "Updated Category Success",
         max_adults: 4,
         max_children: 3,
         user_id: createdUser.id,
@@ -192,8 +192,7 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
       expect(errorBody).toEqual({
         name: "ConflictError",
         status_code: 409,
-        message:
-          "Já existe uma categoria de quarto cadastrada com esse nome para este usuário.",
+        message: "Já existe uma categoria de quarto cadastrada com esse nome.",
         action: "Escolha outro nome ou edite a categoria de quarto existente.",
       })
     })
@@ -206,7 +205,7 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
       const created = await orchestrator.createRoomCategory(createdUser.id, {
-        name: "Category Original",
+        name: "Same Name Update Category",
         max_adults: 2,
         max_children: 1,
       })
@@ -216,7 +215,7 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
         {
           method: "PATCH",
           body: JSON.stringify({
-            name: "Category Original",
+            name: "Same Name Update Category",
             max_adults: 3,
             max_children: 2,
           }),
@@ -230,7 +229,7 @@ describe("PATCH /api/v1/room-categories/[id]", () => {
       expect(response.status).toBe(200)
 
       const updated = await response.json()
-      expect(updated.name).toBe("Category Original")
+      expect(updated.name).toBe("Same Name Update Category")
       expect(updated.max_adults).toBe(3)
       expect(updated.max_children).toBe(2)
     })

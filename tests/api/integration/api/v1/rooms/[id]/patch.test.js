@@ -236,7 +236,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         },
       )
 
-      expect(response.status).toBe(404)
+      expect(response.status).toBe(200)
     })
 
     test("Only total_rooms provided adjusts available", async () => {

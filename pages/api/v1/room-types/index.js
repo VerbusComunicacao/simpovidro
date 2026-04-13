@@ -12,8 +12,7 @@ router.post(controller.canRequest("create:content"), postHandler)
 export default router.handler(controller.errorHandlers)
 
 async function getHandler(request, response) {
-  // Busca room types do usuário (filtro no banco)
-  const roomTypes = await roomType.findAllByUserId(request.context.user.id)
+  const roomTypes = await roomType.findAll()
 
   // Aplica filtros de autorização
   const secureRoomTypes = authorization.filterOutput(

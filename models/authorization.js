@@ -24,12 +24,14 @@ function can(user, feature, resource) {
 
     case "update:content":
     case "read:content":
-    case "delete:guest":
     case "delete:content":
+      return true
+      
+    case "delete:guest":
       if (!resource) return true
       return (
         (resource?.user_id && user.id === resource.user_id) ||
-        user.features.includes("update:content:others")
+        user.features.includes("delete:guest:others")
       )
   }
 
@@ -97,13 +99,8 @@ function filterOutput(user, feature, output) {
   if (feature === "read:content" || feature === "read:user") {
     const clonedOutput = { ...output }
 
-    // Se o usuário não é o dono do recurso, remove campos sensíveis
-    const isOwner =
-      feature === "read:user"
-        ? user.id === output.id
-        : user.id === output.user_id
-
-    if (!isOwner) {
+    // Se for listagem de usuário e ele não é o dono do recurso, remove campos sensíveis
+    if (feature === "read:user" && user.id !== output.id) {
       // Remove campos que só o dono deve ver
       delete clonedOutput.user_id
       delete clonedOutput.created_at

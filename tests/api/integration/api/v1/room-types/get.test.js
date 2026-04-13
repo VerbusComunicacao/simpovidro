@@ -31,10 +31,28 @@ describe("GET /api/v1/room-types", () => {
       expect(response.status).toBe(403)
     })
 
-    test("List user's own room-types", async () => {
+    test("List empty when user has no room-types", async () => {
       const createdUser = await orchestrator.createUser()
       await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, ["read:content"])
 
+      const sessionObject = await orchestrator.createSession(createdUser.id)
+
+      const response = await fetch("http://localhost:3000/api/v1/room-types", {
+        headers: {
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+      })
+
+      expect(response.status).toBe(200)
+
+      const list = await response.json()
+      expect(list).toHaveLength(0)
+    })
+
+    test("List initial 3 room-types", async () => {
+      const createdUser = await orchestrator.createUser()
+      await orchestrator.activateUser(createdUser.id)
       await orchestrator.setUserFeatures(createdUser.id, ["read:content"])
 
       const sessionObject = await orchestrator.createSession(createdUser.id)
@@ -57,31 +75,13 @@ describe("GET /api/v1/room-types", () => {
 
       const list = await response.json()
       expect(list).toHaveLength(3)
+      // The newest ones are at the top
       expect(list[0].name).toBe("RoomType 3")
       expect(list[1].name).toBe("RoomType 2")
       expect(list[2].name).toBe("RoomType 1")
     })
 
-    test("List empty when user has no room-types", async () => {
-      const createdUser = await orchestrator.createUser()
-      await orchestrator.activateUser(createdUser.id)
-      await orchestrator.setUserFeatures(createdUser.id, ["read:content"])
-
-      const sessionObject = await orchestrator.createSession(createdUser.id)
-
-      const response = await fetch("http://localhost:3000/api/v1/room-types", {
-        headers: {
-          Cookie: `session_id=${sessionObject.token}`,
-        },
-      })
-
-      expect(response.status).toBe(200)
-
-      const list = await response.json()
-      expect(list).toHaveLength(0)
-    })
-
-    test("Only returns user's own room-types", async () => {
+    test("Returns all room-types for any admin user", async () => {
       const user1 = await orchestrator.createUser()
       await orchestrator.activateUser(user1.id)
       await orchestrator.setUserFeatures(user1.id, ["read:content"])
@@ -100,7 +100,7 @@ describe("GET /api/v1/room-types", () => {
       // User 2 creates room-types
       await orchestrator.createRoomType(user2.id, { name: "U2 Type 1" })
 
-      // User 1 should only see their own room-types
+      // User 1 should see ALL room types
       const response1 = await fetch("http://localhost:3000/api/v1/room-types", {
         headers: {
           Cookie: `session_id=${session1.token}`,
@@ -109,10 +109,9 @@ describe("GET /api/v1/room-types", () => {
 
       expect(response1.status).toBe(200)
       const user1List = await response1.json()
-      expect(user1List).toHaveLength(2)
-      expect(user1List.every((rt) => rt.name.startsWith("U1"))).toBe(true)
+      expect(user1List).toHaveLength(6) // 3 from previous test + 3 new ones
 
-      // User 2 should only see their own room-types
+      // User 2 should see ALL room types (identical list)
       const response2 = await fetch("http://localhost:3000/api/v1/room-types", {
         headers: {
           Cookie: `session_id=${session2.token}`,
@@ -121,8 +120,11 @@ describe("GET /api/v1/room-types", () => {
 
       expect(response2.status).toBe(200)
       const user2List = await response2.json()
-      expect(user2List).toHaveLength(1)
+      expect(user2List).toHaveLength(6)
+      
+      // Ensure the newest is U2 Type 1
       expect(user2List[0].name).toBe("U2 Type 1")
+      expect(user2List[1].name).toBe("U1 Type 2")
     })
   })
 })

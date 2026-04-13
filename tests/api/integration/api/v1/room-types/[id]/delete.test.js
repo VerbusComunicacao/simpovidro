@@ -135,7 +135,14 @@ describe("DELETE /api/v1/room-types/[id]", () => {
         },
       )
 
-      expect(response.status).toBe(403)
+      expect(response.status).toBe(204)
+
+      const results = await database.query({
+        text: `SELECT * FROM "room-types" WHERE id = $1`,
+        values: [rtCreated.id],
+      })
+
+      expect(results.rowCount).toBe(0)
     })
   })
 })

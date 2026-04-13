@@ -32,7 +32,7 @@ describe("PATCH /api/v1/room-types/[id]", () => {
         {
           method: "PATCH",
           body: JSON.stringify({
-            name: "Updated Type",
+            name: "Updated Type Forbidden",
             description: "Updated description",
           }),
           headers: {
@@ -57,7 +57,7 @@ describe("PATCH /api/v1/room-types/[id]", () => {
         {
           method: "PATCH",
           body: JSON.stringify({
-            name: "Updated Type",
+            name: "Updated Type NotFound",
           }),
           headers: {
             "Content-Type": "application/json",
@@ -81,7 +81,7 @@ describe("PATCH /api/v1/room-types/[id]", () => {
 
       // First create a room-type
       const created = await orchestrator.createRoomType(createdUser.id, {
-        name: "Original Type",
+        name: "Blank Type Test",
         description: "D1",
       })
 
@@ -119,7 +119,7 @@ describe("PATCH /api/v1/room-types/[id]", () => {
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
       const created = await orchestrator.createRoomType(createdUser.id, {
-        name: "Original Type",
+        name: "Original Success Type",
         description: "D1",
       })
 
@@ -128,7 +128,7 @@ describe("PATCH /api/v1/room-types/[id]", () => {
         {
           method: "PATCH",
           body: JSON.stringify({
-            name: "Updated Type",
+            name: "Updated Success Type",
             description: "D2",
           }),
           headers: {
@@ -143,7 +143,7 @@ describe("PATCH /api/v1/room-types/[id]", () => {
       const updated = await response.json()
       expect(updated).toEqual({
         id: created.id,
-        name: "Updated Type",
+        name: "Updated Success Type",
         description: "D2",
         user_id: createdUser.id,
         created_at: created.created_at.toISOString(),
@@ -191,8 +191,8 @@ describe("PATCH /api/v1/room-types/[id]", () => {
         name: "ConflictError",
         status_code: 409,
         message:
-          "Já existe um tipo de quarto cadastrado com esse nome para este usuário.",
-        action: "Escolha outro nome ou edite o tipo de quarto existente.",
+          "Já existe um tipo de quarto cadastrado com esse nome no sistema.",
+        action: "O nome deve ser globalmente único. Escolha outro nome ou edite o tipo de quarto existente.",
       })
     })
 
@@ -207,7 +207,7 @@ describe("PATCH /api/v1/room-types/[id]", () => {
       const sessionObject = await orchestrator.createSession(createdUser.id)
 
       const created = await orchestrator.createRoomType(createdUser.id, {
-        name: "Type Original",
+        name: "Type Same Name Test",
         description: "D1",
       })
 
@@ -216,7 +216,7 @@ describe("PATCH /api/v1/room-types/[id]", () => {
         {
           method: "PATCH",
           body: JSON.stringify({
-            name: "Type Original",
+            name: "Type Same Name Test",
             description: "D2",
           }),
           headers: {
@@ -229,7 +229,7 @@ describe("PATCH /api/v1/room-types/[id]", () => {
       expect(response.status).toBe(200)
 
       const updated = await response.json()
-      expect(updated.name).toBe("Type Original")
+      expect(updated.name).toBe("Type Same Name Test")
       expect(updated.description).toBe("D2")
     })
   })

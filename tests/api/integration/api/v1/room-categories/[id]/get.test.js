@@ -88,7 +88,7 @@ describe("GET /api/v1/room-categories/[id]", () => {
       expect(roomCategory).toHaveProperty("updated_at")
     })
 
-    test("Can't access room-category from different user", async () => {
+    test("Can access room-category from different user", async () => {
       const user1 = await orchestrator.createUser()
       await orchestrator.activateUser(user1.id)
       await orchestrator.setUserFeatures(user1.id, ["create:content"])
@@ -112,7 +112,7 @@ describe("GET /api/v1/room-categories/[id]", () => {
         },
       )
 
-      expect(response.status).toBe(404)
+      expect(response.status).toBe(200)
     })
 
     test("Invalid UUID format", async () => {

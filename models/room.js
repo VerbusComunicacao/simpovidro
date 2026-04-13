@@ -122,37 +122,9 @@ async function findOneById(roomId) {
   }
 }
 
-async function findOneByIdAndUserId(roomId, userId) {
-  validateUUID(roomId)
-  validateUUID(userId)
 
-  const results = await database.query({
-    text: `
-      SELECT 
-        * 
-      FROM 
-        "rooms"
-      WHERE 
-        id = $1 AND user_id = $2
-      LIMIT
-        1
-      ;`,
-    values: [roomId, userId],
-  })
 
-  if (results.rowCount === 0) {
-    throw new NotFoundError({
-      message: "O ID do quarto informado não foi encontrado no sistema.",
-      action: "Verifique se o ID está digitado corretamente.",
-    })
-  }
-
-  return results.rows[0]
-}
-
-async function findAllByUserId(userId) {
-  validateUUID(userId)
-
+async function findAll() {
   const results = await database.query({
     text: `
       SELECT 
@@ -172,20 +144,16 @@ async function findAllByUserId(userId) {
         updated_at
       FROM 
         "rooms"
-      WHERE 
-        user_id = $1
       ORDER BY 
         created_at DESC
     `,
-    values: [userId],
   })
 
   return results.rows
 }
 
-async function findAllByHotelId(hotelId, userId) {
+async function findAllByHotelId(hotelId) {
   validateUUID(hotelId)
-  validateUUID(userId)
 
   const results = await database.query({
     text: `
@@ -215,11 +183,11 @@ async function findAllByHotelId(hotelId, userId) {
       JOIN "room-types" rt ON r.room_type_id = rt.id
       JOIN "room-categories" rc ON r.room_category_id = rc.id
       WHERE 
-        r.hotel_id = $1 AND r.user_id = $2
+        r.hotel_id = $1
       ORDER BY 
         r.created_at DESC
     `,
-    values: [hotelId, userId],
+    values: [hotelId],
   })
 
   return results.rows
@@ -398,9 +366,9 @@ async function deleteById(roomId, userId) {
   await database.query({
     text: `
     DELETE FROM "rooms"
-    WHERE user_id = $1 and id = $2
+    WHERE id = $1
     `,
-    values: [userId, roomId],
+    values: [roomId],
   })
 }
 
@@ -408,10 +376,10 @@ async function verifyHotelBelongsToUser(hotelId, userId) {
   const results = await database.query({
     text: `
       SELECT id FROM hotels
-      WHERE id = $1 AND user_id = $2
+      WHERE id = $1
       LIMIT 1
     `,
-    values: [hotelId, userId],
+    values: [hotelId],
   })
 
   if (results.rowCount === 0) {
@@ -426,10 +394,10 @@ async function verifyRoomTypeBelongsToUser(roomTypeId, userId) {
   const results = await database.query({
     text: `
       SELECT id FROM "room-types"
-      WHERE id = $1 AND user_id = $2
+      WHERE id = $1
       LIMIT 1
     `,
-    values: [roomTypeId, userId],
+    values: [roomTypeId],
   })
 
   if (results.rowCount === 0) {
@@ -444,10 +412,10 @@ async function verifyRoomCategoryBelongsToUser(roomCategoryId, userId) {
   const results = await database.query({
     text: `
       SELECT id FROM "room-categories"
-      WHERE id = $1 AND user_id = $2
+      WHERE id = $1
       LIMIT 1
     `,
-    values: [roomCategoryId, userId],
+    values: [roomCategoryId],
   })
 
   if (results.rowCount === 0) {
@@ -461,8 +429,7 @@ async function verifyRoomCategoryBelongsToUser(roomCategoryId, userId) {
 const room = {
   create,
   findOneById,
-  findOneByIdAndUserId,
-  findAllByUserId,
+  findAll,
   findAllByHotelId,
   update,
   deleteById,

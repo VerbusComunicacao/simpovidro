@@ -14,8 +14,8 @@ router.post(controller.canRequest("create:content"), postHandler)
 export default router.handler(controller.errorHandlers)
 
 async function getHandler(request, response) {
-  // Busca hotéis do usuário (filtro no banco)
-  const hotels = await hotel.findAllByUserId(request.context.user.id)
+  // Busca todos os hotéis (sistema unificado)
+  const hotels = await hotel.findAll()
 
   // Aplica filtros de autorização
   const secureHotels = authorization.filterOutput(

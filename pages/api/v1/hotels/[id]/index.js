@@ -15,11 +15,8 @@ export default router.handler(controller.errorHandlers)
 async function getHandler(request, response) {
   const { id } = request.query
 
-  // Busca hotel com filtro de segurança (só hotéis do usuário)
-  const hotelFound = await hotel.findOneByIdAndUserId(
-    id,
-    request.context.user.id,
-  )
+  // Busca hotel (acesso global unificado)
+  const hotelFound = await hotel.findOneById(id)
 
   // Aplica filtros de autorização
   const secureHotel = authorization.filterOutput(

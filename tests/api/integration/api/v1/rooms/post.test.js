@@ -223,7 +223,7 @@ describe("POST /api/v1/rooms", () => {
         },
       })
 
-      expect(response.status).toBe(404)
+      expect(response.status).toBe(201)
     })
   })
 })
