@@ -234,6 +234,7 @@ export default function HotelPage() {
           hotelId={hotelId}
           roomTypes={roomTypes}
           roomCategories={roomCategories}
+          pricePolicies={hotel.price_policies}
           onRoomAdded={mutateRooms}
         >
           <Button>
@@ -280,7 +281,11 @@ export default function HotelPage() {
               {hotel.price_policies && hotel.price_policies.length > 0 ? (
                 hotel.price_policies.map((policy, index) => (
                   <li key={index} className="text-sm text-gray-600">
-                    • {policy.description || `Até ${policy.max_age} anos`}
+                    • {policy.description || `Até ${policy.max_age} anos`} (
+                    {policy.use_percentage !== false
+                      ? `${policy.percentage}%`
+                      : "Preço Fixo"}
+                    )
                   </li>
                 ))
               ) : (
@@ -302,6 +307,7 @@ export default function HotelPage() {
                 hotelId={hotelId}
                 roomTypes={roomTypes}
                 roomCategories={roomCategories}
+                pricePolicies={hotel.price_policies}
                 onRoomAdded={mutateRooms}
               >
                 <Button variant="outline">
@@ -314,11 +320,21 @@ export default function HotelPage() {
             {!rooms && !roomsError && <div>Carregando quartos...</div>}
             {rooms && rooms.length === 0 && renderEmptyState()}
             {rooms && rooms.length > 0 && (
-              <div className="grid grid-cols-[repeat(7,minmax(0,1fr))_auto] gap-4 font-medium border-b pb-2 mb-2">
+              <div
+                className="grid gap-4 text-sm border-b pb-2 mb-2"
+                style={{
+                  gridTemplateColumns: `repeat(${7 + (hotel.price_policies?.filter((p) => p.use_percentage === false).length || 0)}, minmax(0, 1fr)) auto`,
+                }}
+              >
                 <div>Tipo</div>
                 <div>Categoria</div>
                 <div>Preço</div>
                 <div>Preço Assoc.</div>
+                {hotel.price_policies
+                  ?.filter((p) => p.use_percentage === false)
+                  .map((policy) => (
+                    <div key={policy.id}>{policy.description}</div>
+                  ))}
                 <div>Total</div>
                 <div>Disponível</div>
                 <div>Bloqueado</div>
@@ -328,12 +344,27 @@ export default function HotelPage() {
             {rooms?.map((room) => (
               <div
                 key={room.id}
-                className="grid grid-cols-[repeat(7,minmax(0,1fr))_auto] gap-4 py-2 border-b items-center"
+                className="grid gap-4 py-2 border-b items-center"
+                style={{
+                  gridTemplateColumns: `repeat(${7 + (hotel.price_policies?.filter((p) => p.use_percentage === false).length || 0)}, minmax(0, 1fr)) auto`,
+                }}
               >
                 <div>{room.room_type}</div>
                 <div>{room.room_category}</div>
                 <div>R$ {room.price_per_night}</div>
                 <div>R$ {room.member_price_per_night}</div>
+                {hotel.price_policies
+                  ?.filter((p) => p.use_percentage === false)
+                  .map((policy) => {
+                    const roomPolicy = room.price_policies?.find(
+                      (rp) => rp.id === policy.id,
+                    )
+                    return (
+                      <div key={policy.id}>
+                        {roomPolicy?.price ? `R$ ${roomPolicy.price}` : "-"}
+                      </div>
+                    )
+                  })}
                 <div>{room.total_rooms}</div>
                 <div>{room.available_rooms}</div>
                 <div>{room.blocked_rooms}</div>

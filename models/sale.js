@@ -33,8 +33,18 @@ async function create(saleInputValues, externalClient) {
           rc.max_children,
           COALESCE(
             (
-              SELECT json_agg(pp.* ORDER BY pp.max_age ASC)
+              SELECT json_agg(
+                json_build_object(
+                  'id', pp.id,
+                  'max_age', pp.max_age,
+                  'description', pp.description,
+                  'use_percentage', pp.use_percentage,
+                  'percentage', pp.percentage,
+                  'price', rpp.price
+                ) ORDER BY pp.max_age ASC
+              )
               FROM "price_policies" pp
+              LEFT JOIN "room_price_policies" rpp ON pp.id = rpp.price_policy_id AND rpp.room_id = r.id
               WHERE pp.hotel_id = r.hotel_id
             ),
             '[]'::json
@@ -134,6 +144,13 @@ async function create(saleInputValues, externalClient) {
       return { guest, age }
     })
 
+    if (adultCount === 0) {
+      throw new ValidationError({
+        message: "Deve haver pelo menos um adulto (18+) por quarto.",
+        action: "Adicione um adulto à inscrição.",
+      })
+    }
+
     if (adultCount > (targetRoom.max_adults || 0)) {
       throw new ValidationError({
         message: `O número de adultos (${adultCount}) excede a capacidade máxima do quarto (${targetRoom.max_adults}).`,
@@ -178,22 +195,41 @@ async function create(saleInputValues, externalClient) {
     const policies = targetRoom.price_policies || []
 
     for (const { age } of guestAges) {
-      let percentage = 100 // Default to 100% of price
+      let guestPrice = 0
 
       if (policies.length > 0) {
+        let matchedPolicy = null
         for (const policy of policies) {
           if (age <= policy.max_age) {
-            percentage = Number(policy.percentage)
+            matchedPolicy = policy
             break
           }
         }
+
+        if (matchedPolicy) {
+          if (matchedPolicy.use_percentage) {
+            const basePrice = isMember
+              ? Number(targetRoom.member_price_per_night)
+              : Number(targetRoom.price_per_night)
+            const percentage = Number(matchedPolicy.percentage || 0)
+            guestPrice = basePrice * (percentage / 100)
+          } else {
+            // Use specific room price for this policy
+            guestPrice = Number(matchedPolicy.price || 0)
+          }
+        } else {
+          // No policy matched (adult/older child)
+          guestPrice = isMember
+            ? Number(targetRoom.member_price_per_night)
+            : Number(targetRoom.price_per_night)
+        }
+      } else {
+        // No policies at all
+        guestPrice = isMember
+          ? Number(targetRoom.member_price_per_night)
+          : Number(targetRoom.price_per_night)
       }
 
-      const basePrice = isMember
-        ? Number(targetRoom.member_price_per_night)
-        : Number(targetRoom.price_per_night)
-
-      const guestPrice = basePrice * (percentage / 100)
       calculatedTotalAmount += guestPrice
     }
 

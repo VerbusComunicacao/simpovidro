@@ -207,5 +207,70 @@ describe("POST /api/v1/hotels", () => {
 
       expect(response.status).toBe(201)
     })
+
+    test("Adiciona hotel com política de idades", async () => {
+      const user1 = await orchestrator.createUser()
+      await orchestrator.activateUser(user1.id)
+      await orchestrator.setUserFeatures(user1.id, ["create:content"])
+
+      const session = await orchestrator.createSession(user1.id)
+
+      const response = await fetch("http://localhost:3000/api/v1/hotels", {
+        method: "POST",
+        body: JSON.stringify({
+          name: "Hotel Paradise Terceiro",
+          city: "São Paulo",
+          country: "Brasil",
+          phone: "+55 1199993349",
+          state: "São Paulo",
+          address: "Av. Paraná, 1105",
+          email: "hotel@paradise.com",
+          check_in_date: "2026-01-07T20:43:12.021Z",
+          check_out_date: "2026-01-10T20:43:12.021Z",
+          price_policies: [
+            {
+              max_age: 3,
+              description: "Criança até 3 anos não pagam",
+              use_percentage: true,
+            },
+            {
+              max_age: 12,
+              description: "Criança até 12 anos não pagam",
+              use_percentage: false,
+            },
+          ],
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${session.token}`,
+        },
+      })
+
+      expect(response.status).toBe(201)
+      const hotelCreated = await response.json()
+      expect(hotelCreated.price_policies).toHaveLength(2)
+      expect(hotelCreated.price_policies).toEqual([
+        {
+          id: expect.any(String),
+          max_age: 3,
+          description: "Criança até 3 anos não pagam",
+          use_percentage: true,
+          percentage: 0,
+          hotel_id: hotelCreated.id,
+          created_at: expect.any(String),
+          updated_at: expect.any(String),
+        },
+        {
+          id: expect.any(String),
+          max_age: 12,
+          description: "Criança até 12 anos não pagam",
+          use_percentage: false,
+          percentage: 0,
+          hotel_id: hotelCreated.id,
+          created_at: expect.any(String),
+          updated_at: expect.any(String),
+        },
+      ])
+    })
   })
 })

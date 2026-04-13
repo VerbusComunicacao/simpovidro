@@ -106,8 +106,6 @@ async function findOneById(hotelId) {
   }
 }
 
-
-
 async function update(hotelId, hotelInputNewValues, userId) {
   if (Object.keys(hotelInputNewValues).length === 0) {
     throw new ValidationError({
@@ -272,7 +270,8 @@ async function verifyIHotelAlreadyExists(name) {
   if (results.rowCount > 0) {
     throw new ConflictError({
       message: "Já existe um hotel cadastrado com esse nome no sistema.",
-      action: "O nome do hotel deve ser único globalmente. Escolha outro nome ou edite o hotel existente.",
+      action:
+        "O nome do hotel deve ser único globalmente. Escolha outro nome ou edite o hotel existente.",
     })
   }
 }
@@ -365,30 +364,73 @@ async function getAllActiveHotels() {
 }
 
 async function syncPricePolicies(hotelId, policies) {
-  // 1. Delete existing
-  await database.query({
-    text: `DELETE FROM "price_policies" WHERE hotel_id = $1`,
+  // 1. Get current policies from DB to identify what to delete
+  const currentPoliciesResults = await database.query({
+    text: `SELECT id FROM "price_policies" WHERE hotel_id = $1`,
     values: [hotelId],
   })
+  const currentIds = currentPoliciesResults.rows.map((p) => p.id)
 
-  // 2. Insert new
+  const incomingIds = policies.filter((p) => p.id).map((p) => p.id)
+
+  // 2. Delete policies that are no longer present
+  const idsToDelete = currentIds.filter((id) => !incomingIds.includes(id))
+  if (idsToDelete.length > 0) {
+    await database.query({
+      text: `DELETE FROM "price_policies" WHERE id = ANY($1)`,
+      values: [idsToDelete],
+    })
+  }
+
+  // 3. Update or Insert new ones
   for (const policy of policies) {
     if (
       policy.max_age === undefined ||
       policy.max_age === "" ||
-      policy.percentage === undefined ||
-      policy.percentage === "" ||
       !policy.description
     )
       continue
 
-    await database.query({
-      text: `
-                INSERT INTO "price_policies" (hotel_id, max_age, percentage, description)
-                VALUES ($1, $2, $3, $4)
-            `,
-      values: [hotelId, policy.max_age, policy.percentage, policy.description],
-    })
+    const percentage =
+      policy.percentage !== undefined && policy.percentage !== ""
+        ? policy.percentage
+        : 0
+    const use_percentage =
+      policy.use_percentage !== undefined ? policy.use_percentage : true
+
+    if (policy.id) {
+      // Update existing
+      await database.query({
+        text: `
+                    UPDATE "price_policies" 
+                    SET max_age = $1, percentage = $2, description = $3, use_percentage = $4, updated_at = now()
+                    WHERE id = $5 AND hotel_id = $6
+                `,
+        values: [
+          policy.max_age,
+          percentage,
+          policy.description,
+          use_percentage,
+          policy.id,
+          hotelId,
+        ],
+      })
+    } else {
+      // Insert new
+      await database.query({
+        text: `
+                    INSERT INTO "price_policies" (hotel_id, max_age, percentage, description, use_percentage)
+                    VALUES ($1, $2, $3, $4, $5)
+                `,
+        values: [
+          hotelId,
+          policy.max_age,
+          percentage,
+          policy.description,
+          use_percentage,
+        ],
+      })
+    }
   }
 }
 
@@ -400,5 +442,6 @@ const hotel = {
   deleteById,
   activate,
   getAllActiveHotels,
+  syncPricePolicies,
 }
 export default hotel

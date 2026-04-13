@@ -656,7 +656,7 @@ export default function AdminAddRegistrationPage() {
                     </Select>
                   </div>
 
-                  {paymentMethod === "installments" && (
+                  {paymentMethod === "installments" && currentRoom && (
                     <div className="space-y-2 flex flex-col justify-center">
                       <Label className="text-gray-600 text-xs">
                         Número de Parcelas

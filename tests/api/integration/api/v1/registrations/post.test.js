@@ -836,5 +836,383 @@ describe("POST /api/v1/registrations", () => {
       })
       expect(saleResult.rows[0].name).toBe("Johnny Override")
     })
+    test("should apply room-specific age policy price when use_percentage is false", async () => {
+      // 1. Create Hotel with policies
+      const hotelResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/hotels`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({
+            name: "Policy Test Hotel Final",
+            city: "Florianópolis",
+            country: "Brasil",
+            check_in_date: "2026-11-01",
+            check_out_date: "2026-11-10",
+            price_policies: [
+              {
+                max_age: 3,
+                description: "Criança até 3 anos Grátis",
+                use_percentage: true,
+                percentage: 0,
+              },
+              {
+                max_age: 12,
+                description: "Criança até 12 anos Preço Fixo",
+                use_percentage: false,
+                percentage: 100,
+              },
+            ],
+          }),
+        },
+      )
+      expect(hotelResp.status).toBe(201)
+      const hotelData = await hotelResp.json()
+      expect(hotelData.price_policies).toBeDefined()
+      expect(hotelData.price_policies).toHaveLength(2)
+
+      // 2. Setup Resources (Type and Category)
+      const rtResp = await fetch(`${orchestrator.webserverUrl}/api/v1/room-types`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Cookie: `session_id=${admToken}` },
+        body: JSON.stringify({ name: "PricingRT" }),
+      })
+      expect(rtResp.status).toBe(201)
+      const rtData = await rtResp.json()
+
+      const rcResp = await fetch(`${orchestrator.webserverUrl}/api/v1/room-categories`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Cookie: `session_id=${admToken}` },
+        body: JSON.stringify({ name: "PricingRC", max_adults: 3, max_children: 2 }),
+      })
+      expect(rcResp.status).toBe(201)
+      const rcData = await rcResp.json()
+
+      // 3. Create Room with override for the 12y policy
+      const roomFinalResp = await fetch(`${orchestrator.webserverUrl}/api/v1/rooms`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Cookie: `session_id=${admToken}` },
+        body: JSON.stringify({
+          hotel_id: hotelData.id,
+          room_type_id: rtData.id,
+          room_category_id: rcData.id,
+          price_per_night: 200.0,
+          total_rooms: 10,
+          price_policies: [
+            {
+              id: hotelData.price_policies[1].id,
+              price: 75.5,
+            },
+          ],
+        }),
+      })
+      expect(roomFinalResp.status).toBe(201)
+      const roomData = await roomFinalResp.json()
+
+      // 3. Perform registration
+      const guestsData = [
+        {
+          name: "Adulto",
+          email: "post-registration-adult@test.com",
+          phone: "11999999999",
+          gender: "Masculino",
+          rg_number: "RG-PRICING-1",
+          cpf_number: "888.888.888-81",
+          birth_date: "1994-01-01",
+        },
+        {
+          name: "Bebê",
+          email: "post-registration-baby@test.com",
+          phone: "11999999999",
+          gender: "Feminino",
+          rg_number: "RG-PRICING-2",
+          cpf_number: "888.888.888-82",
+          birth_date: "2024-01-01",
+        },
+        {
+          name: "Criança",
+          email: "post-registration-child@test.com",
+          phone: "11999999999",
+          gender: "Masculino",
+          rg_number: "RG-PRICING-3",
+          cpf_number: "888.888.888-83",
+          birth_date: "2016-01-01",
+        },
+      ]
+
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomData.id,
+            guests_data: guestsData,
+            payment_method: "cash",
+          }),
+        },
+      )
+
+      expect(response.status).toBe(201)
+      const { saleId } = await response.json()
+
+      // 4. Verify Sale Pricing
+      const saleResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
+        {
+          headers: { Cookie: `session_id=${admToken}` },
+        },
+      )
+      const saleData = await saleResp.json()
+
+      // Expected: 200 (adult) + 0 (baby) + 75.5 (child) = 275.5
+      expect(Number(saleData.total_amount)).toBe(275.5)
+    })
+
+    test("should use percentage calculation when use_percentage is true, even if room price is defined", async () => {
+      // 1. Create Hotel with policy (percentage based)
+      const hotelResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/hotels`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({
+            name: "Percentage Priority Hotel",
+            city: "Florianópolis",
+            country: "Brasil",
+            check_in_date: "2026-11-01",
+            check_out_date: "2026-11-10",
+            price_policies: [
+              {
+                max_age: 12,
+                description: "Criança até 12 anos 50%",
+                use_percentage: true,
+                percentage: 50,
+              },
+            ],
+          }),
+        },
+      )
+      const hotelData = await hotelResp.json()
+
+      // 2. Setup Resources
+      const rtResp = await fetch(`${orchestrator.webserverUrl}/api/v1/room-types`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Cookie: `session_id=${admToken}` },
+        body: JSON.stringify({ name: "PercentageRT" }),
+      })
+      const rtData = await rtResp.json()
+
+      const rcResp = await fetch(`${orchestrator.webserverUrl}/api/v1/room-categories`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Cookie: `session_id=${admToken}` },
+        body: JSON.stringify({ name: "PercentageRC", max_adults: 2, max_children: 1 }),
+      })
+      const rcData = await rcResp.json()
+
+      // 3. Create Room with override price (but use_percentage is TRUE in policy)
+      const roomFinalResp = await fetch(`${orchestrator.webserverUrl}/api/v1/rooms`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Cookie: `session_id=${admToken}` },
+        body: JSON.stringify({
+          hotel_id: hotelData.id,
+          room_type_id: rtData.id,
+          room_category_id: rcData.id,
+          price_per_night: 200.0,
+          total_rooms: 10,
+          price_policies: [
+            {
+              id: hotelData.price_policies[0].id,
+              price: 75.0, // This should be ignored because use_percentage is true
+            },
+          ],
+        }),
+      })
+      const roomData = await roomFinalResp.json()
+
+      // 4. Perform registration for a child (age 10) + ONE ADULT
+      const guestsData = [
+        {
+          name: "Adulto Responsável",
+          email: "adult-percentage@test.com",
+          phone: "11999999999",
+          gender: "Masculino",
+          rg_number: "RG-ADULT-PCT",
+          cpf_number: "999.888.777-22",
+          birth_date: "1990-01-01",
+        },
+        {
+          name: "Criança",
+          email: "percentage-child@test.com",
+          phone: "11999999999",
+          gender: "Masculino",
+          rg_number: "RG-PCT-1",
+          cpf_number: "999.888.777-11",
+          birth_date: "2016-01-01",
+        },
+      ]
+
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomData.id,
+            guests_data: guestsData,
+            payment_method: "cash",
+          }),
+        },
+      )
+
+      expect(response.status).toBe(201)
+      const { saleId } = await response.json()
+
+      // 5. Verify Sale Pricing
+      const saleResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
+        {
+          headers: { Cookie: `session_id=${admToken}` },
+        },
+      )
+      const saleData = await saleResp.json()
+
+      // Expected: Adult (200) + Child (200 * 50% = 100) = 300.0
+      expect(Number(saleData.total_amount)).toBe(300.0)
+    })
+
+    test("Falha ao tentar adicionar uma criança sozinha no quarto (exige pelo menos um adulto)", async () => {
+      // 1. Setup Hotel
+      const hotelResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/hotels`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({
+            name: "Adult Required Hotel Unique",
+            email: "adult-required-unique@test.com",
+            city: "São Paulo",
+            country: "Brasil",
+            check_in_date: new Date(Date.now() + 86400000).toISOString(),
+            check_out_date: new Date(Date.now() + 86400000 * 2).toISOString(),
+            price_policies: [
+              {
+                max_age: 12,
+                percentage: 50,
+                description: "Criança",
+                use_percentage: true,
+              },
+            ],
+          }),
+        },
+      )
+      const hotelData = await hotelResp.json()
+
+      const rtResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/room-types`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({ name: "SingleAdultRT_Unq" }),
+        },
+      )
+      const rtData = await rtResp.json()
+
+      const rcResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/room-categories`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({
+            name: "SingleAdultRC_Unq",
+            max_adults: 1,
+            max_children: 1,
+          }),
+        },
+      )
+      const rcData = await rcResp.json()
+
+      const roomResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/rooms`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({
+            hotel_id: hotelData.id,
+            room_type_id: rtData.id,
+            room_category_id: rcData.id,
+            price_per_night: 200.0,
+            total_rooms: 5,
+            blocked_rooms: 0,
+            name: "Room Test",
+            description: "Room Description",
+            photos: [],
+          }),
+        },
+      )
+      const roomData = await roomResp.json()
+      
+      // Se falhar aqui, o erro será exibido no console para debug
+      if (roomResp.status !== 201) {
+        console.error("Room creation failed:", roomData)
+      }
+      expect(roomResp.status).toBe(201)
+
+      // 2. Tenta registrar apenas uma criança (8 anos)
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomData.id,
+            guests_data: [
+              {
+                name: "Criança Sozinha",
+                email: "sozinha@test.com",
+                phone: "11999999999",
+                gender: "Feminino",
+                rg_number: "RG-SOZINHA",
+                cpf_number: "111.999.333-44", // CPF diferente
+                birth_date: "2018-01-01", // ~8 anos
+              },
+            ],
+            payment_method: "cash",
+          }),
+        },
+      )
+
+      // Espera-se que falhe com 400 (Bad Request)
+      expect(response.status).toBe(400)
+      const body = await response.json()
+      expect(body.message).toContain("pelo menos um adulto")
+    })
   })
 })

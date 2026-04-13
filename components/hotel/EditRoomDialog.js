@@ -46,6 +46,11 @@ export function EditRoomDialog({
   const [action, setAction] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [roomPricePolicies, setRoomPricePolicies] = useState(
+    room.price_policies
+      ?.filter((p) => p.price !== null)
+      .map((p) => ({ id: p.id, price: p.price })) || [],
+  )
 
   const handleAddPhoto = () => {
     setPhotos([...photos, ""])
@@ -99,6 +104,11 @@ export function EditRoomDialog({
     setName(room.name || "")
     setDescription(room.description || "")
     setPhotos(room.photos && room.photos.length > 0 ? room.photos : [""])
+    setRoomPricePolicies(
+      room.price_policies
+        ?.filter((p) => p.price !== null)
+        .map((p) => ({ id: p.id, price: p.price })) || [],
+    )
   }, [room])
 
   const handleSubmit = async (e) => {
@@ -128,10 +138,10 @@ export function EditRoomDialog({
         member_price_per_night: memberPricePerNight,
         total_rooms: parseInt(totalRooms),
         blocked_rooms: parseInt(blockedRooms),
-        available_rooms: parseInt(totalRooms) - parseInt(blockedRooms),
         name,
         description,
         photos: photos.filter((p) => p.trim() !== ""),
+        price_policies: roomPricePolicies,
       }),
     })
 
@@ -345,6 +355,54 @@ export function EditRoomDialog({
                     </Button>
                   </div>
                 </div>
+
+                {room.price_policies?.filter((p) => p.use_percentage === false)
+                  .length > 0 && (
+                  <div className="my-4 border-t pt-4">
+                    <h4 className="text-sm font-medium mb-3">
+                      Preços Específicos por Idade
+                    </h4>
+                    <div className="space-y-3">
+                      {room.price_policies
+                        .filter((p) => p.use_percentage === false)
+                        .map((policy) => (
+                          <div
+                            key={policy.id}
+                            className="grid grid-cols-4 items-center gap-4"
+                          >
+                            <Label className="text-right text-xs">
+                              {policy.description}
+                            </Label>
+                            <Input
+                              type="number"
+                              placeholder="Preço fixo"
+                              className="col-span-3"
+                              value={
+                                roomPricePolicies.find(
+                                  (rpp) => rpp.id === policy.id,
+                                )?.price || ""
+                              }
+                              onChange={(e) => {
+                                const newPolicies = [...roomPricePolicies]
+                                const index = newPolicies.findIndex(
+                                  (rpp) => rpp.id === policy.id,
+                                )
+                                if (index >= 0) {
+                                  newPolicies[index].price = e.target.value
+                                } else {
+                                  newPolicies.push({
+                                    id: policy.id,
+                                    price: e.target.value,
+                                  })
+                                }
+                                setRoomPricePolicies(newPolicies)
+                              }}
+                            />
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <DialogFooter className="mt-4 pt-2 border-t">

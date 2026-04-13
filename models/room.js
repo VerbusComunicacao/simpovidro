@@ -23,6 +23,13 @@ async function create(roomInputValues, userId) {
 
   const newRoom = await runInsertQuery(roomInputValues, userId)
 
+  if (
+    roomInputValues.price_policies &&
+    Array.isArray(roomInputValues.price_policies)
+  ) {
+    await syncRoomPricePolicies(newRoom.id, roomInputValues.price_policies)
+  }
+
   return await findOneById(newRoom.id)
 
   async function runInsertQuery(roomInputValues, userId) {
@@ -89,8 +96,18 @@ async function findOneById(roomId) {
           rc.max_children,
           COALESCE(
             (
-              SELECT json_agg(pp.* ORDER BY pp.max_age ASC)
+              SELECT json_agg(
+                json_build_object(
+                  'id', pp.id,
+                  'max_age', pp.max_age,
+                  'description', pp.description,
+                  'use_percentage', pp.use_percentage,
+                  'percentage', pp.percentage,
+                  'price', rpp.price
+                ) ORDER BY pp.max_age ASC
+              )
               FROM "price_policies" pp
+              LEFT JOIN "room_price_policies" rpp ON pp.id = rpp.price_policy_id AND rpp.room_id = r.id
               WHERE pp.hotel_id = r.hotel_id
             ),
             '[]'::json
@@ -121,8 +138,6 @@ async function findOneById(roomId) {
     return results.rows[0]
   }
 }
-
-
 
 async function findAll() {
   const results = await database.query({
@@ -176,7 +191,23 @@ async function findAllByHotelId(hotelId) {
         rc.max_children,
         h.check_in_date as hotel_check_in_date,
         r.created_at,
-        r.updated_at
+        r.updated_at,
+        COALESCE(
+          (
+            SELECT json_agg(json_build_object(
+              'id', pp.id,
+              'max_age', pp.max_age,
+              'description', pp.description,
+              'use_percentage', pp.use_percentage,
+              'percentage', pp.percentage,
+              'price', rpp.price
+            ) ORDER BY pp.max_age ASC)
+            FROM "price_policies" pp
+            LEFT JOIN "room_price_policies" rpp ON rpp.price_policy_id = pp.id AND rpp.room_id = r.id
+            WHERE pp.hotel_id = r.hotel_id
+          ),
+          '[]'::json
+        ) as price_policies
       FROM 
         "rooms" r
       JOIN "hotels" h ON r.hotel_id = h.id
@@ -244,6 +275,13 @@ async function update(roomId, roomInputNewValues, userId) {
   }
 
   const updatedRoom = await runUpdateQuery(roomWithNewValues)
+
+  if (
+    roomInputNewValues.price_policies &&
+    Array.isArray(roomInputNewValues.price_policies)
+  ) {
+    await syncRoomPricePolicies(updatedRoom.id, roomInputNewValues.price_policies)
+  }
 
   return await findOneById(updatedRoom.id)
 
@@ -426,6 +464,29 @@ async function verifyRoomCategoryBelongsToUser(roomCategoryId, userId) {
   }
 }
 
+async function syncRoomPricePolicies(roomId, pricePolicies) {
+  // 1. Delete existing specific prices for this room
+  await database.query({
+    text: `DELETE FROM "room_price_policies" WHERE room_id = $1`,
+    values: [roomId],
+  })
+
+  // 2. Insert new ones
+  for (const policy of pricePolicies) {
+    if (!policy.id || policy.price === undefined || policy.price === "") {
+      continue
+    }
+
+    await database.query({
+      text: `
+        INSERT INTO "room_price_policies" (room_id, price_policy_id, price)
+        VALUES ($1, $2, $3)
+      `,
+      values: [roomId, policy.id, policy.price],
+    })
+  }
+}
+
 const room = {
   create,
   findOneById,
@@ -433,6 +494,7 @@ const room = {
   findAllByHotelId,
   update,
   deleteById,
+  syncRoomPricePolicies,
 }
 
 export default room

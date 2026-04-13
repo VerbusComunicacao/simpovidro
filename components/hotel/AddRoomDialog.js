@@ -26,6 +26,7 @@ export function AddRoomDialog({
   hotelId,
   roomTypes,
   roomCategories,
+  pricePolicies = [],
   onRoomAdded,
 }) {
   const [open, setOpen] = useState(false)
@@ -41,6 +42,7 @@ export function AddRoomDialog({
   const [action, setAction] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [roomPricePolicies, setRoomPricePolicies] = useState([])
 
   const handleAddPhoto = () => {
     setPhotos([...photos, ""])
@@ -105,6 +107,7 @@ export function AddRoomDialog({
         name,
         description,
         photos: photos.filter((p) => p.trim() !== ""),
+        price_policies: roomPricePolicies,
       }),
     })
 
@@ -122,6 +125,7 @@ export function AddRoomDialog({
       setName("")
       setDescription("")
       setPhotos([""])
+      setRoomPricePolicies([])
     } else {
       const data = await response.json()
       setError(data.message || "Ocorreu um erro ao adicionar o quarto.")
@@ -312,6 +316,54 @@ export function AddRoomDialog({
                     </Button>
                   </div>
                 </div>
+
+                {pricePolicies?.filter((p) => p.use_percentage === false)
+                  .length > 0 && (
+                  <div className="my-4 border-t pt-4">
+                    <h4 className="text-sm font-medium mb-3">
+                      Preços Específicos por Idade
+                    </h4>
+                    <div className="space-y-3">
+                      {pricePolicies
+                        .filter((p) => p.use_percentage === false)
+                        .map((policy) => (
+                          <div
+                            key={policy.id}
+                            className="grid grid-cols-4 items-center gap-4"
+                          >
+                            <Label className="text-right text-xs">
+                              {policy.description}
+                            </Label>
+                            <Input
+                              type="number"
+                              placeholder="Preço fixo"
+                              className="col-span-3"
+                              value={
+                                roomPricePolicies.find(
+                                  (rpp) => rpp.id === policy.id,
+                                )?.price || ""
+                              }
+                              onChange={(e) => {
+                                const newPolicies = [...roomPricePolicies]
+                                const index = newPolicies.findIndex(
+                                  (rpp) => rpp.id === policy.id,
+                                )
+                                if (index >= 0) {
+                                  newPolicies[index].price = e.target.value
+                                } else {
+                                  newPolicies.push({
+                                    id: policy.id,
+                                    price: e.target.value,
+                                  })
+                                }
+                                setRoomPricePolicies(newPolicies)
+                              }}
+                            />
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <DialogFooter className="mt-4 pt-2 border-t">

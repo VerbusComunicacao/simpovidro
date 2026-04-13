@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Trash2, Percent, DollarSign } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 
 export function PricePolicyManager({
   policies,
@@ -9,7 +10,10 @@ export function PricePolicyManager({
   hideSideLabel = false,
 }) {
   const handleAddPolicy = () => {
-    onChange([...policies, { max_age: "", percentage: "", description: "" }])
+    onChange([
+      ...policies,
+      { max_age: "", percentage: "", description: "", use_percentage: true },
+    ])
   }
 
   const handleRemovePolicy = (index) => {
@@ -60,8 +64,24 @@ export function PricePolicyManager({
                     className="h-8"
                     min="0"
                     max="100"
+                    disabled={policy.use_percentage === false}
                   />
                 </div>
+              </div>
+              <div className="flex items-center space-x-2 mt-1">
+                <Checkbox
+                  id={`use-percentage-${index}`}
+                  checked={policy.use_percentage !== false}
+                  onCheckedChange={(checked) =>
+                    handlePolicyChange(index, "use_percentage", checked)
+                  }
+                />
+                <Label
+                  htmlFor={`use-percentage-${index}`}
+                  className="text-[10px] font-normal cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Usar cálculo percentual (%)
+                </Label>
               </div>
               <div>
                 <Label className="text-xs">Descrição</Label>

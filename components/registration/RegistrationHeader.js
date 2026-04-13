@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Hotel, LogOut, ChevronLeft } from "lucide-react"
 import useUser from "@/hooks/useUser"
 import { useRouter } from "next/router"
+import authorization from "@/models/authorization"
 
 export default function RegistrationHeader({ showBackButton = false }) {
   const { user, logout } = useUser()
@@ -50,6 +51,16 @@ export default function RegistrationHeader({ showBackButton = false }) {
         <div className="flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-4">
+              {authorization.can(user, "create:content") && (
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="hidden sm:flex text-gray-600"
+                >
+                  <Link href="/table">Painel</Link>
+                </Button>
+              )}
               <Button
                 asChild
                 variant="ghost"
