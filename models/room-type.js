@@ -124,6 +124,22 @@ async function update(roomTypeId, roomTypeInputNewValues, userId) {
 }
 
 async function deleteById(roomTypeId) {
+  // 1. Verificação de Integridade (Regra de Negócio: Não deletar se em uso)
+  const countResult = await database.query({
+    text: `SELECT id FROM rooms WHERE room_type_id = $1 LIMIT 1`,
+    values: [roomTypeId],
+  })
+
+  if (countResult.rowCount > 0) {
+    throw new ValidationError({
+      message:
+        "Este tipo de quarto não pode ser excluído pois está sendo utilizado em um ou mais quartos.",
+      action:
+        "Exclua ou altere os quartos que utilizam este tipo antes de tentar novamente.",
+    })
+  }
+
+  // 2. Exclusão
   await database.query({
     text: `
     DELETE FROM "room-types"

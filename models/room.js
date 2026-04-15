@@ -116,9 +116,9 @@ async function findOneById(roomId) {
           "rooms" r
         JOIN
           "hotels" h ON r.hotel_id = h.id
-        JOIN
+        LEFT JOIN
           "room-types" rt ON r.room_type_id = rt.id
-        JOIN
+        LEFT JOIN
           "room-categories" rc ON r.room_category_id = rc.id
         WHERE
           r.id = $1
@@ -211,8 +211,8 @@ async function findAllByHotelId(hotelId) {
       FROM 
         "rooms" r
       JOIN "hotels" h ON r.hotel_id = h.id
-      JOIN "room-types" rt ON r.room_type_id = rt.id
-      JOIN "room-categories" rc ON r.room_category_id = rc.id
+      LEFT JOIN "room-types" rt ON r.room_type_id = rt.id
+      LEFT JOIN "room-categories" rc ON r.room_category_id = rc.id
       WHERE 
         r.hotel_id = $1
       ORDER BY 
@@ -291,6 +291,8 @@ async function update(roomId, roomInputNewValues, userId) {
       hotel_id,
       room_type_id,
       room_category_id,
+      // No banco de dados, o campo é chamado de 'price_per_night',
+      // mas para a regra de negócio do Simpovidro, ele representa o "Preço por Pessoa" para o evento.
       price_per_night,
       member_price_per_night,
       total_rooms,
@@ -401,13 +403,25 @@ async function deleteById(roomId, userId) {
   validateUUID(roomId)
   validateUUID(userId)
 
-  await database.query({
-    text: `
-    DELETE FROM "rooms"
-    WHERE id = $1
-    `,
-    values: [roomId],
-  })
+  try {
+    await database.query({
+      text: `
+      DELETE FROM "rooms"
+      WHERE id = $1
+      `,
+      values: [roomId],
+    })
+  } catch (error) {
+    if (error.code === "23503") {
+      throw new ValidationError({
+        message:
+          "Este quarto não pode ser excluído pois existem inscrições ou outros registros vinculados a ele.",
+        action:
+          "Cancele as inscrições vinculadas a este quarto antes de tentar novamente.",
+      })
+    }
+    throw error
+  }
 }
 
 async function verifyHotelBelongsToUser(hotelId, userId) {

@@ -1214,5 +1214,137 @@ describe("POST /api/v1/registrations", () => {
       const body = await response.json()
       expect(body.message).toContain("pelo menos um adulto")
     })
+    describe("Pricing Calculation (Per Person)", () => {
+      test("should calculate total as Price * Number of Adults (1 guest)", async () => {
+        const response = await fetch(
+          `${orchestrator.webserverUrl}/api/v1/registrations`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: `session_id=${userToken}`,
+            },
+            body: JSON.stringify({
+              room_id: roomId,
+              guests_data: [
+                {
+                  name: "Regular User",
+                  email: "user-registration@example.com",
+                  phone: "11999999999",
+                  gender: "Masculino",
+                  rg_number: "PR-1",
+                  cpf_number: "222.111.999-01",
+                  birth_date: "1990-01-01",
+                },
+              ],
+            }),
+          },
+        )
+
+        expect(response.status).toBe(201)
+        const { saleId } = await response.json()
+
+        const saleResp = await fetch(
+          `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
+          {
+            headers: { Cookie: `session_id=${userToken}` },
+          },
+        )
+        const saleData = await saleResp.json()
+
+        // 1 guest * 1000 = 1000
+        expect(Number(saleData.total_amount)).toBe(1000.0)
+      })
+
+      test("should calculate total as Price * Number of Adults (2 guests)", async () => {
+        const response = await fetch(
+          `${orchestrator.webserverUrl}/api/v1/registrations`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: `session_id=${userToken}`,
+            },
+            body: JSON.stringify({
+              room_id: roomId,
+              guests_data: [
+                {
+                  name: "Regular User",
+                  email: "user-registration@example.com",
+                  phone: "11999999999",
+                  gender: "Masculino",
+                  rg_number: "PR-3",
+                  cpf_number: "222.111.999-03",
+                  birth_date: "1990-01-01",
+                },
+                {
+                  name: "Second Guest",
+                  email: "second@example.com",
+                  phone: "11988888888",
+                  gender: "Feminino",
+                  rg_number: "PR-4",
+                  cpf_number: "222.111.999-04",
+                  birth_date: "1992-02-02",
+                },
+              ],
+            }),
+          },
+        )
+
+        expect(response.status).toBe(201)
+        const { saleId } = await response.json()
+
+        const saleResp = await fetch(
+          `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
+          {
+            headers: { Cookie: `session_id=${userToken}` },
+          },
+        )
+        const saleData = await saleResp.json()
+
+        // 2 guests * 1000 = 2000
+        expect(Number(saleData.total_amount)).toBe(2000.0)
+      })
+
+      test("should NOT multiply by number of nights (Price per Person/Event)", async () => {
+        const response = await fetch(
+          `${orchestrator.webserverUrl}/api/v1/registrations`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: `session_id=${userToken}`,
+            },
+            body: JSON.stringify({
+              room_id: roomId,
+              guests_data: [
+                {
+                  name: "Regular User",
+                  email: "user-registration@example.com",
+                  phone: "11999999999",
+                  gender: "Masculino",
+                  rg_number: "PR-5",
+                  cpf_number: "222.111.999-05",
+                  birth_date: "1990-01-01",
+                },
+              ],
+            }),
+          },
+        )
+
+        expect(response.status).toBe(201)
+        const { saleId } = await response.json()
+        const saleResp = await fetch(
+          `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
+          {
+            headers: { Cookie: `session_id=${userToken}` },
+          },
+        )
+        const saleData = await saleResp.json()
+
+        // Should still be 1000, not 9000
+        expect(Number(saleData.total_amount)).toBe(1000.0)
+      })
+    })
   })
 })

@@ -189,7 +189,7 @@ export function AddRoomDialog({
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="price" className="text-right">
-                    Preço Padrão
+                    Preço por Pessoa
                   </Label>
                   <Input
                     id="price"

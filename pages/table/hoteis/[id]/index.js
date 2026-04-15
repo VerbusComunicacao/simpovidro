@@ -155,6 +155,32 @@ export default function HotelPage() {
     }
   }
 
+  const handleDeleteRoom = async (roomId) => {
+    try {
+      const response = await fetch(`/api/v1/rooms/${roomId}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        mutateRooms()
+      } else {
+        const data = await response.json()
+        setErrorInfo({
+          title: "Erro ao Excluir Quarto",
+          message: data.message || "Ocorreu um erro ao excluir o quarto.",
+          actionMessage: data.action,
+        })
+        setIsErrorDialogOpen(true)
+      }
+    } catch (error) {
+      setErrorInfo({
+        title: "Erro ao Excluir Quarto",
+        message: "Ocorreu um erro de conexão.",
+      })
+      setIsErrorDialogOpen(true)
+    }
+  }
+
   const pageActions = hotel && (
     <>
       {!hotel.active && (
@@ -328,8 +354,8 @@ export default function HotelPage() {
               >
                 <div>Tipo</div>
                 <div>Categoria</div>
-                <div>Preço</div>
-                <div>Preço Assoc.</div>
+                <div>Preço por Pessoa</div>
+                <div>Preço Associado</div>
                 {hotel.price_policies
                   ?.filter((p) => p.use_percentage === false)
                   .map((policy) => (
@@ -379,9 +405,31 @@ export default function HotelPage() {
                       <Pencil className="h-4 w-4" />
                     </Button>
                   </EditRoomDialog>
-                  <Button variant="destructive" size="sm">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta ação excluirá permanentemente este quarto. Esta
+                          ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteRoom(room.id)}
+                          className="bg-destructive hover:bg-destructive/90"
+                        >
+                          Excluir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             ))}

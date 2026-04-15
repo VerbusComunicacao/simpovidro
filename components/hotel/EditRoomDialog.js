@@ -216,7 +216,7 @@ export function EditRoomDialog({
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="price-edit" className="text-right">
-                    Preço Padrão
+                    Preço por Pessoa
                   </Label>
                   <Input
                     id="price-edit"

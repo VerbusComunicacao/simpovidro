@@ -26,6 +26,7 @@ O projeto segue uma adaptação do padrão **MVP (Model-View-Presenter/Controlle
 4.  **`/tests`**: Testes de integração robustos.
     - `/tests/orchestrator.js`: "Canivete suíço" para testes. Contém helpers para criar usuários, sessões, hotéis, limpar banco, etc.
     - `/tests/api/integration`: Segue a mesma estrutura de pastas da API.
+    - Os testes dentro de integration seguem um padrão de rota (GET, POST, PUT, DELETE) exemplo: post.test.js, get.test.js, put.test.js, delete.test.js.
 
 ## 🔐 Segurança e Autorização
 

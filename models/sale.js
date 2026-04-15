@@ -230,6 +230,8 @@ async function create(saleInputValues, externalClient) {
           : Number(targetRoom.price_per_night)
       }
 
+      // O cálculo é feito acumulando o preço por pessoa.
+      // Não é multiplicado pelo número de noites, pois o preço é por evento/pacote.
       calculatedTotalAmount += guestPrice
     }
 

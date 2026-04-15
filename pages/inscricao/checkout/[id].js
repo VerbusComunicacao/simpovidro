@@ -159,17 +159,23 @@ export default function CheckoutPage({
   const maxChildren = room.max_children || 0
   const totalCapacity = maxAdults + maxChildren
 
-  const [guests, setGuests] = useState(() => {
-    const initialGuests = []
-    for (let i = 0; i < totalCapacity; i++) {
-      if (i === 0) {
-        initialGuests.push({ ...initialGuest })
-      } else {
-        initialGuests.push({ ...emptyGuest })
-      }
+  const [guests, setGuests] = useState([{ ...initialGuest }])
+
+  const handleAddGuest = () => {
+    if (guests.length < totalCapacity) {
+      setGuests([...guests, { ...emptyGuest }])
     }
-    return initialGuests
-  })
+  }
+
+  const handleRemoveGuest = (indexToRemove) => {
+    const newGuests = guests.filter((_, index) => index !== indexToRemove)
+    setGuests(newGuests)
+
+    if (guestErrors[indexToRemove] || Object.keys(guestErrors).length > 0) {
+      // Clear errors on removal to force re-validation
+      setGuestErrors({})
+    }
+  }
 
   // Handlers for form changes
   const handleChange = (index, e) => {
@@ -829,6 +835,16 @@ export default function CheckoutPage({
                             </CardDescription>
                           </div>
                         </div>
+                        {index > 0 && (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleRemoveGuest(index)}
+                          >
+                            Remover acompanhante
+                          </Button>
+                        )}
                       </CardHeader>
                       <CardContent className="pt-6 space-y-6">
                         {/* Personal Data */}
@@ -1247,6 +1263,20 @@ export default function CheckoutPage({
                       </CardContent>
                     </Card>
                   ))}
+
+                  {guests.length < totalCapacity && (
+                    <div className="flex justify-center py-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleAddGuest}
+                        className="w-full md:w-auto border-dashed border-2 border-blue-600 text-blue-600 hover:bg-blue-50 py-6"
+                      >
+                        <User className="h-5 w-5 mr-2" />
+                        Adicionar Hóspede (Máximo de: {totalCapacity})
+                      </Button>
+                    </div>
+                  )}
 
                   <div className="pt-4 sticky bottom-4 z-10">
                     <div className="bg-white p-4 rounded-xl shadow-xl border">

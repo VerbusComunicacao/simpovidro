@@ -345,7 +345,7 @@ async function getAllActiveHotels() {
               'description', r.description,
               'photos', r.photos
             )
-          ) FILTER (WHERE r.id IS NOT NULL),
+          ) FILTER (WHERE r.id IS NOT NULL AND rt.id IS NOT NULL AND rc.id IS NOT NULL),
           '[]'
         ) as rooms
       FROM 
