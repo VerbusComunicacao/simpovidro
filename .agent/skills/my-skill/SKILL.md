@@ -1,5 +1,6 @@
 ---
-trigger: always_on
+name: my-skill
+description: Use em toda task.
 ---
 
 ste documento serve como um guia de contexto para assistentes de IA que trabalharem neste projeto. Ele descreve os padrões arquiteturais e convenções adotadas.
@@ -27,6 +28,7 @@ O projeto segue uma adaptação do padrão **MVP (Model-View-Presenter/Controlle
     - `/tests/orchestrator.js`: "Canivete suíço" para testes. Contém helpers para criar usuários, sessões, hotéis, limpar banco, etc.
     - `/tests/api/integration`: Segue a mesma estrutura de pastas da API.
     - Os testes dentro de integration seguem um padrão de rota (GET, POST, PUT, DELETE) exemplo: post.test.js, get.test.js, put.test.js, delete.test.js.
+    - IMPORTANTE: os testes são a base do código e devem possuir o caminho feliz e o caminho triste, cada situação precisa de um teste validado, com dados concretos.
 
 ## 🔐 Segurança e Autorização
 

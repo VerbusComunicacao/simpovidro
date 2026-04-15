@@ -5,20 +5,26 @@ import {
   validateUUID,
 } from "infra/validator.js"
 
-async function create(companyInputValues) {
-  validateRequired(companyInputValues, [
-    "corporate_name",
-    "badge",
-    "cnpj",
-    "address",
-    "address_number",
-    "neighborhood",
-    "city",
-    "state",
-    "phone",
-    "email",
-    "zip_code",
-  ])
+async function create(companyInputValues, options = { isImport: false }) {
+  const isImport = options.isImport
+
+  const requiredFields = isImport
+    ? ["corporate_name", "cnpj"]
+    : [
+        "corporate_name",
+        "badge",
+        "cnpj",
+        "address",
+        "address_number",
+        "neighborhood",
+        "city",
+        "state",
+        "phone",
+        "email",
+        "zip_code",
+      ]
+
+  validateRequired(companyInputValues, requiredFields)
 
   const cleanCnpj = companyInputValues.cnpj?.replace(/\D/g, "")
   const valuesWithCleanCnpj = { ...companyInputValues, cnpj: cleanCnpj }
@@ -39,7 +45,7 @@ async function create(companyInputValues) {
       address_number = null,
       address_complement = null,
       neighborhood = null,
-      city,
+      city = null,
       state = null,
       country = "Brasil",
       phone = null,
