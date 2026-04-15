@@ -200,7 +200,7 @@ export default function RegistrationPage({ hotels, discounts }) {
                         variant="outline"
                         className="border-blue-200 text-blue-700 bg-blue-50"
                       >
-                        {room.room_category}
+                        {room.room_type}
                       </Badge>
                     </div>
                     <CardTitle className="text-xl">

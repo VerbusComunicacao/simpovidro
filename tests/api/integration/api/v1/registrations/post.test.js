@@ -28,6 +28,7 @@ describe("POST /api/v1/registrations", () => {
             guests_data: [
               {
                 name: "Test Guest",
+                badge_name: "Crachá Teste",
                 phone: "11999999999",
                 gender: "Masculino",
                 rg_number: "123456789",
@@ -213,6 +214,7 @@ describe("POST /api/v1/registrations", () => {
             guests_data: [
               {
                 name: "Regular User",
+                badge_name: "Crachá Regular",
                 email: "user-registration@example.com",
                 phone: "11999999999",
                 gender: "Masculino",
@@ -326,6 +328,7 @@ describe("POST /api/v1/registrations", () => {
             guests_data: [
               {
                 name: "Regular User",
+                badge_name: "Crachá Regular",
                 email: "user-registration@example.com",
                 phone: "11988888888",
                 gender: "Feminino",
@@ -375,6 +378,7 @@ describe("POST /api/v1/registrations", () => {
             guests_data: [
               {
                 name: "Regular User",
+                badge_name: "Crachá Regular",
                 email: "user-registration@example.com",
                 phone: "11999999999",
                 gender: "Masculino",
@@ -384,6 +388,7 @@ describe("POST /api/v1/registrations", () => {
               },
               {
                 name: "Regression Guest",
+                badge_name: "Crachá Regression",
                 email: guestEmail,
                 phone: "11977777777",
                 gender: "Masculino",
@@ -440,6 +445,7 @@ describe("POST /api/v1/registrations", () => {
             guests_data: [
               {
                 name: "Regular User",
+                badge_name: "Crachá Regular",
                 email: "user-registration@example.com",
                 phone: "11966666666",
                 gender: "Masculino",
@@ -496,6 +502,7 @@ describe("POST /api/v1/registrations", () => {
             guests_data: [
               {
                 name: "Regular User",
+                badge_name: "Crachá Regular",
                 email: "user-registration@example.com",
                 phone: "11999999999",
                 gender: "Feminino",
@@ -597,6 +604,7 @@ describe("POST /api/v1/registrations", () => {
             guests_data: [
               {
                 name: "Regular User",
+                badge_name: "Crachá Regular",
                 email: "user-registration@example.com",
                 phone: "11999999999",
                 gender: "Masculino",
@@ -660,6 +668,7 @@ describe("POST /api/v1/registrations", () => {
             guests_data: [
               {
                 name: "Imposter Guest", // Different name
+                badge_name: "Crachá Impostor",
                 email: "imposter@example.com", // Different email
                 phone: "11900000000",
                 gender: "Feminino",
@@ -698,6 +707,7 @@ describe("POST /api/v1/registrations", () => {
             guests_data: [
               {
                 name: "111", // Spoofed name
+                badge_name: "Crachá 111",
                 email: "111@example.com", // Spoofed email
                 phone: "11911111111",
                 gender: "Masculino",
@@ -730,6 +740,7 @@ describe("POST /api/v1/registrations", () => {
             guests_data: [
               {
                 name: "Regular User",
+                badge_name: "Crachá Regular",
                 email: "user-registration@example.com",
                 phone: "11999999999",
                 gender: "Masculino",
@@ -758,6 +769,7 @@ describe("POST /api/v1/registrations", () => {
             guests_data: [
               {
                 name: "Regular User",
+                badge_name: "Crachá Regular",
                 email: "user-registration@example.com",
                 phone: "11999999999",
                 gender: "Masculino",
@@ -806,6 +818,7 @@ describe("POST /api/v1/registrations", () => {
             guests_data: [
               {
                 name: "Johnny Override",
+                badge_name: "Johnny Crachá",
                 email: "johnny@example.com",
                 phone: "11911111111",
                 gender: "Masculino",
@@ -875,40 +888,62 @@ describe("POST /api/v1/registrations", () => {
       expect(hotelData.price_policies).toHaveLength(2)
 
       // 2. Setup Resources (Type and Category)
-      const rtResp = await fetch(`${orchestrator.webserverUrl}/api/v1/room-types`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Cookie: `session_id=${admToken}` },
-        body: JSON.stringify({ name: "PricingRT" }),
-      })
+      const rtResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/room-types`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({ name: "PricingRT" }),
+        },
+      )
       expect(rtResp.status).toBe(201)
       const rtData = await rtResp.json()
 
-      const rcResp = await fetch(`${orchestrator.webserverUrl}/api/v1/room-categories`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Cookie: `session_id=${admToken}` },
-        body: JSON.stringify({ name: "PricingRC", max_adults: 3, max_children: 2 }),
-      })
+      const rcResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/room-categories`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({
+            name: "PricingRC",
+            max_adults: 3,
+            max_children: 2,
+          }),
+        },
+      )
       expect(rcResp.status).toBe(201)
       const rcData = await rcResp.json()
 
       // 3. Create Room with override for the 12y policy
-      const roomFinalResp = await fetch(`${orchestrator.webserverUrl}/api/v1/rooms`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Cookie: `session_id=${admToken}` },
-        body: JSON.stringify({
-          hotel_id: hotelData.id,
-          room_type_id: rtData.id,
-          room_category_id: rcData.id,
-          price_per_night: 200.0,
-          total_rooms: 10,
-          price_policies: [
-            {
-              id: hotelData.price_policies[1].id,
-              price: 75.5,
-            },
-          ],
-        }),
-      })
+      const roomFinalResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/rooms`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({
+            hotel_id: hotelData.id,
+            room_type_id: rtData.id,
+            room_category_id: rcData.id,
+            price_per_night: 200.0,
+            total_rooms: 10,
+            price_policies: [
+              {
+                id: hotelData.price_policies[1].id,
+                price: 75.5,
+              },
+            ],
+          }),
+        },
+      )
       expect(roomFinalResp.status).toBe(201)
       const roomData = await roomFinalResp.json()
 
@@ -916,6 +951,7 @@ describe("POST /api/v1/registrations", () => {
       const guestsData = [
         {
           name: "Adulto",
+          badge_name: "Adulto",
           email: "post-registration-adult@test.com",
           phone: "11999999999",
           gender: "Masculino",
@@ -925,6 +961,7 @@ describe("POST /api/v1/registrations", () => {
         },
         {
           name: "Bebê",
+          badge_name: "Bebê",
           email: "post-registration-baby@test.com",
           phone: "11999999999",
           gender: "Feminino",
@@ -934,6 +971,7 @@ describe("POST /api/v1/registrations", () => {
         },
         {
           name: "Criança",
+          badge_name: "Criança",
           email: "post-registration-child@test.com",
           phone: "11999999999",
           gender: "Masculino",
@@ -1005,44 +1043,67 @@ describe("POST /api/v1/registrations", () => {
       const hotelData = await hotelResp.json()
 
       // 2. Setup Resources
-      const rtResp = await fetch(`${orchestrator.webserverUrl}/api/v1/room-types`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Cookie: `session_id=${admToken}` },
-        body: JSON.stringify({ name: "PercentageRT" }),
-      })
+      const rtResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/room-types`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({ name: "PercentageRT" }),
+        },
+      )
       const rtData = await rtResp.json()
 
-      const rcResp = await fetch(`${orchestrator.webserverUrl}/api/v1/room-categories`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Cookie: `session_id=${admToken}` },
-        body: JSON.stringify({ name: "PercentageRC", max_adults: 2, max_children: 1 }),
-      })
+      const rcResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/room-categories`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({
+            name: "PercentageRC",
+            max_adults: 2,
+            max_children: 1,
+          }),
+        },
+      )
       const rcData = await rcResp.json()
 
       // 3. Create Room with override price (but use_percentage is TRUE in policy)
-      const roomFinalResp = await fetch(`${orchestrator.webserverUrl}/api/v1/rooms`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Cookie: `session_id=${admToken}` },
-        body: JSON.stringify({
-          hotel_id: hotelData.id,
-          room_type_id: rtData.id,
-          room_category_id: rcData.id,
-          price_per_night: 200.0,
-          total_rooms: 10,
-          price_policies: [
-            {
-              id: hotelData.price_policies[0].id,
-              price: 75.0, // This should be ignored because use_percentage is true
-            },
-          ],
-        }),
-      })
+      const roomFinalResp = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/rooms`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${admToken}`,
+          },
+          body: JSON.stringify({
+            hotel_id: hotelData.id,
+            room_type_id: rtData.id,
+            room_category_id: rcData.id,
+            price_per_night: 200.0,
+            total_rooms: 10,
+            price_policies: [
+              {
+                id: hotelData.price_policies[0].id,
+                price: 75.0, // This should be ignored because use_percentage is true
+              },
+            ],
+          }),
+        },
+      )
       const roomData = await roomFinalResp.json()
 
       // 4. Perform registration for a child (age 10) + ONE ADULT
       const guestsData = [
         {
           name: "Adulto Responsável",
+          badge_name: "Adulto",
           email: "adult-percentage@test.com",
           phone: "11999999999",
           gender: "Masculino",
@@ -1052,6 +1113,7 @@ describe("POST /api/v1/registrations", () => {
         },
         {
           name: "Criança",
+          badge_name: "Criança",
           email: "percentage-child@test.com",
           phone: "11999999999",
           gender: "Masculino",
@@ -1175,7 +1237,7 @@ describe("POST /api/v1/registrations", () => {
         },
       )
       const roomData = await roomResp.json()
-      
+
       // Se falhar aqui, o erro será exibido no console para debug
       if (roomResp.status !== 201) {
         console.error("Room creation failed:", roomData)
@@ -1196,6 +1258,7 @@ describe("POST /api/v1/registrations", () => {
             guests_data: [
               {
                 name: "Criança Sozinha",
+                badge_name: "Criança",
                 email: "sozinha@test.com",
                 phone: "11999999999",
                 gender: "Feminino",
@@ -1229,6 +1292,7 @@ describe("POST /api/v1/registrations", () => {
               guests_data: [
                 {
                   name: "Regular User",
+                  badge_name: "Crachá Regular",
                   email: "user-registration@example.com",
                   phone: "11999999999",
                   gender: "Masculino",
@@ -1270,6 +1334,7 @@ describe("POST /api/v1/registrations", () => {
               guests_data: [
                 {
                   name: "Regular User",
+                  badge_name: "Crachá Reg",
                   email: "user-registration@example.com",
                   phone: "11999999999",
                   gender: "Masculino",
@@ -1279,6 +1344,7 @@ describe("POST /api/v1/registrations", () => {
                 },
                 {
                   name: "Second Guest",
+                  badge_name: "Crachá Sec",
                   email: "second@example.com",
                   phone: "11988888888",
                   gender: "Feminino",
@@ -1320,6 +1386,7 @@ describe("POST /api/v1/registrations", () => {
               guests_data: [
                 {
                   name: "Regular User",
+                  badge_name: "Crachá Reg",
                   email: "user-registration@example.com",
                   phone: "11999999999",
                   gender: "Masculino",

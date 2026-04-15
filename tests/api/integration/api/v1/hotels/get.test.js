@@ -73,7 +73,7 @@ describe("GET /api/v1/hotels", () => {
       })
 
       expect(response.status).toBe(200)
-      
+
       const hotelsList = await response.json()
       expect(hotelsList).toHaveLength(3)
     })

@@ -130,8 +130,7 @@ describe("POST /api/v1/room-categories", () => {
       expect(responseBody2).toEqual({
         name: "ConflictError",
         status_code: 409,
-        message:
-          "Já existe uma categoria de quarto cadastrada com esse nome.",
+        message: "Já existe uma categoria de quarto cadastrada com esse nome.",
         action: "Escolha outro nome ou edite a categoria de quarto existente.",
       })
     })

@@ -280,7 +280,10 @@ async function update(roomId, roomInputNewValues, userId) {
     roomInputNewValues.price_policies &&
     Array.isArray(roomInputNewValues.price_policies)
   ) {
-    await syncRoomPricePolicies(updatedRoom.id, roomInputNewValues.price_policies)
+    await syncRoomPricePolicies(
+      updatedRoom.id,
+      roomInputNewValues.price_policies,
+    )
   }
 
   return await findOneById(updatedRoom.id)
@@ -424,7 +427,7 @@ async function deleteById(roomId, userId) {
   }
 }
 
-async function verifyHotelBelongsToUser(hotelId, userId) {
+async function verifyHotelBelongsToUser(hotelId) {
   const results = await database.query({
     text: `
       SELECT id FROM hotels
@@ -442,7 +445,7 @@ async function verifyHotelBelongsToUser(hotelId, userId) {
   }
 }
 
-async function verifyRoomTypeBelongsToUser(roomTypeId, userId) {
+async function verifyRoomTypeBelongsToUser(roomTypeId) {
   const results = await database.query({
     text: `
       SELECT id FROM "room-types"
@@ -460,7 +463,7 @@ async function verifyRoomTypeBelongsToUser(roomTypeId, userId) {
   }
 }
 
-async function verifyRoomCategoryBelongsToUser(roomCategoryId, userId) {
+async function verifyRoomCategoryBelongsToUser(roomCategoryId) {
   const results = await database.query({
     text: `
       SELECT id FROM "room-categories"

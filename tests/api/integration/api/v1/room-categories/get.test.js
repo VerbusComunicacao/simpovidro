@@ -139,7 +139,7 @@ describe("GET /api/v1/room-categories", () => {
       expect(response2.status).toBe(200)
       const user2List = await response2.json()
       expect(user2List).toHaveLength(6)
-      
+
       expect(user2List[0].name).toBe("U2 Category 1")
       expect(user2List[1].name).toBe("U1 Category 2")
     })

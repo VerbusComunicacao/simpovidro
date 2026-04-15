@@ -192,7 +192,8 @@ describe("PATCH /api/v1/room-types/[id]", () => {
         status_code: 409,
         message:
           "Já existe um tipo de quarto cadastrado com esse nome no sistema.",
-        action: "O nome deve ser globalmente único. Escolha outro nome ou edite o tipo de quarto existente.",
+        action:
+          "O nome deve ser globalmente único. Escolha outro nome ou edite o tipo de quarto existente.",
       })
     })
 

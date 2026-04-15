@@ -121,7 +121,7 @@ describe("GET /api/v1/room-types", () => {
       expect(response2.status).toBe(200)
       const user2List = await response2.json()
       expect(user2List).toHaveLength(6)
-      
+
       // Ensure the newest is U2 Type 1
       expect(user2List[0].name).toBe("U2 Type 1")
       expect(user2List[1].name).toBe("U1 Type 2")

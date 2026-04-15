@@ -17,7 +17,7 @@ async function getHandler(request, response) {
 
   // Busca quarto (unificado)
   const roomFound = await room.findOneById(id)
-  
+
   // Aplica filtros de autorização
   const secureRoom = authorization.filterOutput(
     request.context.user,

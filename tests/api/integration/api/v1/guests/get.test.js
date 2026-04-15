@@ -42,6 +42,8 @@ describe("GET /api/v1/guests", () => {
       await guest.create(
         {
           name: "Guest 1",
+          badge_name: "Crachá 1",
+          email: "guest1@example.com",
           phone: "+5511999999901",
           gender: "Male",
           rg_number: "111111111",
@@ -53,6 +55,8 @@ describe("GET /api/v1/guests", () => {
       await guest.create(
         {
           name: "Guest 2",
+          badge_name: "Crachá 2",
+          email: "guest2@example.com",
           phone: "+5511999999902",
           gender: "Female",
           rg_number: "222222222",

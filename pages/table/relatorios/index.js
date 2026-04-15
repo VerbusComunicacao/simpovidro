@@ -169,7 +169,6 @@ export default function RelatoriosPage() {
         Total: parseInt(item.total),
         Masculino: parseInt(item.male_count),
         Feminino: parseInt(item.female_count),
-        Outros: parseInt(item.other_count),
       }))
 
       const genderData = [
@@ -181,20 +180,16 @@ export default function RelatoriosPage() {
           name: "Feminino",
           value: data.reduce((acc, curr) => acc + curr.Feminino, 0),
         },
-        {
-          name: "Outros",
-          value: data.reduce((acc, curr) => acc + curr.Outros, 0),
-        },
       ].filter((item) => item.value > 0)
 
-      const COLORS = ["#0088FE", "#FF8042", "#00C49F"]
+      const COLORS = ["#0088FE", "#FF8042"]
 
       return (
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="h-80 border rounded p-4">
               <h3 className="text-lg font-semibold mb-4 text-center">
-                Distribuição por Idade e Gênero
+                Distribuição por Idade e Sexo
               </h3>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
@@ -208,14 +203,13 @@ export default function RelatoriosPage() {
                   <Legend />
                   <Bar dataKey="Masculino" stackId="a" fill="#0088FE" />
                   <Bar dataKey="Feminino" stackId="a" fill="#FF8042" />
-                  <Bar dataKey="Outros" stackId="a" fill="#00C49F" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
             <div className="h-80 border rounded p-4">
               <h3 className="text-lg font-semibold mb-4 text-center">
-                Gênero Global
+                Distribuição por Sexo
               </h3>
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart>
@@ -250,29 +244,35 @@ export default function RelatoriosPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-100 sticky top-0">
                   <tr>
-                    <th className="px-4 py-2 text-left font-semibold">
+                    <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
                       Faixa Etária
                     </th>
-                    <th className="px-4 py-2 text-left font-semibold">Total</th>
-                    <th className="px-4 py-2 text-left font-semibold">
-                      Homens
+                    <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
+                      Total
                     </th>
-                    <th className="px-4 py-2 text-left font-semibold">
-                      Mulheres
+                    <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
+                      Masculino
                     </th>
-                    <th className="px-4 py-2 text-left font-semibold">
-                      Outros
+                    <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
+                      Feminino
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {reportData.map((row, index) => (
                     <tr key={index} className="border-t hover:bg-gray-50">
-                      <td className="px-4 py-2">{row.age_range}</td>
-                      <td className="px-4 py-2 font-bold">{row.total}</td>
-                      <td className="px-4 py-2">{row.male_count}</td>
-                      <td className="px-4 py-2">{row.female_count}</td>
-                      <td className="px-4 py-2">{row.other_count}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        {row.age_range}
+                      </td>
+                      <td className="px-4 py-2 font-bold whitespace-nowrap">
+                        {row.total}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        {row.male_count}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        {row.female_count}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -306,7 +306,7 @@ export default function RelatoriosPage() {
                     .map((key) => (
                       <th
                         key={key}
-                        className="px-4 py-2 text-left font-semibold"
+                        className="px-4 py-2 text-left font-semibold whitespace-nowrap"
                       >
                         {key}
                       </th>
@@ -322,7 +322,7 @@ export default function RelatoriosPage() {
                         typeof value !== "object" || value === null,
                     )
                     .map(([key, value]) => (
-                      <td key={key} className="px-4 py-2">
+                      <td key={key} className="px-4 py-2 whitespace-nowrap">
                         {value === true
                           ? "Sim"
                           : value === false

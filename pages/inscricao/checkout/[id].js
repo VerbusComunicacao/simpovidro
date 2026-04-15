@@ -45,6 +45,18 @@ import {
   generateInstallmentDates,
 } from "@/lib/registration-helpers"
 
+function calculateIsAdult(birthDate) {
+  if (!birthDate) return false
+  const birth = new Date(birthDate)
+  const now = new Date()
+  let age = now.getFullYear() - birth.getFullYear()
+  const m = now.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+    age--
+  }
+  return age >= 18
+}
+
 export default function CheckoutPage({
   room,
   user,
@@ -90,6 +102,7 @@ export default function CheckoutPage({
   const initialGuest = {
     // Personal
     name: guestProfile?.name || user.full_name || "",
+    badge_name: guestProfile?.badge_name || "",
     email: user.email || "",
     phone: guestProfile?.phone || "",
     gender: guestProfile?.gender || "",
@@ -124,6 +137,7 @@ export default function CheckoutPage({
 
   const emptyGuest = {
     name: "",
+    badge_name: "",
     email: "",
     phone: "",
     gender: "",
@@ -219,13 +233,6 @@ export default function CheckoutPage({
       }
       setGuests(updatedGuests)
     }
-  }
-
-  const handleLocationChange = (index, location) => {
-    const newGuests = [...guests]
-    newGuests[index] = { ...newGuests[index], ...location }
-    setGuests(newGuests)
-    setError("")
   }
 
   const handleCompanyLocationChange = (location) => {
@@ -331,10 +338,22 @@ export default function CheckoutPage({
         hasError = true
       }
 
-      // Basic Required Fields (already handled by HTML 'required', but good to double check or if we switch to non-form submit)
+      // Basic Required Fields
       if (!guest.name) {
         if (!newErrors[index]) newErrors[index] = {}
         newErrors[index].name = "Nome é obrigatório."
+        hasError = true
+      }
+
+      if (!guest.badge_name) {
+        if (!newErrors[index]) newErrors[index] = {}
+        newErrors[index].badge_name = "Nome no crachá é obrigatório."
+        hasError = true
+      }
+
+      if (calculateIsAdult(guest.birth_date) && !guest.email) {
+        if (!newErrors[index]) newErrors[index] = {}
+        newErrors[index].email = "Email é obrigatório para adultos."
         hasError = true
       }
     })
@@ -639,7 +658,9 @@ export default function CheckoutPage({
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="badge">Nome fantasia (Crachá) *</Label>
+                        <Label htmlFor="badge">
+                          Nome da empresa no crachá *
+                        </Label>
                         <Input
                           id="badge"
                           value={newCompanyData.badge}
@@ -650,6 +671,7 @@ export default function CheckoutPage({
                             })
                             setError("")
                           }}
+                          maxLength={20}
                           required
                         />
                       </div>
@@ -673,7 +695,7 @@ export default function CheckoutPage({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Telefone *</Label>
+                        <Label htmlFor="phone">Telefone Comercial *</Label>
                         <Input
                           id="phone"
                           value={newCompanyData.phone}
@@ -871,6 +893,23 @@ export default function CheckoutPage({
                               />
                             </div>
                             <div className="space-y-2">
+                              <Label htmlFor={`badge_name-${index}`}>
+                                Nome no Crachá *
+                              </Label>
+                              <Input
+                                id={`badge_name-${index}`}
+                                name="badge_name"
+                                value={guestData.badge_name}
+                                onChange={(e) => handleChange(index, e)}
+                                placeholder="Como aparecerá no crachá"
+                                maxLength={20}
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
                               <Label htmlFor={`birth_date-${index}`}>
                                 Data de Nascimento *
                               </Label>
@@ -882,6 +921,24 @@ export default function CheckoutPage({
                                 onChange={(e) => handleChange(index, e)}
                                 required
                               />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`gender-${index}`}>Sexo *</Label>
+                              <Select
+                                value={guestData.gender}
+                                onValueChange={(val) =>
+                                  handleSelectChange(index, "gender", val)
+                                }
+                                required
+                              >
+                                <SelectTrigger id={`gender-${index}`}>
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="M">Masculino</SelectItem>
+                                  <SelectItem value="F">Feminino</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                           </div>
 
@@ -924,36 +981,15 @@ export default function CheckoutPage({
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label htmlFor={`gender-${index}`}>
-                                Gênero *
-                              </Label>
-                              <Select
-                                value={guestData.gender}
-                                onValueChange={(val) =>
-                                  handleSelectChange(index, "gender", val)
-                                }
-                                required
-                              >
-                                <SelectTrigger id={`gender-${index}`}>
-                                  <SelectValue placeholder="Selecione" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="M">Masculino</SelectItem>
-                                  <SelectItem value="F">Feminino</SelectItem>
-                                  <SelectItem value="O">Outro</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
                               <Label htmlFor={`phone-${index}`}>
-                                Telefone / WhatsApp *
+                                Celular *
                               </Label>
                               <Input
                                 id={`phone-${index}`}
                                 name="phone"
                                 value={guestData.phone}
                                 onChange={(e) => handleChange(index, e)}
-                                placeholder="(00) 00000-0000"
+                                placeholder="(00) 90000-0000"
                                 required
                                 className={
                                   guestErrors[index]?.phone
@@ -967,11 +1003,11 @@ export default function CheckoutPage({
                                 </p>
                               )}
                             </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label htmlFor={`email-${index}`}>E-mail *</Label>
+                              <Label htmlFor={`email-${index}`}>
+                                E-mail{" "}
+                                {calculateIsAdult(guestData.birth_date) && "*"}
+                              </Label>
                               <Input
                                 id={`email-${index}`}
                                 name="email"
@@ -982,9 +1018,14 @@ export default function CheckoutPage({
                                 className={
                                   index === 0 ? "bg-gray-50 opacity-80" : ""
                                 }
-                                required
+                                required={calculateIsAdult(
+                                  guestData.birth_date,
+                                )}
                               />
                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor={`passport_number-${index}`}>
                                 Número do Passaporte (opcional)
@@ -999,63 +1040,7 @@ export default function CheckoutPage({
                           </div>
                         </div>
 
-                        {/* Address */}
-                        <div className="space-y-4">
-                          <h3 className="font-semibold text-gray-900 border-b pb-2">
-                            Endereço
-                          </h3>
-                          <div className="grid grid-cols-1 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor={`address-${index}`}>
-                                Rua / Logradouro *
-                              </Label>
-                              <Input
-                                id={`address-${index}`}
-                                name="address"
-                                value={guestData.address}
-                                onChange={(e) => handleChange(index, e)}
-                                required
-                              />
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor={`address_number-${index}`}>
-                                Número *
-                              </Label>
-                              <Input
-                                id={`address_number-${index}`}
-                                name="address_number"
-                                value={guestData.address_number}
-                                onChange={(e) => handleChange(index, e)}
-                                required
-                              />
-                            </div>
-                            <div className="md:col-span-2 space-y-2">
-                              <Label htmlFor={`address_complement-${index}`}>
-                                Complemento
-                              </Label>
-                              <Input
-                                id={`address_complement-${index}`}
-                                name="address_complement"
-                                value={guestData.address_complement}
-                                onChange={(e) => handleChange(index, e)}
-                              />
-                            </div>
-                          </div>
-                          <div className="mt-4">
-                            <LocationSelector
-                              key={`guest-${index}-${guestData.stateCode}-${guestData.city}`}
-                              countryCode={guestData.countryCode}
-                              stateCode={guestData.stateCode}
-                              cityName={guestData.city}
-                              onLocationChange={(loc) =>
-                                handleLocationChange(index, loc)
-                              }
-                              required
-                            />
-                          </div>
-                        </div>
+                        {/* Address removed */}
 
                         {/* Health & Emergency */}
                         <div className="space-y-4">

@@ -106,7 +106,6 @@ describe("DELETE /api/v1/hotels/[id]", () => {
       const user2 = await orchestrator.createUser()
       await orchestrator.activateUser(user2.id)
 
-      const session1 = await orchestrator.createSession(user1.id)
       const session2 = await orchestrator.createSession(user2.id)
 
       // User 1 creates a hotel

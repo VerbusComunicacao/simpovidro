@@ -21,6 +21,8 @@ describe("PATCH /api/v1/guests/[id]", () => {
       const createdGuest = await guest.create(
         {
           name: "Guest to Update",
+          badge_name: "Crachá Original",
+          email: "original@example.com",
           phone: "+5511999999904",
           gender: "Male",
           rg_number: "444444444",
@@ -96,6 +98,8 @@ describe("PATCH /api/v1/guests/[id]", () => {
       await guest.create(
         {
           name: "Existing Guest",
+          badge_name: "Crachá Existente",
+          email: "existing@example.com",
           phone: "+5511999999905",
           gender: "Female",
           rg_number: "555555555",
@@ -108,6 +112,8 @@ describe("PATCH /api/v1/guests/[id]", () => {
       const guestToUpdate = await guest.create(
         {
           name: "Another Guest",
+          badge_name: "Crachá Outro",
+          email: "another@example.com",
           phone: "+5511999999906",
           gender: "Male",
           rg_number: "666666666",
@@ -159,6 +165,8 @@ describe("PATCH /api/v1/guests/[id]", () => {
       const guestOfA = await guest.create(
         {
           name: "Guest of A",
+          badge_name: "Crachá de A",
+          email: "guest_a@example.com",
           phone: "+5511999999910",
           gender: "M",
           rg_number: "RG_A_10",
@@ -211,6 +219,8 @@ describe("PATCH /api/v1/guests/[id]", () => {
       const guestOfA = await guest.create(
         {
           name: "Guest of A",
+          badge_name: "Crachá de A Admin",
+          email: "guest_a_admin@example.com",
           phone: "+5511999999911",
           gender: "F",
           rg_number: "RG_A_11",

@@ -220,6 +220,7 @@ async function createRegistration(userId, registrationData) {
     guests_data: registrationData?.guests_data || [
       {
         name: userProfile.full_name,
+        badge_name: faker.person.firstName(),
         email: userProfile.email,
         phone: faker.string.numeric(11),
         gender: faker.helpers.arrayElement(["Masculino", "Feminino"]),

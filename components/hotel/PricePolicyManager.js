@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus, Trash2, Percent, DollarSign } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 
 export function PricePolicyManager({

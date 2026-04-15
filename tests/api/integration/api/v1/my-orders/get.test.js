@@ -65,6 +65,7 @@ describe("GET /api/v1/my-orders", () => {
             guests_data: [
               {
                 name: user.full_name,
+                badge_name: user.full_name,
                 email: user.email,
                 phone: "123456789",
                 gender: "Masculino",

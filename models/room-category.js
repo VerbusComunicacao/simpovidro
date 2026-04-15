@@ -86,9 +86,7 @@ async function update(roomCategoryId, roomCategoryInputNewValues) {
     "name" in roomCategoryInputNewValues &&
     roomCategoryInputNewValues.name !== currentRoomCategory.name
   ) {
-    await verifyRoomCategoryAlreadyExists(
-      roomCategoryInputNewValues.name,
-    )
+    await verifyRoomCategoryAlreadyExists(roomCategoryInputNewValues.name)
   }
 
   const roomCategoryWithNewValues = {
@@ -162,8 +160,7 @@ async function verifyRoomCategoryAlreadyExists(name) {
 
   if (results.rowCount > 0) {
     throw new ConflictError({
-      message:
-        "Já existe uma categoria de quarto cadastrada com esse nome.",
+      message: "Já existe uma categoria de quarto cadastrada com esse nome.",
       action: "Escolha outro nome ou edite a categoria de quarto existente.",
     })
   }

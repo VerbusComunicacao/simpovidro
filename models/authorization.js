@@ -9,24 +9,24 @@ function can(user, feature, resource) {
 
   switch (feature) {
     case "update:user":
-    case "read:guest":
     case "read:user":
       return (
         (resource?.id && user.id === resource.id) ||
         user.features.includes(`${feature}:others`)
       )
 
+    case "read:guest":
     case "update:guest":
       return (
         (resource?.user_id && user.id === resource.user_id) ||
-        user.features.includes("update:guest:others")
+        user.features.includes(`${feature}:others`)
       )
 
     case "update:content":
     case "read:content":
     case "delete:content":
       return true
-      
+
     case "delete:guest":
       if (!resource) return true
       return (

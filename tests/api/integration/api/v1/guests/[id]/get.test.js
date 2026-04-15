@@ -19,6 +19,8 @@ describe("GET /api/v1/guests/[id]", () => {
       const createdGuest = await guest.create(
         {
           name: "Guest to Find",
+          badge_name: "Crachá do Hóspede",
+          email: "find@example.com",
           phone: "+5511999999903",
           gender: "Female",
           rg_number: "333333333",

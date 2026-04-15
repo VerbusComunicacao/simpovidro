@@ -3,14 +3,24 @@ import { ConflictError, ValidationError, NotFoundError } from "infra/errors.js"
 import { validateRequiredFields, validateUUID } from "infra/validator.js"
 
 async function create(guestInputValues, userId, client) {
-  validateRequiredFields(guestInputValues, [
+  const isAdult = calculateIsAdult(guestInputValues.birth_date)
+
+  const requiredFields = [
     "name",
+    "badge_name",
     "phone",
     "gender",
     "rg_number",
     "cpf_number",
     "birth_date",
-  ])
+  ]
+
+  if (isAdult) {
+    requiredFields.push("email")
+  }
+
+  validateRequiredFields(guestInputValues, requiredFields)
+
   await checkUniqueFields(guestInputValues, null, client)
 
   const resolvedUserId = await resolveUserId(
@@ -171,14 +181,22 @@ async function findOneByUserId(userId, client) {
 }
 
 async function upsert(guestData, userId = null, client) {
-  validateRequiredFields(guestData, [
+  const isAdult = calculateIsAdult(guestData.birth_date)
+
+  const requiredFields = [
     "name",
     "phone",
     "gender",
     "rg_number",
     "cpf_number",
     "birth_date",
-  ])
+  ]
+
+  if (isAdult) {
+    requiredFields.push("email")
+  }
+
+  validateRequiredFields(guestData, requiredFields)
 
   const existingGuest = await findOneByCpfOrRg(
     guestData.cpf_number,
@@ -426,7 +444,20 @@ async function resolveUserId(guestEmail, providedUserId, client) {
     text: "SELECT id FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1",
     values: [guestEmail],
   })
-  return results.rows[0]?.id || null
+  return results.rows[0]?.id || providedUserId
+}
+
+function calculateIsAdult(birthDate) {
+  if (!birthDate) return false
+
+  const referenceDate = new Date()
+  const birth = new Date(birthDate)
+  let age = referenceDate.getUTCFullYear() - birth.getUTCFullYear()
+  const m = referenceDate.getUTCMonth() - birth.getUTCMonth()
+  if (m < 0 || (m === 0 && referenceDate.getUTCDate() < birth.getUTCDate())) {
+    age--
+  }
+  return age >= 18
 }
 
 const guest = {
