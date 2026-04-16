@@ -136,7 +136,7 @@ async function create(saleInputValues, externalClient) {
         age--
       }
 
-      if (age >= 18) {
+      if (age >= 12) {
         adultCount++
       } else {
         childCount++
@@ -144,10 +144,18 @@ async function create(saleInputValues, externalClient) {
       return { guest, age }
     })
 
+    const holderAge = guestAges[0]?.age || 0
+    if (holderAge < 18) {
+      throw new ValidationError({
+        message: "O titular da inscrição deve ser maior de 18 anos.",
+        action: "Altere o titular da inscrição para um adulto maior de 18.",
+      })
+    }
+
     if (adultCount === 0) {
       throw new ValidationError({
-        message: "Deve haver pelo menos um adulto (18+) por quarto.",
-        action: "Adicione um adulto à inscrição.",
+        message: "Deve haver pelo menos um hóspede adulto por quarto.",
+        action: "Adicione um hóspede adulto à inscrição.",
       })
     }
 
@@ -162,6 +170,13 @@ async function create(saleInputValues, externalClient) {
       throw new ValidationError({
         message: `O número de crianças (${childCount}) excede a capacidade máxima do quarto (${targetRoom.max_children}).`,
         action: "Selecione um quarto com maior capacidade para crianças.",
+      })
+    }
+
+    if (adultCount < (targetRoom.min_guests || 1)) {
+      throw new ValidationError({
+        message: `Este quarto exige no mínimo ${targetRoom.min_guests} hóspedes adultos.`,
+        action: "Adicione mais hóspedes adultos para continuar.",
       })
     }
 

@@ -349,9 +349,10 @@ export default function HotelPage() {
               <div
                 className="grid gap-4 text-sm border-b pb-2 mb-2"
                 style={{
-                  gridTemplateColumns: `repeat(${7 + (hotel.price_policies?.filter((p) => p.use_percentage === false).length || 0)}, minmax(0, 1fr)) auto`,
+                  gridTemplateColumns: `repeat(${8 + (hotel.price_policies?.filter((p) => p.use_percentage === false).length || 0)}, minmax(0, 1fr)) auto`,
                 }}
               >
+                <div>Nome</div>
                 <div>Tipo</div>
                 <div>Categoria</div>
                 <div>Preço por Pessoa</div>
@@ -372,9 +373,12 @@ export default function HotelPage() {
                 key={room.id}
                 className="grid gap-4 py-2 border-b items-center"
                 style={{
-                  gridTemplateColumns: `repeat(${7 + (hotel.price_policies?.filter((p) => p.use_percentage === false).length || 0)}, minmax(0, 1fr)) auto`,
+                  gridTemplateColumns: `repeat(${8 + (hotel.price_policies?.filter((p) => p.use_percentage === false).length || 0)}, minmax(0, 1fr)) auto`,
                 }}
               >
+                <div className="font-medium text-blue-600">
+                  {room.name || "-"}
+                </div>
                 <div>{room.room_type}</div>
                 <div>{room.room_category}</div>
                 <div>R$ {room.price_per_night}</div>

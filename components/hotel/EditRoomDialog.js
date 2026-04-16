@@ -42,6 +42,7 @@ export function EditRoomDialog({
   const [photos, setPhotos] = useState(
     room.photos && room.photos.length > 0 ? room.photos : [""],
   )
+  const [minGuests, setMinGuests] = useState(room.min_guests || 1)
   const [error, setError] = useState("")
   const [action, setAction] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
@@ -104,6 +105,7 @@ export function EditRoomDialog({
     setName(room.name || "")
     setDescription(room.description || "")
     setPhotos(room.photos && room.photos.length > 0 ? room.photos : [""])
+    setMinGuests(room.min_guests || 1)
     setRoomPricePolicies(
       room.price_policies
         ?.filter((p) => p.price !== null)
@@ -141,6 +143,7 @@ export function EditRoomDialog({
         name,
         description,
         photos: photos.filter((p) => p.trim() !== ""),
+        min_guests: parseInt(minGuests) || 1,
         price_policies: roomPricePolicies,
       }),
     })
@@ -172,6 +175,19 @@ export function EditRoomDialog({
           <form onSubmit={handleSubmit}>
             <div className="max-h-[70vh] overflow-y-auto px-1">
               <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name-edit" className="text-right">
+                    Nome
+                  </Label>
+                  <Input
+                    id="name-edit"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="col-span-3"
+                    placeholder="Ex: Suíte Presidencial"
+                    required
+                  />
+                </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="room-type-edit" className="text-right">
                     Tipo
@@ -262,19 +278,20 @@ export function EditRoomDialog({
                     className="col-span-3"
                   />
                 </div>
-
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name-edit" className="text-right">
-                    Nome (opcional)
+                  <Label htmlFor="min-guests-edit" className="text-right">
+                    Mínimo de hóspedes
                   </Label>
                   <Input
-                    id="name-edit"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    id="min-guests-edit"
+                    type="number"
+                    min="1"
+                    value={minGuests}
+                    onChange={(e) => setMinGuests(e.target.value)}
                     className="col-span-3"
-                    placeholder="Ex: Suíte Presidencial"
                   />
                 </div>
+
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="description-edit" className="text-right">
                     Descrição

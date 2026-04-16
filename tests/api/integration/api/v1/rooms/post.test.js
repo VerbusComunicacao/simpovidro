@@ -163,6 +163,7 @@ describe("POST /api/v1/rooms", () => {
         max_adults: roomCategory.max_adults,
         max_children: roomCategory.max_children,
         member_price_per_night: "0.00",
+        min_guests: 1,
       })
     })
 

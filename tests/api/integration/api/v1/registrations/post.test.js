@@ -45,11 +45,13 @@ describe("POST /api/v1/registrations", () => {
   })
 
   describe("Authenticated user", () => {
-    let admToken
+    let adminToken
     let userToken
     let hotelId
     let roomId
     let regularUserId
+    let roomTypeId
+    let roomCategoryId
 
     beforeAll(async () => {
       // 1. Create and Setup Admin User
@@ -60,7 +62,7 @@ describe("POST /api/v1/registrations", () => {
       })
       await orchestrator.activateAdmUser(adminUser.id)
       const adminSession = await orchestrator.createSession(adminUser.id)
-      admToken = adminSession.token
+      adminToken = adminSession.token
 
       // 2. Create Regular User
       const regularUser = await orchestrator.createUser({
@@ -83,13 +85,13 @@ describe("POST /api/v1/registrations", () => {
       regularUserId = regularUser.id
 
       // 3. Create a hotel (as admin)
-      const hotelResp = await fetch(
+      const hotelResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/hotels`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             name: "Discount Hotel",
@@ -100,36 +102,37 @@ describe("POST /api/v1/registrations", () => {
           }),
         },
       )
-      const hotelText = await hotelResp.text()
-      if (hotelResp.status !== 201)
+      const hotelText = await hotelResponse.text()
+      if (hotelResponse.status !== 201)
         throw new Error(`Hotel setup failed: ${hotelText}`)
       hotelId = JSON.parse(hotelText).id
 
       // 4. Create a room type (as admin)
-      const rtResp = await fetch(
+      const roomTypeResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/room-types`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({ name: "Single" }),
         },
       )
-      const rtText = await rtResp.text()
-      if (rtResp.status !== 201)
-        throw new Error(`Room type setup failed: ${rtText}`)
-      const rtData = JSON.parse(rtText)
+      const roomTypeText = await roomTypeResponse.text()
+      if (roomTypeResponse.status !== 201)
+        throw new Error(`Room type setup failed: ${roomTypeText}`)
+      const roomTypeData = JSON.parse(roomTypeText)
+      roomTypeId = roomTypeData.id
 
       // 5. Create a room category (as admin)
-      const rcResp = await fetch(
+      const roomCategoryResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/room-categories`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             name: "Standard",
@@ -138,31 +141,32 @@ describe("POST /api/v1/registrations", () => {
           }),
         },
       )
-      const rcText = await rcResp.text()
-      if (rcResp.status !== 201)
-        throw new Error(`Room category setup failed: ${rcText}`)
-      const rcData = JSON.parse(rcText)
+      const roomCategoryText = await roomCategoryResponse.text()
+      if (roomCategoryResponse.status !== 201)
+        throw new Error(`Room category setup failed: ${roomCategoryText}`)
+      const roomCategoryData = JSON.parse(roomCategoryText)
+      roomCategoryId = roomCategoryData.id
 
       // 6. Create a room (as admin)
-      const roomResp = await fetch(
+      const roomResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/rooms`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             hotel_id: hotelId,
-            room_type_id: rtData.id,
-            room_category_id: rcData.id,
+            room_type_id: roomTypeData.id,
+            room_category_id: roomCategoryData.id,
             price_per_night: 1000.0,
             total_rooms: 10,
           }),
         },
       )
-      const roomText = await roomResp.text()
-      if (roomResp.status !== 201)
+      const roomText = await roomResponse.text()
+      if (roomResponse.status !== 201)
         throw new Error(`Room setup failed: ${roomText}`)
       roomId = JSON.parse(roomText).id
     })
@@ -170,13 +174,13 @@ describe("POST /api/v1/registrations", () => {
     test("should apply discount when company is eligible", async () => {
       const cnpj = "12345678000199"
 
-      const compResp = await fetch(
+      const companyResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/companies`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             corporate_name: "Eligible Corp",
@@ -196,9 +200,9 @@ describe("POST /api/v1/registrations", () => {
           }),
         },
       )
-      const compText = await compResp.text()
-      if (compResp.status !== 201)
-        throw new Error(`Company setup failed: ${compText}`)
+      const companyText = await companyResponse.text()
+      if (companyResponse.status !== 201)
+        throw new Error(`Company setup failed: ${companyText}`)
 
       const response = await fetch(
         `${orchestrator.webserverUrl}/api/v1/registrations`,
@@ -227,21 +231,23 @@ describe("POST /api/v1/registrations", () => {
         },
       )
 
-      const regText = await response.text()
+      const registrationText = await response.text()
       if (response.status !== 201)
-        throw new Error(`Registration failed (${response.status}): ${regText}`)
+        throw new Error(
+          `Registration failed (${response.status}): ${registrationText}`,
+        )
 
-      const data = JSON.parse(regText)
+      const data = JSON.parse(registrationText)
       expect(data.saleId).toBeDefined()
 
-      const saleResp = await fetch(
+      const saleResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/sales/${data.saleId}`,
         {
           headers: { Cookie: `session_id=${userToken}` },
         },
       )
-      const saleText = await saleResp.text()
-      if (saleResp.status !== 200)
+      const saleText = await saleResponse.text()
+      if (saleResponse.status !== 200)
         throw new Error(`Sale lookup failed: ${saleText}`)
       const saleData = JSON.parse(saleText)
 
@@ -279,11 +285,11 @@ describe("POST /api/v1/registrations", () => {
         },
       )
 
-      const compText = await response.text()
+      const companyText = await response.text()
       if (response.status !== 201)
-        throw new Error(`Sneaky company creation failed: ${compText}`)
+        throw new Error(`Sneaky company creation failed: ${companyText}`)
 
-      const companyData = JSON.parse(compText)
+      const companyData = JSON.parse(companyText)
       expect(companyData.custom_discount_percentage).toBe(null)
     })
 
@@ -341,19 +347,19 @@ describe("POST /api/v1/registrations", () => {
         },
       )
 
-      const regText = await response.text()
+      const registrationText = await response.text()
       if (response.status !== 201)
-        throw new Error(`Registration failed: ${regText}`)
-      const data = JSON.parse(regText)
+        throw new Error(`Registration failed: ${registrationText}`)
+      const data = JSON.parse(registrationText)
 
-      const saleResp = await fetch(
+      const saleResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/sales/${data.saleId}`,
         {
           headers: { Cookie: `session_id=${userToken}` },
         },
       )
-      const saleText = await saleResp.text()
-      if (saleResp.status !== 200)
+      const saleText = await saleResponse.text()
+      if (saleResponse.status !== 200)
         throw new Error(`Sale lookup failed: ${saleText}`)
       const saleData = JSON.parse(saleText)
 
@@ -461,13 +467,13 @@ describe("POST /api/v1/registrations", () => {
       expect(response.status).toBe(201)
       const data = JSON.parse(await response.text())
 
-      const saleResp = await fetch(
+      const saleResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/sales/${data.saleId}`,
         {
           headers: { Cookie: `session_id=${userToken}` },
         },
       )
-      const saleData = JSON.parse(await saleResp.text())
+      const saleData = JSON.parse(await saleResponse.text())
 
       expect(saleData.payment_method).toBe("installments")
       expect(saleData.installments_count).toBe(expectedInstallmentsCount)
@@ -541,7 +547,7 @@ describe("POST /api/v1/registrations", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Cookie: `session_id=${admToken}`,
+          Cookie: `session_id=${adminToken}`,
         },
         body: JSON.stringify({
           hotel_id: hotelId,
@@ -571,7 +577,7 @@ describe("POST /api/v1/registrations", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Cookie: `session_id=${admToken}`,
+          Cookie: `session_id=${adminToken}`,
         },
         body: JSON.stringify({
           corporate_name: "Member Corp",
@@ -621,13 +627,13 @@ describe("POST /api/v1/registrations", () => {
       const data = JSON.parse(await response.text())
 
       // 4. Verify Sale Pricing
-      const saleResp = await fetch(
+      const saleResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/sales/${data.saleId}`,
         {
           headers: { Cookie: `session_id=${userToken}` },
         },
       )
-      const saleData = JSON.parse(await saleResp.text())
+      const saleData = JSON.parse(await saleResponse.text())
 
       // Member price (850) should be used instead of standard price (1000)
       // And discount_percentage should be 0 because it's a fixed member price
@@ -803,7 +809,7 @@ describe("POST /api/v1/registrations", () => {
     })
 
     test("Admin should be able to register ANY guest as the primary registrant (bypass identity check)", async () => {
-      // 1. Setup Admin Token (already exists in scope: admToken)
+      // 1. Setup Admin Token (already exists in scope: adminToken)
       // 2. Attempt registration with Guest 1 identity !== Admin User
       const response = await fetch(
         `${orchestrator.webserverUrl}/api/v1/registrations`,
@@ -811,7 +817,7 @@ describe("POST /api/v1/registrations", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             room_id: roomId,
@@ -851,13 +857,13 @@ describe("POST /api/v1/registrations", () => {
     })
     test("should apply room-specific age policy price when use_percentage is false", async () => {
       // 1. Create Hotel with policies
-      const hotelResp = await fetch(
+      const hotelResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/hotels`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             name: "Policy Test Hotel Final",
@@ -882,33 +888,33 @@ describe("POST /api/v1/registrations", () => {
           }),
         },
       )
-      expect(hotelResp.status).toBe(201)
-      const hotelData = await hotelResp.json()
+      expect(hotelResponse.status).toBe(201)
+      const hotelData = await hotelResponse.json()
       expect(hotelData.price_policies).toBeDefined()
       expect(hotelData.price_policies).toHaveLength(2)
 
       // 2. Setup Resources (Type and Category)
-      const rtResp = await fetch(
+      const roomTypeResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/room-types`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({ name: "PricingRT" }),
         },
       )
-      expect(rtResp.status).toBe(201)
-      const rtData = await rtResp.json()
+      expect(roomTypeResponse.status).toBe(201)
+      const roomTypeData = await roomTypeResponse.json()
 
-      const rcResp = await fetch(
+      const roomCategoryResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/room-categories`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             name: "PricingRC",
@@ -917,8 +923,8 @@ describe("POST /api/v1/registrations", () => {
           }),
         },
       )
-      expect(rcResp.status).toBe(201)
-      const rcData = await rcResp.json()
+      expect(roomCategoryResponse.status).toBe(201)
+      const roomCategoryData = await roomCategoryResponse.json()
 
       // 3. Create Room with override for the 12y policy
       const roomFinalResp = await fetch(
@@ -927,12 +933,12 @@ describe("POST /api/v1/registrations", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             hotel_id: hotelData.id,
-            room_type_id: rtData.id,
-            room_category_id: rcData.id,
+            room_type_id: roomTypeData.id,
+            room_category_id: roomCategoryData.id,
             price_per_night: 200.0,
             total_rooms: 10,
             price_policies: [
@@ -987,7 +993,7 @@ describe("POST /api/v1/registrations", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             room_id: roomData.id,
@@ -1001,13 +1007,13 @@ describe("POST /api/v1/registrations", () => {
       const { saleId } = await response.json()
 
       // 4. Verify Sale Pricing
-      const saleResp = await fetch(
+      const saleResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
         {
-          headers: { Cookie: `session_id=${admToken}` },
+          headers: { Cookie: `session_id=${adminToken}` },
         },
       )
-      const saleData = await saleResp.json()
+      const saleData = await saleResponse.json()
 
       // Expected: 200 (adult) + 0 (baby) + 75.5 (child) = 275.5
       expect(Number(saleData.total_amount)).toBe(275.5)
@@ -1015,13 +1021,13 @@ describe("POST /api/v1/registrations", () => {
 
     test("should use percentage calculation when use_percentage is true, even if room price is defined", async () => {
       // 1. Create Hotel with policy (percentage based)
-      const hotelResp = await fetch(
+      const hotelResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/hotels`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             name: "Percentage Priority Hotel",
@@ -1040,29 +1046,29 @@ describe("POST /api/v1/registrations", () => {
           }),
         },
       )
-      const hotelData = await hotelResp.json()
+      const hotelData = await hotelResponse.json()
 
       // 2. Setup Resources
-      const rtResp = await fetch(
+      const roomTypeResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/room-types`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({ name: "PercentageRT" }),
         },
       )
-      const rtData = await rtResp.json()
+      const roomTypeData = await roomTypeResponse.json()
 
-      const rcResp = await fetch(
+      const roomCategoryResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/room-categories`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             name: "PercentageRC",
@@ -1071,7 +1077,7 @@ describe("POST /api/v1/registrations", () => {
           }),
         },
       )
-      const rcData = await rcResp.json()
+      const roomCategoryData = await roomCategoryResponse.json()
 
       // 3. Create Room with override price (but use_percentage is TRUE in policy)
       const roomFinalResp = await fetch(
@@ -1080,12 +1086,12 @@ describe("POST /api/v1/registrations", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             hotel_id: hotelData.id,
-            room_type_id: rtData.id,
-            room_category_id: rcData.id,
+            room_type_id: roomTypeData.id,
+            room_category_id: roomCategoryData.id,
             price_per_night: 200.0,
             total_rooms: 10,
             price_policies: [
@@ -1129,7 +1135,7 @@ describe("POST /api/v1/registrations", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             room_id: roomData.id,
@@ -1143,13 +1149,13 @@ describe("POST /api/v1/registrations", () => {
       const { saleId } = await response.json()
 
       // 5. Verify Sale Pricing
-      const saleResp = await fetch(
+      const saleResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
         {
-          headers: { Cookie: `session_id=${admToken}` },
+          headers: { Cookie: `session_id=${adminToken}` },
         },
       )
-      const saleData = await saleResp.json()
+      const saleData = await saleResponse.json()
 
       // Expected: Adult (200) + Child (200 * 50% = 100) = 300.0
       expect(Number(saleData.total_amount)).toBe(300.0)
@@ -1157,13 +1163,13 @@ describe("POST /api/v1/registrations", () => {
 
     test("Falha ao tentar adicionar uma criança sozinha no quarto (exige pelo menos um adulto)", async () => {
       // 1. Setup Hotel
-      const hotelResp = await fetch(
+      const hotelResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/hotels`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             name: "Adult Required Hotel Unique",
@@ -1183,28 +1189,28 @@ describe("POST /api/v1/registrations", () => {
           }),
         },
       )
-      const hotelData = await hotelResp.json()
+      const hotelData = await hotelResponse.json()
 
-      const rtResp = await fetch(
+      const roomTypeResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/room-types`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({ name: "SingleAdultRT_Unq" }),
         },
       )
-      const rtData = await rtResp.json()
+      const roomTypeData = await roomTypeResponse.json()
 
-      const rcResp = await fetch(
+      const roomCategoryResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/room-categories`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             name: "SingleAdultRC_Unq",
@@ -1213,20 +1219,20 @@ describe("POST /api/v1/registrations", () => {
           }),
         },
       )
-      const rcData = await rcResp.json()
+      const roomCategoryData = await roomCategoryResponse.json()
 
-      const roomResp = await fetch(
+      const roomResponse = await fetch(
         `${orchestrator.webserverUrl}/api/v1/rooms`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             hotel_id: hotelData.id,
-            room_type_id: rtData.id,
-            room_category_id: rcData.id,
+            room_type_id: roomTypeData.id,
+            room_category_id: roomCategoryData.id,
             price_per_night: 200.0,
             total_rooms: 5,
             blocked_rooms: 0,
@@ -1236,13 +1242,13 @@ describe("POST /api/v1/registrations", () => {
           }),
         },
       )
-      const roomData = await roomResp.json()
+      const roomData = await roomResponse.json()
 
       // Se falhar aqui, o erro será exibido no console para debug
-      if (roomResp.status !== 201) {
+      if (roomResponse.status !== 201) {
         console.error("Room creation failed:", roomData)
       }
-      expect(roomResp.status).toBe(201)
+      expect(roomResponse.status).toBe(201)
 
       // 2. Tenta registrar apenas uma criança (8 anos)
       const response = await fetch(
@@ -1251,7 +1257,7 @@ describe("POST /api/v1/registrations", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${admToken}`,
+            Cookie: `session_id=${adminToken}`,
           },
           body: JSON.stringify({
             room_id: roomData.id,
@@ -1275,7 +1281,7 @@ describe("POST /api/v1/registrations", () => {
       // Espera-se que falhe com 400 (Bad Request)
       expect(response.status).toBe(400)
       const body = await response.json()
-      expect(body.message).toContain("pelo menos um adulto")
+      expect(body.message).toContain("maior de 18 anos")
     })
     describe("Pricing Calculation (Per Person)", () => {
       test("should calculate total as Price * Number of Adults (1 guest)", async () => {
@@ -1308,13 +1314,13 @@ describe("POST /api/v1/registrations", () => {
         expect(response.status).toBe(201)
         const { saleId } = await response.json()
 
-        const saleResp = await fetch(
+        const saleResponse = await fetch(
           `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
           {
             headers: { Cookie: `session_id=${userToken}` },
           },
         )
-        const saleData = await saleResp.json()
+        const saleData = await saleResponse.json()
 
         // 1 guest * 1000 = 1000
         expect(Number(saleData.total_amount)).toBe(1000.0)
@@ -1360,13 +1366,13 @@ describe("POST /api/v1/registrations", () => {
         expect(response.status).toBe(201)
         const { saleId } = await response.json()
 
-        const saleResp = await fetch(
+        const saleResponse = await fetch(
           `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
           {
             headers: { Cookie: `session_id=${userToken}` },
           },
         )
-        const saleData = await saleResp.json()
+        const saleData = await saleResponse.json()
 
         // 2 guests * 1000 = 2000
         expect(Number(saleData.total_amount)).toBe(2000.0)
@@ -1401,16 +1407,215 @@ describe("POST /api/v1/registrations", () => {
 
         expect(response.status).toBe(201)
         const { saleId } = await response.json()
-        const saleResp = await fetch(
+        const saleResponse = await fetch(
           `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
           {
             headers: { Cookie: `session_id=${userToken}` },
           },
         )
-        const saleData = await saleResp.json()
+        const saleData = await saleResponse.json()
 
         // Should still be 1000, not 9000
         expect(Number(saleData.total_amount)).toBe(1000.0)
+      })
+    })
+
+    describe("Minimum Guest Occupancy Policy", () => {
+      test("should return 400 if room requires more guests than provided", async () => {
+        // 1. Create a unique user for this specific test to avoid 404 (identity mismatch) and 400 (duplicate registration)
+        const uniqueEmail = `min-guest-${Date.now()}@example.com`
+        const minimumGuestUser = await orchestrator.createUser({
+          full_name: "Min Guest Tester",
+          email: uniqueEmail,
+        })
+
+        await orchestrator.activateUser(minimumGuestUser.id)
+        await orchestrator.setUserFeatures(minimumGuestUser.id, [
+          "create:session",
+          "read:session",
+          "create:guest",
+          "read:guest",
+          "read:user",
+          "update:user",
+          "read:content",
+        ])
+        const temporarySession = await orchestrator.createSession(
+          minimumGuestUser.id,
+        )
+        const temporaryToken = temporarySession.token
+
+        // 2. Create a room with min_guests = 2
+        const roomResponse = await fetch(
+          `${orchestrator.webserverUrl}/api/v1/rooms`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: `session_id=${adminToken}`,
+            },
+            body: JSON.stringify({
+              hotel_id: hotelId,
+              room_type_id: roomTypeId,
+              room_category_id: roomCategoryId,
+              price_per_night: 100,
+              total_rooms: 10,
+              min_guests: 2,
+            }),
+          },
+        )
+        expect(roomResponse.status).toBe(201)
+        const roomData = await roomResponse.json()
+        const targetRoomId = roomData.id
+
+        // 3. Try to register with only 1 guest (the user themselves)
+        const registrationResponse = await fetch(
+          `${orchestrator.webserverUrl}/api/v1/registrations`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: `session_id=${temporaryToken}`,
+            },
+            body: JSON.stringify({
+              room_id: targetRoomId,
+              guests_data: [
+                {
+                  name: minimumGuestUser.full_name,
+                  badge_name: "Tester",
+                  email: minimumGuestUser.email,
+                  phone: "(11) 99999-9999",
+                  gender: "Masculino",
+                  rg_number: `RG-${Date.now()}`,
+                  cpf_number: `000.000.00${Math.floor(Math.random() * 90) + 10}-01`,
+                  birth_date: "1990-01-01",
+                  emergency_contact_name: "Emergency",
+                  emergency_contact_phone: "(11) 99999-9999",
+                },
+              ],
+              payment_method: "cash",
+            }),
+          },
+        )
+
+        expect(registrationResponse.status).toBe(400)
+        const registrationData = await registrationResponse.json()
+        expect(registrationData.message).toContain(
+          "exige no mínimo 2 hóspedes adultos",
+        )
+      })
+
+      test("should return 400 if room has high capacity but min_guests requirement is not met", async () => {
+        // 1. Create another unique user for this test
+        const uniqueEmailHC = `high-cap-${Date.now()}@example.com`
+        const highCapUser = await orchestrator.createUser({
+          full_name: "High Cap Tester",
+          email: uniqueEmailHC,
+        })
+        await orchestrator.activateUser(highCapUser.id)
+        await orchestrator.setUserFeatures(highCapUser.id, [
+          "create:session",
+          "read:session",
+          "create:guest",
+          "read:guest",
+          "read:user",
+          "update:user",
+          "read:content",
+        ])
+        const highCapSession = await orchestrator.createSession(highCapUser.id)
+        const highCapToken = highCapSession.token
+
+        // 2. Create a specialized category 4 adults, 4 children
+        const roomCategoryData = await orchestrator.createRoomCategory(
+          regularUserId,
+          {
+            name: "Grand Suite High Capacity",
+            max_adults: 4,
+            max_children: 4,
+          },
+        )
+
+        const roomResponse = await fetch(
+          `${orchestrator.webserverUrl}/api/v1/rooms`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: `session_id=${adminToken}`,
+            },
+            body: JSON.stringify({
+              hotel_id: hotelId,
+              room_type_id: roomTypeId,
+              room_category_id: roomCategoryData.id,
+              price_per_night: 200,
+              total_rooms: 5,
+              min_guests: 3,
+            }),
+          },
+        )
+        expect(roomResponse.status).toBe(201)
+        const roomData = await roomResponse.json()
+        const targetRoomId = roomData.id
+
+        // 4. Try to register with only 3 guests
+        // Guest 1 MUST be the logged-in user to avoid identity 404
+        const registrationResponse = await fetch(
+          `${orchestrator.webserverUrl}/api/v1/registrations`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: `session_id=${highCapToken}`,
+            },
+            body: JSON.stringify({
+              room_id: targetRoomId,
+              guests_data: [
+                {
+                  name: highCapUser.full_name,
+                  badge_name: "HC Lead",
+                  email: highCapUser.email,
+                  phone: "(11) 99999-9999",
+                  gender: "Masculino",
+                  rg_number: `RG-HC1-${Date.now()}`,
+                  cpf_number: `000.000.00${Math.floor(Math.random() * 90) + 10}-02`,
+                  birth_date: "1980-01-01",
+                  emergency_contact_name: "Emergency",
+                  emergency_contact_phone: "(11) 99999-9999",
+                },
+                {
+                  name: "HC Guest 2",
+                  badge_name: "HC 2",
+                  email: "hc-guest2@example.com",
+                  phone: "(11) 99999-9999",
+                  gender: "Feminino",
+                  rg_number: `RG-HC2-${Date.now()}`,
+                  cpf_number: `000.000.00${Math.floor(Math.random() * 90) + 10}-03`,
+                  birth_date: "2020-01-01",
+                  emergency_contact_name: "Emergency",
+                  emergency_contact_phone: "(11) 99999-9999",
+                },
+                {
+                  name: "HC Guest 3",
+                  badge_name: "HC 3",
+                  email: "hc-guest3@example.com",
+                  phone: "(11) 99999-9999",
+                  gender: "Masculino",
+                  rg_number: `RG-HC3-${Date.now()}`,
+                  cpf_number: `000.000.00${Math.floor(Math.random() * 90) + 10}-04`,
+                  birth_date: "2022-01-01",
+                  emergency_contact_name: "Emergency",
+                  emergency_contact_phone: "(11) 99999-9999",
+                },
+              ],
+              payment_method: "cash",
+            }),
+          },
+        )
+
+        expect(registrationResponse.status).toBe(400)
+        const registrationData = await registrationResponse.json()
+        expect(registrationData.message).toContain(
+          "exige no mínimo 3 hóspedes adultos",
+        )
       })
     })
   })

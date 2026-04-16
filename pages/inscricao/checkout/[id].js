@@ -54,6 +54,18 @@ function calculateIsAdult(birthDate) {
   if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
     age--
   }
+  return age >= 12
+}
+
+function calculateIsHolder(birthDate) {
+  if (!birthDate) return false
+  const birth = new Date(birthDate)
+  const now = new Date()
+  let age = now.getFullYear() - birth.getFullYear()
+  const m = now.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+    age--
+  }
   return age >= 18
 }
 
@@ -168,12 +180,19 @@ export default function CheckoutPage({
     has_low_blood_pressure: false,
   }
 
-  // Initialize guests array with fixed capacity
   const maxAdults = room.max_adults || 0
   const maxChildren = room.max_children || 0
   const totalCapacity = maxAdults + maxChildren
+  const minRequired = room.min_guests || 1
 
-  const [guests, setGuests] = useState([{ ...initialGuest }])
+  const [guests, setGuests] = useState(() => {
+    // Start with the logged-in user as Guest 1, then add (minRequired - 1) empty guests
+    const initialArr = [{ ...initialGuest }]
+    for (let i = 1; i < minRequired; i++) {
+      initialArr.push({ ...emptyGuest })
+    }
+    return initialArr
+  })
 
   const handleAddGuest = () => {
     if (guests.length < totalCapacity) {
@@ -182,6 +201,8 @@ export default function CheckoutPage({
   }
 
   const handleRemoveGuest = (indexToRemove) => {
+    if (guests.length <= minRequired) return
+
     const newGuests = guests.filter((_, index) => index !== indexToRemove)
     setGuests(newGuests)
 
@@ -314,6 +335,15 @@ export default function CheckoutPage({
     let hasError = false
 
     guests.forEach((guest, index) => {
+      // 0. Validate Holder Age (Specifically for the first guest)
+      if (index === 0 && !calculateIsHolder(guest.birth_date)) {
+        hasError = true
+        if (!newErrors[index]) newErrors[index] = {}
+        setError("O titular da inscrição deve ser maior de 18 anos.")
+        // Highlight the birth date field for the holder
+        newErrors[index].birth_date = "Titular deve ser maior de 18 anos."
+      }
+
       // Validate CPF
       if (guest.cpf_number && !validateCPF(guest.cpf_number)) {
         if (!newErrors[index]) newErrors[index] = {}
@@ -494,13 +524,15 @@ export default function CheckoutPage({
       : `Criança ${index - maxAdults + 1}`
   }
 
+  const isMinGuestsReached = guests.length >= minRequired
+
   const getGuestDescription = (index) => {
     if (index === 0)
-      return "Dados do titular da conta (vinculados ao seu perfil)."
+      return "Dados do titular da conta (deve ser maior de 18 anos)."
 
     return index < maxAdults
-      ? "Dados do acompanhante adulto (obrigatório)."
-      : "Dados da criança (obrigatório)."
+      ? "Dados do acompanhante adulto (a partir de 12 anos)."
+      : "Dados da criança (até 11 anos)."
   }
 
   return (
@@ -857,12 +889,13 @@ export default function CheckoutPage({
                             </CardDescription>
                           </div>
                         </div>
-                        {index > 0 && (
+                        {index > 0 && !(guests.length <= minRequired) && (
                           <Button
                             type="button"
                             variant="destructive"
                             size="sm"
                             onClick={() => handleRemoveGuest(index)}
+                            disabled={guests.length <= minRequired}
                           >
                             Remover acompanhante
                           </Button>
@@ -1260,6 +1293,21 @@ export default function CheckoutPage({
                         <User className="h-5 w-5 mr-2" />
                         Adicionar Hóspede (Máximo de: {totalCapacity})
                       </Button>
+                    </div>
+                  )}
+
+                  {minRequired > 1 && (
+                    <div className="bg-orange-50 text-orange-700 p-4 rounded-md border border-orange-200 text-sm flex items-start gap-2 mb-4">
+                      <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                      <div>
+                        <p className="font-semibold">
+                          Ocupação mínima obrigatória
+                        </p>
+                        <p>
+                          Este quarto exige no mínimo {minRequired} hóspedes
+                          adultos para a reserva.
+                        </p>
+                      </div>
                     </div>
                   )}
 

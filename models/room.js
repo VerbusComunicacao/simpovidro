@@ -9,6 +9,7 @@ async function create(roomInputValues, userId) {
     "room_category_id",
     "price_per_night",
     "total_rooms",
+    "name",
   ])
   validateUUID(roomInputValues.hotel_id)
   validateUUID(roomInputValues.room_type_id)
@@ -45,14 +46,15 @@ async function create(roomInputValues, userId) {
       description,
       photos,
       member_price_per_night = 0,
+      min_guests = 1,
     } = roomInputValues
 
     const results = await database.query({
       text: `
         INSERT INTO
-          "rooms" (user_id, hotel_id, room_type_id, room_category_id, price_per_night, member_price_per_night, total_rooms, available_rooms, blocked_rooms, name, description, photos)
+          "rooms" (user_id, hotel_id, room_type_id, room_category_id, price_per_night, member_price_per_night, total_rooms, available_rooms, blocked_rooms, name, description, photos, min_guests)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING
           *
       `,
@@ -69,6 +71,7 @@ async function create(roomInputValues, userId) {
         name,
         description,
         photos || [],
+        min_guests,
       ],
     })
 
@@ -155,6 +158,7 @@ async function findAll() {
         name,
         description,
         photos,
+        min_guests,
         created_at,
         updated_at
       FROM 
@@ -187,6 +191,7 @@ async function findAllByHotelId(hotelId) {
         r.name,
         r.description,
         r.photos,
+        r.min_guests,
         rc.max_adults,
         rc.max_children,
         h.check_in_date as hotel_check_in_date,
@@ -301,6 +306,7 @@ async function update(roomId, roomInputNewValues, userId) {
       total_rooms,
       available_rooms,
       blocked_rooms,
+      min_guests,
     } = roomWithNewValues
 
     const results = await database.query({
@@ -319,6 +325,7 @@ async function update(roomId, roomInputNewValues, userId) {
           name = $10,
           description = $11,
           photos = $12,
+          min_guests = $13,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
@@ -338,6 +345,7 @@ async function update(roomId, roomInputNewValues, userId) {
         roomWithNewValues.name,
         roomWithNewValues.description,
         roomWithNewValues.photos || [],
+        min_guests,
       ],
     })
 

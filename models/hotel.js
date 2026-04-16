@@ -341,6 +341,7 @@ async function getAllActiveHotels() {
               'room_category', rc.name,
               'max_adults', rc.max_adults,
               'max_children', rc.max_children,
+              'min_guests', r.min_guests,
               'name', r.name,
               'description', r.description,
               'photos', r.photos

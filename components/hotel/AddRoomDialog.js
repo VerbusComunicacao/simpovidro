@@ -38,6 +38,7 @@ export function AddRoomDialog({
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [photos, setPhotos] = useState([""])
+  const [minGuests, setMinGuests] = useState(1)
   const [error, setError] = useState("")
   const [action, setAction] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
@@ -107,6 +108,7 @@ export function AddRoomDialog({
         name,
         description,
         photos: photos.filter((p) => p.trim() !== ""),
+        min_guests: parseInt(minGuests) || 1,
         price_policies: roomPricePolicies,
       }),
     })
@@ -125,6 +127,7 @@ export function AddRoomDialog({
       setName("")
       setDescription("")
       setPhotos([""])
+      setMinGuests(1)
       setRoomPricePolicies([])
     } else {
       const data = await response.json()
@@ -150,6 +153,19 @@ export function AddRoomDialog({
           <form onSubmit={handleSubmit}>
             <div className="max-h-[70vh] overflow-y-auto px-1">
               <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">
+                    Nome
+                  </Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="col-span-3"
+                    placeholder="Ex: Suíte Presidencial"
+                    required
+                  />
+                </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="room-type" className="text-right">
                     Tipo
@@ -223,17 +239,17 @@ export function AddRoomDialog({
                     className="col-span-3"
                   />
                 </div>
-
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Nome (opcional)
+                  <Label htmlFor="min-guests" className="text-right">
+                    Mínimo de hóspedes
                   </Label>
                   <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    id="min-guests"
+                    type="number"
+                    min="1"
+                    value={minGuests}
+                    onChange={(e) => setMinGuests(e.target.value)}
                     className="col-span-3"
-                    placeholder="Ex: Suíte Presidencial"
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
