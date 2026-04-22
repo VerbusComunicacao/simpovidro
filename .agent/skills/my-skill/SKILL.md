@@ -48,3 +48,15 @@ O projeto segue uma adaptação do padrão **MVP (Model-View-Presenter/Controlle
 1.  **Rota (`pages/api/...`)**: Recebe request -> Chama middleware de autorização -> Chama função do Model -> Retorna JSON.
 2.  **Model (`models/...`)**: Valida campos -> Executa query no DB -> Retorna objeto ou lança erro.
 3.  **Teste (`tests/...`)**: Limpa banco -> Cria cenário via `orchestrator` -> Faz `fetch` na API -> Valida status e corpo.
+
+## 💻 Ambiente do Assistente (AI Agent)
+
+Para que o Assistente de IA consiga executar comandos de terminal (`npm`, `node`, `docker`) com sucesso neste projeto, é necessário garantir que os caminhos dos binários estejam no `PATH`.
+
+**Caminhos Obrigatórios:**
+- `/opt/homebrew/bin` (Node e NPM)
+- `/usr/local/bin` (Docker)
+
+> [!TIP]
+> Antes de rodar qualquer script ou teste, concatene os caminhos:
+> `export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"`

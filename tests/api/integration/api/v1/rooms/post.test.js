@@ -36,6 +36,7 @@ describe("POST /api/v1/rooms", () => {
           room_category_id: roomCategory.id,
           price_per_night: 150.0,
           total_rooms: 5,
+          name: "Quarto Teste",
         }),
         headers: {
           "Content-Type": "application/json",
@@ -68,7 +69,7 @@ describe("POST /api/v1/rooms", () => {
       expect(roomCreated).toEqual({
         action: "Envie todos os campos obrigatórios e tente novamente.",
         message:
-          "Campos obrigatórios ausentes: hotel_id, room_type_id, room_category_id, price_per_night, total_rooms.",
+          "Campos obrigatórios ausentes: hotel_id, room_type_id, room_category_id, price_per_night, total_rooms, name.",
         name: "ValidationError",
         status_code: 400,
       })
@@ -91,6 +92,7 @@ describe("POST /api/v1/rooms", () => {
           hotel_id: hotel.id,
           room_type_id: roomType.id,
           room_category_id: roomCategory.id,
+          name: "Quarto Teste",
         }),
         headers: {
           "Content-Type": "application/json",
@@ -129,6 +131,7 @@ describe("POST /api/v1/rooms", () => {
           room_category_id: roomCategory.id,
           price_per_night: 250.5,
           total_rooms: 6,
+          name: "Suíte Luxo",
         }),
         headers: {
           "Content-Type": "application/json",
@@ -142,7 +145,7 @@ describe("POST /api/v1/rooms", () => {
       expect(roomCreated).toEqual({
         id: expect.any(String),
         hotel_id: hotel.id,
-        name: null,
+        name: "Suíte Luxo",
         description: null,
         photos: [],
         room_type_id: roomType.id,
@@ -217,6 +220,7 @@ describe("POST /api/v1/rooms", () => {
           room_category_id: roomCategory2.id,
           price_per_night: 250.5,
           total_rooms: 6,
+          name: "Quarto Diferente",
         }),
         headers: {
           "Content-Type": "application/json",
@@ -265,6 +269,7 @@ describe("POST /api/v1/rooms", () => {
               price: 50,
             },
           ],
+          name: "Quarto com política",
         }),
         headers: {
           "Content-Type": "application/json",

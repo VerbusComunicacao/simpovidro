@@ -152,7 +152,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
       expect(updated).toEqual({
         id: created.id,
         hotel_id: created.hotel_id,
-        name: null,
+        name: expect.any(String),
         description: null,
         photos: [],
         room_type_id: created.room_type_id,
@@ -276,7 +276,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
       expect(roomUpdated).toEqual({
         id: roomCreated.id,
         hotel_id: hotel.id,
-        name: null,
+        name: expect.any(String),
         description: null,
         photos: [],
         room_type_id: roomType.id,
@@ -317,7 +317,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
       expect(roomUpdated2).toEqual({
         id: roomCreated.id,
         hotel_id: hotel.id,
-        name: null,
+        name: expect.any(String),
         description: null,
         photos: [],
         room_type_id: roomType.id,

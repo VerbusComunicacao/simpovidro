@@ -119,6 +119,7 @@ describe("DELETE /api/v1/rooms/[id]", () => {
             .id,
           price_per_night: 150.0,
           total_rooms: 5,
+          name: "Quarto para Delete",
         }),
         headers: {
           "Content-Type": "application/json",

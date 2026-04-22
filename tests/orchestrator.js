@@ -124,6 +124,7 @@ async function createRoom(userId, roomData) {
         roomData?.available_rooms ?? faker.number.int({ min: 1, max: 5 }),
       blocked_rooms:
         roomData?.blocked_rooms ?? faker.number.int({ min: 0, max: 3 }),
+      name: roomData?.name || faker.commerce.productName(),
     },
     userId,
   )

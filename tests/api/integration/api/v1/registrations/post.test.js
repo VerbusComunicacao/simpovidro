@@ -162,6 +162,7 @@ describe("POST /api/v1/registrations", () => {
             room_category_id: roomCategoryData.id,
             price_per_night: 1000.0,
             total_rooms: 10,
+            name: "Quarto Inscrição",
           }),
         },
       )
@@ -556,6 +557,7 @@ describe("POST /api/v1/registrations", () => {
           price_per_night: 1000.0,
           member_price_per_night: 850.0,
           total_rooms: 5,
+          name: "Quarto Associado",
         }),
       })
 
@@ -941,6 +943,7 @@ describe("POST /api/v1/registrations", () => {
             room_category_id: roomCategoryData.id,
             price_per_night: 200.0,
             total_rooms: 10,
+            name: "Quarto Pricing Override",
             price_policies: [
               {
                 id: hotelData.price_policies[1].id,
@@ -1094,6 +1097,7 @@ describe("POST /api/v1/registrations", () => {
             room_category_id: roomCategoryData.id,
             price_per_night: 200.0,
             total_rooms: 10,
+            name: "Quarto Percentage Priority",
             price_policies: [
               {
                 id: hotelData.price_policies[0].id,
@@ -1460,6 +1464,7 @@ describe("POST /api/v1/registrations", () => {
               price_per_night: 100,
               total_rooms: 10,
               min_guests: 2,
+              name: "Quarto Min Guests Required",
             }),
           },
         )
@@ -1549,6 +1554,7 @@ describe("POST /api/v1/registrations", () => {
               price_per_night: 200,
               total_rooms: 5,
               min_guests: 3,
+              name: "Quarto High Capacity Min Guests",
             }),
           },
         )
