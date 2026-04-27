@@ -312,6 +312,7 @@ export default function CheckoutPage({
         body: JSON.stringify({
           room_id: room.id,
           guests_data: guests,
+          company_data: newCompanyData.corporate_name ? newCompanyData : null,
           company_cnpj: foundCompany?.cnpj || newCompanyData.cnpj || cnpj,
           payment_method: paymentMethod,
           installments_count: installmentsCount,
@@ -442,9 +443,41 @@ export default function CheckoutPage({
       if (response.ok) {
         const companyData = await response.json()
         setFoundCompany(companyData)
-        setCurrentStep(3) // Jump to Guest Form
+        setNewCompanyData({
+          corporate_name: companyData.corporate_name || "",
+          badge: companyData.badge || "",
+          email: companyData.email || "",
+          phone: companyData.phone || "",
+          responsible_person: companyData.responsible_person || "",
+          zip_code: companyData.zip_code || "",
+          address: companyData.address || "",
+          address_number: companyData.address_number || "",
+          address_complement: companyData.address_complement || "",
+          neighborhood: companyData.neighborhood || "",
+          city: companyData.city || "",
+          state: companyData.state || "",
+          stateCode: companyData.state || "",
+          countryCode: companyData.country_code || "BR",
+          cnpj: companyData.cnpj || cnpj,
+        })
+        setCurrentStep(2)
       } else if (response.status === 404) {
-        setNewCompanyData((prev) => ({ ...prev, cnpj }))
+        setFoundCompany(null)
+        setNewCompanyData({
+          cnpj: cnpj,
+          corporate_name: "",
+          badge: "",
+          email: "",
+          phone: "",
+          responsible_person: "",
+          zip_code: "",
+          address: "",
+          address_number: "",
+          address_complement: "",
+          neighborhood: "",
+          city: "",
+          state: "",
+        })
         setCurrentStep(2) // Go to Company Form
       } else {
         throw new Error("Erro ao verificar CNPJ.")
@@ -476,28 +509,13 @@ export default function CheckoutPage({
     setIsLoading(true)
     setError("")
 
-    try {
-      const response = await fetch("/api/v1/companies", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newCompanyData),
-      })
-
-      if (!response.ok) {
-        const errData = await response.json()
-        throw new Error(errData.message || "Erro ao cadastrar empresa.")
-      }
-
-      const createdCompany = await response.json()
-      setFoundCompany(createdCompany)
-      setCurrentStep(3)
-    } catch (err) {
-      setError(err.message)
-    } finally {
+    // We no longer save the company here because it will be handled by the
+    // registration.create (upsert) logic at the end of the process.
+    setTimeout(() => {
       setIsLoading(false)
-    }
+      setCurrentStep(3)
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }, 400)
   }
 
   const handleMasterSubmit = async (e) => {
@@ -674,10 +692,13 @@ export default function CheckoutPage({
               {currentStep === 2 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Cadastrar Empresa</CardTitle>
+                    <CardTitle>
+                      {foundCompany ? "Confirmar Empresa" : "Cadastrar Empresa"}
+                    </CardTitle>
                     <CardDescription>
-                      Não encontramos sua empresa. Por favor, preencha os dados
-                      abaixo.
+                      {foundCompany
+                        ? "Verifique e atualize os dados da empresa se necessário."
+                        : "Não encontramos sua empresa. Por favor, preencha os dados abaixo."}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">

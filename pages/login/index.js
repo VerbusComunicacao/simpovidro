@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import Image from "next/image"
 
 export default function LoginPage() {
   const { user, isLoading } = useUser()
@@ -33,33 +34,51 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Acesse sua Conta</CardTitle>
-          <CardDescription>
-            Entre com seu email e senha para continuar.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <LoginForm />
-        </CardContent>
-        <CardFooter className="flex-col items-center">
-          <div className="mt-4 text-sm">
-            <Link href="/forgot-password" passHref>
-              <span className="text-blue-600 hover:underline">
-                Esqueceu a senha?
-              </span>
-            </Link>
-          </div>
-          <div className="mt-2 text-sm">
-            Não tem uma conta?{" "}
-            <Link href="/cadastro" passHref>
-              <span className="text-blue-600 hover:underline">Cadastre-se</span>
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
+    <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/images/simpovidro.webp"
+          alt="Background"
+          fill
+          className="object-cover brightness-[0.4]"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/20"></div>
+      </div>
+
+      <div className="relative z-10 w-full max-w-md px-4">
+        <Card className="w-full">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold">
+              Acesse sua Conta
+            </CardTitle>
+            <CardDescription>
+              Entre com seu email e senha para continuar.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LoginForm />
+          </CardContent>
+          <CardFooter className="flex-col items-center">
+            <div className="mt-4 text-sm">
+              <Link href="/forgot-password" passHref>
+                <span className="text-blue-600 hover:underline">
+                  Esqueceu a senha?
+                </span>
+              </Link>
+            </div>
+            <div className="mt-2 text-sm">
+              Não tem uma conta?{" "}
+              <Link href="/cadastro" passHref>
+                <span className="text-blue-600 hover:underline">
+                  Cadastre-se
+                </span>
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   )
 }

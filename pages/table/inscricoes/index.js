@@ -1,7 +1,15 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import useSWR from "swr"
-import { Hotel, Calendar, Users, Loader2, Search, Plus } from "lucide-react"
+import {
+  Hotel,
+  Calendar,
+  Users,
+  Loader2,
+  Search,
+  Plus,
+  ChevronRight,
+} from "lucide-react"
 import TableLayout from "@/components/layout/TableLayout"
 import ErrorDialog from "@/components/ui/ErrorDialog"
 import { useEffect, useState } from "react"
@@ -76,14 +84,19 @@ export default function RegistrationsTable() {
   const filteredSales = Array.isArray(sales)
     ? sales.filter((sale) => {
         const searchLower = searchTerm.toLowerCase()
+        const cleanSearch = searchTerm.replace(/\D/g, "")
+
         return (
           sale.sale_number?.toLowerCase().includes(searchLower) ||
           sale.hotel_name?.toLowerCase().includes(searchLower) ||
-          sale.guests?.some(
-            (g) =>
+          sale.guests?.some((g) => {
+            const cleanCPF = g.cpf_number?.replace(/\D/g, "") || ""
+            return (
               g.name.toLowerCase().includes(searchLower) ||
-              g.cpf_number?.includes(searchTerm),
-          )
+              (cleanSearch !== "" && cleanCPF.includes(cleanSearch)) ||
+              g.cpf_number?.includes(searchTerm)
+            )
+          })
         )
       })
     : []
@@ -134,79 +147,85 @@ export default function RegistrationsTable() {
       {filteredSales.length > 0 && (
         <div className="space-y-4">
           {filteredSales.map((sale) => (
-            <Card key={sale.id} className="overflow-hidden">
-              <CardHeader className="bg-gray-50/50 border-b py-3 px-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm font-bold text-blue-600">
-                      #{sale.sale_number}
-                    </span>
-                    <span className="text-xs text-gray-400">•</span>
-                    <span className="text-sm text-gray-500 flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(sale.created_at).toLocaleDateString("pt-BR")}
-                    </span>
-                  </div>
-                  {getStatusBadge(sale.status)}
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                      Hospedagem
-                    </p>
-                    <p className="font-bold text-gray-900 flex items-center gap-2">
-                      <Hotel className="h-4 w-4 text-gray-400" />
-                      {sale.hotel_name}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {sale.room_name || sale.room_type} ({sale.room_category})
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {formatDate(sale.check_in_date)} —{" "}
-                      {formatDate(sale.check_out_date)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                      Hóspedes ({sale.guests?.length || 0})
-                    </p>
-                    <div className="space-y-1">
-                      {sale.guests?.slice(0, 3).map((g, i) => (
-                        <p
-                          key={i}
-                          className="text-sm text-gray-700 flex items-center gap-2"
-                        >
-                          <Users className="h-3 w-3 text-gray-400" />
-                          {g.name}
-                        </p>
-                      ))}
-                      {sale.guests?.length > 3 && (
-                        <p className="text-xs text-gray-400 italic font-medium ml-5">
-                          + {sale.guests.length - 3} outros
-                        </p>
-                      )}
+            <Link key={sale.id} href={`/table/inscricoes/${sale.id}`}>
+              <Card className="overflow-hidden hover:border-blue-300 transition-all cursor-pointer group mb-4">
+                <CardHeader className="bg-gray-50/50 border-b py-3 px-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-sm font-bold text-blue-600">
+                        #{sale.sale_number}
+                      </span>
+                      <span className="text-xs text-gray-400">•</span>
+                      <span className="text-sm text-gray-500 flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {new Date(sale.created_at).toLocaleDateString("pt-BR")}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {getStatusBadge(sale.status)}
+                      <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                     </div>
                   </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                        Hospedagem
+                      </p>
+                      <p className="font-bold text-gray-900 flex items-center gap-2">
+                        <Hotel className="h-4 w-4 text-gray-400" />
+                        {sale.hotel_name}
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {sale.room_name || sale.room_type} ({sale.room_category}
+                        )
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {formatDate(sale.check_in_date)} —{" "}
+                        {formatDate(sale.check_out_date)}
+                      </p>
+                    </div>
 
-                  <div className="flex flex-col md:items-end justify-center">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                      Valor Total
-                    </p>
-                    <p className="text-2xl font-black text-gray-900">
-                      {formatCurrency(sale.final_amount)}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {sale.payment_status === "paid"
-                        ? "Pago"
-                        : "Aguardando pagamento"}
-                    </p>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                        Hóspedes ({sale.guests?.length || 0})
+                      </p>
+                      <div className="space-y-1">
+                        {sale.guests?.slice(0, 3).map((g, i) => (
+                          <p
+                            key={i}
+                            className="text-sm text-gray-700 flex items-center gap-2"
+                          >
+                            <Users className="h-3 w-3 text-gray-400" />
+                            {g.name}
+                          </p>
+                        ))}
+                        {sale.guests?.length > 3 && (
+                          <p className="text-xs text-gray-400 italic font-medium ml-5">
+                            + {sale.guests.length - 3} outros
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col md:items-end justify-center">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                        Valor Total
+                      </p>
+                      <p className="text-2xl font-black text-gray-900">
+                        {formatCurrency(sale.final_amount)}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {sale.payment_status === "paid"
+                          ? "Pago"
+                          : "Aguardando pagamento"}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}

@@ -276,8 +276,12 @@ export default function AdminAddRegistrationPage() {
       ? allGuests
           .filter((guest) => {
             const term = searchTerm.toLowerCase()
+            const cleanSearch = searchTerm.replace(/\D/g, "")
+            const cleanCPF = guest.cpf_number?.replace(/\D/g, "") || ""
+
             return (
               guest.name?.toLowerCase().includes(term) ||
+              (cleanSearch !== "" && cleanCPF.includes(cleanSearch)) ||
               guest.cpf_number?.includes(searchTerm)
             )
           })
@@ -289,8 +293,12 @@ export default function AdminAddRegistrationPage() {
       ? allCompanies
           .filter((company) => {
             const term = companySearchTerm.toLowerCase()
+            const cleanSearch = companySearchTerm.replace(/\D/g, "")
+            const cleanCNPJ = company.cnpj?.replace(/\D/g, "") || ""
+
             return (
               company.corporate_name?.toLowerCase().includes(term) ||
+              (cleanSearch !== "" && cleanCNPJ.includes(cleanSearch)) ||
               company.cnpj?.includes(companySearchTerm)
             )
           })

@@ -299,6 +299,88 @@ async function deleteAll() {
   })
 }
 
+async function upsert(companyData, client) {
+  const cleanCnpj = companyData.cnpj?.replace(/\D/g, "")
+  if (!cleanCnpj) {
+    return null
+  }
+
+  const db = client || database
+
+  try {
+    const existingCompany = await findOneByCnpj(cleanCnpj, db)
+    // Avoid double cleaning or verification in update
+    return await update(existingCompany.id, companyData, db)
+  } catch (error) {
+    if (error.name === "NotFoundError") {
+      // Create without checking if already exists again
+      return await runInsertQuery(companyData, db)
+    }
+    throw error
+  }
+
+  async function runInsertQuery(values, dbClient) {
+    const {
+      corporate_name,
+      badge = null,
+      cnpj = null,
+      address = null,
+      address_number = null,
+      address_complement = null,
+      neighborhood = null,
+      city = null,
+      state = null,
+      country = "Brasil",
+      phone = null,
+      permission = "A",
+      discount_id = null,
+      custom_discount_percentage = null,
+      email = null,
+      responsible_person = null,
+      zip_code = null,
+      last_registration_date = null,
+    } = values
+
+    const results = await dbClient.query({
+      text: `
+        INSERT INTO
+          companies (
+            corporate_name, badge, cnpj, address, address_number, 
+            address_complement, neighborhood, city, state, country, 
+            phone, permission, discount_id, custom_discount_percentage, email, 
+            responsible_person, zip_code, last_registration_date
+          )
+        VALUES
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+        RETURNING
+          *
+      `,
+      values: [
+        corporate_name,
+        badge,
+        cnpj.replace(/\D/g, ""),
+        address,
+        address_number,
+        address_complement,
+        neighborhood,
+        city,
+        state,
+        country,
+        phone,
+        permission,
+        discount_id,
+        custom_discount_percentage,
+        email,
+        responsible_person,
+        zip_code,
+        last_registration_date,
+      ],
+    })
+
+    return results.rows[0]
+  }
+}
+
 const company = {
   create,
   findOneById,
@@ -307,6 +389,7 @@ const company = {
   deleteById,
   deleteAll,
   findOneByCnpj,
+  upsert,
 }
 
 export default company

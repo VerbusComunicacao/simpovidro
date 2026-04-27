@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Zap, MapPin, Info, Hotel, Plane } from "lucide-react"
+import Link from "next/link"
 
 export default function Pricing() {
   return (
@@ -85,9 +86,11 @@ export default function Pricing() {
                   Centralizamos as reservas para garantir que você esteja no
                   coração do evento com tarifas especiais Simpovidro.
                 </p>
-                <Button className="w-full bg-white text-blue-600 hover:bg-slate-100">
-                  Consultar Quartos
-                </Button>
+                <Link href="/inscricao#acomodacoes">
+                  <Button className="w-full bg-white text-blue-600 hover:bg-slate-100">
+                    Consultar Quartos
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 

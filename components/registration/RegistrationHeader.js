@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Hotel, LogOut, ChevronLeft } from "lucide-react"
+import { LogOut, ChevronLeft } from "lucide-react"
 import useUser from "@/hooks/useUser"
 import { useRouter } from "next/router"
 import authorization from "@/models/authorization"
@@ -10,91 +10,135 @@ export default function RegistrationHeader({ showBackButton = false }) {
   const router = useRouter()
 
   return (
-    <header className="bg-white border-b sticky top-0 z-50">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+    <header className="bg-white/90 backdrop-blur-md shadow-sm border-b sticky top-0 z-50 py-3">
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+        <div className="flex items-center gap-8">
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-80 transition-all group"
+          >
+            <div className="w-10 h-10 bg-blue-700 rounded-lg flex items-center justify-center text-white font-bold text-xl group-hover:scale-110 transition-transform">
+              S
+            </div>
+            <span className="text-xl font-bold tracking-tight text-slate-900 hidden sm:inline-block">
+              Simpovidro
+            </span>
+          </Link>
+
+          {/* Nav Items - Same as Home Navbar */}
+          <nav className="hidden xl:flex items-center gap-6 text-sm font-bold text-slate-600">
+            <Link
+              href="/#sobre"
+              className="hover:text-blue-600 transition-colors"
+            >
+              Sobre
+            </Link>
+            <Link
+              href="/#palestrantes"
+              className="hover:text-blue-600 transition-colors"
+            >
+              Palestrantes
+            </Link>
+            <Link
+              href="/#paineis"
+              className="hover:text-blue-600 transition-colors"
+            >
+              Painéis
+            </Link>
+            <Link
+              href="/#programacao"
+              className="hover:text-blue-600 transition-colors"
+            >
+              Programação
+            </Link>
+            <Link
+              href="/#precos"
+              className="hover:text-blue-600 transition-colors"
+            >
+              Preços
+            </Link>
+            <Link
+              href="/#dicas"
+              className="hover:text-blue-600 transition-colors"
+            >
+              Dicas
+            </Link>
+          </nav>
+        </div>
+
         <div className="flex items-center gap-4">
           {showBackButton && (
             <Button
               variant="ghost"
-              size="icon"
               onClick={() => router.back()}
-              className="md:hidden"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-          )}
-
-          <Link
-            href="/inscricao"
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-          >
-            <div className="bg-blue-600 p-1.5 rounded-lg">
-              <Hotel className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900 hidden sm:inline-block">
-              Simpovidro 2026
-            </span>
-          </Link>
-
-          {showBackButton && (
-            <Button
-              variant="ghost"
-              onClick={() => router.back()}
-              className="hidden md:flex items-center gap-2 text-gray-600"
+              className="hidden md:flex items-center gap-2 text-slate-600 font-bold"
             >
               <ChevronLeft className="h-4 w-4" />
               Voltar
             </Button>
           )}
-        </div>
 
-        <div className="flex items-center gap-3">
           {user ? (
             <div className="flex items-center gap-4">
-              {authorization.can(user, "create:content") && (
+              <div className="hidden lg:flex flex-col items-end">
+                <span className="text-sm font-black text-slate-900 uppercase italic tracking-tighter">
+                  {user.name || user.username}
+                </span>
+                <span className="text-[10px] text-blue-600 font-bold uppercase tracking-widest">
+                  Logado
+                </span>
+              </div>
+
+              <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
+
+              <div className="flex items-center gap-2">
+                {authorization.can(user, "create:content") && (
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="hidden sm:flex text-slate-600 font-bold hover:text-blue-600"
+                  >
+                    <Link href="/table">Painel</Link>
+                  </Button>
+                )}
                 <Button
                   asChild
                   variant="ghost"
                   size="sm"
-                  className="hidden sm:flex text-gray-600"
+                  className="hidden sm:flex text-slate-600 font-bold hover:text-blue-600"
                 >
-                  <Link href="/table">Painel</Link>
+                  <Link href="/meus-pedidos">Meus Pedidos</Link>
                 </Button>
-              )}
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="hidden sm:flex text-gray-600"
-              >
-                <Link href="/meus-pedidos">Meus Pedidos</Link>
-              </Button>
 
-              <div className="hidden md:flex flex-col items-end">
-                <span className="text-sm font-medium text-gray-900">
-                  {user.name || user.username}
-                </span>
-                <span className="text-xs text-gray-500">{user.email}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={logout}
+                  className="gap-2 border-slate-200 text-slate-600 hover:text-red-600 hover:border-red-100 hover:bg-red-50 rounded-full px-4 shadow-sm"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline font-bold">Sair</span>
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={logout}
-                className="gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Sair</span>
-              </Button>
             </div>
           ) : (
-            <Button
-              asChild
-              variant="default"
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Link href="/login">Entrar</Link>
-            </Button>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/login"
+                className="text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors"
+              >
+                Entrar
+              </Link>
+              <Button
+                asChild
+                variant="default"
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 font-bold shadow-md shadow-blue-200"
+              >
+                <Link href="/inscricao">Inscreva-se</Link>
+              </Button>
+            </div>
           )}
         </div>
       </div>
