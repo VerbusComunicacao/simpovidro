@@ -14,14 +14,7 @@ async function getHandler(request, response) {
     const cleanCnpj = request.query.cnpj.replace(/\D/g, "")
     try {
       const foundCompany = await company.findOneByCnpj(cleanCnpj)
-      return response.status(200).json({
-        id: foundCompany.id,
-        corporate_name: foundCompany.corporate_name,
-        badge: foundCompany.badge,
-        discount_id: foundCompany.discount_id,
-        custom_discount_percentage: foundCompany.custom_discount_percentage,
-        cnpj: foundCompany.cnpj,
-      })
+      return response.status(200).json(foundCompany)
     } catch (error) {
       if (error.name === "NotFoundError") {
         return response.status(404).json({

@@ -27,17 +27,13 @@ async function create(userOrId, registrationData) {
   try {
     await client.query("BEGIN")
 
-    // 1. Resolve Company if CNPJ provided
+    // 1. Resolve Company if CNPJ or Data provided
     let companyId = null
-    if (company_cnpj) {
-      const cleanCnpj = company_cnpj.replace(/\D/g, "")
-      try {
-        const foundCompany = await company.findOneByCnpj(cleanCnpj, client)
-        companyId = foundCompany.id
-      } catch (error) {
-        if (error.name !== "NotFoundError") throw error
-        // If not found, companyId remains null
-      }
+    const companyToProcess = registrationData.company_data || (registrationData.company_cnpj ? { cnpj: registrationData.company_cnpj } : null)
+
+    if (companyToProcess) {
+      const upsertedCompany = await company.upsert(companyToProcess, client)
+      companyId = upsertedCompany?.id || null
     }
 
     // 2. Process all guests
