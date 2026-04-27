@@ -89,7 +89,7 @@ describe("GET /api/v1/room-types/[id]", () => {
       expect(roomType).toHaveProperty("updated_at")
     })
 
-    test("Can't access room-type from different user", async () => {
+    test("Can access room-type from different user as admin", async () => {
       const user1 = await orchestrator.createUser()
       await orchestrator.activateUser(user1.id)
       await orchestrator.setUserFeatures(user1.id, ["create:content"])
@@ -101,13 +101,13 @@ describe("GET /api/v1/room-types/[id]", () => {
       const session2 = await orchestrator.createSession(user2.id)
 
       // User 1 creates a room-type
-      const rt = await orchestrator.createRoomType(user1.id, {
-        name: "U1 Type",
+      const roomTypeCreated = await orchestrator.createRoomType(user1.id, {
+        name: "U1 Type to Access",
       })
 
       // User 2 tries to access User 1's room-type
       const response = await fetch(
-        `http://localhost:3000/api/v1/room-types/${rt.id}`,
+        `http://localhost:3000/api/v1/room-types/${roomTypeCreated.id}`,
         {
           headers: {
             Cookie: `session_id=${session2.token}`,
@@ -115,7 +115,9 @@ describe("GET /api/v1/room-types/[id]", () => {
         },
       )
 
-      expect(response.status).toBe(404)
+      expect(response.status).toBe(200)
+      const body = await response.json()
+      expect(body.id).toBe(roomTypeCreated.id)
     })
 
     test("Invalid UUID format", async () => {

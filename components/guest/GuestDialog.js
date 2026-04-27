@@ -23,8 +23,23 @@ import { Checkbox } from "@/components/ui/checkbox"
 import ErrorDialog from "@/components/ui/ErrorDialog"
 import { maskPhone, maskCPF, maskRG } from "@/lib/masks"
 import { validateCPF, validatePhone } from "@/lib/validators"
-import { LocationSelector } from "@/components/ui/LocationSelector"
 import { getInitialLocationState } from "@/lib/location-utils"
+import {
+  isTestEnvironment,
+  generateRandomGuest,
+} from "@/lib/test-data-generator"
+
+function calculateIsAdult(birthDate) {
+  if (!birthDate) return false
+  const birth = new Date(birthDate)
+  const now = new Date()
+  let age = now.getFullYear() - birth.getFullYear()
+  const m = now.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+    age--
+  }
+  return age >= 18
+}
 
 export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
   const isEditMode = !!guestToEdit
@@ -136,6 +151,19 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     if (name === "rg_number") maskedValue = maskRG(value)
 
     setFormData((prev) => ({ ...prev, [name]: maskedValue }))
+
+    // Dev Helper: Autofill on all ones (CPF)
+    if (
+      name === "cpf_number" &&
+      isTestEnvironment() &&
+      value.replace(/\D/g, "") === "1".repeat(11)
+    ) {
+      const randomGuest = generateRandomGuest()
+      setFormData((prev) => ({
+        ...prev,
+        ...randomGuest,
+      }))
+    }
   }
 
   const handleSelectChange = (name, value) => {
@@ -146,12 +174,9 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     setFormData((prev) => ({ ...prev, [name]: !!checked }))
   }
 
-  const handleLocationChange = (location) => {
-    setFormData((prev) => ({ ...prev, ...location }))
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
+    e.stopPropagation() // Prevent bubbling up to parent forms
     setError("")
     setAction("")
     setAction("")
@@ -186,7 +211,8 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     setLoading(false)
 
     if (response.ok) {
-      if (onGuestSuccess) onGuestSuccess()
+      const data = await response.json()
+      if (onGuestSuccess) onGuestSuccess(data)
       setOpen(false)
     } else {
       const data = await response.json()
@@ -233,21 +259,24 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="badge_name">Nome no Crachá</Label>
+                    <Label htmlFor="badge_name">Nome no Crachá *</Label>
                     <Input
                       id="badge_name"
                       name="badge_name"
                       value={formData.badge_name}
                       onChange={handleChange}
                       placeholder="Como aparecerá no crachá"
-                      maxLength={23}
+                      maxLength={20}
+                      required
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">
+                      Email {calculateIsAdult(formData.birth_date) && "*"}
+                    </Label>
                     <Input
                       id="email"
                       name="email"
@@ -255,16 +284,17 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="hospede@email.com"
+                      required={calculateIsAdult(formData.birth_date)}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Telefone *</Label>
+                    <Label htmlFor="phone">Celular *</Label>
                     <Input
                       id="phone"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder="(00) 00000-0000"
+                      placeholder="(00) 90000-0000"
                       required
                     />
                   </div>
@@ -308,7 +338,7 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="gender">Gênero *</Label>
+                    <Label htmlFor="gender">Sexo *</Label>
                     <Select
                       onValueChange={(val) => handleSelectChange("gender", val)}
                       value={formData.gender}
@@ -320,7 +350,6 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
                       <SelectContent>
                         <SelectItem value="M">Masculino</SelectItem>
                         <SelectItem value="F">Feminino</SelectItem>
-                        <SelectItem value="O">Outro</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -468,42 +497,6 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
                       value={formData.health_observations}
                       onChange={handleChange}
                       placeholder="Outras observações relevantes de saúde"
-                    />
-                  </div>
-                </div>
-
-                <div className="border-t pt-4">
-                  <h3 className="text-sm font-semibold mb-3 text-gray-500">
-                    Endereço
-                  </h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="col-span-2 space-y-2">
-                      <Label htmlFor="address">Logradouro</Label>
-                      <Input
-                        id="address"
-                        name="address"
-                        value={formData.address}
-                        onChange={handleChange}
-                        placeholder="Rua, Avenida..."
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="address_number">Número</Label>
-                      <Input
-                        id="address_number"
-                        name="address_number"
-                        value={formData.address_number}
-                        onChange={handleChange}
-                        placeholder="123"
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <LocationSelector
-                      countryCode={formData.countryCode}
-                      stateCode={formData.stateCode}
-                      cityName={formData.city}
-                      onLocationChange={handleLocationChange}
                     />
                   </div>
                 </div>

@@ -44,6 +44,8 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Test Guest",
+          badge_name: "Crachá Sucesso",
+          email: "success@example.com",
           phone: "+5511999999999",
           gender: "Male",
           rg_number: "123456789",
@@ -59,14 +61,14 @@ describe("POST /api/v1/guests", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         name: "Test Guest",
-        phone: "+5511999999999",
-        email: null,
-        badge_name: null,
+        email: "success@example.com",
+        badge_name: "Crachá Sucesso",
         gender: "Male",
         rg_number: "123456789",
         cpf_number: "123.456.789-00",
         company_cnpj: null,
         passport_number: null,
+        phone: "+5511999999999",
         medication_details: null,
         blood_type: null,
         blood_rh_factor: null,
@@ -112,6 +114,8 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Guest One",
+          badge_name: "Crachá Um",
+          email: "one@example.com",
           phone: "+5511999999991",
           gender: "Female",
           rg_number: "111111111",
@@ -130,6 +134,8 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Guest Two",
+          badge_name: "Crachá Dois",
+          email: "two@example.com",
           phone: "+5511999999992",
           gender: "Male",
           rg_number: "111111111", // Duplicated RG instead of email
@@ -165,6 +171,8 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Guest Three",
+          badge_name: "Crachá Três",
+          email: "three@example.com",
           phone: "+5511999999993",
           gender: "Female",
           rg_number: "333333333",
@@ -183,6 +191,8 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Guest Four",
+          badge_name: "Crachá Quatro",
+          email: "four@example.com",
           phone: "+5511999999994",
           gender: "Male",
           rg_number: "333333333",
@@ -218,6 +228,8 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Guest Five",
+          badge_name: "Crachá Cinco",
+          email: "five@example.com",
           phone: "+5511999999995",
           gender: "Female",
           rg_number: "555555555",
@@ -236,6 +248,8 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Guest Six",
+          badge_name: "Crachá Seis",
+          email: "six@example.com",
           phone: "+5511999999996",
           gender: "Male",
           rg_number: "666666666",
@@ -286,7 +300,7 @@ describe("POST /api/v1/guests", () => {
       expect(responseBody).toEqual({
         name: "ValidationError",
         message:
-          "Campos obrigatórios ausentes: phone, gender, rg_number, cpf_number, birth_date.",
+          "Campos obrigatórios ausentes: badge_name, gender, rg_number, cpf_number, birth_date, phone.",
         action: "Envie todos os campos obrigatórios e tente novamente.",
         status_code: 400,
       })
@@ -318,6 +332,7 @@ describe("POST /api/v1/guests", () => {
         },
         body: JSON.stringify({
           name: "Synced Guest",
+          badge_name: "Crachá Synced",
           email: "target@user.com",
           phone: "+5511999999999",
           gender: "Male",

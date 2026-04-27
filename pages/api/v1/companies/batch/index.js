@@ -37,7 +37,7 @@ async function postHandler(request, response) {
       }
       delete companyData.discount_name // Remove from object to avoid postgres error
 
-      await company.create(companyData)
+      await company.create(companyData, { isImport: true })
       results.successCount++
     } catch (error) {
       // Log para debug

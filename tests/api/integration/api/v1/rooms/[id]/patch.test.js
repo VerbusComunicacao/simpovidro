@@ -152,7 +152,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
       expect(updated).toEqual({
         id: created.id,
         hotel_id: created.hotel_id,
-        name: null,
+        name: expect.any(String),
         description: null,
         photos: [],
         room_type_id: created.room_type_id,
@@ -172,6 +172,8 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         room_category: roomCategory.name,
         max_adults: roomCategory.max_adults,
         max_children: roomCategory.max_children,
+        member_price_per_night: "0.00",
+        min_guests: 1,
       })
     })
 
@@ -235,7 +237,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         },
       )
 
-      expect(response.status).toBe(404)
+      expect(response.status).toBe(200)
     })
 
     test("Only total_rooms provided adjusts available", async () => {
@@ -274,7 +276,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
       expect(roomUpdated).toEqual({
         id: roomCreated.id,
         hotel_id: hotel.id,
-        name: null,
+        name: expect.any(String),
         description: null,
         photos: [],
         room_type_id: roomType.id,
@@ -294,6 +296,8 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         room_category: roomCategory.name,
         max_adults: roomCategory.max_adults,
         max_children: roomCategory.max_children,
+        member_price_per_night: "0.00",
+        min_guests: 1,
       })
 
       const patchResponse2 = await fetch(
@@ -313,7 +317,7 @@ describe("PATCH /api/v1/rooms/[id]", () => {
       expect(roomUpdated2).toEqual({
         id: roomCreated.id,
         hotel_id: hotel.id,
-        name: null,
+        name: expect.any(String),
         description: null,
         photos: [],
         room_type_id: roomType.id,
@@ -333,6 +337,8 @@ describe("PATCH /api/v1/rooms/[id]", () => {
         room_category: roomCategory.name,
         max_adults: roomCategory.max_adults,
         max_children: roomCategory.max_children,
+        member_price_per_night: "0.00",
+        min_guests: 1,
       })
 
       const patchResponse3 = await fetch(

@@ -22,11 +22,8 @@ async function getHandler(request, response) {
 
   const { id } = request.query
 
-  // Busca room type com filtro de segurança (só room types do usuário)
-  const roomTypeFound = await roomType.findOneByIdAndUserId(
-    id,
-    sessionObject.user_id,
-  )
+  // Busca room type (consulta global)
+  const roomTypeFound = await roomType.findOneById(id)
 
   // Aplica filtros de autorização
   const secureRoomType = authorization.filterOutput(

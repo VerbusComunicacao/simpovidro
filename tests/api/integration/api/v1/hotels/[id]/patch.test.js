@@ -60,7 +60,7 @@ describe("PATCH /api/v1/hotels/[id]", () => {
         {
           method: "PATCH",
           body: JSON.stringify({
-            name: "Updated Hotel",
+            name: "Updated Hotel NotFound",
             city: "Rio de Janeiro",
             country: "Brasil",
             check_in_date: "2026-01-07T20:43:12.021Z",
@@ -89,7 +89,7 @@ describe("PATCH /api/v1/hotels/[id]", () => {
         {
           method: "POST",
           body: JSON.stringify({
-            name: "Original Hotel",
+            name: "Blank Hotel Test",
             city: "São Paulo",
             country: "Brasil",
             email: "original@hotel.com",
@@ -143,7 +143,7 @@ describe("PATCH /api/v1/hotels/[id]", () => {
         {
           method: "PATCH",
           body: JSON.stringify({
-            name: "Updated Hotel Paradise",
+            name: "Success Updated Hotel",
             city: "Rio de Janeiro",
             country: "Brasil",
             phone: "+55 2199999999",
@@ -165,7 +165,7 @@ describe("PATCH /api/v1/hotels/[id]", () => {
       const hotelUpdated = await response.json()
       expect(hotelUpdated).toEqual({
         id: hotelCreated.id,
-        name: "Updated Hotel Paradise",
+        name: "Success Updated Hotel",
         city: "Rio de Janeiro",
         country: "Brasil",
         phone: "+55 2199999999",
@@ -191,7 +191,7 @@ describe("PATCH /api/v1/hotels/[id]", () => {
 
       // Create first hotel
       await orchestrator.createHotel(createdUser.id, {
-        name: "Hotel A",
+        name: "Hotel Unique A",
         city: "Rio de Janeiro",
         country: "Brasil",
       })
@@ -204,7 +204,7 @@ describe("PATCH /api/v1/hotels/[id]", () => {
         {
           method: "PATCH",
           body: JSON.stringify({
-            name: "Hotel A",
+            name: "Hotel Unique A",
             city: "Rio de Janeiro",
             country: "Brasil",
             check_in_date: "2026-01-07T20:43:12.021Z",
@@ -223,9 +223,9 @@ describe("PATCH /api/v1/hotels/[id]", () => {
       expect(errorBody).toEqual({
         name: "ConflictError",
         status_code: 409,
-        message:
-          "Já existe um hotel cadastrado com esse nome para este usuário.",
-        action: "Escolha outro nome ou edite o hotel existente.",
+        message: "Já existe um hotel cadastrado com esse nome no sistema.",
+        action:
+          "O nome do hotel deve ser único globalmente. Escolha outro nome ou edite o hotel existente.",
       })
     })
 
@@ -238,7 +238,7 @@ describe("PATCH /api/v1/hotels/[id]", () => {
 
       // Create hotel
       const hotelCreated = await orchestrator.createHotel(createdUser.id, {
-        name: "Hotel Original",
+        name: "Equal Name Test Hotel",
         city: "São Paulo",
         country: "Brasil",
       })
@@ -249,7 +249,7 @@ describe("PATCH /api/v1/hotels/[id]", () => {
         {
           method: "PATCH",
           body: JSON.stringify({
-            name: "Hotel Original",
+            name: "Equal Name Test Hotel",
             city: "Rio de Janeiro",
             country: "Brasil",
             check_in_date: "2026-01-07T20:43:12.021Z",
@@ -265,7 +265,7 @@ describe("PATCH /api/v1/hotels/[id]", () => {
       expect(response.status).toBe(200)
 
       const hotelUpdated = await response.json()
-      expect(hotelUpdated.name).toBe("Hotel Original")
+      expect(hotelUpdated.name).toBe("Equal Name Test Hotel")
       expect(hotelUpdated.city).toBe("Rio de Janeiro")
     })
   })

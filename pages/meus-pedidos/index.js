@@ -269,20 +269,82 @@ export default function MyOrdersPage() {
                                         - {guest.city}/{guest.state}
                                       </div>
                                     )}
-                                    {guest.medication_details && (
-                                      <div className="md:col-span-2 text-amber-700 bg-amber-50 p-2 rounded mt-1">
-                                        <span className="font-medium">
-                                          Medicamentos:
-                                        </span>{" "}
-                                        {guest.medication_details}
-                                      </div>
-                                    )}
-                                    {guest.health_observations && (
-                                      <div className="md:col-span-2 text-blue-700 bg-blue-50 p-2 rounded mt-1">
-                                        <span className="font-medium">
-                                          Obs. Saúde:
-                                        </span>{" "}
-                                        {guest.health_observations}
+
+                                    {/* Saúde / Detalhes Médicos */}
+                                    {(guest.blood_type ||
+                                      guest.has_heart_condition ||
+                                      guest.has_diabetes ||
+                                      guest.has_high_blood_pressure ||
+                                      guest.has_low_blood_pressure ||
+                                      guest.medication_details ||
+                                      guest.health_observations ||
+                                      guest.special_needs_details) && (
+                                      <div className="md:col-span-2 mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 p-3 bg-red-50/30 rounded-lg border border-red-100/50">
+                                        <p className="md:col-span-2 text-xs font-bold uppercase tracking-wider text-red-800 mb-1">
+                                          Informações de Saúde
+                                        </p>
+                                        {(guest.blood_type ||
+                                          guest.blood_rh_factor) && (
+                                          <div>
+                                            <span className="font-medium text-gray-500">
+                                              Tipo Sanguíneo:
+                                            </span>{" "}
+                                            {guest.blood_type}{" "}
+                                            {guest.blood_rh_factor}
+                                          </div>
+                                        )}
+                                        {guest.has_heart_condition && (
+                                          <div>
+                                            <span className="font-medium text-red-700">
+                                              Problema Cardíaco
+                                            </span>
+                                          </div>
+                                        )}
+                                        {guest.has_diabetes && (
+                                          <div>
+                                            <span className="font-medium text-red-700">
+                                              Diabetes
+                                            </span>
+                                          </div>
+                                        )}
+                                        {guest.has_high_blood_pressure && (
+                                          <div>
+                                            <span className="font-medium text-red-700">
+                                              Pressão Alta
+                                            </span>
+                                          </div>
+                                        )}
+                                        {guest.has_low_blood_pressure && (
+                                          <div>
+                                            <span className="font-medium text-red-700">
+                                              Pressão Baixa
+                                            </span>
+                                          </div>
+                                        )}
+                                        {guest.medication_details && (
+                                          <div className="md:col-span-2">
+                                            <span className="font-medium text-gray-500">
+                                              Medicamentos:
+                                            </span>{" "}
+                                            {guest.medication_details}
+                                          </div>
+                                        )}
+                                        {guest.health_observations && (
+                                          <div className="md:col-span-2">
+                                            <span className="font-medium text-gray-500">
+                                              Obs. Saúde:
+                                            </span>{" "}
+                                            {guest.health_observations}
+                                          </div>
+                                        )}
+                                        {guest.special_needs_details && (
+                                          <div className="md:col-span-2">
+                                            <span className="font-medium text-gray-500">
+                                              Necessidades Especiais:
+                                            </span>{" "}
+                                            {guest.special_needs_details}
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>

@@ -106,41 +106,6 @@ async function findOneById(hotelId) {
   }
 }
 
-async function findOneByIdAndUserId(hotelId, userId) {
-  validateUUID(hotelId)
-
-  const results = await database.query({
-    text: `
-      SELECT 
-        h.*,
-        COALESCE(
-          (
-            SELECT json_agg(pp.* ORDER BY pp.max_age ASC)
-            FROM "price_policies" pp
-            WHERE pp.hotel_id = h.id
-          ),
-          '[]'::json
-        ) as price_policies
-      FROM 
-        hotels h
-      WHERE 
-        h.id = $1 AND h.user_id = $2
-      LIMIT
-        1
-      ;`,
-    values: [hotelId, userId],
-  })
-
-  if (results.rowCount === 0) {
-    throw new NotFoundError({
-      message: "O ID do hotel informado não foi encontrado no sistema.",
-      action: "Verifique se o ID está digitado corretamente.",
-    })
-  }
-
-  return results.rows[0]
-}
-
 async function update(hotelId, hotelInputNewValues, userId) {
   if (Object.keys(hotelInputNewValues).length === 0) {
     throw new ValidationError({
@@ -262,13 +227,13 @@ async function deleteById(hotelId, userId) {
   await database.query({
     text: `
     DELETE FROM hotels
-    WHERE user_id = $1 and id = $2
+    WHERE id = $1
     `,
-    values: [userId, hotelId],
+    values: [hotelId],
   })
 }
 
-async function findAllByUserId(userId) {
+async function findAll() {
   const results = await database.query({
     text: `
       SELECT 
@@ -283,33 +248,30 @@ async function findAllByUserId(userId) {
         ) as price_policies
       FROM 
         hotels h
-      WHERE 
-        h.user_id = $1
       ORDER BY 
         h.created_at DESC
     `,
-    values: [userId],
   })
 
   return results.rows
 }
 
-async function verifyIHotelAlreadyExists(name, userId) {
+async function verifyIHotelAlreadyExists(name) {
   const results = await database.query({
     text: `
       SELECT *
       FROM hotels
-      WHERE user_id = $1
-        AND name = $2
+      WHERE name = $1
       LIMIT 1
     `,
-    values: [userId, name],
+    values: [name],
   })
 
   if (results.rowCount > 0) {
     throw new ConflictError({
-      message: "Já existe um hotel cadastrado com esse nome para este usuário.",
-      action: "Escolha outro nome ou edite o hotel existente.",
+      message: "Já existe um hotel cadastrado com esse nome no sistema.",
+      action:
+        "O nome do hotel deve ser único globalmente. Escolha outro nome ou edite o hotel existente.",
     })
   }
 }
@@ -372,17 +334,19 @@ async function getAllActiveHotels() {
             json_build_object(
               'id', r.id,
               'price_per_night', r.price_per_night,
+              'member_price_per_night', r.member_price_per_night,
               'available_rooms', r.available_rooms,
               'room_type', rt.name,
               'room_type_description', rt.description,
               'room_category', rc.name,
               'max_adults', rc.max_adults,
               'max_children', rc.max_children,
+              'min_guests', r.min_guests,
               'name', r.name,
               'description', r.description,
               'photos', r.photos
             )
-          ) FILTER (WHERE r.id IS NOT NULL),
+          ) FILTER (WHERE r.id IS NOT NULL AND rt.id IS NOT NULL AND rc.id IS NOT NULL),
           '[]'
         ) as rooms
       FROM 
@@ -401,41 +365,84 @@ async function getAllActiveHotels() {
 }
 
 async function syncPricePolicies(hotelId, policies) {
-  // 1. Delete existing
-  await database.query({
-    text: `DELETE FROM "price_policies" WHERE hotel_id = $1`,
+  // 1. Get current policies from DB to identify what to delete
+  const currentPoliciesResults = await database.query({
+    text: `SELECT id FROM "price_policies" WHERE hotel_id = $1`,
     values: [hotelId],
   })
+  const currentIds = currentPoliciesResults.rows.map((p) => p.id)
 
-  // 2. Insert new
+  const incomingIds = policies.filter((p) => p.id).map((p) => p.id)
+
+  // 2. Delete policies that are no longer present
+  const idsToDelete = currentIds.filter((id) => !incomingIds.includes(id))
+  if (idsToDelete.length > 0) {
+    await database.query({
+      text: `DELETE FROM "price_policies" WHERE id = ANY($1)`,
+      values: [idsToDelete],
+    })
+  }
+
+  // 3. Update or Insert new ones
   for (const policy of policies) {
     if (
       policy.max_age === undefined ||
       policy.max_age === "" ||
-      policy.percentage === undefined ||
-      policy.percentage === "" ||
       !policy.description
     )
       continue
 
-    await database.query({
-      text: `
-                INSERT INTO "price_policies" (hotel_id, max_age, percentage, description)
-                VALUES ($1, $2, $3, $4)
-            `,
-      values: [hotelId, policy.max_age, policy.percentage, policy.description],
-    })
+    const percentage =
+      policy.percentage !== undefined && policy.percentage !== ""
+        ? policy.percentage
+        : 0
+    const use_percentage =
+      policy.use_percentage !== undefined ? policy.use_percentage : true
+
+    if (policy.id) {
+      // Update existing
+      await database.query({
+        text: `
+                    UPDATE "price_policies" 
+                    SET max_age = $1, percentage = $2, description = $3, use_percentage = $4, updated_at = now()
+                    WHERE id = $5 AND hotel_id = $6
+                `,
+        values: [
+          policy.max_age,
+          percentage,
+          policy.description,
+          use_percentage,
+          policy.id,
+          hotelId,
+        ],
+      })
+    } else {
+      // Insert new
+      await database.query({
+        text: `
+                    INSERT INTO "price_policies" (hotel_id, max_age, percentage, description, use_percentage)
+                    VALUES ($1, $2, $3, $4, $5)
+                `,
+        values: [
+          hotelId,
+          policy.max_age,
+          percentage,
+          policy.description,
+          use_percentage,
+        ],
+      })
+    }
   }
 }
 
 const hotel = {
   create,
   findOneById,
-  findOneByIdAndUserId,
-  findAllByUserId,
+  findAll,
   update,
   deleteById,
   activate,
   getAllActiveHotels,
+  syncPricePolicies,
 }
 export default hotel

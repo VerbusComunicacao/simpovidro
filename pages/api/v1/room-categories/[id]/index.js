@@ -15,11 +15,8 @@ export default router.handler(controller.errorHandlers)
 async function getHandler(request, response) {
   const { id } = request.query
 
-  // Busca room category com filtro de segurança (só room categories do usuário)
-  const roomCategoryFound = await roomCategory.findOneByIdAndUserId(
-    id,
-    request.context.user.id,
-  )
+  // Busca room category (de maneira global)
+  const roomCategoryFound = await roomCategory.findOneById(id)
 
   // Aplica filtros de autorização
   const secureRoomCategory = authorization.filterOutput(

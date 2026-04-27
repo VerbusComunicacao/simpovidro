@@ -7,7 +7,7 @@ import {
 
 async function create(roomTypeInputValues, userId) {
   validateRequired(roomTypeInputValues, ["name"])
-  await verifyRoomTypeAlreadyExists(roomTypeInputValues.name, userId)
+  await verifyRoomTypeAlreadyExists(roomTypeInputValues.name)
 
   const newRoomType = await runInsertQuery(roomTypeInputValues, userId)
   return newRoomType
@@ -63,54 +63,12 @@ async function findOneById(roomTypeId) {
   }
 }
 
-async function findOneByIdAndUserId(roomTypeId, userId) {
-  validateUUID(roomTypeId)
-  validateUUID(userId)
-
+async function findAll() {
   const results = await database.query({
     text: `
-      SELECT 
-        * 
-      FROM 
-        "room-types"
-      WHERE 
-        id = $1 AND user_id = $2
-      LIMIT
-        1
-      ;`,
-    values: [roomTypeId, userId],
-  })
-
-  if (results.rowCount === 0) {
-    throw new NotFoundError({
-      message:
-        "O ID do tipo de quarto informado não foi encontrado no sistema.",
-      action: "Verifique se o ID está digitado corretamente.",
-    })
-  }
-
-  return results.rows[0]
-}
-
-async function findAllByUserId(userId) {
-  validateUUID(userId)
-
-  const results = await database.query({
-    text: `
-      SELECT 
-        id,
-        name,
-        description,
-        created_at,
-        updated_at
-      FROM 
-        "room-types"
-      WHERE 
-        user_id = $1
-      ORDER BY 
-        created_at DESC
+      SELECT * FROM "room-types"
+      ORDER BY created_at DESC
     `,
-    values: [userId],
   })
 
   return results.rows
@@ -165,33 +123,49 @@ async function update(roomTypeId, roomTypeInputNewValues, userId) {
   }
 }
 
-async function deleteById(roomTypeId, userId) {
+async function deleteById(roomTypeId) {
+  // 1. Verificação de Integridade (Regra de Negócio: Não deletar se em uso)
+  const countResult = await database.query({
+    text: `SELECT id FROM rooms WHERE room_type_id = $1 LIMIT 1`,
+    values: [roomTypeId],
+  })
+
+  if (countResult.rowCount > 0) {
+    throw new ValidationError({
+      message:
+        "Este tipo de quarto não pode ser excluído pois está sendo utilizado em um ou mais quartos.",
+      action:
+        "Exclua ou altere os quartos que utilizam este tipo antes de tentar novamente.",
+    })
+  }
+
+  // 2. Exclusão
   await database.query({
     text: `
     DELETE FROM "room-types"
-    WHERE user_id = $1 and id = $2
+    WHERE id = $1
     `,
-    values: [userId, roomTypeId],
+    values: [roomTypeId],
   })
 }
 
-async function verifyRoomTypeAlreadyExists(name, userId) {
+async function verifyRoomTypeAlreadyExists(name) {
   const results = await database.query({
     text: `
       SELECT *
       FROM "room-types"
-      WHERE user_id = $1
-        AND name = $2
+      WHERE name = $1
       LIMIT 1
     `,
-    values: [userId, name],
+    values: [name],
   })
 
   if (results.rowCount > 0) {
     throw new ConflictError({
       message:
-        "Já existe um tipo de quarto cadastrado com esse nome para este usuário.",
-      action: "Escolha outro nome ou edite o tipo de quarto existente.",
+        "Já existe um tipo de quarto cadastrado com esse nome no sistema.",
+      action:
+        "O nome deve ser globalmente único. Escolha outro nome ou edite o tipo de quarto existente.",
     })
   }
 }
@@ -199,8 +173,7 @@ async function verifyRoomTypeAlreadyExists(name, userId) {
 const roomType = {
   create,
   findOneById,
-  findOneByIdAndUserId,
-  findAllByUserId,
+  findAll,
   update,
   deleteById,
 }

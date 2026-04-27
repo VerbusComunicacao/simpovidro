@@ -8,21 +8,25 @@ async function generateCompleteReport(hotelId) {
   const query = `
     SELECT 
       g.name as "Nome",
+      g.badge_name as "Crachá do Participante",
       g.email as "Email",
-      g.phone as "Telefone",
+      g.phone as "Celular",
       g.gender as "Sexo",
       g.birth_date as "Data de Nascimento",
       g.cpf_number as "CPF",
       g.rg_number as "RG",
       g.passport_number as "Passaporte",
       g.nationality as "Nacionalidade",
-      g.address as "Endereço",
-      g.address_number as "Número",
-      g.address_complement as "Complemento",
-      g.neighborhood as "Bairro",
-      g.city as "Cidade",
-      g.state as "Estado",
-      g.country as "País",
+      c.corporate_name as "Empresa",
+      c.cnpj as "CNPJ da empresa",
+      c.badge as "Nome da empresa no crachá",
+      c.phone as "Telefone Comercial",
+      c.address as "Endereço da Empresa",
+      c.address_number as "Número",
+      c.neighborhood as "Bairro",
+      c.city as "Cidade",
+      c.state as "Estado",
+      c.zip_code as "CEP",
       g.medication_details as "Medicação",
       g.blood_type as "Tipo sanguíneo",
       g.blood_rh_factor as "Fator RH",
@@ -34,7 +38,6 @@ async function generateCompleteReport(hotelId) {
       g.has_low_blood_pressure as "Pressão baixa",
       g.emergency_contact_name as "Contato de emergência",
       g.emergency_contact_phone as "Telefone de emergência",
-      g.company_cnpj as "CNPJ da empresa",
       s.sale_number as "Número da venda",
       s.payment_status as "Status de pagamento",
       s.final_amount as "Valor total",
@@ -128,14 +131,13 @@ async function generateByAge(hotelId) {
       COUNT(*) as total,
       COUNT(*) FILTER (WHERE gender ILIKE 'masculino' OR gender ILIKE 'male' OR gender ILIKE 'm') as male_count,
       COUNT(*) FILTER (WHERE gender ILIKE 'feminino' OR gender ILIKE 'female' OR gender ILIKE 'f') as female_count,
-      COUNT(*) FILTER (WHERE gender IS NULL OR (gender NOT ILIKE 'masculino' AND gender NOT ILIKE 'male' AND gender NOT ILIKE 'm' AND gender NOT ILIKE 'feminino' AND gender NOT ILIKE 'female' AND gender NOT ILIKE 'f')) as other_count,
       json_agg(
         json_build_object(
           'name', name,
           'age', age,
           'email', email,
           'phone', phone,
-          'gender', gender
+          'sexo', gender
         ) ORDER BY name
       ) as participants
     FROM age_calculations

@@ -40,6 +40,7 @@ describe("Room Availability (Source of Truth)", () => {
     const guest1 = await guest.create(
       {
         name: "Guest 1",
+        badge_name: "Crachá 1",
         email: "guest1@example.com",
         phone: "11999999999",
         gender: "M",
@@ -53,6 +54,7 @@ describe("Room Availability (Source of Truth)", () => {
     const guest2 = await guest.create(
       {
         name: "Guest 2",
+        badge_name: "Crachá 2",
         email: "guest2@example.com",
         phone: "11888888888",
         gender: "F",

@@ -1,7 +1,7 @@
-import { Temporal } from "@js-temporal/polyfill"
 import database from "infra/database.js"
 import { NotFoundError } from "infra/errors.js"
 import { validateUUID } from "infra/validator.js"
+import { generateInstallmentDates } from "../lib/registration-helpers.js"
 
 async function findAll({ sale_id, status } = {}) {
   let queryText = `SELECT * FROM sale_installments`
@@ -119,28 +119,6 @@ async function createMany(installments, client) {
       values: [sale_id, installment_number, amount, due_date],
     })
   }
-}
-
-function generateInstallmentDates(count, eventDate) {
-  const dates = []
-  const today = Temporal.Now.plainDateISO()
-
-  for (let i = 0; i < count; i++) {
-    let dueDate
-
-    if (i < count - 1) {
-      // Intermediate installments: last day of the month
-      // i = 0 is the current month
-      const monthDate = today.add({ months: i })
-      dueDate = monthDate.with({ day: monthDate.daysInMonth })
-    } else {
-      // Last installment: 5 days before the event
-      dueDate = eventDate.subtract({ days: 5 })
-    }
-
-    dates.push(dueDate.toString())
-  }
-  return dates
 }
 
 const saleInstallment = {

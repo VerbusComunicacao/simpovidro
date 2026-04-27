@@ -60,59 +60,18 @@ async function findOneById(roomCategoryId) {
   }
 }
 
-async function findOneByIdAndUserId(roomCategoryId, userId) {
-  validateUUID(roomCategoryId)
-  validateUUID(userId)
-
+async function findAll() {
   const results = await database.query({
     text: `
-      SELECT 
-        * 
-      FROM 
-        "room-categories"
-      WHERE 
-        id = $1 AND user_id = $2
-      LIMIT
-        1
-      ;`,
-    values: [roomCategoryId, userId],
-  })
-
-  if (results.rowCount === 0) {
-    throw new NotFoundError({
-      message:
-        "O ID da categoria de quarto informado não foi encontrado no sistema.",
-      action: "Verifique se o ID está digitado corretamente.",
-    })
-  }
-
-  return results.rows[0]
-}
-
-async function findAllByUserId(userId) {
-  const results = await database.query({
-    text: `
-      SELECT 
-        id,
-        name,
-        max_adults,
-        max_children,
-        created_at,
-        updated_at
-      FROM 
-        "room-categories"
-      WHERE 
-        user_id = $1
-      ORDER BY 
-        created_at DESC
+      SELECT * FROM "room-categories"
+      ORDER BY created_at DESC
     `,
-    values: [userId],
   })
 
   return results.rows
 }
 
-async function update(roomCategoryId, roomCategoryInputNewValues, userId) {
+async function update(roomCategoryId, roomCategoryInputNewValues) {
   if (Object.keys(roomCategoryInputNewValues).length === 0) {
     throw new ValidationError({
       message: `Nenhum campo enviado para atualização.`,
@@ -127,10 +86,7 @@ async function update(roomCategoryId, roomCategoryInputNewValues, userId) {
     "name" in roomCategoryInputNewValues &&
     roomCategoryInputNewValues.name !== currentRoomCategory.name
   ) {
-    await verifyRoomCategoryAlreadyExists(
-      roomCategoryInputNewValues.name,
-      userId,
-    )
+    await verifyRoomCategoryAlreadyExists(roomCategoryInputNewValues.name)
   }
 
   const roomCategoryWithNewValues = {
@@ -165,32 +121,46 @@ async function update(roomCategoryId, roomCategoryInputNewValues, userId) {
   }
 }
 
-async function deleteById(roomCategoryId, userId) {
+async function deleteById(roomCategoryId) {
+  // 1. Verificação de Integridade (Regra de Negócio: Não deletar se em uso)
+  const countResult = await database.query({
+    text: `SELECT id FROM rooms WHERE room_category_id = $1 LIMIT 1`,
+    values: [roomCategoryId],
+  })
+
+  if (countResult.rowCount > 0) {
+    throw new ValidationError({
+      message:
+        "Esta categoria de quarto não pode ser excluída pois está sendo utilizada em um ou mais quartos.",
+      action:
+        "Exclua ou altere os quartos que utilizam esta categoria antes de tentar novamente.",
+    })
+  }
+
+  // 2. Exclusão
   await database.query({
     text: `
     DELETE FROM "room-categories"
-    WHERE user_id = $1 and id = $2
+    WHERE id = $1
     `,
-    values: [userId, roomCategoryId],
+    values: [roomCategoryId],
   })
 }
 
-async function verifyRoomCategoryAlreadyExists(name, userId) {
+async function verifyRoomCategoryAlreadyExists(name) {
   const results = await database.query({
     text: `
       SELECT *
       FROM "room-categories"
-      WHERE user_id = $1
-        AND name = $2
+      WHERE name = $1
       LIMIT 1
     `,
-    values: [userId, name],
+    values: [name],
   })
 
   if (results.rowCount > 0) {
     throw new ConflictError({
-      message:
-        "Já existe uma categoria de quarto cadastrada com esse nome para este usuário.",
+      message: "Já existe uma categoria de quarto cadastrada com esse nome.",
       action: "Escolha outro nome ou edite a categoria de quarto existente.",
     })
   }
@@ -199,8 +169,7 @@ async function verifyRoomCategoryAlreadyExists(name, userId) {
 const roomCategory = {
   create,
   findOneById,
-  findOneByIdAndUserId,
-  findAllByUserId,
+  findAll,
   update,
   deleteById,
 }

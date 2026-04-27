@@ -11,6 +11,7 @@ import room from "models/room.js"
 import activation from "models/activation"
 import discount from "models/discount"
 import registration from "models/registration.js"
+import guest from "models/guest.js"
 
 const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`
 const webserverUrl = "http://localhost:3000"
@@ -123,6 +124,7 @@ async function createRoom(userId, roomData) {
         roomData?.available_rooms ?? faker.number.int({ min: 1, max: 5 }),
       blocked_rooms:
         roomData?.blocked_rooms ?? faker.number.int({ min: 0, max: 3 }),
+      name: roomData?.name || faker.commerce.productName(),
     },
     userId,
   )
@@ -205,18 +207,22 @@ async function createDiscount(discountData) {
 }
 
 async function createRegistration(userId, registrationData) {
+  const userResults = await database.query({
+    text: "SELECT email, full_name FROM users WHERE id = $1",
+    values: [userId],
+  })
+  const userProfile = userResults.rows[0] || {
+    email: faker.internet.email(),
+    full_name: faker.person.fullName(),
+  }
+
   const data = {
     room_id: registrationData?.room_id || (await createRoom(userId)).id,
     guests_data: registrationData?.guests_data || [
       {
-        name: faker.person.fullName(),
-        email:
-          (
-            await database.query({
-              text: "SELECT email FROM users WHERE id = $1",
-              values: [userId],
-            })
-          ).rows[0]?.email || faker.internet.email(),
+        name: userProfile.full_name,
+        badge_name: faker.person.firstName(),
+        email: userProfile.email,
         phone: faker.string.numeric(11),
         gender: faker.helpers.arrayElement(["Masculino", "Feminino"]),
         rg_number: faker.string.numeric(9),
@@ -232,6 +238,10 @@ async function createRegistration(userId, registrationData) {
     installments_count: registrationData?.installments_count || 3,
   }
   return await registration.create(userId, data)
+}
+
+async function createGuest(guestData, userId, client) {
+  return await guest.upsert(guestData, userId, client)
 }
 
 const orchestrator = {
@@ -254,6 +264,7 @@ const orchestrator = {
   addFeatureToUser,
   createDiscount,
   createRegistration,
+  createGuest,
 
   createPricePolicy,
   webserverUrl,

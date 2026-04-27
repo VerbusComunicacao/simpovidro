@@ -36,6 +36,7 @@ describe("POST /api/v1/rooms", () => {
           room_category_id: roomCategory.id,
           price_per_night: 150.0,
           total_rooms: 5,
+          name: "Quarto Teste",
         }),
         headers: {
           "Content-Type": "application/json",
@@ -68,7 +69,7 @@ describe("POST /api/v1/rooms", () => {
       expect(roomCreated).toEqual({
         action: "Envie todos os campos obrigatórios e tente novamente.",
         message:
-          "Campos obrigatórios ausentes: hotel_id, room_type_id, room_category_id, price_per_night, total_rooms.",
+          "Campos obrigatórios ausentes: hotel_id, room_type_id, room_category_id, price_per_night, total_rooms, name.",
         name: "ValidationError",
         status_code: 400,
       })
@@ -91,6 +92,7 @@ describe("POST /api/v1/rooms", () => {
           hotel_id: hotel.id,
           room_type_id: roomType.id,
           room_category_id: roomCategory.id,
+          name: "Quarto Teste",
         }),
         headers: {
           "Content-Type": "application/json",
@@ -129,6 +131,7 @@ describe("POST /api/v1/rooms", () => {
           room_category_id: roomCategory.id,
           price_per_night: 250.5,
           total_rooms: 6,
+          name: "Suíte Luxo",
         }),
         headers: {
           "Content-Type": "application/json",
@@ -142,7 +145,7 @@ describe("POST /api/v1/rooms", () => {
       expect(roomCreated).toEqual({
         id: expect.any(String),
         hotel_id: hotel.id,
-        name: null,
+        name: "Suíte Luxo",
         description: null,
         photos: [],
         room_type_id: roomType.id,
@@ -162,6 +165,8 @@ describe("POST /api/v1/rooms", () => {
         room_category: roomCategory.name,
         max_adults: roomCategory.max_adults,
         max_children: roomCategory.max_children,
+        member_price_per_night: "0.00",
+        min_guests: 1,
       })
     })
 
@@ -215,6 +220,7 @@ describe("POST /api/v1/rooms", () => {
           room_category_id: roomCategory2.id,
           price_per_night: 250.5,
           total_rooms: 6,
+          name: "Quarto Diferente",
         }),
         headers: {
           "Content-Type": "application/json",
@@ -222,7 +228,56 @@ describe("POST /api/v1/rooms", () => {
         },
       })
 
-      expect(response.status).toBe(404)
+      expect(response.status).toBe(201)
+    })
+
+    test("Cria um quarto com base em políticas de idade existentes", async () => {
+      const user1 = await orchestrator.createUser()
+      await orchestrator.activateAdmUser(user1.id)
+      const session = await orchestrator.createSession(user1.id)
+
+      const hotel = await orchestrator.createHotel(user1.id, {
+        price_policies: [
+          {
+            max_age: 3,
+            description: "Criança até 3 anos não pagam",
+            use_percentage: true,
+          },
+          {
+            max_age: 12,
+            description: "Criança até 12 anos não pagam",
+            use_percentage: false,
+          },
+        ],
+      })
+
+      const roomType = await orchestrator.createRoomType(user1.id)
+      const roomCategory = await orchestrator.createRoomCategory(user1.id)
+
+      const response = await fetch("http://localhost:3000/api/v1/rooms", {
+        method: "POST",
+        body: JSON.stringify({
+          hotel_id: hotel.id,
+          room_type_id: roomType.id,
+          room_category_id: roomCategory.id,
+          price_per_night: 250.5,
+          member_price_per_night: 200.5,
+          total_rooms: 6,
+          price_policies: [
+            {
+              id: hotel.price_policies[1].id,
+              price: 50,
+            },
+          ],
+          name: "Quarto com política",
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${session.token}`,
+        },
+      })
+
+      expect(response.status).toBe(201)
     })
   })
 })

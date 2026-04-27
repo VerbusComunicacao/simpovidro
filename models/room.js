@@ -9,6 +9,7 @@ async function create(roomInputValues, userId) {
     "room_category_id",
     "price_per_night",
     "total_rooms",
+    "name",
   ])
   validateUUID(roomInputValues.hotel_id)
   validateUUID(roomInputValues.room_type_id)
@@ -22,6 +23,13 @@ async function create(roomInputValues, userId) {
   )
 
   const newRoom = await runInsertQuery(roomInputValues, userId)
+
+  if (
+    roomInputValues.price_policies &&
+    Array.isArray(roomInputValues.price_policies)
+  ) {
+    await syncRoomPricePolicies(newRoom.id, roomInputValues.price_policies)
+  }
 
   return await findOneById(newRoom.id)
 
@@ -37,14 +45,16 @@ async function create(roomInputValues, userId) {
       name,
       description,
       photos,
+      member_price_per_night = 0,
+      min_guests = 1,
     } = roomInputValues
 
     const results = await database.query({
       text: `
         INSERT INTO
-          "rooms" (user_id, hotel_id, room_type_id, room_category_id, price_per_night, total_rooms, available_rooms, blocked_rooms, name, description, photos)
+          "rooms" (user_id, hotel_id, room_type_id, room_category_id, price_per_night, member_price_per_night, total_rooms, available_rooms, blocked_rooms, name, description, photos, min_guests)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING
           *
       `,
@@ -54,12 +64,14 @@ async function create(roomInputValues, userId) {
         room_type_id,
         room_category_id,
         price_per_night,
+        member_price_per_night,
         total_rooms,
         available_rooms,
         blocked_rooms,
         name,
         description,
         photos || [],
+        min_guests,
       ],
     })
 
@@ -77,6 +89,7 @@ async function findOneById(roomId) {
       text: `
         SELECT 
           r.*,
+          r.member_price_per_night,
           h.name as hotel_name,
           h.check_in_date as hotel_check_in_date,
           h.check_out_date as hotel_check_out_date,
@@ -86,8 +99,18 @@ async function findOneById(roomId) {
           rc.max_children,
           COALESCE(
             (
-              SELECT json_agg(pp.* ORDER BY pp.max_age ASC)
+              SELECT json_agg(
+                json_build_object(
+                  'id', pp.id,
+                  'max_age', pp.max_age,
+                  'description', pp.description,
+                  'use_percentage', pp.use_percentage,
+                  'percentage', pp.percentage,
+                  'price', rpp.price
+                ) ORDER BY pp.max_age ASC
+              )
               FROM "price_policies" pp
+              LEFT JOIN "room_price_policies" rpp ON pp.id = rpp.price_policy_id AND rpp.room_id = r.id
               WHERE pp.hotel_id = r.hotel_id
             ),
             '[]'::json
@@ -96,9 +119,9 @@ async function findOneById(roomId) {
           "rooms" r
         JOIN
           "hotels" h ON r.hotel_id = h.id
-        JOIN
+        LEFT JOIN
           "room-types" rt ON r.room_type_id = rt.id
-        JOIN
+        LEFT JOIN
           "room-categories" rc ON r.room_category_id = rc.id
         WHERE
           r.id = $1
@@ -119,37 +142,7 @@ async function findOneById(roomId) {
   }
 }
 
-async function findOneByIdAndUserId(roomId, userId) {
-  validateUUID(roomId)
-  validateUUID(userId)
-
-  const results = await database.query({
-    text: `
-      SELECT 
-        * 
-      FROM 
-        "rooms"
-      WHERE 
-        id = $1 AND user_id = $2
-      LIMIT
-        1
-      ;`,
-    values: [roomId, userId],
-  })
-
-  if (results.rowCount === 0) {
-    throw new NotFoundError({
-      message: "O ID do quarto informado não foi encontrado no sistema.",
-      action: "Verifique se o ID está digitado corretamente.",
-    })
-  }
-
-  return results.rows[0]
-}
-
-async function findAllByUserId(userId) {
-  validateUUID(userId)
-
+async function findAll() {
   const results = await database.query({
     text: `
       SELECT 
@@ -158,30 +151,28 @@ async function findAllByUserId(userId) {
         room_type_id,
         room_category_id,
         price_per_night,
+        member_price_per_night,
         total_rooms,
         available_rooms,
         blocked_rooms,
         name,
         description,
         photos,
+        min_guests,
         created_at,
         updated_at
       FROM 
         "rooms"
-      WHERE 
-        user_id = $1
       ORDER BY 
         created_at DESC
     `,
-    values: [userId],
   })
 
   return results.rows
 }
 
-async function findAllByHotelId(hotelId, userId) {
+async function findAllByHotelId(hotelId) {
   validateUUID(hotelId)
-  validateUUID(userId)
 
   const results = await database.query({
     text: `
@@ -193,24 +184,46 @@ async function findAllByHotelId(hotelId, userId) {
         r.room_type_id,
         r.room_category_id,
         r.price_per_night,
+        r.member_price_per_night,
         r.total_rooms,
         r.available_rooms,
         r.blocked_rooms,
         r.name,
         r.description,
         r.photos,
+        r.min_guests,
+        rc.max_adults,
+        rc.max_children,
+        h.check_in_date as hotel_check_in_date,
         r.created_at,
-        r.updated_at
+        r.updated_at,
+        COALESCE(
+          (
+            SELECT json_agg(json_build_object(
+              'id', pp.id,
+              'max_age', pp.max_age,
+              'description', pp.description,
+              'use_percentage', pp.use_percentage,
+              'percentage', pp.percentage,
+              'price', rpp.price
+            ) ORDER BY pp.max_age ASC)
+            FROM "price_policies" pp
+            LEFT JOIN "room_price_policies" rpp ON rpp.price_policy_id = pp.id AND rpp.room_id = r.id
+            WHERE pp.hotel_id = r.hotel_id
+          ),
+          '[]'::json
+        ) as price_policies
       FROM 
         "rooms" r
-      JOIN "room-types" rt ON r.room_type_id = rt.id
-      JOIN "room-categories" rc ON r.room_category_id = rc.id
+      JOIN "hotels" h ON r.hotel_id = h.id
+      LEFT JOIN "room-types" rt ON r.room_type_id = rt.id
+      LEFT JOIN "room-categories" rc ON r.room_category_id = rc.id
       WHERE 
-        r.hotel_id = $1 AND r.user_id = $2
+        r.hotel_id = $1
       ORDER BY 
         r.created_at DESC
     `,
-    values: [hotelId, userId],
+    values: [hotelId],
   })
 
   return results.rows
@@ -268,6 +281,16 @@ async function update(roomId, roomInputNewValues, userId) {
 
   const updatedRoom = await runUpdateQuery(roomWithNewValues)
 
+  if (
+    roomInputNewValues.price_policies &&
+    Array.isArray(roomInputNewValues.price_policies)
+  ) {
+    await syncRoomPricePolicies(
+      updatedRoom.id,
+      roomInputNewValues.price_policies,
+    )
+  }
+
   return await findOneById(updatedRoom.id)
 
   async function runUpdateQuery(roomWithNewValues) {
@@ -276,10 +299,14 @@ async function update(roomId, roomInputNewValues, userId) {
       hotel_id,
       room_type_id,
       room_category_id,
+      // No banco de dados, o campo é chamado de 'price_per_night',
+      // mas para a regra de negócio do Simpovidro, ele representa o "Preço por Pessoa" para o evento.
       price_per_night,
+      member_price_per_night,
       total_rooms,
       available_rooms,
       blocked_rooms,
+      min_guests,
     } = roomWithNewValues
 
     const results = await database.query({
@@ -291,12 +318,14 @@ async function update(roomId, roomInputNewValues, userId) {
           room_type_id = $3,
           room_category_id = $4,
           price_per_night = $5,
-          total_rooms = $6,
-          available_rooms = $7,
-          blocked_rooms = $8,
-          name = $9,
-          description = $10,
-          photos = $11,
+          member_price_per_night = $6,
+          total_rooms = $7,
+          available_rooms = $8,
+          blocked_rooms = $9,
+          name = $10,
+          description = $11,
+          photos = $12,
+          min_guests = $13,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
@@ -309,12 +338,14 @@ async function update(roomId, roomInputNewValues, userId) {
         room_type_id,
         room_category_id,
         price_per_night,
+        member_price_per_night,
         total_rooms,
         available_rooms,
         blocked_rooms,
         roomWithNewValues.name,
         roomWithNewValues.description,
         roomWithNewValues.photos || [],
+        min_guests,
       ],
     })
 
@@ -383,23 +414,35 @@ async function deleteById(roomId, userId) {
   validateUUID(roomId)
   validateUUID(userId)
 
-  await database.query({
-    text: `
-    DELETE FROM "rooms"
-    WHERE user_id = $1 and id = $2
-    `,
-    values: [userId, roomId],
-  })
+  try {
+    await database.query({
+      text: `
+      DELETE FROM "rooms"
+      WHERE id = $1
+      `,
+      values: [roomId],
+    })
+  } catch (error) {
+    if (error.code === "23503") {
+      throw new ValidationError({
+        message:
+          "Este quarto não pode ser excluído pois existem inscrições ou outros registros vinculados a ele.",
+        action:
+          "Cancele as inscrições vinculadas a este quarto antes de tentar novamente.",
+      })
+    }
+    throw error
+  }
 }
 
-async function verifyHotelBelongsToUser(hotelId, userId) {
+async function verifyHotelBelongsToUser(hotelId) {
   const results = await database.query({
     text: `
       SELECT id FROM hotels
-      WHERE id = $1 AND user_id = $2
+      WHERE id = $1
       LIMIT 1
     `,
-    values: [hotelId, userId],
+    values: [hotelId],
   })
 
   if (results.rowCount === 0) {
@@ -410,14 +453,14 @@ async function verifyHotelBelongsToUser(hotelId, userId) {
   }
 }
 
-async function verifyRoomTypeBelongsToUser(roomTypeId, userId) {
+async function verifyRoomTypeBelongsToUser(roomTypeId) {
   const results = await database.query({
     text: `
       SELECT id FROM "room-types"
-      WHERE id = $1 AND user_id = $2
+      WHERE id = $1
       LIMIT 1
     `,
-    values: [roomTypeId, userId],
+    values: [roomTypeId],
   })
 
   if (results.rowCount === 0) {
@@ -428,14 +471,14 @@ async function verifyRoomTypeBelongsToUser(roomTypeId, userId) {
   }
 }
 
-async function verifyRoomCategoryBelongsToUser(roomCategoryId, userId) {
+async function verifyRoomCategoryBelongsToUser(roomCategoryId) {
   const results = await database.query({
     text: `
       SELECT id FROM "room-categories"
-      WHERE id = $1 AND user_id = $2
+      WHERE id = $1
       LIMIT 1
     `,
-    values: [roomCategoryId, userId],
+    values: [roomCategoryId],
   })
 
   if (results.rowCount === 0) {
@@ -446,14 +489,37 @@ async function verifyRoomCategoryBelongsToUser(roomCategoryId, userId) {
   }
 }
 
+async function syncRoomPricePolicies(roomId, pricePolicies) {
+  // 1. Delete existing specific prices for this room
+  await database.query({
+    text: `DELETE FROM "room_price_policies" WHERE room_id = $1`,
+    values: [roomId],
+  })
+
+  // 2. Insert new ones
+  for (const policy of pricePolicies) {
+    if (!policy.id || policy.price === undefined || policy.price === "") {
+      continue
+    }
+
+    await database.query({
+      text: `
+        INSERT INTO "room_price_policies" (room_id, price_policy_id, price)
+        VALUES ($1, $2, $3)
+      `,
+      values: [roomId, policy.id, policy.price],
+    })
+  }
+}
+
 const room = {
   create,
   findOneById,
-  findOneByIdAndUserId,
-  findAllByUserId,
+  findAll,
   findAllByHotelId,
   update,
   deleteById,
+  syncRoomPricePolicies,
 }
 
 export default room

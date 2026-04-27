@@ -24,6 +24,10 @@ import { maskPhone, maskCNPJ, maskCEP } from "@/lib/masks"
 import { validateCNPJ, validatePhone } from "@/lib/validators"
 import { LocationSelector } from "@/components/ui/LocationSelector"
 import { getInitialLocationState } from "@/lib/location-utils"
+import {
+  isTestEnvironment,
+  generateRandomCompany,
+} from "@/lib/test-data-generator"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -33,6 +37,7 @@ const fetcher = async (url) => {
     error.status = res.status
     throw error
   }
+  return res.json()
 }
 
 export function CompanyDialog({
@@ -41,6 +46,8 @@ export function CompanyDialog({
   companyToEdit = null,
 }) {
   const isEditMode = !!companyToEdit
+  const [internalCompanyToEdit, setInternalCompanyToEdit] =
+    useState(companyToEdit)
   const [open, setOpen] = useState(false)
   const [formData, setFormData] = useState({
     corporate_name: "",
@@ -126,6 +133,64 @@ export function CompanyDialog({
     if (name === "zip_code") maskedValue = maskCEP(value)
 
     setFormData((prev) => ({ ...prev, [name]: maskedValue }))
+
+    // Auto-fetch company data if CNPJ is complete
+    if (name === "cnpj" && maskedValue.replace(/\D/g, "").length === 14) {
+      handleExistingCompanyLookup(maskedValue.replace(/\D/g, ""))
+    }
+
+    // Dev Helper: Autofill on all ones
+    if (
+      name === "cnpj" &&
+      isTestEnvironment() &&
+      maskedValue.replace(/\D/g, "") === "1".repeat(14)
+    ) {
+      const randomData = generateRandomCompany()
+      setFormData((prev) => ({
+        ...prev,
+        ...randomData,
+      }))
+    }
+  }
+
+  const handleExistingCompanyLookup = async (cnpj) => {
+    try {
+      const response = await fetch(`/api/v1/companies?cnpj=${cnpj}`)
+      if (response.ok) {
+        const fullCompanyData = await response.json()
+        // If we found a company, load ALL its data to allow editing
+        // We need to fetch the full record because the search endpoint returns a subset
+        const fullRecordResponse = await fetch(
+          `/api/v1/companies/${fullCompanyData.id}`,
+        )
+        if (fullRecordResponse.ok) {
+          const company = await fullRecordResponse.json()
+          setInternalCompanyToEdit(company)
+          setFormData((prev) => ({
+            ...prev,
+            corporate_name: company.corporate_name || "",
+            badge: company.badge || "",
+            cnpj: company.cnpj || prev.cnpj,
+            address: company.address || "",
+            address_number: company.address_number || "",
+            address_complement: company.address_complement || "",
+            neighborhood: company.neighborhood || "",
+            phone: company.phone || "",
+            email: company.email || "",
+            responsible_person: company.responsible_person || "",
+            zip_code: company.zip_code || "",
+            permission: company.permission || "A",
+            discount_id: company.discount_id || "none",
+            custom_discount_percentage:
+              company.custom_discount_percentage || "",
+            city: company.city || "",
+            state: company.state || "",
+          }))
+        }
+      }
+    } catch (error) {
+      console.error("Error looking up existing company:", error)
+    }
   }
 
   const handleSelectChange = (name, value) => {
@@ -155,11 +220,14 @@ export function CompanyDialog({
 
     setLoading(true)
 
-    const url = isEditMode
-      ? `/api/v1/companies/${companyToEdit.id}`
+    const companyId = internalCompanyToEdit?.id
+    const isActuallyEditMode = !!companyId
+
+    const url = isActuallyEditMode
+      ? `/api/v1/companies/${companyId}`
       : "/api/v1/companies"
 
-    const method = isEditMode ? "PATCH" : "POST"
+    const method = isActuallyEditMode ? "PATCH" : "POST"
 
     const response = await fetch(url, {
       method,
@@ -227,14 +295,14 @@ export function CompanyDialog({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="badge">Ref (Crachá) *</Label>
+                    <Label htmlFor="badge">Nome da empresa no crachá *</Label>
                     <Input
                       id="badge"
                       name="badge"
                       value={formData.badge}
                       onChange={handleChange}
                       placeholder="Identificação curta"
-                      maxLength={23}
+                      maxLength={20}
                       required
                     />
                   </div>
@@ -279,7 +347,7 @@ export function CompanyDialog({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Telefone *</Label>
+                    <Label htmlFor="phone">Telefone Comercial *</Label>
                     <Input
                       id="phone"
                       name="phone"

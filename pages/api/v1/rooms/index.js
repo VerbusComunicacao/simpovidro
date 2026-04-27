@@ -13,13 +13,12 @@ export default router.handler(controller.errorHandlers)
 
 async function getHandler(request, response) {
   const { hotel_id } = request.query
-  const userId = request.context.user.id
   let rooms
 
   if (hotel_id) {
-    rooms = await room.findAllByHotelId(hotel_id, userId)
+    rooms = await room.findAllByHotelId(hotel_id)
   } else {
-    rooms = await room.findAllByUserId(userId)
+    rooms = await room.findAll()
   }
 
   const secureRooms = authorization.filterOutput(

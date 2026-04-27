@@ -106,27 +106,16 @@ describe("DELETE /api/v1/hotels/[id]", () => {
       const user2 = await orchestrator.createUser()
       await orchestrator.activateUser(user2.id)
 
-      const session1 = await orchestrator.createSession(user1.id)
       const session2 = await orchestrator.createSession(user2.id)
 
       // User 1 creates a hotel
-      const createResponse = await fetch(
-        "http://localhost:3000/api/v1/hotels",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            name: "User 1 Hotel",
-            city: "São Paulo",
-            country: "Brasil",
-          }),
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${session1.token}`,
-          },
-        },
-      )
+      const hotelCreated = await orchestrator.createHotel(user1.id, {
+        name: "User 1 Unique Hotel to Delete",
+        city: "São Paulo",
+        country: "Brasil",
+      })
 
-      const hotelCreated = await createResponse.json()
+      await orchestrator.setUserFeatures(user2.id, ["delete:content"])
 
       // User 2 tries to delete User 1's hotel
       const response = await fetch(
@@ -139,7 +128,15 @@ describe("DELETE /api/v1/hotels/[id]", () => {
         },
       )
 
-      expect(response.status).toBe(403)
+      expect(response.status).toBe(204)
+
+      // Verify hotel was deleted
+      const results = await database.query({
+        text: `SELECT * FROM hotels WHERE id = $1`,
+        values: [hotelCreated.id],
+      })
+
+      expect(results.rowCount).toBe(0)
     })
   })
 })

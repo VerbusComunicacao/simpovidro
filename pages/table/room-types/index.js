@@ -1,3 +1,4 @@
+import { useState } from "react"
 import useSWR from "swr"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import TableLayout from "@/components/layout/TableLayout"
@@ -13,6 +14,18 @@ import {
   AddRoomTypeDialog,
   EditRoomTypeDialog,
 } from "@/components/hotel/RoomTypeDialogs"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import ErrorDialog from "@/components/ui/ErrorDialog"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -31,6 +44,32 @@ export default function RoomTypesPage() {
     error,
     mutate,
   } = useSWR("/api/v1/room-types", fetcher)
+
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
+  const [errorAction, setErrorAction] = useState("")
+
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`/api/v1/room-types/${id}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        mutate()
+      } else {
+        const data = await response.json()
+        setErrorMessage(
+          data.message || "Ocorreu um erro ao excluir o tipo de quarto.",
+        )
+        setErrorAction(data.action || "")
+        setIsErrorDialogOpen(true)
+      }
+    } catch (error) {
+      setErrorMessage("Erro de conexão com o servidor.")
+      setIsErrorDialogOpen(true)
+    }
+  }
 
   const pageActions = (
     <AddRoomTypeDialog onRoomTypeAdded={() => mutate()}>
@@ -80,9 +119,31 @@ export default function RoomTypesPage() {
                         <Pencil className="h-4 w-4" />
                       </Button>
                     </EditRoomTypeDialog>
-                    <Button variant="destructive" size="sm">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta ação excluirá permanentemente este tipo de
+                            quarto. Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(type.id)}
+                            className="bg-destructive hover:bg-destructive/90"
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               ))}
@@ -90,6 +151,13 @@ export default function RoomTypesPage() {
           )}
         </CardContent>
       </Card>
+      <ErrorDialog
+        isOpen={isErrorDialogOpen}
+        onClose={() => setIsErrorDialogOpen(false)}
+        title="Erro ao Excluir Tipo de Quarto"
+        message={errorMessage}
+        actionMessage={errorAction}
+      />
     </TableLayout>
   )
 }

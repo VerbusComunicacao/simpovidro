@@ -137,7 +137,55 @@ describe("DELETE /api/v1/room-categories/[id]", () => {
         },
       )
 
-      expect(response.status).toBe(403)
+      expect(response.status).toBe(204)
+
+      const results = await database.query({
+        text: `SELECT * FROM "room-categories" WHERE id = $1`,
+        values: [rcCreated.id],
+      })
+
+      expect(results.rowCount).toBe(0)
+    })
+
+    test("Cannot delete room-category when used by a room", async () => {
+      const createdUser = await orchestrator.createUser()
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, [
+        "create:content",
+        "delete:content",
+      ])
+
+      const sessionObject = await orchestrator.createSession(createdUser.id)
+
+      // Create hotel, room-type, room-category and finally a Room using it
+      const createdHotel = await orchestrator.createHotel(createdUser.id)
+      const createdType = await orchestrator.createRoomType(createdUser.id)
+      const createdCategory = await orchestrator.createRoomCategory(
+        createdUser.id,
+      )
+
+      await orchestrator.createRoom(createdUser.id, {
+        hotel_id: createdHotel.id,
+        room_type_id: createdType.id,
+        room_category_id: createdCategory.id,
+      })
+
+      const response = await fetch(
+        `http://localhost:3000/api/v1/room-categories/${createdCategory.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Cookie: `session_id=${sessionObject.token}`,
+          },
+        },
+      )
+
+      const responseBody = await response.json()
+      expect(response.status).toBe(400)
+      expect(responseBody.name).toBe("ValidationError")
+      expect(responseBody.message).toBe(
+        "Esta categoria de quarto não pode ser excluída pois está sendo utilizada em um ou mais quartos.",
+      )
     })
   })
 })

@@ -96,7 +96,7 @@ describe("GET /api/v1/hotels/[id]", () => {
       expect(hotel).toHaveProperty("updated_at")
     })
 
-    test("Can't access hotel from different user", async () => {
+    test("Can access hotel from different user as admin", async () => {
       const user1 = await orchestrator.createUser()
       await orchestrator.activateUser(user1.id)
       await orchestrator.setUserFeatures(user1.id, ["read:content"])
@@ -109,7 +109,7 @@ describe("GET /api/v1/hotels/[id]", () => {
 
       // User 1 creates a hotel
       const hotelCreated = await orchestrator.createHotel(user1.id, {
-        name: "User 1 Hotel",
+        name: "User 1 Hotel to Access",
         city: "São Paulo",
         country: "Brasil",
       })
@@ -124,7 +124,9 @@ describe("GET /api/v1/hotels/[id]", () => {
         },
       )
 
-      expect(response.status).toBe(404)
+      expect(response.status).toBe(200)
+      const hotel = await response.json()
+      expect(hotel.id).toBe(hotelCreated.id)
     })
 
     test("Get hotel with all fields", async () => {

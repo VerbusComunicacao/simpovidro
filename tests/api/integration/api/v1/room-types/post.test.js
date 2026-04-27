@@ -115,8 +115,9 @@ describe("POST /api/v1/room-types", () => {
         name: "ConflictError",
         status_code: 409,
         message:
-          "Já existe um tipo de quarto cadastrado com esse nome para este usuário.",
-        action: "Escolha outro nome ou edite o tipo de quarto existente.",
+          "Já existe um tipo de quarto cadastrado com esse nome no sistema.",
+        action:
+          "O nome deve ser globalmente único. Escolha outro nome ou edite o tipo de quarto existente.",
       })
     })
 

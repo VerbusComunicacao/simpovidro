@@ -7,7 +7,7 @@ function getOrigin() {
     return `https://${process.env.VERCEL_URL}`
   }
 
-  return "https://igrejaconnect.com.br"
+  return "https://simpovidro.com.br"
 }
 
 const webserver = {

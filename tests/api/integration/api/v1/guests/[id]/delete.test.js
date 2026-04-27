@@ -19,11 +19,13 @@ describe("DELETE /api/v1/guests/[id]", () => {
       const createdGuest = await guest.create(
         {
           name: "Guest to Delete",
-          phone: "+5511999999907",
+          badge_name: "Crachá Delete",
+          email: "delete@example.com",
+          phone: "+5511999999904",
           gender: "Male",
-          rg_number: "777777777",
-          cpf_number: "777.777.777-07",
-          birth_date: "1997-01-01",
+          rg_number: "444444444",
+          cpf_number: "444.444.444-04",
+          birth_date: "1994-01-01",
         },
         createdUser.id,
       )

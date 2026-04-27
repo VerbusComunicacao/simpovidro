@@ -1,0 +1,72 @@
+
+> simpovidro@1.0.0 test
+> node infra/scripts/run-tests-with-cleanup.js tests/api/integration/api/v1/registrations/post.test.js
+
+(node:34478) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+> simpovidro@1.0.0 services:up
+> docker compose -f infra/compose.yaml up -d
+
+ Container postgres-dev  Starting
+ Container mailcatcher-dev  Starting
+ Container mailcatcher-dev  Started
+ Container postgres-dev  Started
+[jest]   console.log
+[jest]     RESPONSE ERROR: {
+[jest]       name: 'ValidationError',
+[jest]       message: 'O número de adultos (2) excede a capacidade máxima do quarto (1).',
+[jest]       action: 'Selecione um quarto com maior capacidade para adultos.',
+[jest]       status_code: 400
+[jest]     }
+[jest] 
+[jest]       at Object.log (tests/api/integration/api/v1/registrations/post.test.js:400:17)
+[jest] 
+[jest] FAIL tests/api/integration/api/v1/registrations/post.test.js
+[jest]   POST /api/v1/registrations
+[jest]     Anonymous user
+[jest]       ✓ should return 401 (144 ms)
+[jest]     Authenticated user
+[jest]       ✓ should apply discount when company is eligible (388 ms)
+[jest]       ✓ should NOT allow a regular user to create a company with discount_status 'S' (51 ms)
+[jest]       ✓ should NOT apply discount when company is NOT eligible (181 ms)
+[jest]       ✕ should NOT associate guest with logged-in user when a different email is provided (Regression) (77 ms)
+[jest]       ✓ should enforce backend-calculated installments_count even if client sends different value (107 ms)
+[jest]       ✓ should rollback all changes if an error occurs during sale creation (Transaction Atomicity) (60 ms)
+[jest]       ✓ should apply member price when company has 'Associada' discount (164 ms)
+[jest]       ✓ should force the first guest to be the logged-in user even if different data is provided (71 ms)
+[jest]       ✓ should reject registration with spoofed data EVEN IF the user has no previous guest profile (103 ms)
+[jest] 
+[jest]   ● POST /api/v1/registrations › Authenticated user › should NOT associate guest with logged-in user when a different email is provided (Regression)
+[jest] 
+[jest]     expect(received).toBe(expected) // Object.is equality
+[jest] 
+[jest]     Expected: 201
+[jest]     Received: 400
+[jest] 
+[jest]       400 |         console.log("RESPONSE ERROR:", await response.json())
+[jest]       401 |       }
+[jest]     > 402 |       expect(response.status).toBe(201)
+[jest]           |                               ^
+[jest]       403 |
+[jest]       404 |       // Query database to check if user_id is null for the SECOND guest
+[jest]       405 |       const guestResult = await database.query({
+[jest] 
+[jest]       at Object.toBe (tests/api/integration/api/v1/registrations/post.test.js:402:31)
+[jest] 
+[jest] Test Suites: 1 failed, 1 total
+[jest] Tests:       1 failed, 9 passed, 10 total
+[jest] Snapshots:   0 total
+[jest] Time:        4.409 s, estimated 8 s
+[jest] Ran all test suites matching /tests\/api\/integration\/api\/v1\/registrations\/post.test.js/i.
+[jest] jest --runInBand --verbose tests/api/integration/api/v1/registrations/post.test.js exited with code 1
+--> Sending SIGTERM to other processes..
+Processo finalizado com código: 1
+
+> simpovidro@1.0.0 services:stop
+> docker compose -f infra/compose.yaml stop
+
+ Container mailcatcher-dev  Stopping
+ Container postgres-dev  Stopping
+ Container mailcatcher-dev  Stopped
+ Container postgres-dev  Stopped

@@ -32,6 +32,9 @@ export function EditRoomDialog({
   const [roomTypeId, setRoomTypeId] = useState(room.room_type_id)
   const [roomCategoryId, setRoomCategoryId] = useState(room.room_category_id)
   const [pricePerNight, setPricePerNight] = useState(room.price_per_night)
+  const [memberPricePerNight, setMemberPricePerNight] = useState(
+    room.member_price_per_night,
+  )
   const [totalRooms, setTotalRooms] = useState(room.total_rooms)
   const [blockedRooms, setBlockedRooms] = useState(room.blocked_rooms)
   const [name, setName] = useState(room.name || "")
@@ -39,10 +42,16 @@ export function EditRoomDialog({
   const [photos, setPhotos] = useState(
     room.photos && room.photos.length > 0 ? room.photos : [""],
   )
+  const [minGuests, setMinGuests] = useState(room.min_guests || 1)
   const [error, setError] = useState("")
   const [action, setAction] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [roomPricePolicies, setRoomPricePolicies] = useState(
+    room.price_policies
+      ?.filter((p) => p.price !== null)
+      .map((p) => ({ id: p.id, price: p.price })) || [],
+  )
 
   const handleAddPhoto = () => {
     setPhotos([...photos, ""])
@@ -90,11 +99,18 @@ export function EditRoomDialog({
     setRoomTypeId(room.room_type_id)
     setRoomCategoryId(room.room_category_id)
     setPricePerNight(room.price_per_night)
+    setMemberPricePerNight(room.member_price_per_night)
     setTotalRooms(room.total_rooms)
     setBlockedRooms(room.blocked_rooms)
     setName(room.name || "")
     setDescription(room.description || "")
     setPhotos(room.photos && room.photos.length > 0 ? room.photos : [""])
+    setMinGuests(room.min_guests || 1)
+    setRoomPricePolicies(
+      room.price_policies
+        ?.filter((p) => p.price !== null)
+        .map((p) => ({ id: p.id, price: p.price })) || [],
+    )
   }, [room])
 
   const handleSubmit = async (e) => {
@@ -121,12 +137,14 @@ export function EditRoomDialog({
         room_type_id: roomTypeId,
         room_category_id: roomCategoryId,
         price_per_night: pricePerNight,
+        member_price_per_night: memberPricePerNight,
         total_rooms: parseInt(totalRooms),
         blocked_rooms: parseInt(blockedRooms),
-        available_rooms: parseInt(totalRooms) - parseInt(blockedRooms),
         name,
         description,
         photos: photos.filter((p) => p.trim() !== ""),
+        min_guests: parseInt(minGuests) || 1,
+        price_policies: roomPricePolicies,
       }),
     })
 
@@ -157,6 +175,19 @@ export function EditRoomDialog({
           <form onSubmit={handleSubmit}>
             <div className="max-h-[70vh] overflow-y-auto px-1">
               <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name-edit" className="text-right">
+                    Nome
+                  </Label>
+                  <Input
+                    id="name-edit"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="col-span-3"
+                    placeholder="Ex: Suíte Presidencial"
+                    required
+                  />
+                </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="room-type-edit" className="text-right">
                     Tipo
@@ -201,13 +232,25 @@ export function EditRoomDialog({
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="price-edit" className="text-right">
-                    Preço
+                    Preço por Pessoa
                   </Label>
                   <Input
                     id="price-edit"
                     type="number"
                     value={pricePerNight}
                     onChange={(e) => setPricePerNight(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="member-price-edit" className="text-right">
+                    Preço Associado
+                  </Label>
+                  <Input
+                    id="member-price-edit"
+                    type="number"
+                    value={memberPricePerNight}
+                    onChange={(e) => setMemberPricePerNight(e.target.value)}
                     className="col-span-3"
                   />
                 </div>
@@ -235,19 +278,20 @@ export function EditRoomDialog({
                     className="col-span-3"
                   />
                 </div>
-
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name-edit" className="text-right">
-                    Nome (opcional)
+                  <Label htmlFor="min-guests-edit" className="text-right">
+                    Mínimo de hóspedes
                   </Label>
                   <Input
-                    id="name-edit"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    id="min-guests-edit"
+                    type="number"
+                    min="1"
+                    value={minGuests}
+                    onChange={(e) => setMinGuests(e.target.value)}
                     className="col-span-3"
-                    placeholder="Ex: Suíte Presidencial"
                   />
                 </div>
+
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="description-edit" className="text-right">
                     Descrição
@@ -328,6 +372,54 @@ export function EditRoomDialog({
                     </Button>
                   </div>
                 </div>
+
+                {room.price_policies?.filter((p) => p.use_percentage === false)
+                  .length > 0 && (
+                  <div className="my-4 border-t pt-4">
+                    <h4 className="text-sm font-medium mb-3">
+                      Preços Específicos por Idade
+                    </h4>
+                    <div className="space-y-3">
+                      {room.price_policies
+                        .filter((p) => p.use_percentage === false)
+                        .map((policy) => (
+                          <div
+                            key={policy.id}
+                            className="grid grid-cols-4 items-center gap-4"
+                          >
+                            <Label className="text-right text-xs">
+                              {policy.description}
+                            </Label>
+                            <Input
+                              type="number"
+                              placeholder="Preço fixo"
+                              className="col-span-3"
+                              value={
+                                roomPricePolicies.find(
+                                  (rpp) => rpp.id === policy.id,
+                                )?.price || ""
+                              }
+                              onChange={(e) => {
+                                const newPolicies = [...roomPricePolicies]
+                                const index = newPolicies.findIndex(
+                                  (rpp) => rpp.id === policy.id,
+                                )
+                                if (index >= 0) {
+                                  newPolicies[index].price = e.target.value
+                                } else {
+                                  newPolicies.push({
+                                    id: policy.id,
+                                    price: e.target.value,
+                                  })
+                                }
+                                setRoomPricePolicies(newPolicies)
+                              }}
+                            />
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <DialogFooter className="mt-4 pt-2 border-t">
