@@ -431,7 +431,7 @@ export default function RegistrationDetailsPage() {
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-gray-700 uppercase text-sm">
                         {sale.payment_method === "installments"
-                          ? "Cartão de Crédito"
+                          ? "Parcelado"
                           : "À Vista / PIX"}
                       </span>
                       <Badge variant="outline">

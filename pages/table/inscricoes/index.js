@@ -84,14 +84,19 @@ export default function RegistrationsTable() {
   const filteredSales = Array.isArray(sales)
     ? sales.filter((sale) => {
         const searchLower = searchTerm.toLowerCase()
+        const cleanSearch = searchTerm.replace(/\D/g, "")
+
         return (
           sale.sale_number?.toLowerCase().includes(searchLower) ||
           sale.hotel_name?.toLowerCase().includes(searchLower) ||
-          sale.guests?.some(
-            (g) =>
+          sale.guests?.some((g) => {
+            const cleanCPF = g.cpf_number?.replace(/\D/g, "") || ""
+            return (
               g.name.toLowerCase().includes(searchLower) ||
-              g.cpf_number?.includes(searchTerm),
-          )
+              (cleanSearch !== "" && cleanCPF.includes(cleanSearch)) ||
+              g.cpf_number?.includes(searchTerm)
+            )
+          })
         )
       })
     : []
