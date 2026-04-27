@@ -8,7 +8,6 @@ import {
   Loader2,
   CreditCard,
   Building2,
-  Stethoscope,
   Info,
   ArrowLeft,
 } from "lucide-react"

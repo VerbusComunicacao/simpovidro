@@ -29,7 +29,11 @@ async function create(userOrId, registrationData) {
 
     // 1. Resolve Company if CNPJ or Data provided
     let companyId = null
-    const companyToProcess = registrationData.company_data || (registrationData.company_cnpj ? { cnpj: registrationData.company_cnpj } : null)
+    const companyToProcess =
+      registrationData.company_data ||
+      (registrationData.company_cnpj
+        ? { cnpj: registrationData.company_cnpj }
+        : null)
 
     if (companyToProcess) {
       const upsertedCompany = await company.upsert(companyToProcess, client)

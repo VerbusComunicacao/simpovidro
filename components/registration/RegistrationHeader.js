@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Hotel, LogOut, ChevronLeft } from "lucide-react"
+import { LogOut, ChevronLeft } from "lucide-react"
 import useUser from "@/hooks/useUser"
 import { useRouter } from "next/router"
 import authorization from "@/models/authorization"

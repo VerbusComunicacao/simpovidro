@@ -178,7 +178,8 @@ export default function RegistrationsTable() {
                         {sale.hotel_name}
                       </p>
                       <p className="text-sm text-gray-600 mt-1">
-                        {sale.room_name || sale.room_type} ({sale.room_category})
+                        {sale.room_name || sale.room_type} ({sale.room_category}
+                        )
                       </p>
                       <p className="text-sm text-gray-500 mt-1">
                         {formatDate(sale.check_in_date)} —{" "}
