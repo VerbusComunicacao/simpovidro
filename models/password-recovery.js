@@ -41,10 +41,57 @@ async function createToken(userEmail) {
 async function sendRecoveryEmail(user, token) {
   const recoveryLink = `${webserver.origin}/reset-password/${token}`
 
+  const sponsorsFooter = `
+      <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #f3f4f6; text-align: center;">
+        <p style="color: #9ca3af; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px;">Patrocínio</p>
+        <div style="display: inline-block;">
+          <img src="${webserver.origin}/images/agc-logo.png" alt="AGC" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+          <img src="${webserver.origin}/images/cebrace-logo.png" alt="Cebrace" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+          <img src="${webserver.origin}/images/glass-guardian-logo.png" alt="Guardian Glass" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+          <img src="${webserver.origin}/images/logo_vivix.png" alt="Vivix" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+        </div>
+      </div>
+    `
+
+  const emailHtml = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #374151; line-height: 1.5;">
+        <div style="background-color: #2563eb; padding: 30px 20px; border-radius: 8px 8px 0 0; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 1.8em;">Recuperação de Senha</h1>
+          <p style="color: #bfdbfe; margin-top: 10px;">Simpovidro 2026</p>
+        </div>
+
+        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+          <p>Olá, <strong>${user.full_name}</strong>!</p>
+          <p>Você solicitou a recuperação de sua senha no Simpovidro. Clique no botão abaixo para redefini-la:</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${recoveryLink}" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">Redefinir minha senha</a>
+          </div>
+
+          <p style="font-size: 0.85em; color: #6b7280; text-align: center;">
+            Este link expira em 1 hora. Se você não solicitou esta alteração, ignore este e-mail.
+          </p>
+
+          <p style="font-size: 0.85em; color: #6b7280; text-align: center; margin-top: 20px;">
+            Se o botão acima não funcionar, copie e cole o link abaixo no seu navegador:<br/>
+            <a href="${recoveryLink}" style="color: #2563eb; word-break: break-all;">${recoveryLink}</a>
+          </p>
+
+          ${sponsorsFooter}
+
+          <p style="margin-top: 30px; font-size: 0.9em; color: #6b7280; text-align: center;">
+            Atenciosamente,<br/>
+            <strong>Equipe Abravidro</strong>
+          </p>
+        </div>
+      </div>
+    `
+
   await email.send({
     from: "Abravidro <contato@simpovidro.com.br>",
     to: user.email,
     subject: "Recuperação de Senha",
+    html: emailHtml,
     text: `Olá ${user.full_name}, você solicitou a recuperação de sua senha no Simpovidro.
     
     Clique no link abaixo para redefini-la:
