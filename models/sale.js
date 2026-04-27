@@ -447,6 +447,8 @@ async function findOneByIdWithDetails(saleId) {
         rooms.description as room_description,
         "room-types".name as room_type,
         "room-categories".name as room_category,
+        companies.corporate_name as company_corporate_name,
+        companies.cnpj as company_cnpj,
         (
           SELECT json_agg(g.*)
           FROM sales_guests sg
@@ -470,6 +472,8 @@ async function findOneByIdWithDetails(saleId) {
         "room-types" ON rooms.room_type_id = "room-types".id
       JOIN
         "room-categories" ON rooms.room_category_id = "room-categories".id
+      LEFT JOIN
+        companies ON sales.company_id = companies.id
       WHERE 
         sales.id = $1
     `,

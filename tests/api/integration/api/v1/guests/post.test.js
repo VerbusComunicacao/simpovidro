@@ -300,7 +300,7 @@ describe("POST /api/v1/guests", () => {
       expect(responseBody).toEqual({
         name: "ValidationError",
         message:
-          "Campos obrigatórios ausentes: badge_name, phone, gender, rg_number, cpf_number, birth_date.",
+          "Campos obrigatórios ausentes: badge_name, gender, rg_number, cpf_number, birth_date, phone.",
         action: "Envie todos os campos obrigatórios e tente novamente.",
         status_code: 400,
       })

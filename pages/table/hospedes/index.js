@@ -7,6 +7,7 @@ import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { GuestDialog } from "@/components/guest/GuestDialog"
 import { GuestRow } from "@/components/guest/GuestRow"
+import { GuestImportButton } from "@/components/guest/GuestImportButton"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -67,6 +68,7 @@ export default function GuestsTable() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          <GuestImportButton onImportSuccess={() => mutate()} />
         </div>
       </div>
 

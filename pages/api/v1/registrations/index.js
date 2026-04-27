@@ -4,6 +4,7 @@ import registration from "models/registration.js"
 import sale from "models/sale.js"
 import { ValidationError, UnauthorizedError } from "infra/errors.js"
 import email from "infra/email.js"
+import webserver from "infra/webserver.js"
 
 const router = createRouter()
 
@@ -62,7 +63,13 @@ async function postHandler(request, response) {
   try {
     const saleDetails = await sale.findOneByIdWithDetails(saleId)
 
-    const formatDate = (date) => new Date(date).toLocaleDateString("pt-BR")
+    const formatDate = (date) => {
+      if (!date) return ""
+      const dateStr =
+        date instanceof Date ? date.toISOString().split("T")[0] : String(date)
+      const [year, month, day] = dateStr.split("T")[0].split("-")
+      return `${day}/${month}/${year}`
+    }
     const formatCurrency = (val) =>
       new Intl.NumberFormat("pt-BR", {
         style: "currency",
@@ -86,8 +93,32 @@ async function postHandler(request, response) {
             ? `${guest.address}, ${guest.address_number || ""} ${guest.address_complement ? `(${guest.address_complement})` : ""} - ${guest.city}/${guest.state}`
             : null,
         },
+        {
+          label: "Tipo Sanguíneo",
+          value:
+            guest.blood_type || guest.blood_rh_factor
+              ? `${guest.blood_type || ""} ${guest.blood_rh_factor || ""}`.trim()
+              : null,
+        },
+        {
+          label: "Problema Cardíaco",
+          value: guest.has_heart_condition ? "Sim" : null,
+        },
+        { label: "Diabetes", value: guest.has_diabetes ? "Sim" : null },
+        {
+          label: "Pressão Alta",
+          value: guest.has_high_blood_pressure ? "Sim" : null,
+        },
+        {
+          label: "Pressão Baixa",
+          value: guest.has_low_blood_pressure ? "Sim" : null,
+        },
         { label: "Medicamentos", value: guest.medication_details },
         { label: "Obs. Saúde", value: guest.health_observations },
+        {
+          label: "Necessidades Especiais",
+          value: guest.special_needs_details,
+        },
       ].filter((f) => f.value)
 
       return fields
@@ -102,45 +133,112 @@ async function postHandler(request, response) {
     const recipientEmail = leadGuest?.email || user.email
     const recipientName = leadGuest?.name || user.full_name || "Participante"
 
+    const formatCnpj = (cnpj) => {
+      if (!cnpj) return ""
+      return cnpj.replace(
+        /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
+        "$1.$2.$3/$4-$5",
+      )
+    }
+
+    const companySection = saleDetails.company_id
+      ? `
+      <div style="margin-top: 20px; padding: 15px; background-color: #f3f4f6; border-radius: 8px; border: 1px solid #e5e7eb;">
+        <h3 style="margin-top: 0; color: #374151; font-size: 1.1em; border-bottom: 1px solid #d1d5db; padding-bottom: 8px; margin-bottom: 10px;">Dados da Empresa</h3>
+        <p style="margin: 5px 0;"><strong>Razão Social:</strong> ${saleDetails.company_corporate_name}</p>
+        <p style="margin: 5px 0;"><strong>CNPJ:</strong> ${formatCnpj(saleDetails.company_cnpj)}</p>
+      </div>
+    `
+      : ""
+
+    const installmentsSection = `
+      <div style="margin-top: 25px;">
+        <h3 style="color: #374151; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px;">Cronograma de Pagamentos</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.95em;">
+          <thead>
+            <tr style="background-color: #f9fafb;">
+              <th style="text-align: left; padding: 10px; border: 1px solid #e5e7eb; color: #6b7280;">Parcela</th>
+              <th style="text-align: left; padding: 10px; border: 1px solid #e5e7eb; color: #6b7280;">Vencimento</th>
+              <th style="text-align: right; padding: 10px; border: 1px solid #e5e7eb; color: #6b7280;">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${saleDetails.installments
+              .map(
+                (inst) => `
+              <tr>
+                <td style="padding: 10px; border: 1px solid #e5e7eb;">${inst.installment_number} / ${saleDetails.installments_count}</td>
+                <td style="padding: 10px; border: 1px solid #e5e7eb;">${formatDate(inst.due_date)}</td>
+                <td style="padding: 10px; border: 1px solid #e5e7eb; text-align: right; font-weight: 500;">${formatCurrency(inst.amount)}</td>
+              </tr>
+            `,
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+    `
+
+    const sponsorsFooter = `
+      <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #f3f4f6; text-align: center;">
+        <p style="color: #9ca3af; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px;">Patrocínio</p>
+        <div style="display: inline-block;">
+          <img src="${webserver.origin}/images/agc-logo.png" alt="AGC" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+          <img src="${webserver.origin}/images/cebrace-logo.png" alt="Cebrace" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+          <img src="${webserver.origin}/images/glass-guardian-logo.png" alt="Guardian Glass" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+          <img src="${webserver.origin}/images/logo_vivix.png" alt="Vivix" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+        </div>
+      </div>
+    `
+
     const emailHtml = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #2563eb;">Confirmação de Inscrição - Simpovidro 2026</h1>
-        <p>Olá, <strong>${recipientName}</strong>!</p>
-        <p>Sua inscrição foi confirmada com sucesso! Abaixo estão os detalhes do seu pedido:</p>
-        
-        <hr style="border: 1px solid #e5e7eb; margin: 20px 0;" />
-        
-        <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px;">
-          <h2 style="margin-top: 0; color: #111827;">Pedido #${saleDetails.sale_number || saleDetails.id.slice(0, 8)}</h2>
-          <p><strong>Hotel:</strong> ${saleDetails.hotel_name}</p>
-          <p><strong>Endereço:</strong> ${saleDetails.hotel_address || ""}, ${saleDetails.hotel_city || ""} - ${saleDetails.hotel_state || ""}</p>
-          <p><strong>Quarto:</strong> ${saleDetails.room_name || saleDetails.room_type} (${saleDetails.room_category})</p>
-          <p><strong>Período:</strong> ${formatDate(saleDetails.check_in_date)} à ${formatDate(saleDetails.check_out_date)}</p>
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #374151; line-height: 1.5;">
+        <div style="background-color: #2563eb; padding: 30px 20px; border-radius: 8px 8px 0 0; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 1.8em;">Inscrição Confirmada</h1>
+          <p style="color: #bfdbfe; margin-top: 10px;">Simpovidro 2026</p>
+        </div>
+
+        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+          <p>Olá, <strong>${recipientName}</strong>!</p>
+          <p>Sua inscrição foi finalizada com sucesso. Abaixo você encontra o resumo completo do seu pedido.</p>
           
-          <h3 style="color: #374151; margin-top: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">Hóspedes</h3>
-          <div style="display: grid; gap: 15px;">
+          <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #f3f4f6;">
+            <h2 style="margin-top: 0; color: #111827; font-size: 1.25em;">Pedido #${saleDetails.sale_number || saleDetails.id.slice(0, 8)}</h2>
+            <p style="margin: 5px 0;"><strong>Hotel:</strong> ${saleDetails.hotel_name}</p>
+            <p style="margin: 5px 0;"><strong>Quarto:</strong> ${saleDetails.room_name || saleDetails.room_type} (${saleDetails.room_category})</p>
+            <p style="margin: 5px 0;"><strong>Período:</strong> ${formatDate(saleDetails.check_in_date)} à ${formatDate(saleDetails.check_out_date)}</p>
+          </div>
+
+          ${companySection}
+          
+          <h3 style="color: #374151; margin-top: 25px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">Hóspedes Inscritos</h3>
+          <div style="margin-bottom: 20px;">
             ${saleDetails.guests
               .map(
                 (g, index) => `
-              <div style="background-color: white; padding: 15px; border-radius: 6px; border: 1px solid #e5e7eb;">
-                <div style="font-weight: bold; color: #111827; margin-bottom: 5px;">${index + 1}. ${g.name}</div>
+              <div style="padding: 12px; border-bottom: 1px solid #f3f4f6;">
+                <div style="font-weight: bold; color: #111827;">${index + 1}. ${g.name}</div>
                 ${formatGuestDetails(g)}
               </div>
             `,
               )
               .join("")}
           </div>
+
+          ${installmentsSection}
           
-          <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: right;">
-            <p style="margin: 0; font-size: 0.9em; color: #6b7280;">Valor Total</p>
-            <p style="margin: 0; font-size: 1.5em; font-weight: bold; color: #111827;">${formatCurrency(saleDetails.final_amount)}</p>
+          <div style="margin-top: 30px; padding: 20px; background-color: #f8fafc; border-radius: 8px; text-align: right;">
+            <p style="margin: 0; font-size: 0.9em; color: #64748b;">Valor Total do Pedido</p>
+            <p style="margin: 0; font-size: 1.8em; font-weight: bold; color: #2563eb;">${formatCurrency(saleDetails.final_amount)}</p>
           </div>
+
+          ${sponsorsFooter}
+
+          <p style="margin-top: 30px; font-size: 0.9em; color: #6b7280; text-align: center;">
+            Dúvidas? Entre em contato com nossa equipe.<br/>
+            <strong>Equipe Simpovidro</strong>
+          </p>
         </div>
-        
-        <hr style="border: 1px solid #e5e7eb; margin: 20px 0;" />
-        
-        <p style="color: #6b7280; font-size: 0.9em;">Se tiver dúvidas, entre em contato conosco.</p>
-        <p style="color: #6b7280; font-size: 0.9em;">Atenciosamente,<br/>Equipe Simpovidro</p>
       </div>
     `
 

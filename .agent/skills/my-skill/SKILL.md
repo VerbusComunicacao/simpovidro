@@ -54,6 +54,7 @@ O projeto segue uma adaptação do padrão **MVP (Model-View-Presenter/Controlle
 Para que o Assistente de IA consiga executar comandos de terminal (`npm`, `node`, `docker`) com sucesso neste projeto, é necessário garantir que os caminhos dos binários estejam no `PATH`.
 
 **Caminhos Obrigatórios:**
+
 - `/opt/homebrew/bin` (Node e NPM)
 - `/usr/local/bin` (Docker)
 

@@ -2,18 +2,21 @@ import database from "infra/database.js"
 import { ConflictError, ValidationError, NotFoundError } from "infra/errors.js"
 import { validateRequiredFields, validateUUID } from "infra/validator.js"
 
-async function create(guestInputValues, userId, client) {
+async function create(guestInputValues, userId, client, isImport = false) {
   const isAdult = calculateIsAdult(guestInputValues.birth_date)
 
   const requiredFields = [
     "name",
     "badge_name",
-    "phone",
     "gender",
     "rg_number",
     "cpf_number",
     "birth_date",
   ]
+
+  if (!isImport) {
+    requiredFields.push("phone")
+  }
 
   if (isAdult) {
     requiredFields.push("email")
@@ -180,17 +183,20 @@ async function findOneByUserId(userId, client) {
   }
 }
 
-async function upsert(guestData, userId = null, client) {
+async function upsert(guestData, userId = null, client, isImport = false) {
   const isAdult = calculateIsAdult(guestData.birth_date)
 
   const requiredFields = [
     "name",
-    "phone",
     "gender",
     "rg_number",
     "cpf_number",
     "birth_date",
   ]
+
+  if (!isImport) {
+    requiredFields.push("phone")
+  }
 
   if (isAdult) {
     requiredFields.push("email")
@@ -208,7 +214,7 @@ async function upsert(guestData, userId = null, client) {
     return await update(existingGuest.id, guestData, client)
   }
 
-  return await create(guestData, userId, client)
+  return await create(guestData, userId, client, isImport)
 }
 
 async function findOneByCpfOrRg(cpf_number, rg_number, client) {

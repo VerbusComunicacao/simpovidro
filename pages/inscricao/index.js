@@ -16,18 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  MapPin,
-  Hotel,
-  BedDouble,
-  Users,
-  AlertCircle,
-  Calendar,
-  Minus,
-  Plus,
-  ArrowRight,
-  Search,
-} from "lucide-react"
+import { BedDouble, Users, AlertCircle, Search } from "lucide-react"
 import {
   Empty,
   EmptyHeader,
@@ -92,17 +81,6 @@ export default function RegistrationPage({ hotels, discounts }) {
       filteredRooms: filtered,
     }
   }, [activeHotel, selectedType, selectedCategory, searchData])
-
-  const handleUpdatePassengers = (type, action) => {
-    setSearchData((prev) => {
-      const newValue = action === "inc" ? prev[type] + 1 : prev[type] - 1
-      if (type === "adults" && newValue < 1) return prev
-      if (type === "children" && newValue < 0) return prev
-      if (type === "adults" && newValue > 10) return prev // Sanity limit
-      if (type === "children" && newValue > 10) return prev // Sanity limit
-      return { ...prev, [type]: newValue }
-    })
-  }
 
   if (!activeHotel) {
     return (

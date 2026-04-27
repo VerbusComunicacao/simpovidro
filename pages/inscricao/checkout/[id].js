@@ -320,7 +320,11 @@ export default function CheckoutPage({
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || "Erro ao realizar inscrição.")
+        const err = new Error(
+          errorData.message || "Erro ao realizar inscrição.",
+        )
+        err.action = errorData.action
+        throw err
       }
 
       router.push("/inscricao/sucesso")
@@ -381,6 +385,12 @@ export default function CheckoutPage({
         hasError = true
       }
 
+      if (!guest.gender) {
+        if (!newErrors[index]) newErrors[index] = {}
+        newErrors[index].gender = "Sexo é obrigatório."
+        hasError = true
+      }
+
       if (calculateIsAdult(guest.birth_date) && !guest.email) {
         if (!newErrors[index]) newErrors[index] = {}
         newErrors[index].email = "Email é obrigatório para adultos."
@@ -393,7 +403,11 @@ export default function CheckoutPage({
       const firstErrorIndex = Object.keys(newErrors)[0]
       const element = document.getElementById(`guest-card-${firstErrorIndex}`)
       if (element) element.scrollIntoView({ behavior: "smooth" })
-      setError("Por favor, corrija os erros no formulário de hóspedes.")
+
+      // Pega a exata mensagem do primeiro erro encontrado
+      const firstErrorGuest = newErrors[firstErrorIndex]
+      const firstErrorMessage = Object.values(firstErrorGuest)[0]
+      setError(`Erro: ${firstErrorMessage}`)
       return
     }
 
@@ -524,8 +538,6 @@ export default function CheckoutPage({
       : `Criança ${index - maxAdults + 1}`
   }
 
-  const isMinGuestsReached = guests.length >= minRequired
-
   const getGuestDescription = (index) => {
     if (index === 0)
       return "Dados do titular da conta (deve ser maior de 18 anos)."
@@ -610,9 +622,11 @@ export default function CheckoutPage({
           <div className="lg:col-span-2">
             <form onSubmit={handleMasterSubmit} className="space-y-6">
               {error && (
-                <div className="bg-red-50 text-red-600 p-4 rounded-md flex items-center gap-2 text-sm border border-red-200">
-                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                  {error}
+                <div className="bg-red-50 text-red-600 p-4 rounded-md flex items-start gap-2 text-sm border border-red-200">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold">{error}</span>
+                  </div>
                 </div>
               )}
 
@@ -919,11 +933,17 @@ export default function CheckoutPage({
                                 value={guestData.name}
                                 onChange={(e) => handleChange(index, e)}
                                 disabled={index === 0}
-                                className={
-                                  index === 0 ? "bg-gray-50 opacity-80" : ""
-                                }
+                                className={`
+                                  ${index === 0 ? "bg-gray-50 opacity-80" : ""}
+                                  ${guestErrors[index]?.name ? "border-red-500" : ""}
+                                `}
                                 required
                               />
+                              {guestErrors[index]?.name && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {guestErrors[index].name}
+                                </p>
+                              )}
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor={`badge_name-${index}`}>
@@ -936,8 +956,18 @@ export default function CheckoutPage({
                                 onChange={(e) => handleChange(index, e)}
                                 placeholder="Como aparecerá no crachá"
                                 maxLength={20}
+                                className={
+                                  guestErrors[index]?.badge_name
+                                    ? "border-red-500"
+                                    : ""
+                                }
                                 required
                               />
+                              {guestErrors[index]?.badge_name && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {guestErrors[index].badge_name}
+                                </p>
+                              )}
                             </div>
                           </div>
 
@@ -952,8 +982,18 @@ export default function CheckoutPage({
                                 type="date"
                                 value={guestData.birth_date}
                                 onChange={(e) => handleChange(index, e)}
+                                className={
+                                  guestErrors[index]?.birth_date
+                                    ? "border-red-500"
+                                    : ""
+                                }
                                 required
                               />
+                              {guestErrors[index]?.birth_date && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {guestErrors[index].birth_date}
+                                </p>
+                              )}
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor={`gender-${index}`}>Sexo *</Label>
@@ -964,7 +1004,14 @@ export default function CheckoutPage({
                                 }
                                 required
                               >
-                                <SelectTrigger id={`gender-${index}`}>
+                                <SelectTrigger
+                                  id={`gender-${index}`}
+                                  className={
+                                    guestErrors[index]?.gender
+                                      ? "border-red-500"
+                                      : ""
+                                  }
+                                >
                                   <SelectValue placeholder="Selecione" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -972,6 +1019,11 @@ export default function CheckoutPage({
                                   <SelectItem value="F">Feminino</SelectItem>
                                 </SelectContent>
                               </Select>
+                              {guestErrors[index]?.gender && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {guestErrors[index].gender}
+                                </p>
+                              )}
                             </div>
                           </div>
 
@@ -1048,13 +1100,19 @@ export default function CheckoutPage({
                                 value={guestData.email}
                                 onChange={(e) => handleChange(index, e)}
                                 disabled={index === 0}
-                                className={
-                                  index === 0 ? "bg-gray-50 opacity-80" : ""
-                                }
+                                className={`
+                                  ${index === 0 ? "bg-gray-50 opacity-80" : ""}
+                                  ${guestErrors[index]?.email ? "border-red-500" : ""}
+                                `}
                                 required={calculateIsAdult(
                                   guestData.birth_date,
                                 )}
                               />
+                              {guestErrors[index]?.email && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {guestErrors[index].email}
+                                </p>
+                              )}
                             </div>
                           </div>
 
