@@ -105,120 +105,146 @@ export default function RegistrationPage({ hotels, discounts }) {
     <RegistrationLayout>
       <main className="container mx-auto px-4 py-8">
         {!isSearchPerformed ? (
-          <div className="max-w-2xl mx-auto py-8">
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Inicie sua Inscrição
-              </h1>
-              <p className="text-gray-600">
-                Selecione a quantidade de hóspedes para ver as opções
-                disponíveis no {activeHotel.name}
-              </p>
+          <div>
+            {/* BACKGROUND */}
+            <div className="absolute inset-0 z-0">
+              <Image
+                src="/images/simpovidro.webp"
+                width={1920}
+                height={1080}
+                alt="background"
+                className="w-full h-full object-cover"
+              />
+              {/* overlay escuro */}
+              <div className="absolute inset-0 bg-black/80"></div>
             </div>
-
-            <Card className="border shadow-sm overflow-hidden rounded-xl">
-              <div className="bg-gray-50 border-b p-6">
-                <div className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-blue-600" />
-                  <h2 className="text-xl font-bold">Quem vai com você?</h2>
+            <div className="relative max-w-2xl mx-auto px-4 py-8 overflow-hidden">
+              {/* CONTEÚDO */}
+              <div className="relative z-10">
+                <div className="text-center mb-12">
+                  <h1 className="text-4xl font-black text-white uppercase italic tracking-tighter mb-4 drop-shadow-lg">
+                    Inicie sua <span className="text-blue-400">Inscrição</span>
+                  </h1>
+                  <p className="text-slate-200 font-medium max-w-lg mx-auto">
+                    Selecione a quantidade de hóspedes para ver as opções
+                    disponíveis no{" "}
+                    <span className="text-blue-400 font-bold">
+                      {activeHotel.name}
+                    </span>
+                  </p>
                 </div>
-              </div>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  {/* Adult Counter */}
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-                      Adultos
-                    </h3>
-                    <div className="flex items-center justify-between border rounded-lg p-2 bg-white">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() =>
-                          setSearchData((prev) => ({
-                            ...prev,
-                            adults: Math.max(1, prev.adults - 1),
-                          }))
-                        }
-                      >
-                        -
-                      </Button>
-                      <span className="text-xl font-bold text-gray-900">
-                        {searchData.adults}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() =>
-                          setSearchData((prev) => ({
-                            ...prev,
-                            adults: prev.adults + 1,
-                          }))
-                        }
-                      >
-                        +
-                      </Button>
-                    </div>
-                  </div>
 
-                  {/* Children Counter */}
-                  <div className="space-y-3">
+                <Card className="border shadow-xl overflow-hidden rounded-xl backdrop-blur">
+                  <div className="bg-gray-50 border-b p-6">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-                        Crianças
-                      </h3>
-                      <span className="text-xs text-gray-500">
-                        (Até 11 anos)
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between border rounded-lg p-2 bg-white">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() =>
-                          setSearchData((prev) => ({
-                            ...prev,
-                            children: Math.max(0, prev.children - 1),
-                          }))
-                        }
-                      >
-                        -
-                      </Button>
-                      <span className="text-xl font-bold text-gray-900">
-                        {searchData.children}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() =>
-                          setSearchData((prev) => ({
-                            ...prev,
-                            children: prev.children + 1,
-                          }))
-                        }
-                      >
-                        +
-                      </Button>
+                      <Users className="h-5 w-5 text-blue-600" />
+                      <h2 className="text-xl font-bold">Quem vai com você?</h2>
                     </div>
                   </div>
-                </div>
 
-                <Button
-                  className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all"
-                  onClick={() => {
-                    setIsSearchPerformed(true)
-                    window.scrollTo({ top: 0, behavior: "smooth" })
-                  }}
-                >
-                  <Search className="mr-2 h-4 w-4" />
-                  Procurar Quartos Disponíveis
-                </Button>
-              </CardContent>
-            </Card>
+                  <CardContent className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      {/* Adultos */}
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                          Adultos
+                        </h3>
+                        <div className="flex items-center justify-between border rounded-lg p-2 bg-white">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() =>
+                              setSearchData((prev) => ({
+                                ...prev,
+                                adults: Math.max(1, prev.adults - 1),
+                              }))
+                            }
+                          >
+                            -
+                          </Button>
+
+                          <span className="text-xl font-bold text-gray-900">
+                            {searchData.adults}
+                          </span>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() =>
+                              setSearchData((prev) => ({
+                                ...prev,
+                                adults: prev.adults + 1,
+                              }))
+                            }
+                          >
+                            +
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Crianças */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                            Crianças
+                          </h3>
+                          <span className="text-xs text-gray-400">
+                            (Até 11 anos)
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between border rounded-lg p-2 bg-white">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() =>
+                              setSearchData((prev) => ({
+                                ...prev,
+                                children: Math.max(0, prev.children - 1),
+                              }))
+                            }
+                          >
+                            -
+                          </Button>
+
+                          <span className="text-xl font-bold text-gray-900">
+                            {searchData.children}
+                          </span>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() =>
+                              setSearchData((prev) => ({
+                                ...prev,
+                                children: prev.children + 1,
+                              }))
+                            }
+                          >
+                            +
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all"
+                      onClick={() => {
+                        setIsSearchPerformed(true)
+                        window.scrollTo({ top: 0, behavior: "smooth" })
+                      }}
+                    >
+                      <Search className="mr-2 h-4 w-4" />
+                      Procurar Quartos Disponíveis
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         ) : (
           <>
@@ -254,10 +280,10 @@ export default function RegistrationPage({ hotels, discounts }) {
             <section>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                  <h2 className="text-2xl font-semibold text-gray-900">
-                    Escolha seu Quarto
+                  <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">
+                    Escolha seu <span className="text-blue-600">Quarto</span>
                   </h2>
-                  <p className="text-gray-600">
+                  <p className="text-slate-500 font-medium">
                     Selecione as opções abaixo para filtrar os quartos
                     disponíveis
                   </p>
