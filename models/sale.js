@@ -449,6 +449,15 @@ async function findOneByIdWithDetails(saleId) {
         "room-categories".name as room_category,
         companies.corporate_name as company_corporate_name,
         companies.cnpj as company_cnpj,
+        companies.badge as company_badge,
+        companies.phone as company_phone,
+        companies.address as company_address,
+        companies.address_number as company_address_number,
+        companies.address_complement as company_address_complement,
+        companies.neighborhood as company_neighborhood,
+        companies.city as company_city,
+        companies.state as company_state,
+        companies.zip_code as company_zip_code,
         (
           SELECT json_agg(g.*)
           FROM sales_guests sg
