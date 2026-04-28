@@ -38,11 +38,10 @@ export default function RegistrationPage({ hotels, discounts }) {
   const [isSearchPerformed, setIsSearchPerformed] = useState(false)
   const [searchData, setSearchData] = useState({ adults: 1, children: 0 })
   const [selectedType, setSelectedType] = useState("all")
-  const [selectedCategory, setSelectedCategory] = useState("all")
 
   const activeHotel = hotels?.[0]
 
-  const { roomTypes, roomCategories, filteredRooms } = useMemo(() => {
+  const { roomTypes, filteredRooms } = useMemo(() => {
     if (!activeHotel)
       return { roomTypes: [], roomCategories: [], filteredRooms: [] }
 
@@ -68,15 +67,9 @@ export default function RegistrationPage({ hotels, discounts }) {
       // 2. Dropdown Filter Selection
       const typeMatch =
         selectedType === "all" || room.room_type === selectedType
-      const categoryMatch =
-        selectedCategory === "all" || room.room_category === selectedCategory
 
       return (
-        adultCapacityMatch &&
-        childCapacityMatch &&
-        minAdultsMatch &&
-        typeMatch &&
-        categoryMatch
+        adultCapacityMatch && childCapacityMatch && minAdultsMatch && typeMatch
       )
     })
 
@@ -85,7 +78,7 @@ export default function RegistrationPage({ hotels, discounts }) {
       roomCategories: Array.from(categories),
       filteredRooms: filtered,
     }
-  }, [activeHotel, selectedType, selectedCategory, searchData])
+  }, [activeHotel, selectedType, searchData])
 
   if (!activeHotel) {
     return (
@@ -308,24 +301,6 @@ export default function RegistrationPage({ hotels, discounts }) {
                         {roomTypes.map((type) => (
                           <SelectItem key={type} value={type}>
                             {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="w-full md:w-48">
-                    <Select
-                      value={selectedCategory}
-                      onValueChange={setSelectedCategory}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todas as categorias</SelectItem>
-                        {roomCategories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
                           </SelectItem>
                         ))}
                       </SelectContent>

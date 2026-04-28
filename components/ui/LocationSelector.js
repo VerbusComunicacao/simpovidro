@@ -9,6 +9,13 @@ import {
 } from "@/components/ui/select"
 import { Country, State, City } from "country-state-city"
 
+const normalize = (str) =>
+  str
+    ?.toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") || ""
+
 export function LocationSelector({
   countryCode = "BR",
   stateCode = "",
@@ -36,6 +43,20 @@ export function LocationSelector({
         : [],
     [countryCode, stateCode],
   )
+
+  const normalizedStateCode = useMemo(() => {
+    if (!stateCode || states.length === 0) return stateCode
+    const match = states.find(
+      (s) => normalize(s.isoCode) === normalize(stateCode),
+    )
+    return match ? match.isoCode : stateCode
+  }, [stateCode, states])
+
+  const normalizedCityName = useMemo(() => {
+    if (!cityName || cities.length === 0) return cityName
+    const match = cities.find((c) => normalize(c.name) === normalize(cityName))
+    return match ? match.name : cityName
+  }, [cityName, cities])
 
   const handleCountryChange = (val) => {
     const countryObj = countries.find((c) => c.isoCode === val)
@@ -92,7 +113,7 @@ export function LocationSelector({
           {labels.state} {required && "*"}
         </Label>
         <Select
-          value={stateCode}
+          value={normalizedStateCode}
           onValueChange={handleStateChange}
           disabled={disabled || !countryCode}
           required={required}
@@ -115,7 +136,7 @@ export function LocationSelector({
           {labels.city} {required && "*"}
         </Label>
         <Select
-          value={cityName}
+          value={normalizedCityName}
           onValueChange={handleCityChange}
           disabled={disabled || !stateCode}
           required={required}

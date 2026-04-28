@@ -12,15 +12,22 @@ router.post(controller.canRequest("create:guest"), postHandler)
 export default router.handler(controller.errorHandlers)
 
 async function getHandler(request, response) {
-  const guests = await guest.findAll()
+  const page = parseInt(request.query.page, 10) || 1
+  const limit = parseInt(request.query.limit, 10) || 10
+  const search = request.query.search || ""
+
+  const guestsData = await guest.findAll({ search, page, limit })
 
   const secureGuests = authorization.filterOutput(
     request.context.user,
     "read:content",
-    guests,
+    guestsData.data,
   )
 
-  response.status(200).json(secureGuests)
+  response.status(200).json({
+    data: secureGuests,
+    meta: guestsData.meta,
+  })
 }
 
 async function postHandler(request, response) {

@@ -8,8 +8,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { FormattedText } from "@/components/ui/FormattedText"
-import { Users, CheckCircle, BedDouble } from "lucide-react"
-import { useState } from "react"
+import {
+  Users,
+  CheckCircle,
+  BedDouble,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react"
+import { useState, useRef } from "react"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 import Image from "next/image"
 import webserver from "infra/webserver"
@@ -17,6 +23,45 @@ import webserver from "infra/webserver"
 export default function RoomDetailsPage({ room }) {
   const router = useRouter()
   const [activePhoto, setActivePhoto] = useState(room?.photos?.[0] || null)
+  const thumbnailsRef = useRef(null)
+
+  const handleNextPhoto = () => {
+    if (!room.photos || room.photos.length <= 1) return
+    const currentIndex = room.photos.indexOf(activePhoto)
+    const nextIndex = (currentIndex + 1) % room.photos.length
+    setActivePhoto(room.photos[nextIndex])
+    scrollToThumb(nextIndex)
+  }
+
+  const handlePrevPhoto = () => {
+    if (!room.photos || room.photos.length <= 1) return
+    const currentIndex = room.photos.indexOf(activePhoto)
+    const prevIndex =
+      (currentIndex - 1 + room.photos.length) % room.photos.length
+    setActivePhoto(room.photos[prevIndex])
+    scrollToThumb(prevIndex)
+  }
+
+  const scrollToThumb = (index) => {
+    const thumbElement = document.getElementById(`thumb-${index}`)
+    if (thumbElement && thumbnailsRef.current) {
+      thumbElement.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      })
+    }
+  }
+
+  const scrollThumbnails = (direction) => {
+    if (thumbnailsRef.current) {
+      const scrollAmount = 300
+      thumbnailsRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      })
+    }
+  }
 
   if (!room) {
     return (
@@ -40,14 +85,32 @@ export default function RoomDetailsPage({ room }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Photo Gallery */}
           <section className="space-y-4">
-            <div className="aspect-video w-full rounded-2xl overflow-hidden bg-gray-200 border relative">
+            <div className="aspect-video w-full rounded-2xl overflow-hidden bg-gray-200 border relative group">
               {activePhoto ? (
-                <Image
-                  src={activePhoto}
-                  alt={room.name || room.room_type}
-                  className="w-full h-full object-cover"
-                  fill
-                />
+                <>
+                  <Image
+                    src={activePhoto}
+                    alt={room.name || room.room_type}
+                    className="w-full h-full object-cover"
+                    fill
+                  />
+                  {room.photos && room.photos.length > 1 && (
+                    <>
+                      <button
+                        onClick={handlePrevPhoto}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10"
+                      >
+                        <ChevronLeft className="h-6 w-6" />
+                      </button>
+                      <button
+                        onClick={handleNextPhoto}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10"
+                      >
+                        <ChevronRight className="h-6 w-6" />
+                      </button>
+                    </>
+                  )}
+                </>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400">
                   <BedDouble className="h-16 w-16" />
@@ -56,27 +119,51 @@ export default function RoomDetailsPage({ room }) {
             </div>
 
             {room.photos && room.photos.length > 1 && (
-              <div className="flex gap-4 overflow-x-auto pb-2">
-                {room.photos.map((photo, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActivePhoto(photo)}
-                    className={`flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${
-                      activePhoto === photo
-                        ? "border-blue-600 scale-105"
-                        : "border-transparent"
-                    }`}
-                  >
-                    <div className="relative w-full h-full">
-                      <Image
-                        src={photo}
-                        className="w-full h-full object-cover"
-                        alt=""
-                        fill
-                      />
-                    </div>
-                  </button>
-                ))}
+              <div className="relative group/thumbs">
+                <div
+                  ref={thumbnailsRef}
+                  className="flex gap-4 overflow-x-auto pb-2 scroll-smooth no-scrollbar"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                  {room.photos.map((photo, idx) => (
+                    <button
+                      key={idx}
+                      id={`thumb-${idx}`}
+                      onClick={() => {
+                        setActivePhoto(photo)
+                        scrollToThumb(idx)
+                      }}
+                      className={`flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${
+                        activePhoto === photo
+                          ? "border-blue-600 scale-105"
+                          : "border-transparent opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={photo}
+                          className="w-full h-full object-cover"
+                          alt=""
+                          fill
+                        />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Thumbnail Navigation Arrows */}
+                <button
+                  onClick={() => scrollThumbnails("left")}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white shadow-md rounded-full p-1 border hover:bg-gray-50 opacity-0 group-hover/thumbs:opacity-100 transition-opacity hidden md:block z-10"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => scrollThumbnails("right")}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white shadow-md rounded-full p-1 border hover:bg-gray-50 opacity-0 group-hover/thumbs:opacity-100 transition-opacity hidden md:block z-10"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
             )}
           </section>
