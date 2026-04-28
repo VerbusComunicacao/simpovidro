@@ -2,6 +2,11 @@ import { useRouter } from "next/router"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { FormattedText } from "@/components/ui/FormattedText"
 import { Users, CheckCircle, BedDouble } from "lucide-react"
 import { useState } from "react"
@@ -80,12 +85,30 @@ export default function RoomDetailsPage({ room }) {
           <section className="space-y-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <Badge
-                  variant="secondary"
-                  className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
-                >
-                  {room.room_category}
-                </Badge>
+                {room.room_type_description ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant="secondary"
+                        className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none cursor-help"
+                      >
+                        {room.room_type}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="w-64">
+                      <p className="leading-relaxed font-medium">
+                        {room.room_type_description}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Badge
+                    variant="secondary"
+                    className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
+                  >
+                    {room.room_type}
+                  </Badge>
+                )}
               </div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
                 {room.name || room.room_type}
