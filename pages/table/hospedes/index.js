@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import useSWR from "swr"
-import { Plus, Search, Loader2 } from "lucide-react"
+import { Plus, Search, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
 import TableLayout from "@/components/layout/TableLayout"
 import ErrorDialog from "@/components/ui/ErrorDialog"
 import { useEffect, useState } from "react"
@@ -23,13 +23,29 @@ const fetcher = async (url) => {
 }
 
 export default function GuestsTable() {
-  const {
-    data: guests,
-    error: guestsError,
-    mutate,
-  } = useSWR("/api/v1/guests", fetcher)
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
+  const [page, setPage] = useState(1)
+  const limit = 10
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+      setPage(1) // Reset to page 1 when search changes
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
+  const {
+    data: guestsResponse,
+    error: guestsError,
+    mutate,
+    isLoading,
+  } = useSWR(
+    `/api/v1/guests?page=${page}&limit=${limit}&search=${encodeURIComponent(debouncedSearchTerm)}`,
+    fetcher,
+  )
 
   useEffect(() => {
     if (guestsError) {
@@ -37,17 +53,8 @@ export default function GuestsTable() {
     }
   }, [guestsError])
 
-  const filteredGuests = Array.isArray(guests)
-    ? guests.filter((guest) => {
-        const searchLower = searchTerm.toLowerCase()
-
-        return (
-          guest.name?.toLowerCase().includes(searchLower) ||
-          guest.cpf_number?.includes(searchTerm) ||
-          guest.email?.toLowerCase().includes(searchLower)
-        )
-      })
-    : []
+  const guests = guestsResponse?.data || []
+  const meta = guestsResponse?.meta
 
   return (
     <TableLayout>
@@ -72,23 +79,20 @@ export default function GuestsTable() {
         </div>
       </div>
 
-      {!guests && !guestsError && (
+      {isLoading && (
         <div className="flex items-center justify-center p-12">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
       )}
 
-      {filteredGuests.length === 0 &&
-        guests &&
-        !guestsError &&
-        Array.isArray(guests) && (
-          <div className="bg-white rounded-xl border p-12 text-center text-gray-500">
-            Nenhum hóspede encontrado para a busca &quot;{searchTerm}&quot;.
-          </div>
-        )}
+      {!isLoading && guests.length === 0 && !guestsError && (
+        <div className="bg-white rounded-xl border p-12 text-center text-gray-500">
+          Nenhum hóspede encontrado para a busca &quot;{searchTerm}&quot;.
+        </div>
+      )}
 
-      {filteredGuests.length > 0 && (
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+      {!isLoading && guests.length > 0 && (
+        <div className="bg-white rounded-xl border shadow-sm overflow-hidden flex flex-col">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -111,7 +115,7 @@ export default function GuestsTable() {
                 </tr>
               </thead>
               <tbody>
-                {filteredGuests.map((guest) => (
+                {guests.map((guest) => (
                   <GuestRow
                     key={guest.id}
                     guest={guest}
@@ -121,6 +125,39 @@ export default function GuestsTable() {
               </tbody>
             </table>
           </div>
+
+          {meta && meta.totalPages > 1 && (
+            <div className="flex items-center justify-between border-t p-4 bg-gray-50">
+              <span className="text-sm text-gray-500">
+                Mostrando {guests.length} de {meta.total} registros
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <div className="text-sm font-medium px-2">
+                  Página {page} de {meta.totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setPage((p) => Math.min(meta.totalPages, p + 1))
+                  }
+                  disabled={page === meta.totalPages}
+                >
+                  Próximo
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

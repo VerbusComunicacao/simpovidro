@@ -236,19 +236,43 @@ async function findOneByCpfOrRg(cpf_number, rg_number, client) {
   return results.rows[0] || null
 }
 
-async function findAll() {
+async function findAll({ search = "", page = 1, limit = 10 } = {}) {
+  const offset = (page - 1) * limit
+  const searchPattern = `%${search}%`
+
   const results = await database.query({
     text: `
       SELECT
-        *
+        *,
+        count(*) OVER() as full_count
       FROM
         guests
+      WHERE
+        $1 = '' OR name ILIKE $2 OR cpf_number ILIKE $2 OR email ILIKE $2
       ORDER BY
         created_at DESC
+      LIMIT $3 OFFSET $4
     `,
+    values: [search, searchPattern, limit, offset],
   })
 
-  return results.rows
+  const total =
+    results.rows.length > 0 ? parseInt(results.rows[0].full_count, 10) : 0
+  const data = results.rows.map((row) => {
+    const clonedRow = { ...row }
+    delete clonedRow.full_count
+    return clonedRow
+  })
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  }
 }
 
 async function update(guestId, guestInputNewValues, client) {

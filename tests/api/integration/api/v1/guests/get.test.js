@@ -29,7 +29,15 @@ describe("GET /api/v1/guests", () => {
       })
       expect(response.status).toBe(200)
       const responseBody = await response.json()
-      expect(responseBody).toEqual([])
+      expect(responseBody).toEqual({
+        data: [],
+        meta: {
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0,
+        },
+      })
     })
 
     test("Should return 403", async () => {
@@ -98,9 +106,15 @@ describe("GET /api/v1/guests", () => {
       expect(response.status).toBe(200)
       const responseBody = await response.json()
 
-      expect(responseBody.length).toBe(2)
-      expect(responseBody[0].name).toBe("Guest 2") // Ordered by created_at DESC
-      expect(responseBody[1].name).toBe("Guest 1")
+      expect(responseBody.data.length).toBe(2)
+      expect(responseBody.data[0].name).toBe("Guest 2") // Ordered by created_at DESC
+      expect(responseBody.data[1].name).toBe("Guest 1")
+      expect(responseBody.meta).toEqual({
+        total: 2,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      })
     })
   })
 })
