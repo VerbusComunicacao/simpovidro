@@ -122,7 +122,15 @@ export default function CompaniesTable() {
     <TableLayout>
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Empresas</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-bold text-gray-900">Empresas</h2>
+            <CompanyDialog onCompanySuccess={() => mutate()}>
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 h-8">
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar
+              </Button>
+            </CompanyDialog>
+          </div>
           <p className="text-sm text-gray-500">
             Listagem de todas as empresas cadastradas no sistema.
           </p>
@@ -403,17 +411,7 @@ export default function CompaniesTable() {
         </div>
       )}
 
-      {/* Floating Action Button */}
-      <div className="fixed bottom-8 right-8 z-50">
-        <CompanyDialog onCompanySuccess={() => mutate()}>
-          <Button
-            size="lg"
-            className="h-14 w-14 rounded-full shadow-2xl hover:scale-110 transition-transform p-0"
-          >
-            <Plus className="h-6 w-6" />
-          </Button>
-        </CompanyDialog>
-      </div>
+
 
       <ErrorDialog
         isOpen={isErrorDialogOpen}

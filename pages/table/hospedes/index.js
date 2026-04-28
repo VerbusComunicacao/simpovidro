@@ -60,7 +60,15 @@ export default function GuestsTable() {
     <TableLayout>
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Hóspedes</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-bold text-gray-900">Hóspedes</h2>
+            <GuestDialog onGuestSuccess={() => mutate()}>
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 h-8">
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar
+              </Button>
+            </GuestDialog>
+          </div>
           <p className="text-sm text-gray-500">
             Listagem de todos os hóspedes cadastrados no sistema.
           </p>
@@ -161,17 +169,7 @@ export default function GuestsTable() {
         </div>
       )}
 
-      {/* Floating Action Button */}
-      <div className="fixed bottom-8 right-8 z-50">
-        <GuestDialog onGuestSuccess={() => mutate()}>
-          <Button
-            size="lg"
-            className="h-14 w-14 rounded-full shadow-2xl hover:scale-110 transition-transform p-0"
-          >
-            <Plus className="h-6 w-6" />
-          </Button>
-        </GuestDialog>
-      </div>
+
 
       <ErrorDialog
         isOpen={isErrorDialogOpen}
