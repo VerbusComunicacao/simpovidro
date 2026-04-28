@@ -8,7 +8,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { FormattedText } from "@/components/ui/FormattedText"
-import { Users, CheckCircle, BedDouble, ChevronLeft, ChevronRight } from "lucide-react"
+import {
+  Users,
+  CheckCircle,
+  BedDouble,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react"
 import { useState, useRef } from "react"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 import Image from "next/image"
@@ -30,7 +36,8 @@ export default function RoomDetailsPage({ room }) {
   const handlePrevPhoto = () => {
     if (!room.photos || room.photos.length <= 1) return
     const currentIndex = room.photos.indexOf(activePhoto)
-    const prevIndex = (currentIndex - 1 + room.photos.length) % room.photos.length
+    const prevIndex =
+      (currentIndex - 1 + room.photos.length) % room.photos.length
     setActivePhoto(room.photos[prevIndex])
     scrollToThumb(prevIndex)
   }

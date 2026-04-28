@@ -169,8 +169,6 @@ export default function GuestsTable() {
         </div>
       )}
 
-
-
       <ErrorDialog
         isOpen={isErrorDialogOpen}
         onClose={() => setIsErrorDialogOpen(false)}

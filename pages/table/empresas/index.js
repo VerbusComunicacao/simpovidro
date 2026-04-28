@@ -411,8 +411,6 @@ export default function CompaniesTable() {
         </div>
       )}
 
-
-
       <ErrorDialog
         isOpen={isErrorDialogOpen}
         onClose={() => setIsErrorDialogOpen(false)}
