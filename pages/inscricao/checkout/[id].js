@@ -953,11 +953,11 @@ export default function CheckoutPage({
                                 name="name"
                                 value={guestData.name}
                                 onChange={(e) => handleChange(index, e)}
-                                disabled={index === 0}
-                                className={`
-                                  ${index === 0 ? "bg-gray-50 opacity-80" : ""}
-                                  ${guestErrors[index]?.name ? "border-red-500" : ""}
-                                `}
+                                className={
+                                  guestErrors[index]?.name
+                                    ? "border-red-500"
+                                    : ""
+                                }
                                 required
                               />
                               {guestErrors[index]?.name && (
