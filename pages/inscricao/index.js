@@ -8,6 +8,11 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Badge } from "@/components/ui/badge"
 import {
   Select,
@@ -352,18 +357,36 @@ export default function RegistrationPage({ hotels, discounts }) {
                       </div>
                       <CardHeader>
                         <div className="flex justify-between items-start mb-2">
-                          <Badge
-                            variant="outline"
-                            className="border-blue-200 text-blue-700 bg-blue-50"
-                          >
-                            {room.room_type}
-                          </Badge>
+                          {room.room_type_description ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge
+                                  variant="outline"
+                                  className="border-blue-200 text-blue-700 bg-blue-50 cursor-help"
+                                >
+                                  {room.room_type}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="w-64">
+                                <p className="leading-relaxed font-medium">
+                                  {room.room_type_description}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="border-blue-200 text-blue-700 bg-blue-50"
+                            >
+                              {room.room_type}
+                            </Badge>
+                          )}
                         </div>
                         <CardTitle className="text-xl">
                           {room.name || room.room_type}
                         </CardTitle>
                         <CardDescription>
-                          {room.room_type_description}
+                          {room.description || "Nenhuma descrição disponível"}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>

@@ -162,6 +162,7 @@ describe("POST /api/v1/rooms", () => {
         hotel_check_in_date: hotel.check_in_date.toISOString(),
         hotel_check_out_date: hotel.check_out_date.toISOString(),
         room_type: roomType.name,
+        room_type_description: roomType.description,
         room_category: roomCategory.name,
         max_adults: roomCategory.max_adults,
         max_children: roomCategory.max_children,
