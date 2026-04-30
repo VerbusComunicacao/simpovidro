@@ -185,12 +185,10 @@ export default function RegistrationDetailsPage() {
                   {sale.bed_preference && (
                     <div className="mt-3">
                       <p className="text-xs font-bold text-gray-400 uppercase">
-                        Preferência de Cama
+                        Tipo de acomodação
                       </p>
                       <p className="text-sm font-bold text-blue-600 uppercase mt-0.5">
-                        {sale.bed_preference === "casal"
-                          ? "Cama de Casal"
-                          : "2 Camas de Solteiro"}
+                        {sale.bed_preference}
                       </p>
                     </div>
                   )}

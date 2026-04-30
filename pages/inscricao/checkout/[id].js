@@ -696,9 +696,7 @@ export default function CheckoutPage({
                   <p className="font-semibold">{room.room_type}</p>
                   {router.query.bed_preference && (
                     <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mt-1">
-                      {router.query.bed_preference === "casal"
-                        ? "Cama de Casal"
-                        : "2 Camas de Solteiro"}
+                      {router.query.bed_preference}
                     </p>
                   )}
                 </div>
@@ -1543,10 +1541,7 @@ export default function CheckoutPage({
                           </p>
                           {router.query.bed_preference && (
                             <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mt-1 px-2 py-0.5 bg-blue-50 rounded-full w-fit">
-                              Configuração:{" "}
-                              {router.query.bed_preference === "casal"
-                                ? "Cama de Casal"
-                                : "2 Camas de Solteiro"}
+                              Tipo de acomodação: {router.query.bed_preference}
                             </p>
                           )}
                         </div>

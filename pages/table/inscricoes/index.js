@@ -183,10 +183,7 @@ export default function RegistrationsTable() {
                       </p>
                       {sale.bed_preference && (
                         <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mt-1">
-                          Cama:{" "}
-                          {sale.bed_preference === "casal"
-                            ? "Casal"
-                            : "Solteiro"}
+                          Acomodação: {sale.bed_preference}
                         </p>
                       )}
                       <p className="text-sm text-gray-500 mt-1">

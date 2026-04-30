@@ -30,7 +30,7 @@ export default function RoomDetailsPage({ room }) {
 
   const [searchData, setSearchData] = useState({ adults: 1 })
   const [priceDetails, setPriceDetails] = useState(null)
-  const [beddingPreference, setBeddingPreference] = useState("casal")
+  const [beddingPreference, setBeddingPreference] = useState(null) // Change to null to force choice
 
   useEffect(() => {
     if (isReady && query) {
@@ -254,27 +254,24 @@ export default function RoomDetailsPage({ room }) {
                 <CardContent className="p-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <BedDouble className="h-5 w-5 text-blue-600" />
-                    Preferência de Cama
+                    Escolha o Tipo de acomodação
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <button
-                      onClick={() => setBeddingPreference("casal")}
+                      onClick={() => setBeddingPreference("Duplo Casal")}
                       className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
-                        beddingPreference === "casal"
+                        beddingPreference === "Duplo Casal"
                           ? "border-blue-600 bg-blue-50 text-blue-700 shadow-md"
                           : "border-gray-100 bg-gray-50 text-gray-500 hover:border-blue-200"
                       }`}
                     >
                       <BedDouble className="h-8 w-8 mb-2" />
-                      <span className="font-bold">Cama de Casal</span>
-                      <span className="text-[10px] uppercase tracking-wider opacity-70">
-                        Padrão
-                      </span>
+                      <span className="font-bold">Duplo Casal</span>
                     </button>
                     <button
-                      onClick={() => setBeddingPreference("solteiro")}
+                      onClick={() => setBeddingPreference("Duplo Solteiro")}
                       className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
-                        beddingPreference === "solteiro"
+                        beddingPreference === "Duplo Solteiro"
                           ? "border-blue-600 bg-blue-50 text-blue-700 shadow-md"
                           : "border-gray-100 bg-gray-50 text-gray-500 hover:border-blue-200"
                       }`}
@@ -283,10 +280,7 @@ export default function RoomDetailsPage({ room }) {
                         <User className="h-6 w-6" />
                         <User className="h-6 w-6" />
                       </div>
-                      <span className="font-bold">2 Camas de Solteiro</span>
-                      <span className="text-[10px] uppercase tracking-wider opacity-70">
-                        Duplo Solteiro
-                      </span>
+                      <span className="font-bold">Duplo Solteiro</span>
                     </button>
                   </div>
                 </CardContent>
@@ -298,7 +292,9 @@ export default function RoomDetailsPage({ room }) {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div>
                     <span className="text-sm text-gray-500 uppercase font-semibold">
-                      {priceDetails ? "Valor Total da Inscrição" : "Valor por pessoa"}
+                      {priceDetails
+                        ? "Valor Total da Inscrição"
+                        : "Valor por pessoa"}
                     </span>
                     <div className="flex flex-col">
                       <div className="flex items-baseline gap-1">
@@ -307,7 +303,9 @@ export default function RoomDetailsPage({ room }) {
                             style: "currency",
                             currency: "BRL",
                           }).format(
-                            priceDetails ? priceDetails.finalTotal : room.price_per_night,
+                            priceDetails
+                              ? priceDetails.finalTotal
+                              : room.price_per_night,
                           )}
                         </span>
                       </div>
@@ -316,14 +314,16 @@ export default function RoomDetailsPage({ room }) {
                           room.price_per_night && (
                           <div className="flex items-baseline gap-1 mt-1">
                             <span className="text-sm font-semibold text-green-600">
-                              Só {new Intl.NumberFormat("pt-BR", {
+                              Só{" "}
+                              {new Intl.NumberFormat("pt-BR", {
                                 style: "currency",
                                 currency: "BRL",
                               }).format(
-                                priceDetails 
+                                priceDetails
                                   ? priceDetails.memberTotal
-                                  : room.member_price_per_night
-                              )} para associados
+                                  : room.member_price_per_night,
+                              )}{" "}
+                              para associados
                             </span>
                           </div>
                         )}
@@ -331,7 +331,8 @@ export default function RoomDetailsPage({ room }) {
                   </div>
                   <Button
                     size="lg"
-                    className="bg-blue-600 hover:bg-blue-700 px-8 text-lg font-semibold shadow-md active:scale-95 transition-all"
+                    disabled={searchData.adults === 2 && !beddingPreference}
+                    className="bg-blue-600 hover:bg-blue-700 px-8 text-lg font-semibold shadow-md active:scale-95 transition-all disabled:opacity-50"
                     onClick={() => {
                       const params = new URLSearchParams()
                       Object.keys(searchData).forEach((key) => {

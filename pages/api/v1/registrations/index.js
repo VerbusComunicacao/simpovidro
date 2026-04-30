@@ -206,7 +206,7 @@ async function postHandler(request, response) {
             <h2 style="margin-top: 0; color: #111827; font-size: 1.25em;">Pedido #${saleDetails.sale_number || saleDetails.id.slice(0, 8)}</h2>
             <p style="margin: 5px 0;"><strong>Hotel:</strong> ${saleDetails.hotel_name}</p>
             <p style="margin: 5px 0;"><strong>Quarto:</strong> ${saleDetails.room_name || saleDetails.room_type} (${saleDetails.room_category})</p>
-            ${saleDetails.bed_preference ? `<p style="margin: 5px 0;"><strong>Configuração de Cama:</strong> ${saleDetails.bed_preference === "casal" ? "Cama de Casal" : "2 Camas de Solteiro"}</p>` : ""}
+            ${saleDetails.bed_preference ? `<p style="margin: 5px 0;"><strong>Tipo de acomodação:</strong> ${saleDetails.bed_preference}</p>` : ""}
             <p style="margin: 5px 0;"><strong>Período:</strong> ${formatDate(saleDetails.check_in_date)} à ${formatDate(saleDetails.check_out_date)}</p>
           </div>
 
