@@ -182,6 +182,18 @@ export default function RegistrationDetailsPage() {
                   <Badge variant="outline" className="mt-1">
                     {sale.room_category}
                   </Badge>
+                  {sale.bed_preference && (
+                    <div className="mt-3">
+                      <p className="text-xs font-bold text-gray-400 uppercase">
+                        Preferência de Cama
+                      </p>
+                      <p className="text-sm font-bold text-blue-600 uppercase mt-0.5">
+                        {sale.bed_preference === "casal"
+                          ? "Cama de Casal"
+                          : "2 Camas de Solteiro"}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase">

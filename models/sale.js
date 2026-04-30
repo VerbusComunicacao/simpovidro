@@ -296,9 +296,9 @@ async function create(saleInputValues, externalClient) {
     const saleResults = await client.query({
       text: `
         INSERT INTO
-          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, discount_percentage, discount_amount, final_amount, company_id, payment_method, installments_count)
+          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, discount_percentage, discount_amount, final_amount, company_id, payment_method, installments_count, bed_preference)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING
           *
       `,
@@ -315,6 +315,7 @@ async function create(saleInputValues, externalClient) {
         company_id,
         payment_method,
         installments_count,
+        saleInputValues.bed_preference || null,
       ],
     })
 

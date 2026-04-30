@@ -42,6 +42,7 @@ async function generateCompleteReport(hotelId) {
       s.payment_status as "Status de pagamento",
       s.final_amount as "Valor total",
       r.name as "Nome do quarto",
+      s.bed_preference as "Preferência de Cama",
       TO_CHAR(s.created_at, 'DD/MM/YYYY') as "Data de Registro"
     FROM guests g
     JOIN sales_guests sg ON g.id = sg.guest_id

@@ -10,20 +10,44 @@ import {
 import { FormattedText } from "@/components/ui/FormattedText"
 import {
   Users,
+  User,
   CheckCircle,
   BedDouble,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 import Image from "next/image"
 import webserver from "infra/webserver"
+import { calculateSummaryPrice } from "@/lib/registration-helpers"
 
 export default function RoomDetailsPage({ room }) {
   const router = useRouter()
+  const { query, isReady } = router
   const [activePhoto, setActivePhoto] = useState(room?.photos?.[0] || null)
   const thumbnailsRef = useRef(null)
+
+  const [searchData, setSearchData] = useState({ adults: 1 })
+  const [priceDetails, setPriceDetails] = useState(null)
+  const [beddingPreference, setBeddingPreference] = useState("casal")
+
+  useEffect(() => {
+    if (isReady && query) {
+      const counts = { adults: parseInt(query.adults) || 1 }
+      Object.keys(query).forEach((key) => {
+        if (key !== "id" && key !== "adults") {
+          counts[key] = parseInt(query[key]) || 0
+        }
+      })
+      setSearchData(counts)
+
+      if (room) {
+        const summary = calculateSummaryPrice(room, counts, null, [])
+        setPriceDetails(summary)
+      }
+    }
+  }, [isReady, query, room])
 
   const handleNextPhoto = () => {
     if (!room.photos || room.photos.length <= 1) return
@@ -225,12 +249,56 @@ export default function RoomDetailsPage({ room }) {
               </div>
             </div>
 
+            {searchData.adults === 2 && (
+              <Card className="mb-6 bg-white border shadow-sm">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <BedDouble className="h-5 w-5 text-blue-600" />
+                    Preferência de Cama
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      onClick={() => setBeddingPreference("casal")}
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                        beddingPreference === "casal"
+                          ? "border-blue-600 bg-blue-50 text-blue-700 shadow-md"
+                          : "border-gray-100 bg-gray-50 text-gray-500 hover:border-blue-200"
+                      }`}
+                    >
+                      <BedDouble className="h-8 w-8 mb-2" />
+                      <span className="font-bold">Cama de Casal</span>
+                      <span className="text-[10px] uppercase tracking-wider opacity-70">
+                        Padrão
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setBeddingPreference("solteiro")}
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                        beddingPreference === "solteiro"
+                          ? "border-blue-600 bg-blue-50 text-blue-700 shadow-md"
+                          : "border-gray-100 bg-gray-50 text-gray-500 hover:border-blue-200"
+                      }`}
+                    >
+                      <div className="flex gap-1 mb-2">
+                        <User className="h-6 w-6" />
+                        <User className="h-6 w-6" />
+                      </div>
+                      <span className="font-bold">2 Camas de Solteiro</span>
+                      <span className="text-[10px] uppercase tracking-wider opacity-70">
+                        Duplo Solteiro
+                      </span>
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="bg-white border-2 border-blue-50 shadow-sm">
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div>
                     <span className="text-sm text-gray-500 uppercase font-semibold">
-                      Valor por pessoa
+                      {priceDetails ? "Valor Total da Inscrição" : "Valor por pessoa"}
                     </span>
                     <div className="flex flex-col">
                       <div className="flex items-baseline gap-1">
@@ -238,7 +306,9 @@ export default function RoomDetailsPage({ room }) {
                           {new Intl.NumberFormat("pt-BR", {
                             style: "currency",
                             currency: "BRL",
-                          }).format(room.price_per_night)}
+                          }).format(
+                            priceDetails ? priceDetails.finalTotal : room.price_per_night,
+                          )}
                         </span>
                       </div>
                       {room.member_price_per_night &&
@@ -246,12 +316,14 @@ export default function RoomDetailsPage({ room }) {
                           room.price_per_night && (
                           <div className="flex items-baseline gap-1 mt-1">
                             <span className="text-sm font-semibold text-green-600">
-                              Só{" "}
-                              {new Intl.NumberFormat("pt-BR", {
+                              Só {new Intl.NumberFormat("pt-BR", {
                                 style: "currency",
                                 currency: "BRL",
-                              }).format(room.member_price_per_night)}{" "}
-                              para associados
+                              }).format(
+                                priceDetails 
+                                  ? priceDetails.memberTotal
+                                  : room.member_price_per_night
+                              )} para associados
                             </span>
                           </div>
                         )}
@@ -260,9 +332,18 @@ export default function RoomDetailsPage({ room }) {
                   <Button
                     size="lg"
                     className="bg-blue-600 hover:bg-blue-700 px-8 text-lg font-semibold shadow-md active:scale-95 transition-all"
-                    onClick={() =>
-                      router.push(`/inscricao/checkout/${room.id}`)
-                    }
+                    onClick={() => {
+                      const params = new URLSearchParams()
+                      Object.keys(searchData).forEach((key) => {
+                        params.append(key, searchData[key])
+                      })
+                      if (searchData.adults === 2) {
+                        params.append("bed_preference", beddingPreference)
+                      }
+                      router.push(
+                        `/inscricao/checkout/${room.id}?${params.toString()}`,
+                      )
+                    }}
                   >
                     Fazer Minha Inscrição
                   </Button>
