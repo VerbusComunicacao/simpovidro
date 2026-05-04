@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Download, FileText, Loader2 } from "lucide-react"
-import { exportToCSV, flattenDataForExport } from "@/lib/exportUtils"
+import { exportToExcel, flattenDataForExport } from "@/lib/exportUtils"
 import { useEffect } from "react"
 import {
   BarChart,
@@ -146,7 +146,7 @@ export default function RelatoriosPage() {
     }
   }
 
-  const handleExportCSV = () => {
+  const handleExportExcel = () => {
     if (!reportData) return
 
     const reportLabel =
@@ -154,9 +154,9 @@ export default function RelatoriosPage() {
     const timestamp = new Date().toISOString().split("T")[0]
     const filename = `${reportLabel.toLowerCase().replace(/\s+/g, "_")}_${timestamp}`
 
-    // Flatten data for CSV export
+    // Flatten data for export
     const flattenedData = flattenDataForExport(reportData)
-    exportToCSV(flattenedData, filename)
+    exportToExcel(flattenedData, filename)
   }
 
   const renderReportPreview = () => {
@@ -424,13 +424,13 @@ export default function RelatoriosPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Visualização do Relatório</CardTitle>
               <Button
-                onClick={handleExportCSV}
+                onClick={handleExportExcel}
                 variant="outline"
                 size="sm"
                 className="gap-2"
               >
                 <Download className="h-4 w-4" />
-                Exportar CSV
+                Exportar Excel
               </Button>
             </CardHeader>
             <CardContent>{renderReportPreview()}</CardContent>
