@@ -8,7 +8,7 @@ async function generateCompleteReport(hotelId) {
   const query = `
     SELECT 
       g.name as "Nome",
-      g.badge_name as "Crachá do Participante",
+      UPPER(g.badge_name) as "Crachá do Participante",
       g.email as "Email",
       g.phone as "Celular",
       g.gender as "Sexo",
@@ -19,7 +19,7 @@ async function generateCompleteReport(hotelId) {
       g.nationality as "Nacionalidade",
       c.corporate_name as "Empresa",
       c.cnpj as "CNPJ da empresa",
-      c.badge as "Nome da empresa no crachá",
+      UPPER(c.badge) as "Nome da empresa no crachá",
       c.phone as "Telefone Comercial",
       c.address as "Endereço da Empresa",
       c.address_number as "Número",

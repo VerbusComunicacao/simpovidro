@@ -57,11 +57,11 @@ async function create(userOrId, registrationData) {
 
       // Force first guest to be the logged-in user (UNLESS ADMIN)
       if (i === 0 && !isAdmin) {
-        // Enforce that Guest 1 identity matches the trusted profile/account
-        if (
-          currentGuestData.name !== trustedName ||
-          currentGuestData.email.toLowerCase() !== trustedEmail.toLowerCase()
-        ) {
+        const inputEmail = (currentGuestData.email || "").trim().toLowerCase()
+        const dbEmail = (trustedEmail || "").trim().toLowerCase()
+
+        // Enforce that Guest 1 email matches the trusted account email
+        if (inputEmail !== dbEmail) {
           throw new NotFoundError({
             message:
               "Titular da inscrição não encontrado na lista de hóspedes.",

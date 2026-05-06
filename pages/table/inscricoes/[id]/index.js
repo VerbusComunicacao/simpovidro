@@ -232,6 +232,16 @@ export default function RegistrationDetailsPage() {
                       {sale.company_corporate_name}
                     </p>
                   </div>
+                  {sale.company_badge && (
+                    <div>
+                      <p className="text-[10px] font-bold text-blue-400 uppercase">
+                        Crachá da Empresa
+                      </p>
+                      <p className="font-bold text-gray-900">
+                        {sale.company_badge.toUpperCase()}
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-[10px] font-bold text-blue-400 uppercase">
                       CNPJ
@@ -293,8 +303,10 @@ export default function RegistrationDetailsPage() {
                     <Badge variant="outline" className="bg-white">
                       {guest.gender}
                     </Badge>
-                    <Badge variant="outline" className="bg-white">
-                      {guest.badge_name || "Sem nome no crachá"}
+                    <Badge variant="outline" className="bg-white uppercase">
+                      {guest.badge_name
+                        ? guest.badge_name.toUpperCase()
+                        : "SEM NOME NO CRACHÁ"}
                     </Badge>
                   </div>
                 </div>

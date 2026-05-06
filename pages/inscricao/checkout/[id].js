@@ -281,9 +281,12 @@ export default function CheckoutPage({
     }
 
     const newGuests = [...guests]
+    const isBadgeField = name === "badge_name"
+    const valueToStore = isBadgeField ? value.toUpperCase() : value
+
     newGuests[index] = {
       ...newGuests[index],
-      [name]: e.target.type === "checkbox" ? e.target.checked : value,
+      [name]: e.target.type === "checkbox" ? e.target.checked : valueToStore,
     }
     setGuests(newGuests)
     setError("")
@@ -848,7 +851,7 @@ export default function CheckoutPage({
                           onChange={(e) => {
                             setNewCompanyData({
                               ...newCompanyData,
-                              badge: e.target.value,
+                              badge: e.target.value.toUpperCase(),
                             })
                             setError("")
                           }}

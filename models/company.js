@@ -74,7 +74,7 @@ async function create(companyInputValues, options = { isImport: false }) {
       `,
       values: [
         corporate_name,
-        badge,
+        badge?.toUpperCase(),
         cnpj,
         address,
         address_number,
@@ -214,7 +214,7 @@ async function update(companyId, companyInputNewValues) {
       values: [
         id,
         corporate_name,
-        badge,
+        badge?.toUpperCase(),
         cnpj,
         address,
         address_number,
@@ -357,7 +357,7 @@ async function upsert(companyData, client) {
       `,
       values: [
         corporate_name,
-        badge,
+        badge?.toUpperCase(),
         cnpj.replace(/\D/g, ""),
         address,
         address_number,
