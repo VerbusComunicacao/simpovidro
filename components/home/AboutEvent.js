@@ -20,7 +20,7 @@ export default function AboutEvent({ scrollToSection }) {
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-8">
             <div>
-              <h2 className="text-blue-600 font-bold uppercase tracking-[0.2em] text-sm mb-4">
+              <h2 className="font-title text-blue-600 font-bold uppercase tracking-[0.2em] text-sm mb-4">
                 O Evento
               </h2>
               <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight mb-6">
@@ -58,16 +58,16 @@ export default function AboutEvent({ scrollToSection }) {
             <Button
               size="lg"
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-full h-14 px-10 text-lg shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95"
-              onClick={(e) => scrollToSection(e, "programacao")}
+              onClick={(e) => scrollToSection(e, "local")}
             >
-              Confira a Programação completa
+              Conheça o local do evento
             </Button>
           </div>
 
           <div className="relative">
             <div className="absolute -inset-4 bg-blue-600/5 rounded-[2.5rem] blur-2xl"></div>
             <div className="relative aspect-square rounded-[2rem] shadow-2xl border-8 border-white">
-              <div className="absolute rounded-[2rem]  inset-0 bg-gradient-to-tr from-blue-900/20 to-transparent z-10 pointer-events-none"></div>
+              <div className="absolute rounded-[2rem]  inset-0 bg-gradient-to-r from-brand-start/20 to-brand-end/20 z-10 pointer-events-none"></div>
               <Image
                 src="/images/simpovidro.webp"
                 alt="Simpovidro Event Impression"

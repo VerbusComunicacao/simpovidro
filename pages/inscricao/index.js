@@ -364,7 +364,7 @@ export default function RegistrationPage({ hotels, discounts }) {
                             fill
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-r from-blue-600 to-blue-500 flex items-center justify-center">
+                          <div className="w-full h-full bg-gradient-to-r from-brand-start to-brand-end flex items-center justify-center">
                             <BedDouble className="h-12 w-12 text-white/50" />
                           </div>
                         )}

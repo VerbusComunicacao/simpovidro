@@ -65,8 +65,6 @@ export default function Home() {
           HERO_IMAGE={HERO_IMAGE}
         />
 
-        <Sponsors variant="compact" />
-
         <AboutEvent scrollToSection={scrollToSection} />
 
         <Location />

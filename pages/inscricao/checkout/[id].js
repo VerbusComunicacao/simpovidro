@@ -1844,6 +1844,41 @@ export default function CheckoutPage({
                             Parcelado
                           </Button>
                         </div>
+                        {paymentMethod === "cash" && (
+                          <div className="space-y-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100 mt-4">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-blue-900 font-bold">
+                                Pagamento Único
+                              </Label>
+                              <Badge
+                                variant="secondary"
+                                className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
+                              >
+                                Total à Vista
+                              </Badge>
+                            </div>
+                            <div className="pt-2 border-t border-blue-100 flex flex-col gap-2">
+                              <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">
+                                Pagamento por boleto:
+                              </p>
+                              <div className="bg-white/50 p-2 rounded border border-blue-100/50">
+                                <p className="text-[11px] text-blue-600 font-black flex justify-between items-center">
+                                  <span>Data de vencimento</span>
+                                  <span>
+                                    {new Date(
+                                      generateInstallmentDates(
+                                        1,
+                                        room.hotel_check_in_date,
+                                      )[0],
+                                    ).toLocaleDateString("pt-BR", {
+                                      timeZone: "UTC",
+                                    })}
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                         {paymentMethod === "installments" && (
                           <div className="space-y-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100">

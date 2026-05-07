@@ -12,7 +12,7 @@ import Link from "next/link"
 export default function Pricing() {
   return (
     <section
-      id="precos"
+      id="beneficios"
       className="py-24 bg-slate-50 border-y border-slate-200"
     >
       <div className="max-w-7xl mx-auto px-6">

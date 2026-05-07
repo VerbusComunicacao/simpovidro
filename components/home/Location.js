@@ -45,7 +45,7 @@ export default function Location() {
 
           <div className="order-1 lg:order-2 space-y-8">
             <div>
-              <div className="flex items-center gap-2 text-blue-600 font-bold uppercase tracking-[0.2em] text-sm mb-4">
+              <div className="font-title flex items-center gap-2 text-blue-600 font-bold uppercase tracking-[0.2em] text-sm mb-4">
                 <MapPin className="h-4 w-4" /> O Novo Local
               </div>
               <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight mb-6 uppercase italic tracking-tighter">

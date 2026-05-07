@@ -21,13 +21,16 @@ export default function Tips() {
   ]
 
   return (
-    <section id="dicas" className="py-24 bg-white">
+    <section
+      id="dicas"
+      className="py-24 bg-gradient-to-r from-brand-start to-brand-end"
+    >
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-blue-600 font-bold uppercase tracking-widest text-sm mb-4">
+          <h2 className="text-white font-bold uppercase tracking-widest text-sm mb-4">
             Preparação
           </h2>
-          <h3 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 italic tracking-tighter">
+          <h3 className="text-4xl md:text-5xl font-black text-white mb-6 italic tracking-tighter">
             Dicas & Lembretes
           </h3>
         </div>

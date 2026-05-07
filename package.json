@@ -46,6 +46,7 @@
     "dotenv": "16.4.4",
     "dotenv-expand": "11.0.6",
     "eslint": "8.57.0",
+    "framer-motion": "^12.38.0",
     "joi": "^18.0.1",
     "lucide-react": "^0.553.0",
     "next": "14.2.5",
