@@ -7,6 +7,17 @@ export default function Location() {
       {/* Decorative background elements */}
       <div className="absolute top-1/2 left-0 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
 
+      {/* Background Icons Pattern - Vertical Repeat Only */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: "url('/images/icon-17-simpovidro.png')",
+          backgroundSize: "60px",
+          backgroundRepeat: "repeat-y",
+          backgroundPosition: "-20px 0",
+        }}
+      ></div>
+
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="order-2 lg:order-1 relative">
