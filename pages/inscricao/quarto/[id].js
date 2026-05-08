@@ -346,7 +346,7 @@ export default function RoomDetailsPage({ room }) {
                       )
                     }}
                   >
-                    Fazer Minha Inscrição
+                    Fazer minha inscrição
                   </Button>
                 </div>
               </CardContent>

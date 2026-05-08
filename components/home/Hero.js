@@ -1,11 +1,10 @@
 import Image from "next/image"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ChevronRight, Calendar, MapPin, Users, Star } from "lucide-react"
+import { ChevronRight, Calendar, MapPin, Info } from "lucide-react"
 import Sponsors from "@/components/home/Sponsors"
 import { motion } from "framer-motion"
 
-export default function Hero({ scrollToSection, router, HERO_IMAGE }) {
+export default function Hero({ scrollToSection, router }) {
   const stats = [
     { icon: Calendar, label: "5 a 8 de Novembro", sub: "2026" },
     {
@@ -74,7 +73,7 @@ export default function Hero({ scrollToSection, router, HERO_IMAGE }) {
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-full h-14 px-10 text-lg shadow-xl shadow-blue-500/25 transition-transform hover:scale-105"
               onClick={() => router.push("/inscricao")}
             >
-              Quero Me Inscrever <ChevronRight className="ml-2 h-5 w-5" />
+              Quero me inscrever <ChevronRight className="ml-2 h-5 w-5" />
             </Button>
             <Button
               size="lg"
@@ -82,7 +81,7 @@ export default function Hero({ scrollToSection, router, HERO_IMAGE }) {
               className="bg-orange-50/50 backdrop-blur-sm border-orange-200 text-orange-600 hover:bg-orange-100 hover:text-orange-700 rounded-full h-14 px-10 text-lg transition-all"
               onClick={(e) => scrollToSection(e, "sobre")}
             >
-              Saber mais
+              Saber mais <Info />
             </Button>
           </div>
         </motion.div>
@@ -121,7 +120,7 @@ export default function Hero({ scrollToSection, router, HERO_IMAGE }) {
                   <stat.icon className="h-4 w-4 text-blue-600" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-black text-slate-900 text-xs md:text-sm leading-tight font-title">
+                  <span className="font-black text-slate-900 text-xs md:text-lg leading-tight font-title">
                     {stat.label}
                   </span>
                   <span className="text-[9px] md:text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-0.5">

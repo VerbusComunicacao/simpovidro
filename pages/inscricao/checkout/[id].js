@@ -39,7 +39,6 @@ import {
   generateRandomGuest,
 } from "@/lib/test-data-generator"
 import {
-  calculateTotalPrice as calculatePrice,
   calculateMaxInstallments as calculateInstallments,
   validateRoomCapacity,
   generateInstallmentDates,
@@ -56,14 +55,6 @@ function calculateAge(birthDate, referenceDate = new Date()) {
     age--
   }
   return age
-}
-
-function calculateNights(checkIn, checkOut) {
-  if (!checkIn || !checkOut) return 0
-  const start = new Date(checkIn + "T00:00:00")
-  const end = new Date(checkOut + "T00:00:00")
-  const diffTime = Math.abs(end - start)
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }
 
 function calculateIsAdult(birthDate, referenceDate) {
@@ -125,45 +116,6 @@ export default function CheckoutPage({
 
   // No longer needed: countries, getStates, getCities helpers here
 
-  // Determine initial codes for Guest Profile
-  const locationState = getInitialLocationState(guestProfile)
-
-  const initialGuest = {
-    // Personal
-    name: guestProfile?.name || user.full_name || "",
-    badge_name: guestProfile?.badge_name || "",
-    email: user.email || "",
-    phone: guestProfile?.phone || "",
-    gender: guestProfile?.gender || "",
-    rg_number: guestProfile?.rg_number || "",
-    cpf_number: guestProfile?.cpf_number || "",
-    birth_date: guestProfile?.birth_date
-      ? new Date(guestProfile.birth_date).toISOString().split("T")[0]
-      : "",
-    nationality: guestProfile?.nationality || "Brasileira",
-
-    // Address
-    address: guestProfile?.address || "",
-    address_number: guestProfile?.address_number || "",
-    address_complement: guestProfile?.address_complement || "",
-    neighborhood: guestProfile?.neighborhood || "",
-    ...locationState,
-
-    // Health / Emergency
-    emergency_contact_name: guestProfile?.emergency_contact_name || "",
-    emergency_contact_phone: guestProfile?.emergency_contact_phone || "",
-    blood_type: guestProfile?.blood_type || "",
-    blood_rh_factor: guestProfile?.blood_rh_factor || "",
-    passport_number: guestProfile?.passport_number || "",
-    medication_details: guestProfile?.medication_details || "",
-    special_needs_details: guestProfile?.special_needs_details || "",
-    health_observations: guestProfile?.health_observations || "",
-    has_heart_condition: guestProfile?.has_heart_condition ?? false,
-    has_diabetes: guestProfile?.has_diabetes ?? false,
-    has_high_blood_pressure: guestProfile?.has_high_blood_pressure ?? false,
-    has_low_blood_pressure: guestProfile?.has_low_blood_pressure ?? false,
-  }
-
   const emptyGuest = {
     name: "",
     badge_name: "",
@@ -197,9 +149,40 @@ export default function CheckoutPage({
     has_low_blood_pressure: false,
   }
 
-  const maxAdults = room.max_adults || 0
-  const maxChildren = room.max_children || 0
-  const totalCapacity = maxAdults + maxChildren
+  // Determine initial codes for Guest Profile
+  const locationState = getInitialLocationState(guestProfile)
+
+  const isAdmin = user.features?.includes("update:user:others")
+
+  const initialGuest = isAdmin
+    ? { ...emptyGuest }
+    : {
+        ...emptyGuest,
+        name: guestProfile?.name || user.full_name || "",
+        badge_name: guestProfile?.badge_name || "",
+        email: user.email || "",
+        phone: guestProfile?.phone || "",
+        gender: guestProfile?.gender || "",
+        rg_number: guestProfile?.rg_number || "",
+        cpf_number: guestProfile?.cpf_number || "",
+        birth_date: guestProfile?.birth_date
+          ? new Date(guestProfile.birth_date).toISOString().split("T")[0]
+          : "",
+        ...locationState,
+        emergency_contact_name: guestProfile?.emergency_contact_name || "",
+        emergency_contact_phone: guestProfile?.emergency_contact_phone || "",
+        blood_type: guestProfile?.blood_type || "",
+        blood_rh_factor: guestProfile?.blood_rh_factor || "",
+        passport_number: guestProfile?.passport_number || "",
+        medication_details: guestProfile?.medication_details || "",
+        special_needs_details: guestProfile?.special_needs_details || "",
+        health_observations: guestProfile?.health_observations || "",
+        has_heart_condition: guestProfile?.has_heart_condition ?? false,
+        has_diabetes: guestProfile?.has_diabetes ?? false,
+        has_high_blood_pressure: guestProfile?.has_high_blood_pressure ?? false,
+        has_low_blood_pressure: guestProfile?.has_low_blood_pressure ?? false,
+      }
+
   const minRequired = room.min_guests || 1
 
   const [guests, setGuests] = useState(() => {
@@ -260,58 +243,113 @@ export default function CheckoutPage({
     }
   }, [router.isReady, router.query])
 
-  const handleAddGuest = () => {
-    // Disabled as per new requirement
-  }
-
-  const handleRemoveGuest = (indexToRemove) => {
-    // Disabled as per new requirement
-  }
-
   // Handlers for form changes
+  const lookupGuestByCpf = async (index, cpf) => {
+    setIsLoading(true)
+    try {
+      const response = await fetch(
+        `/api/v1/guests?search=${encodeURIComponent(cpf)}`,
+      )
+      if (!response.ok) return
+
+      const result = await response.json()
+      const cleanCpf = cpf.replace(/\D/g, "")
+      const foundGuest = result.data.find(
+        (g) => g.cpf_number?.replace(/\D/g, "") === cleanCpf,
+      )
+
+      if (foundGuest) {
+        updateGuestFields(index, foundGuest)
+      }
+    } catch (err) {
+      console.error("Error looking up guest:", err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const updateGuestFields = (index, data) => {
+    setGuests((prevGuests) => {
+      const updatedGuests = [...prevGuests]
+      const birthDate = data.birth_date
+        ? new Date(data.birth_date).toISOString().split("T")[0]
+        : ""
+
+      updatedGuests[index] = {
+        ...updatedGuests[index],
+        ...data,
+        birth_date: birthDate,
+      }
+      return updatedGuests
+    })
+    setError("")
+  }
+
   const handleChange = (index, e) => {
     let { name, value } = e.target
 
-    if (name === "cpf_number") {
-      value = maskCPF(value)
-    } else if (name === "rg_number") {
-      value = maskRG(value)
-    } else if (name === "phone" || name === "emergency_contact_phone") {
-      value = maskPhone(value)
-    }
+    // 1. Apply masks
+    const maskedValue = applyFieldMask(name, value)
 
-    const newGuests = [...guests]
-    const isBadgeField = name === "badge_name"
-    const valueToStore = isBadgeField ? value.toUpperCase() : value
+    // 2. Update state
+    setGuests((prev) => {
+      const updated = [...prev]
+      const isBadgeField = name === "badge_name"
+      const valueToStore = isBadgeField
+        ? maskedValue.toUpperCase()
+        : maskedValue
 
-    newGuests[index] = {
-      ...newGuests[index],
-      [name]: e.target.type === "checkbox" ? e.target.checked : valueToStore,
+      updated[index] = {
+        ...updated[index],
+        [name]: e.target.type === "checkbox" ? e.target.checked : valueToStore,
+      }
+      return updated
+    })
+
+    // 3. Clear errors
+    if (guestErrors[index]?.[name]) {
+      setGuestErrors((prev) => {
+        const next = { ...prev }
+        delete next[index][name]
+        if (Object.keys(next[index]).length === 0) delete next[index]
+        return next
+      })
     }
-    setGuests(newGuests)
     setError("")
 
-    // Clear error when user types
-    if (guestErrors[index]?.[name]) {
-      const newErrors = { ...guestErrors }
-      delete newErrors[index][name]
-      if (Object.keys(newErrors[index]).length === 0) delete newErrors[index]
-      setGuestErrors(newErrors)
+    // 4. Admin actions (CPF Lookup)
+    if (name === "cpf_number" && isAdmin) {
+      const cleanCpf = maskedValue.replace(/\D/g, "")
+      if (cleanCpf.length === 11) {
+        lookupGuestByCpf(index, maskedValue)
+      }
     }
 
-    // Dev Helper: Autofill on all ones (CPF)
+    // 5. Test actions
+    handleTestAutofill(index, name, maskedValue)
+  }
+
+  const applyFieldMask = (name, value) => {
+    switch (name) {
+      case "cpf_number":
+        return maskCPF(value)
+      case "rg_number":
+        return maskRG(value)
+      case "phone":
+      case "emergency_contact_phone":
+        return maskPhone(value)
+      default:
+        return value
+    }
+  }
+
+  const handleTestAutofill = (index, name, value) => {
     if (
       name === "cpf_number" &&
       isTestEnvironment() &&
       value.replace(/\D/g, "") === "1".repeat(11)
     ) {
-      const randomGuest = generateRandomGuest()
-      const updatedGuests = [...guests]
-      updatedGuests[index] = {
-        ...updatedGuests[index],
-        ...randomGuest,
-      }
-      setGuests(updatedGuests)
+      updateGuestFields(index, generateRandomGuest())
     }
   }
 
@@ -1227,9 +1265,9 @@ export default function CheckoutPage({
                                 type="email"
                                 value={guestData.email}
                                 onChange={(e) => handleChange(index, e)}
-                                disabled={index === 0}
+                                disabled={index === 0 && !isAdmin}
                                 className={`
-                                  ${index === 0 ? "bg-gray-50 opacity-80" : ""}
+                                  ${index === 0 && !isAdmin ? "bg-gray-50 opacity-80" : ""}
                                   ${guestErrors[index]?.email ? "border-red-500" : ""}
                                 `}
                                 required={calculateIsAdult(
@@ -1861,9 +1899,9 @@ export default function CheckoutPage({
                               <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">
                                 Pagamento por boleto:
                               </p>
-                              <div className="bg-white/50 p-2 rounded border border-blue-100/50">
+                              <div>
                                 <p className="text-[11px] text-blue-600 font-black flex justify-between items-center">
-                                  <span>Data de vencimento</span>
+                                  <span>VENCIMENTO</span>
                                   <span>
                                     {new Date(
                                       generateInstallmentDates(

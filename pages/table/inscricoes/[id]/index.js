@@ -232,6 +232,16 @@ export default function RegistrationDetailsPage() {
                       {sale.company_corporate_name}
                     </p>
                   </div>
+                  {sale.company_responsible_person && (
+                    <div>
+                      <p className="text-[10px] font-bold text-blue-400 uppercase">
+                        Responsável
+                      </p>
+                      <p className="font-bold text-gray-900">
+                        {sale.company_responsible_person}
+                      </p>
+                    </div>
+                  )}
                   {sale.company_badge && (
                     <div>
                       <p className="text-[10px] font-bold text-blue-400 uppercase">
@@ -453,7 +463,7 @@ export default function RegistrationDetailsPage() {
                       <span className="font-bold text-gray-700 uppercase text-sm">
                         {sale.payment_method === "installments"
                           ? "Parcelado"
-                          : "À Vista / PIX"}
+                          : "À Vista no Boleto"}
                       </span>
                       <Badge variant="outline">
                         {sale.installments_count}x

@@ -120,6 +120,13 @@ async function postHandler(request, response) {
           label: "Necessidades Especiais",
           value: guest.special_needs_details,
         },
+        {
+          label: "Contato de Emergência",
+          value:
+            guest.emergency_contact_name || guest.emergency_contact_phone
+              ? `${guest.emergency_contact_name || ""} ${guest.emergency_contact_phone ? `(${guest.emergency_contact_phone})` : ""}`.trim()
+              : null,
+        },
       ].filter((f) => f.value)
 
       return fields
@@ -149,6 +156,9 @@ async function postHandler(request, response) {
         <p style="margin: 5px 0;"><strong>Razão Social:</strong> ${saleDetails.company_corporate_name}</p>
         ${saleDetails.company_badge ? `<p style="margin: 5px 0;"><strong>Fantasia/Crachá:</strong> ${saleDetails.company_badge.toUpperCase()}</p>` : ""}
         <p style="margin: 5px 0;"><strong>CNPJ:</strong> ${formatCnpj(saleDetails.company_cnpj)}</p>
+        ${saleDetails.company_responsible_person ? `<p style="margin: 5px 0;"><strong>Responsável:</strong> ${saleDetails.company_responsible_person}</p>` : ""}
+        ${saleDetails.company_phone ? `<p style="margin: 5px 0;"><strong>Telefone:</strong> ${saleDetails.company_phone}</p>` : ""}
+        ${saleDetails.company_address ? `<p style="margin: 5px 0;"><strong>Endereço:</strong> ${saleDetails.company_address}, ${saleDetails.company_address_number || ""} ${saleDetails.company_address_complement ? `(${saleDetails.company_address_complement})` : ""} - ${saleDetails.company_neighborhood || ""} - ${saleDetails.company_city || ""}/${saleDetails.company_state || ""}</p>` : ""}
       </div>
     `
       : ""

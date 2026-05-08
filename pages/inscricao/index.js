@@ -264,7 +264,7 @@ export default function RegistrationPage({ hotels, discounts }) {
                       }}
                     >
                       <Search className="mr-2 h-4 w-4" />
-                      Procurar Quartos Disponíveis
+                      Procurar quartos disponíveis
                     </Button>
                   </CardContent>
                 </Card>
@@ -317,7 +317,7 @@ export default function RegistrationPage({ hotels, discounts }) {
             <section>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">
+                  <h2 className="text-3xl font-black text-slate-900 uppercase">
                     Escolha seu <span className="text-blue-600">Quarto</span>
                   </h2>
                   <p className="text-slate-500 font-medium">

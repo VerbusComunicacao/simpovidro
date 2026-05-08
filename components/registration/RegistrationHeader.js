@@ -4,6 +4,7 @@ import { LogOut, ChevronLeft } from "lucide-react"
 import useUser from "@/hooks/useUser"
 import { useRouter } from "next/router"
 import authorization from "@/models/authorization"
+import Image from "next/image"
 
 export default function RegistrationHeader({ showBackButton = false }) {
   const { user, logout } = useUser()
@@ -17,10 +18,14 @@ export default function RegistrationHeader({ showBackButton = false }) {
             href="/"
             className="flex items-center gap-2 hover:opacity-80 transition-all group"
           >
-            <div className="w-10 h-10 bg-blue-700 rounded-lg flex items-center justify-center text-white font-bold text-xl group-hover:scale-110 transition-transform">
-              S
-            </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900 hidden sm:inline-block">
+            <Image
+              src="/images/icone-simpovidro.svg"
+              alt="Simpovidro Icon"
+              width={40}
+              height={40}
+              className="group-hover:scale-110 transition-transform"
+            />
+            <span className="text-xl font-title tracking-tight text-slate-900 hidden sm:inline-block">
               Simpovidro
             </span>
           </Link>

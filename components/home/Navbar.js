@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import Image from "next/image"
 
-export default function Navbar({ scrolled, scrollToSection, router }) {
+export default function Navbar({ scrollToSection, router }) {
   const navItems = [
     { name: "Local", id: "local" },
     { name: "Palestrantes", id: "palestrantes" },

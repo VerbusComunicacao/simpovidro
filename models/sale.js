@@ -459,6 +459,7 @@ async function findOneByIdWithDetails(saleId) {
         companies.city as company_city,
         companies.state as company_state,
         companies.zip_code as company_zip_code,
+        companies.responsible_person as company_responsible_person,
         (
           SELECT json_agg(g.*)
           FROM sales_guests sg

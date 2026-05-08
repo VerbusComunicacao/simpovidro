@@ -65,7 +65,7 @@ export default function Sponsors({ variant = "full" }) {
     <section id="patrocinadores" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6 text-center">
         <div className="mb-16">
-          <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter mb-12">
+          <h2 className="text-3xl font-black text-slate-900 uppercase mb-12">
             Patrocinadores
           </h2>
           <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
@@ -90,7 +90,7 @@ export default function Sponsors({ variant = "full" }) {
         </div>
 
         <div>
-          <h2 className="text-xl font-black text-slate-400 uppercase italic tracking-widest mb-10">
+          <h2 className="text-xl text-slate-400 uppercase mb-10 font-title">
             Apoio Institucional
           </h2>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 transition-all duration-700">

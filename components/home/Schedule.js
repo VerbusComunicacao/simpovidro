@@ -50,9 +50,6 @@ export default function Schedule() {
               Um roteiro pensado para o seu sucesso.
             </h3>
           </div>
-          <Button variant="ghost" className="text-blue-600 font-bold">
-            Ver Cronograma Completo <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -80,6 +77,12 @@ export default function Schedule() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        <div className="mt-4">
+          <Button variant="ghost" className="text-blue-600 font-bold">
+            Ver Cronograma Completo <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
         </div>
       </div>
     </section>

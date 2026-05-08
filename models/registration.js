@@ -47,7 +47,6 @@ async function create(userOrId, registrationData) {
     const userAccount = await userModel.findOneById(userId, client)
     const registrantProfile = await guest.findOneByUserId(userId, client)
 
-    const trustedName = registrantProfile?.name || userAccount.full_name
     const trustedEmail = registrantProfile?.email || userAccount.email
 
     const isAdmin = userAccount.features.includes("create:content")
