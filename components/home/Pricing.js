@@ -12,13 +12,13 @@ import Link from "next/link"
 export default function Pricing() {
   return (
     <section
-      id="precos"
+      id="beneficios"
       className="py-24 bg-slate-50 border-y border-slate-200"
     >
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
-            <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">
+            <h2 className="text-4xl font-black text-slate-900 uppercase trac">
               Benefícios & Inscrição
             </h2>
             <p className="text-slate-600 text-lg leading-relaxed font-medium">

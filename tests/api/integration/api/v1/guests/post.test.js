@@ -62,7 +62,7 @@ describe("POST /api/v1/guests", () => {
         id: responseBody.id,
         name: "Test Guest",
         email: "success@example.com",
-        badge_name: "Crachá Sucesso",
+        badge_name: "CRACHÁ SUCESSO",
         gender: "Male",
         rg_number: "123456789",
         cpf_number: "123.456.789-00",

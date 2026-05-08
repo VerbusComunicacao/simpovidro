@@ -7,6 +7,17 @@ export default function Location() {
       {/* Decorative background elements */}
       <div className="absolute top-1/2 left-0 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
 
+      {/* Background Icons Pattern - Vertical Repeat Only */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: "url('/images/icon-17-simpovidro.png')",
+          backgroundSize: "60px",
+          backgroundRepeat: "repeat-y",
+          backgroundPosition: "-20px 0",
+        }}
+      ></div>
+
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="order-2 lg:order-1 relative">
@@ -43,9 +54,9 @@ export default function Location() {
             </div>
           </div>
 
-          <div className="order-1 lg:order-2 space-y-8">
+          <div className="order-1 lg:order-2 space-y-8 mx-16 lg:ml-0">
             <div>
-              <div className="flex items-center gap-2 text-blue-600 font-bold uppercase tracking-[0.2em] text-sm mb-4">
+              <div className="font-title flex items-center gap-2 text-blue-600 font-bold uppercase tracking-[0.2em] text-sm mb-4">
                 <MapPin className="h-4 w-4" /> O Novo Local
               </div>
               <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight mb-6 uppercase italic tracking-tighter">

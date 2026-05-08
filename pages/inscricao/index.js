@@ -29,17 +29,27 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
+import { calculateSummaryPrice } from "@/lib/registration-helpers"
 import Link from "next/link"
 import Image from "next/image"
 import webserver from "infra/webserver"
 
 export default function RegistrationPage({ hotels, discounts }) {
   const router = useRouter()
-  const [isSearchPerformed, setIsSearchPerformed] = useState(false)
-  const [searchData, setSearchData] = useState({ adults: 1, children: 0 })
-  const [selectedType, setSelectedType] = useState("all")
-
   const activeHotel = hotels?.[0]
+  const [isSearchPerformed, setIsSearchPerformed] = useState(false)
+  const [searchData, setSearchData] = useState(() => {
+    const initial = { adults: 1 }
+    if (activeHotel?.price_policies) {
+      activeHotel.price_policies.forEach((policy) => {
+        if (policy.max_age < 12) {
+          initial[policy.id] = 0
+        }
+      })
+    }
+    return initial
+  })
+  const [selectedType, setSelectedType] = useState("all")
 
   const { roomTypes, filteredRooms } = useMemo(() => {
     if (!activeHotel)
@@ -49,22 +59,23 @@ export default function RegistrationPage({ hotels, discounts }) {
     const categories = new Set()
 
     activeHotel.rooms.forEach((room) => {
-      // Collect all available types and categories for the dropdown filters
       types.add(room.room_type)
       categories.add(room.room_category)
     })
 
+    const childrenCount = Object.keys(searchData)
+      .filter((k) => k !== "adults")
+      .reduce((acc, k) => acc + searchData[k], 0)
+
     const filtered = activeHotel.rooms.filter((room) => {
-      // 1. Capacity Filtering (Robust handling of null/undefined)
       const maxAdults = room.max_adults ?? Infinity
       const maxChildren = room.max_children ?? Infinity
       const minGuests = room.min_guests ?? 0
 
       const adultCapacityMatch = maxAdults >= searchData.adults
-      const childCapacityMatch = maxChildren >= searchData.children
+      const childCapacityMatch = maxChildren >= childrenCount
       const minAdultsMatch = minGuests <= searchData.adults
 
-      // 2. Dropdown Filter Selection
       const typeMatch =
         selectedType === "all" || room.room_type === selectedType
 
@@ -73,12 +84,24 @@ export default function RegistrationPage({ hotels, discounts }) {
       )
     })
 
+    const roomsWithPrices = filtered.map((room) => {
+      const priceDetails = calculateSummaryPrice(
+        room,
+        searchData,
+        null, // No company at this stage
+        discounts,
+      )
+      return { ...room, ...priceDetails }
+    })
+
+    // Sort by finalTotal ascending
+    roomsWithPrices.sort((a, b) => a.finalTotal - b.finalTotal)
+
     return {
       roomTypes: Array.from(types),
-      roomCategories: Array.from(categories),
-      filteredRooms: filtered,
+      filteredRooms: roomsWithPrices,
     }
-  }, [activeHotel, selectedType, searchData])
+  }, [activeHotel, selectedType, searchData, discounts])
 
   if (!activeHotel) {
     return (
@@ -141,7 +164,7 @@ export default function RegistrationPage({ hotels, discounts }) {
                   </div>
 
                   <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                       {/* Adultos */}
                       <div className="space-y-3">
                         <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
@@ -182,51 +205,55 @@ export default function RegistrationPage({ hotels, discounts }) {
                         </div>
                       </div>
 
-                      {/* Crianças */}
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-                            Crianças
-                          </h3>
-                          <span className="text-xs text-gray-400">
-                            (Até 11 anos)
-                          </span>
-                        </div>
+                      {/* Crianças Dinâmicas */}
+                      {activeHotel.price_policies
+                        ?.filter((p) => p.max_age < 12)
+                        .map((policy) => (
+                          <div key={policy.id} className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                {policy.description}
+                              </h3>
+                            </div>
 
-                        <div className="flex items-center justify-between border rounded-lg p-2 bg-white">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() =>
-                              setSearchData((prev) => ({
-                                ...prev,
-                                children: Math.max(0, prev.children - 1),
-                              }))
-                            }
-                          >
-                            -
-                          </Button>
+                            <div className="flex items-center justify-between border rounded-lg p-2 bg-white">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() =>
+                                  setSearchData((prev) => ({
+                                    ...prev,
+                                    [policy.id]: Math.max(
+                                      0,
+                                      (prev[policy.id] || 0) - 1,
+                                    ),
+                                  }))
+                                }
+                              >
+                                -
+                              </Button>
 
-                          <span className="text-xl font-bold text-gray-900">
-                            {searchData.children}
-                          </span>
+                              <span className="text-xl font-bold text-gray-900">
+                                {searchData[policy.id] || 0}
+                              </span>
 
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() =>
-                              setSearchData((prev) => ({
-                                ...prev,
-                                children: prev.children + 1,
-                              }))
-                            }
-                          >
-                            +
-                          </Button>
-                        </div>
-                      </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() =>
+                                  setSearchData((prev) => ({
+                                    ...prev,
+                                    [policy.id]: (prev[policy.id] || 0) + 1,
+                                  }))
+                                }
+                              >
+                                +
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
                     </div>
 
                     <Button
@@ -237,7 +264,7 @@ export default function RegistrationPage({ hotels, discounts }) {
                       }}
                     >
                       <Search className="mr-2 h-4 w-4" />
-                      Procurar Quartos Disponíveis
+                      Procurar quartos disponíveis
                     </Button>
                   </CardContent>
                 </Card>
@@ -259,10 +286,22 @@ export default function RegistrationPage({ hotels, discounts }) {
                     <span className="flex items-center gap-1 font-medium italic">
                       {searchData.adults} adultos
                     </span>
-                    <span className="text-gray-300">•</span>
-                    <span className="flex items-center gap-1 font-medium italic">
-                      {searchData.children} crianças
-                    </span>
+                    {Object.keys(searchData)
+                      .filter((k) => k !== "adults" && searchData[k] > 0)
+                      .map((k) => {
+                        const policy = activeHotel.price_policies.find(
+                          (p) => p.id === k,
+                        )
+                        return (
+                          <span
+                            key={k}
+                            className="flex items-center gap-1 font-medium italic"
+                          >
+                            <span className="text-gray-300">•</span>
+                            {searchData[k]} {policy?.description}
+                          </span>
+                        )
+                      })}
                   </div>
                 </div>
               </div>
@@ -278,7 +317,7 @@ export default function RegistrationPage({ hotels, discounts }) {
             <section>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-900 uppercase italic tracking-tighter">
+                  <h2 className="text-3xl font-black text-slate-900 uppercase">
                     Escolha seu <span className="text-blue-600">Quarto</span>
                   </h2>
                   <p className="text-slate-500 font-medium">
@@ -325,7 +364,7 @@ export default function RegistrationPage({ hotels, discounts }) {
                             fill
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-r from-blue-600 to-blue-500 flex items-center justify-center">
+                          <div className="w-full h-full bg-gradient-to-r from-brand-start to-brand-end flex items-center justify-center">
                             <BedDouble className="h-12 w-12 text-white/50" />
                           </div>
                         )}
@@ -382,45 +421,64 @@ export default function RegistrationPage({ hotels, discounts }) {
                             <div className="flex items-center justify-between">
                               <div>
                                 <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
-                                  Valor por pessoa
+                                  Valor da Inscrição
                                 </p>
-                                <p className="text-lg font-bold">
+                                <p className="text-2xl font-bold text-blue-600">
                                   {new Intl.NumberFormat("pt-BR", {
                                     style: "currency",
                                     currency: "BRL",
-                                  }).format(room.price_per_night)}
+                                  }).format(room.finalTotal)}
                                 </p>
                               </div>
                               <Button
                                 className="bg-blue-600 hover:bg-blue-700"
-                                onClick={() =>
-                                  router.push(`/inscricao/quarto/${room.id}`)
-                                }
+                                onClick={() => {
+                                  const params = new URLSearchParams()
+                                  Object.keys(searchData).forEach((key) => {
+                                    params.append(key, searchData[key])
+                                  })
+                                  router.push(
+                                    `/inscricao/quarto/${room.id}?${params.toString()}`,
+                                  )
+                                }}
                               >
                                 Selecionar
                               </Button>
                             </div>
 
-                            <div className="flex flex-wrap gap-2">
-                              {discounts.map((discount) => {
+                            <div className="w-full text-sm">
+                              {discounts.map((discount, index) => {
                                 const isMemberDiscount =
-                                  discount.name === "Associada"
+                                  discount.name
+                                    .toLowerCase()
+                                    .includes("associada") ||
+                                  discount.name
+                                    .toLowerCase()
+                                    .includes("associado")
+
                                 const displayPrice =
-                                  isMemberDiscount &&
-                                  room.member_price_per_night
-                                    ? room.member_price_per_night
-                                    : room.price_per_night *
-                                      (1 - discount.value / 100)
+                                  isMemberDiscount && room.memberTotal
+                                    ? room.memberTotal
+                                    : room.originalTotal *
+                                      (1 - Number(discount.value || 0) / 100)
 
                                 return (
                                   <div
                                     key={discount.id}
-                                    className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-2 rounded-full text-xs"
+                                    className={`flex justify-between py-2 ${
+                                      index !== discounts.length - 1
+                                        ? "border-b border-gray-200"
+                                        : ""
+                                    }`}
                                   >
-                                    <span className="font-medium">
-                                      {discount.name}:
+                                    <span className="text-gray-600">
+                                      {discount.name.includes("Associada")
+                                        ? "Associado Abravidro"
+                                        : discount.name}
                                     </span>
-                                    <span className="font-bold">
+
+                                    <span className="font-bold text-gray-900 bg-yellow-100 px-2 py-0.5 rounded-md">
+                                      {" "}
                                       {new Intl.NumberFormat("pt-BR", {
                                         style: "currency",
                                         currency: "BRL",

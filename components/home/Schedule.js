@@ -2,6 +2,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
+import Image from "next/image"
 
 export default function Schedule() {
   const days = [
@@ -26,8 +27,20 @@ export default function Schedule() {
   ]
 
   return (
-    <section id="programacao" className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-6">
+    <section
+      id="programacao"
+      className="py-24 bg-white relative overflow-hidden"
+    >
+      {/* Background Icon */}
+      <div className="absolute top-1/2 right-0 translate-x-[40%] -translate-y-1/2 w-[900px] h-[900px] opacity-[0.7] pointer-events-none z-0">
+        <Image
+          src="/images/icone-simpovidro.svg"
+          alt="Simpovidro Icon BG"
+          layout="fill"
+          objectFit="contain"
+        />
+      </div>
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="flex flex-col lg:flex-row justify-between items-end gap-6 mb-16">
           <div className="max-w-2xl">
             <h2 className="text-blue-600 font-bold uppercase tracking-widest text-sm mb-4">
@@ -37,9 +50,6 @@ export default function Schedule() {
               Um roteiro pensado para o seu sucesso.
             </h3>
           </div>
-          <Button variant="ghost" className="text-blue-600 font-bold">
-            Ver Cronograma Completo <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -67,6 +77,12 @@ export default function Schedule() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        <div className="mt-4">
+          <Button variant="ghost" className="text-blue-600 font-bold">
+            Ver Cronograma Completo <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
         </div>
       </div>
     </section>

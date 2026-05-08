@@ -181,6 +181,11 @@ export default function RegistrationsTable() {
                         {sale.room_name || sale.room_type} ({sale.room_category}
                         )
                       </p>
+                      {sale.bed_preference && (
+                        <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mt-1">
+                          Acomodação: {sale.bed_preference}
+                        </p>
+                      )}
                       <p className="text-sm text-gray-500 mt-1">
                         {formatDate(sale.check_in_date)} —{" "}
                         {formatDate(sale.check_out_date)}

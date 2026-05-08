@@ -344,7 +344,25 @@ async function getAllActiveHotels() {
               'min_guests', r.min_guests,
               'name', r.name,
               'description', r.description,
-              'photos', r.photos
+              'photos', r.photos,
+              'price_policies', COALESCE(
+                (
+                  SELECT json_agg(
+                    json_build_object(
+                      'id', pp.id,
+                      'max_age', pp.max_age,
+                      'description', pp.description,
+                      'use_percentage', pp.use_percentage,
+                      'percentage', pp.percentage,
+                      'price', rpp.price
+                    ) ORDER BY pp.max_age ASC
+                  )
+                  FROM "price_policies" pp
+                  LEFT JOIN "room_price_policies" rpp ON pp.id = rpp.price_policy_id AND rpp.room_id = r.id
+                  WHERE pp.hotel_id = r.hotel_id
+                ),
+                '[]'::json
+              )
             )
           ) FILTER (WHERE r.id IS NOT NULL AND rt.id IS NOT NULL AND rc.id IS NOT NULL),
           '[]'

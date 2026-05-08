@@ -1,6 +1,7 @@
 import Head from "next/head"
 import { useRouter } from "next/router"
 import { useState, useEffect } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 
 // Home Components
 import Navbar from "@/components/home/Navbar"
@@ -25,7 +26,7 @@ export default function Home() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50)
+      setScrolled(window.scrollY > 550)
     }
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
@@ -58,14 +59,26 @@ export default function Home() {
         router={router}
       />
 
+      <AnimatePresence>
+        {scrolled && (
+          <motion.div
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="fixed top-[64px] left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm"
+          >
+            <Sponsors variant="compact" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <main>
         <Hero
           scrollToSection={scrollToSection}
           router={router}
           HERO_IMAGE={HERO_IMAGE}
         />
-
-        <Sponsors variant="compact" />
 
         <AboutEvent scrollToSection={scrollToSection} />
 

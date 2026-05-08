@@ -225,11 +225,11 @@ export default function History() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-start">
           <div className="relative z-10 sticky top-24">
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 italic tracking-tighter uppercase leading-none">
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 uppercase leading-none">
               Uma Tradição <br />
               <span className="text-blue-600">de Sucesso</span>
             </h2>
-            <p className="text-xl text-slate-600 mb-10 leading-relaxed italic font-medium max-w-xl">
+            <p className="text-xl text-slate-600 mb-10 leading-relaxed font-medium max-w-xl">
               Há quase 30 anos, o Simpovidro une o mercado para gerar bilhões em
               parcerias e conexões. Explore os momentos que definiram a história
               do nosso setor.
@@ -261,20 +261,6 @@ export default function History() {
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
-              <div className="inline-flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
-                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                  <Camera className="text-blue-600 h-6 w-6" />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-slate-900 uppercase tracking-tight">
-                    Galeria Histórica
-                  </p>
-                  <p className="text-xs text-slate-500 font-medium">
-                    + de 500 fotos arquivadas
-                  </p>
-                </div>
-              </div>
-
               {selectedYear && (
                 <button
                   onClick={() => setSelectedYear(null)}

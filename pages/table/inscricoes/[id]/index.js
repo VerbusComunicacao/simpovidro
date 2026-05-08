@@ -182,6 +182,16 @@ export default function RegistrationDetailsPage() {
                   <Badge variant="outline" className="mt-1">
                     {sale.room_category}
                   </Badge>
+                  {sale.bed_preference && (
+                    <div className="mt-3">
+                      <p className="text-xs font-bold text-gray-400 uppercase">
+                        Tipo de acomodação
+                      </p>
+                      <p className="text-sm font-bold text-blue-600 uppercase mt-0.5">
+                        {sale.bed_preference}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase">
@@ -222,6 +232,26 @@ export default function RegistrationDetailsPage() {
                       {sale.company_corporate_name}
                     </p>
                   </div>
+                  {sale.company_responsible_person && (
+                    <div>
+                      <p className="text-[10px] font-bold text-blue-400 uppercase">
+                        Responsável
+                      </p>
+                      <p className="font-bold text-gray-900">
+                        {sale.company_responsible_person}
+                      </p>
+                    </div>
+                  )}
+                  {sale.company_badge && (
+                    <div>
+                      <p className="text-[10px] font-bold text-blue-400 uppercase">
+                        Crachá da Empresa
+                      </p>
+                      <p className="font-bold text-gray-900">
+                        {sale.company_badge.toUpperCase()}
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-[10px] font-bold text-blue-400 uppercase">
                       CNPJ
@@ -283,8 +313,10 @@ export default function RegistrationDetailsPage() {
                     <Badge variant="outline" className="bg-white">
                       {guest.gender}
                     </Badge>
-                    <Badge variant="outline" className="bg-white">
-                      {guest.badge_name || "Sem nome no crachá"}
+                    <Badge variant="outline" className="bg-white uppercase">
+                      {guest.badge_name
+                        ? guest.badge_name.toUpperCase()
+                        : "SEM NOME NO CRACHÁ"}
                     </Badge>
                   </div>
                 </div>
@@ -431,7 +463,7 @@ export default function RegistrationDetailsPage() {
                       <span className="font-bold text-gray-700 uppercase text-sm">
                         {sale.payment_method === "installments"
                           ? "Parcelado"
-                          : "À Vista / PIX"}
+                          : "À Vista no Boleto"}
                       </span>
                       <Badge variant="outline">
                         {sale.installments_count}x

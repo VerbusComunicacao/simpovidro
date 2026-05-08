@@ -47,7 +47,6 @@ async function create(userOrId, registrationData) {
     const userAccount = await userModel.findOneById(userId, client)
     const registrantProfile = await guest.findOneByUserId(userId, client)
 
-    const trustedName = registrantProfile?.name || userAccount.full_name
     const trustedEmail = registrantProfile?.email || userAccount.email
 
     const isAdmin = userAccount.features.includes("create:content")
@@ -57,11 +56,11 @@ async function create(userOrId, registrationData) {
 
       // Force first guest to be the logged-in user (UNLESS ADMIN)
       if (i === 0 && !isAdmin) {
-        // Enforce that Guest 1 identity matches the trusted profile/account
-        if (
-          currentGuestData.name !== trustedName ||
-          currentGuestData.email.toLowerCase() !== trustedEmail.toLowerCase()
-        ) {
+        const inputEmail = (currentGuestData.email || "").trim().toLowerCase()
+        const dbEmail = (trustedEmail || "").trim().toLowerCase()
+
+        // Enforce that Guest 1 email matches the trusted account email
+        if (inputEmail !== dbEmail) {
           throw new NotFoundError({
             message:
               "Titular da inscrição não encontrado na lista de hóspedes.",
@@ -95,6 +94,7 @@ async function create(userOrId, registrationData) {
         company_id: companyId,
         payment_method: payment_method,
         installments_count: installments_count,
+        bed_preference: registrationData.bed_preference,
       },
       client,
     )

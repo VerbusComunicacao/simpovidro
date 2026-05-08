@@ -67,7 +67,9 @@ export default function TableLayout({ children, pageActions }) {
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       {/* Mobile Header */}
       <header className="md:hidden bg-white border-b px-4 py-3 flex items-center justify-between sticky top-0 z-50">
-        <h1 className="font-bold text-lg text-blue-600">Simpovidro</h1>
+        <h1 className="font-bold t font-titleext-lg text-blue-600">
+          Simpovidro
+        </h1>
         <Button
           variant="ghost"
           size="icon"
@@ -84,7 +86,7 @@ export default function TableLayout({ children, pageActions }) {
         } md:flex flex-col w-full md:w-64 bg-white border-r min-h-screen fixed md:sticky top-0 z-40 transition-all duration-300 md:translate-x-0`}
       >
         <div className="p-6 hidden md:block">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-brand-start to-brand-end bg-clip-text text-transparent">
             Área administrativa
           </h1>
         </div>

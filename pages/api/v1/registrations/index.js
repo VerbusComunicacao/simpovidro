@@ -79,6 +79,7 @@ async function postHandler(request, response) {
     // Helper to format key-value pairs cleanly
     const formatGuestDetails = (guest) => {
       const fields = [
+        { label: "Crachá", value: guest.badge_name?.toUpperCase() },
         { label: "CPF", value: guest.cpf_number },
         { label: "RG", value: guest.rg_number },
         {
@@ -119,6 +120,13 @@ async function postHandler(request, response) {
           label: "Necessidades Especiais",
           value: guest.special_needs_details,
         },
+        {
+          label: "Contato de Emergência",
+          value:
+            guest.emergency_contact_name || guest.emergency_contact_phone
+              ? `${guest.emergency_contact_name || ""} ${guest.emergency_contact_phone ? `(${guest.emergency_contact_phone})` : ""}`.trim()
+              : null,
+        },
       ].filter((f) => f.value)
 
       return fields
@@ -146,7 +154,11 @@ async function postHandler(request, response) {
       <div style="margin-top: 20px; padding: 15px; background-color: #f3f4f6; border-radius: 8px; border: 1px solid #e5e7eb;">
         <h3 style="margin-top: 0; color: #374151; font-size: 1.1em; border-bottom: 1px solid #d1d5db; padding-bottom: 8px; margin-bottom: 10px;">Dados da Empresa</h3>
         <p style="margin: 5px 0;"><strong>Razão Social:</strong> ${saleDetails.company_corporate_name}</p>
+        ${saleDetails.company_badge ? `<p style="margin: 5px 0;"><strong>Fantasia/Crachá:</strong> ${saleDetails.company_badge.toUpperCase()}</p>` : ""}
         <p style="margin: 5px 0;"><strong>CNPJ:</strong> ${formatCnpj(saleDetails.company_cnpj)}</p>
+        ${saleDetails.company_responsible_person ? `<p style="margin: 5px 0;"><strong>Responsável:</strong> ${saleDetails.company_responsible_person}</p>` : ""}
+        ${saleDetails.company_phone ? `<p style="margin: 5px 0;"><strong>Telefone:</strong> ${saleDetails.company_phone}</p>` : ""}
+        ${saleDetails.company_address ? `<p style="margin: 5px 0;"><strong>Endereço:</strong> ${saleDetails.company_address}, ${saleDetails.company_address_number || ""} ${saleDetails.company_address_complement ? `(${saleDetails.company_address_complement})` : ""} - ${saleDetails.company_neighborhood || ""} - ${saleDetails.company_city || ""}/${saleDetails.company_state || ""}</p>` : ""}
       </div>
     `
       : ""
@@ -206,6 +218,7 @@ async function postHandler(request, response) {
             <h2 style="margin-top: 0; color: #111827; font-size: 1.25em;">Pedido #${saleDetails.sale_number || saleDetails.id.slice(0, 8)}</h2>
             <p style="margin: 5px 0;"><strong>Hotel:</strong> ${saleDetails.hotel_name}</p>
             <p style="margin: 5px 0;"><strong>Quarto:</strong> ${saleDetails.room_name || saleDetails.room_type} (${saleDetails.room_category})</p>
+            ${saleDetails.bed_preference ? `<p style="margin: 5px 0;"><strong>Tipo de acomodação:</strong> ${saleDetails.bed_preference}</p>` : ""}
             <p style="margin: 5px 0;"><strong>Período:</strong> ${formatDate(saleDetails.check_in_date)} à ${formatDate(saleDetails.check_out_date)}</p>
           </div>
 

@@ -39,34 +39,30 @@ import {
   generateRandomGuest,
 } from "@/lib/test-data-generator"
 import {
-  calculateTotalPrice as calculatePrice,
   calculateMaxInstallments as calculateInstallments,
   validateRoomCapacity,
   generateInstallmentDates,
+  calculateSummaryPrice,
 } from "@/lib/registration-helpers"
 
-function calculateIsAdult(birthDate) {
-  if (!birthDate) return false
+function calculateAge(birthDate, referenceDate = new Date()) {
+  if (!birthDate) return 0
   const birth = new Date(birthDate)
-  const now = new Date()
-  let age = now.getFullYear() - birth.getFullYear()
-  const m = now.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+  const ref = new Date(referenceDate)
+  let age = ref.getFullYear() - birth.getFullYear()
+  const m = ref.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && ref.getDate() < birth.getDate())) {
     age--
   }
-  return age >= 12
+  return age
+}
+
+function calculateIsAdult(birthDate, referenceDate) {
+  return calculateAge(birthDate, referenceDate) >= 12
 }
 
 function calculateIsHolder(birthDate) {
-  if (!birthDate) return false
-  const birth = new Date(birthDate)
-  const now = new Date()
-  let age = now.getFullYear() - birth.getFullYear()
-  const m = now.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
-    age--
-  }
-  return age >= 18
+  return calculateAge(birthDate) >= 18
 }
 
 export default function CheckoutPage({
@@ -74,6 +70,7 @@ export default function CheckoutPage({
   user,
   guestProfile,
   initialDiscounts,
+  initialQuery,
 }) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
@@ -105,47 +102,19 @@ export default function CheckoutPage({
   const [installmentsCount, setInstallmentsCount] = useState(1)
   const [globalDiscounts] = useState(initialDiscounts || [])
   const [guestErrors, setGuestErrors] = useState({})
+  const [occupancyCounts, setOccupancyCounts] = useState(() => {
+    const counts = { adults: parseInt(initialQuery?.adults) || 1 }
+    if (initialQuery) {
+      Object.keys(initialQuery).forEach((key) => {
+        if (key !== "id" && key !== "adults") {
+          counts[key] = parseInt(initialQuery[key]) || 0
+        }
+      })
+    }
+    return counts
+  })
 
   // No longer needed: countries, getStates, getCities helpers here
-
-  // Determine initial codes for Guest Profile
-  const locationState = getInitialLocationState(guestProfile)
-
-  const initialGuest = {
-    // Personal
-    name: guestProfile?.name || user.full_name || "",
-    badge_name: guestProfile?.badge_name || "",
-    email: user.email || "",
-    phone: guestProfile?.phone || "",
-    gender: guestProfile?.gender || "",
-    rg_number: guestProfile?.rg_number || "",
-    cpf_number: guestProfile?.cpf_number || "",
-    birth_date: guestProfile?.birth_date
-      ? new Date(guestProfile.birth_date).toISOString().split("T")[0]
-      : "",
-    nationality: guestProfile?.nationality || "Brasileira",
-
-    // Address
-    address: guestProfile?.address || "",
-    address_number: guestProfile?.address_number || "",
-    address_complement: guestProfile?.address_complement || "",
-    neighborhood: guestProfile?.neighborhood || "",
-    ...locationState,
-
-    // Health / Emergency
-    emergency_contact_name: guestProfile?.emergency_contact_name || "",
-    emergency_contact_phone: guestProfile?.emergency_contact_phone || "",
-    blood_type: guestProfile?.blood_type || "",
-    blood_rh_factor: guestProfile?.blood_rh_factor || "",
-    passport_number: guestProfile?.passport_number || "",
-    medication_details: guestProfile?.medication_details || "",
-    special_needs_details: guestProfile?.special_needs_details || "",
-    health_observations: guestProfile?.health_observations || "",
-    has_heart_condition: guestProfile?.has_heart_condition ?? false,
-    has_diabetes: guestProfile?.has_diabetes ?? false,
-    has_high_blood_pressure: guestProfile?.has_high_blood_pressure ?? false,
-    has_low_blood_pressure: guestProfile?.has_low_blood_pressure ?? false,
-  }
 
   const emptyGuest = {
     name: "",
@@ -180,79 +149,207 @@ export default function CheckoutPage({
     has_low_blood_pressure: false,
   }
 
-  const maxAdults = room.max_adults || 0
-  const maxChildren = room.max_children || 0
-  const totalCapacity = maxAdults + maxChildren
+  // Determine initial codes for Guest Profile
+  const locationState = getInitialLocationState(guestProfile)
+
+  const isAdmin = user.features?.includes("update:user:others")
+
+  const initialGuest = isAdmin
+    ? { ...emptyGuest }
+    : {
+        ...emptyGuest,
+        name: guestProfile?.name || user.full_name || "",
+        badge_name: guestProfile?.badge_name || "",
+        email: user.email || "",
+        phone: guestProfile?.phone || "",
+        gender: guestProfile?.gender || "",
+        rg_number: guestProfile?.rg_number || "",
+        cpf_number: guestProfile?.cpf_number || "",
+        birth_date: guestProfile?.birth_date
+          ? new Date(guestProfile.birth_date).toISOString().split("T")[0]
+          : "",
+        ...locationState,
+        emergency_contact_name: guestProfile?.emergency_contact_name || "",
+        emergency_contact_phone: guestProfile?.emergency_contact_phone || "",
+        blood_type: guestProfile?.blood_type || "",
+        blood_rh_factor: guestProfile?.blood_rh_factor || "",
+        passport_number: guestProfile?.passport_number || "",
+        medication_details: guestProfile?.medication_details || "",
+        special_needs_details: guestProfile?.special_needs_details || "",
+        health_observations: guestProfile?.health_observations || "",
+        has_heart_condition: guestProfile?.has_heart_condition ?? false,
+        has_diabetes: guestProfile?.has_diabetes ?? false,
+        has_high_blood_pressure: guestProfile?.has_high_blood_pressure ?? false,
+        has_low_blood_pressure: guestProfile?.has_low_blood_pressure ?? false,
+      }
+
   const minRequired = room.min_guests || 1
 
   const [guests, setGuests] = useState(() => {
-    // Start with the logged-in user as Guest 1, then add (minRequired - 1) empty guests
-    const initialArr = [{ ...initialGuest }]
-    for (let i = 1; i < minRequired; i++) {
-      initialArr.push({ ...emptyGuest })
+    const query = initialQuery || {}
+    const adultsCount = parseInt(query.adults) || 1
+    const initialArr = []
+
+    // 1. Fill Adults
+    for (let i = 0; i < adultsCount; i++) {
+      if (i === 0) {
+        initialArr.push({ ...initialGuest, _type: "adult" })
+      } else {
+        initialArr.push({ ...emptyGuest, _type: "adult" })
+      }
     }
+
+    // 2. Fill Children by Policy
+    Object.keys(query).forEach((key) => {
+      if (key !== "id" && key !== "adults") {
+        const count = parseInt(query[key]) || 0
+        const policy = room.price_policies?.find((p) => p.id === key)
+        if (policy) {
+          for (let i = 0; i < count; i++) {
+            initialArr.push({
+              ...emptyGuest,
+              _type: "child",
+              _policy_id: policy.id,
+              _policy_label: policy.description,
+              _max_age: policy.max_age,
+            })
+          }
+        }
+      }
+    })
+
+    // Fallback if no query params (should not happen in normal flow now)
+    if (initialArr.length === 0) {
+      initialArr.push({ ...initialGuest, _type: "adult" })
+      for (let i = 1; i < minRequired; i++) {
+        initialArr.push({ ...emptyGuest, _type: "adult" })
+      }
+    }
+
     return initialArr
   })
 
-  const handleAddGuest = () => {
-    if (guests.length < totalCapacity) {
-      setGuests([...guests, { ...emptyGuest }])
+  // Initial query is handled by useState, but we keep this to handle
+  // dynamic updates if the URL changes without a full page reload
+  useEffect(() => {
+    if (router.isReady && router.query) {
+      const counts = { adults: parseInt(router.query.adults) || 1 }
+      Object.keys(router.query).forEach((key) => {
+        if (key !== "id" && key !== "adults") {
+          counts[key] = parseInt(router.query[key]) || 0
+        }
+      })
+      setOccupancyCounts(counts)
     }
-  }
-
-  const handleRemoveGuest = (indexToRemove) => {
-    if (guests.length <= minRequired) return
-
-    const newGuests = guests.filter((_, index) => index !== indexToRemove)
-    setGuests(newGuests)
-
-    if (guestErrors[indexToRemove] || Object.keys(guestErrors).length > 0) {
-      // Clear errors on removal to force re-validation
-      setGuestErrors({})
-    }
-  }
+  }, [router.isReady, router.query])
 
   // Handlers for form changes
+  const lookupGuestByCpf = async (index, cpf) => {
+    setIsLoading(true)
+    try {
+      const response = await fetch(
+        `/api/v1/guests?search=${encodeURIComponent(cpf)}`,
+      )
+      if (!response.ok) return
+
+      const result = await response.json()
+      const cleanCpf = cpf.replace(/\D/g, "")
+      const foundGuest = result.data.find(
+        (g) => g.cpf_number?.replace(/\D/g, "") === cleanCpf,
+      )
+
+      if (foundGuest) {
+        updateGuestFields(index, foundGuest)
+      }
+    } catch (err) {
+      console.error("Error looking up guest:", err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const updateGuestFields = (index, data) => {
+    setGuests((prevGuests) => {
+      const updatedGuests = [...prevGuests]
+      const birthDate = data.birth_date
+        ? new Date(data.birth_date).toISOString().split("T")[0]
+        : ""
+
+      updatedGuests[index] = {
+        ...updatedGuests[index],
+        ...data,
+        birth_date: birthDate,
+      }
+      return updatedGuests
+    })
+    setError("")
+  }
+
   const handleChange = (index, e) => {
     let { name, value } = e.target
 
-    if (name === "cpf_number") {
-      value = maskCPF(value)
-    } else if (name === "rg_number") {
-      value = maskRG(value)
-    } else if (name === "phone" || name === "emergency_contact_phone") {
-      value = maskPhone(value)
-    }
+    // 1. Apply masks
+    const maskedValue = applyFieldMask(name, value)
 
-    const newGuests = [...guests]
-    newGuests[index] = {
-      ...newGuests[index],
-      [name]: e.target.type === "checkbox" ? e.target.checked : value,
+    // 2. Update state
+    setGuests((prev) => {
+      const updated = [...prev]
+      const isBadgeField = name === "badge_name"
+      const valueToStore = isBadgeField
+        ? maskedValue.toUpperCase()
+        : maskedValue
+
+      updated[index] = {
+        ...updated[index],
+        [name]: e.target.type === "checkbox" ? e.target.checked : valueToStore,
+      }
+      return updated
+    })
+
+    // 3. Clear errors
+    if (guestErrors[index]?.[name]) {
+      setGuestErrors((prev) => {
+        const next = { ...prev }
+        delete next[index][name]
+        if (Object.keys(next[index]).length === 0) delete next[index]
+        return next
+      })
     }
-    setGuests(newGuests)
     setError("")
 
-    // Clear error when user types
-    if (guestErrors[index]?.[name]) {
-      const newErrors = { ...guestErrors }
-      delete newErrors[index][name]
-      if (Object.keys(newErrors[index]).length === 0) delete newErrors[index]
-      setGuestErrors(newErrors)
+    // 4. Admin actions (CPF Lookup)
+    if (name === "cpf_number" && isAdmin) {
+      const cleanCpf = maskedValue.replace(/\D/g, "")
+      if (cleanCpf.length === 11) {
+        lookupGuestByCpf(index, maskedValue)
+      }
     }
 
-    // Dev Helper: Autofill on all ones (CPF)
+    // 5. Test actions
+    handleTestAutofill(index, name, maskedValue)
+  }
+
+  const applyFieldMask = (name, value) => {
+    switch (name) {
+      case "cpf_number":
+        return maskCPF(value)
+      case "rg_number":
+        return maskRG(value)
+      case "phone":
+      case "emergency_contact_phone":
+        return maskPhone(value)
+      default:
+        return value
+    }
+  }
+
+  const handleTestAutofill = (index, name, value) => {
     if (
       name === "cpf_number" &&
       isTestEnvironment() &&
       value.replace(/\D/g, "") === "1".repeat(11)
     ) {
-      const randomGuest = generateRandomGuest()
-      const updatedGuests = [...guests]
-      updatedGuests[index] = {
-        ...updatedGuests[index],
-        ...randomGuest,
-      }
-      setGuests(updatedGuests)
+      updateGuestFields(index, generateRandomGuest())
     }
   }
 
@@ -272,10 +369,18 @@ export default function CheckoutPage({
     discountPercentage,
     discountAmount,
     finalTotal,
-    adultCount,
-    childCount,
     isAssociate,
-  } = calculatePrice(room, guests, foundCompany, globalDiscounts)
+  } = calculateSummaryPrice(
+    room,
+    occupancyCounts,
+    foundCompany,
+    globalDiscounts,
+  )
+
+  const adultCount = occupancyCounts.adults || 0
+  const childCount = Object.keys(occupancyCounts)
+    .filter((k) => k !== "adults")
+    .reduce((acc, k) => acc + occupancyCounts[k], 0)
 
   const maxInstallments = calculateInstallments(room.hotel_check_in_date)
 
@@ -316,6 +421,7 @@ export default function CheckoutPage({
           company_cnpj: foundCompany?.cnpj || newCompanyData.cnpj || cnpj,
           payment_method: paymentMethod,
           installments_count: installmentsCount,
+          bed_preference: router.query.bed_preference,
         }),
       })
 
@@ -347,6 +453,30 @@ export default function CheckoutPage({
         setError("O titular da inscrição deve ser maior de 18 anos.")
         // Highlight the birth date field for the holder
         newErrors[index].birth_date = "Titular deve ser maior de 18 anos."
+      }
+
+      // Validate age matches category
+      const ageAtCheckIn = calculateAge(
+        guest.birth_date,
+        room.hotel_check_in_date,
+      )
+      if (guest._type === "adult") {
+        if (guest.birth_date && ageAtCheckIn < 12) {
+          hasError = true
+          if (!newErrors[index]) newErrors[index] = {}
+          newErrors[index].birth_date =
+            "Este hóspede deve ser adulto (12+ anos)."
+        }
+      } else if (guest._type === "child" && guest._policy_id) {
+        const policy = room.price_policies?.find(
+          (p) => p.id === guest._policy_id,
+        )
+        if (policy && guest.birth_date && ageAtCheckIn > policy.max_age) {
+          hasError = true
+          if (!newErrors[index]) newErrors[index] = {}
+          newErrors[index].birth_date =
+            `Idade excede o limite desta categoria (${policy.max_age} anos).`
+        }
       }
 
       // Validate CPF
@@ -540,10 +670,12 @@ export default function CheckoutPage({
   }
 
   const getGuestTitle = (index) => {
+    const guest = guests[index]
+
     if (index === 0) {
       return (
         <div className="flex items-center gap-2">
-          <span>Responsável (Adulto 1)</span>
+          <span>Adulto 1</span>
           <Badge className="bg-blue-600 text-white border-none flex items-center gap-1">
             <Lock className="h-3 w-3" /> Titular
           </Badge>
@@ -551,18 +683,38 @@ export default function CheckoutPage({
       )
     }
 
-    return index < maxAdults
-      ? `Adulto ${index + 1}`
-      : `Criança ${index - maxAdults + 1}`
+    if (guest?._type === "child") {
+      // Count how many children come before this one
+      const childNum = guests
+        .slice(0, index + 1)
+        .filter((g) => g._type === "child").length
+      return `Criança ${childNum}`
+    }
+
+    return `Adulto ${index + 1}`
   }
 
   const getGuestDescription = (index) => {
+    const guest = guests[index]
     if (index === 0)
       return "Dados do titular da conta (deve ser maior de 18 anos)."
 
-    return index < maxAdults
-      ? "Dados do acompanhante adulto (a partir de 12 anos)."
-      : "Dados da criança (até 11 anos)."
+    if (guest?._type === "child") {
+      const sortedPolicies = [...(room.price_policies || [])].sort(
+        (a, b) => a.max_age - b.max_age,
+      )
+      const policyIndex = sortedPolicies.findIndex(
+        (p) => p.id === guest._policy_id,
+      )
+      const minAge =
+        policyIndex === 0 || policyIndex === -1
+          ? 0
+          : sortedPolicies[policyIndex - 1].max_age + 1
+
+      return `Dados da criança de ${minAge} até ${guest._max_age} anos`
+    }
+
+    return "Dados do acompanhante adulto (a partir de 12 anos)."
   }
 
   return (
@@ -576,13 +728,18 @@ export default function CheckoutPage({
           <div className="lg:col-span-1 space-y-6">
             <Card className="sticky top-8">
               <CardHeader>
-                <CardTitle className="text-lg">Resumo do Pedido</CardTitle>
+                <CardTitle className="text-lg">Resumo da Inscrição</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-sm text-gray-500">Quarto Selecionado</p>
-                  <p className="font-semibold">{room.name || room.room_type}</p>
-                  <p className="text-sm text-gray-600">{room.room_category}</p>
+                  <p className="font-semibold text-blue-600">{room.name}</p>
+                  <p className="font-semibold">{room.room_type}</p>
+                  {router.query.bed_preference && (
+                    <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mt-1">
+                      {router.query.bed_preference}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Calendar className="h-4 w-4" />
@@ -602,28 +759,26 @@ export default function CheckoutPage({
                 </div>
                 <Separator />
                 <div>
-                  <p className="text-sm text-gray-500">Capacidade do Quarto</p>
+                  <p className="text-sm text-gray-500">Hóspedes:</p>
                   <p className="font-semibold text-blue-600">
-                    {maxAdults} Adultos + {maxChildren} Crianças
+                    {adultCount} {adultCount === 1 ? "Adulto" : "Adultos"}
+                    {childCount > 0 &&
+                      ` + ${childCount} ${childCount === 1 ? "Criança" : "Crianças"}`}
                   </p>
                 </div>
                 <Separator />
                 <div>
                   <p className="text-sm text-gray-500">Valor Total</p>
                   <div className="flex flex-col">
-                    {discountPercentage > 0 && (
-                      <p className="text-sm text-gray-500 line-through">
-                        {new Intl.NumberFormat("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        }).format(originalTotal)}
-                      </p>
-                    )}
-                    {isAssociate && (
-                      <Badge className="bg-green-100 text-green-700 w-fit mb-1 hover:bg-green-100 border-none">
-                        Preço Associado Aplicado
-                      </Badge>
-                    )}
+                    {(discountPercentage > 0 || isAssociate) &&
+                      originalTotal > finalTotal && (
+                        <p className="text-2xl text-gray-400 line-through">
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(originalTotal)}
+                        </p>
+                      )}
                     <p className="text-3xl font-bold text-blue-600">
                       {new Intl.NumberFormat("pt-BR", {
                         style: "currency",
@@ -734,7 +889,7 @@ export default function CheckoutPage({
                           onChange={(e) => {
                             setNewCompanyData({
                               ...newCompanyData,
-                              badge: e.target.value,
+                              badge: e.target.value.toUpperCase(),
                             })
                             setError("")
                           }}
@@ -924,17 +1079,7 @@ export default function CheckoutPage({
                             </CardDescription>
                           </div>
                         </div>
-                        {index > 0 && !(guests.length <= minRequired) && (
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleRemoveGuest(index)}
-                            disabled={guests.length <= minRequired}
-                          >
-                            Remover acompanhante
-                          </Button>
-                        )}
+                        {/* Remove button hidden */}
                       </CardHeader>
                       <CardContent className="pt-6 space-y-6">
                         {/* Personal Data */}
@@ -1120,9 +1265,9 @@ export default function CheckoutPage({
                                 type="email"
                                 value={guestData.email}
                                 onChange={(e) => handleChange(index, e)}
-                                disabled={index === 0}
+                                disabled={index === 0 && !isAdmin}
                                 className={`
-                                  ${index === 0 ? "bg-gray-50 opacity-80" : ""}
+                                  ${index === 0 && !isAdmin ? "bg-gray-50 opacity-80" : ""}
                                   ${guestErrors[index]?.email ? "border-red-500" : ""}
                                 `}
                                 required={calculateIsAdult(
@@ -1361,19 +1506,7 @@ export default function CheckoutPage({
                     </Card>
                   ))}
 
-                  {guests.length < totalCapacity && (
-                    <div className="flex justify-center py-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleAddGuest}
-                        className="w-full md:w-auto border-dashed border-2 border-blue-600 text-blue-600 hover:bg-blue-50 py-6"
-                      >
-                        <User className="h-5 w-5 mr-2" />
-                        Adicionar Hóspede (Máximo de: {totalCapacity})
-                      </Button>
-                    </div>
-                  )}
+                  {/* Add guest button hidden */}
 
                   {minRequired > 1 && (
                     <div className="bg-orange-50 text-orange-700 p-4 rounded-md border border-orange-200 text-sm flex items-start gap-2 mb-4">
@@ -1418,7 +1551,7 @@ export default function CheckoutPage({
                         className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-6"
                         disabled={isLoading}
                       >
-                        Avançar para o Resumo
+                        Avançar para o Resumo da Inscrição
                       </Button>
                     </div>
                   </div>
@@ -1436,18 +1569,88 @@ export default function CheckoutPage({
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                        <div>
+                          <h4 className="text-[10px] uppercase font-bold text-gray-500 tracking-widest mb-1">
+                            Quarto Selecionado
+                          </h4>
+                          <p className="font-semibold text-blue-900">
+                            {room.name}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            {room.room_type}
+                          </p>
+                          {router.query.bed_preference && (
+                            <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mt-1 px-2 py-0.5 bg-blue-50 rounded-full w-fit">
+                              Tipo de acomodação: {router.query.bed_preference}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="text-[10px] uppercase font-bold text-gray-500 tracking-widest mb-1">
+                            Período da Reserva
+                          </h4>
+                          <p className="font-semibold text-gray-900">
+                            {new Date(
+                              (room.hotel_check_in_date || "").includes("T")
+                                ? room.hotel_check_in_date
+                                : (room.hotel_check_in_date || "") +
+                                  "T12:00:00",
+                            ).toLocaleDateString("pt-BR")}{" "}
+                            até{" "}
+                            {new Date(
+                              (room.hotel_check_out_date || "").includes("T")
+                                ? room.hotel_check_out_date
+                                : (room.hotel_check_out_date || "") +
+                                  "T12:00:00",
+                            ).toLocaleDateString("pt-BR")}
+                          </p>
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
                         <h3 className="font-semibold text-gray-900 border-b pb-1">
                           Empresa
                         </h3>
-                        <p className="text-sm">
-                          {foundCompany?.corporate_name ||
-                            newCompanyData.corporate_name}
-                          <br />
-                          <span className="text-gray-500 font-mono">
-                            CNPJ: {foundCompany?.cnpj || newCompanyData.cnpj}
-                          </span>
-                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                          <p>
+                            <span className="text-gray-500">Razão Social:</span>{" "}
+                            {foundCompany?.corporate_name ||
+                              newCompanyData.corporate_name}
+                          </p>
+                          <p>
+                            <span className="text-gray-500">Fantasia:</span>{" "}
+                            {foundCompany?.fantasy_name ||
+                              newCompanyData.fantasy_name ||
+                              "-"}
+                          </p>
+                          <p>
+                            <span className="text-gray-500">CNPJ:</span>{" "}
+                            {foundCompany?.cnpj || newCompanyData.cnpj}
+                          </p>
+                          <p>
+                            <span className="text-gray-500">Insc. Est.:</span>{" "}
+                            {foundCompany?.state_registration ||
+                              newCompanyData.state_registration ||
+                              "Isento"}
+                          </p>
+                          <p className="md:col-span-2">
+                            <span className="text-gray-500">Endereço:</span>{" "}
+                            {foundCompany?.address || newCompanyData.address},{" "}
+                            {foundCompany?.number || newCompanyData.number} -{" "}
+                            {foundCompany?.city || newCompanyData.city}/
+                            {foundCompany?.state || newCompanyData.state} (
+                            {foundCompany?.zip_code || newCompanyData.zip_code})
+                          </p>
+                          <p>
+                            <span className="text-gray-500">Telefone:</span>{" "}
+                            {foundCompany?.phone || newCompanyData.phone}
+                          </p>
+                          <p>
+                            <span className="text-gray-500">E-mail:</span>{" "}
+                            {foundCompany?.email || newCompanyData.email}
+                          </p>
+                        </div>
                       </div>
 
                       <div className="space-y-4">
@@ -1457,12 +1660,124 @@ export default function CheckoutPage({
                         {guests.map((g, idx) => (
                           <div
                             key={idx}
-                            className="text-sm border-l-4 border-blue-500 pl-4 py-1 bg-blue-50/30"
+                            className="text-sm border-l-4 border-blue-500 pl-4 py-3 bg-blue-50/30 rounded-r-md"
                           >
-                            <p className="font-bold">{g.name}</p>
-                            <p className="text-gray-600">
-                              {g.cpf_number} | {g.email}
-                            </p>
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <p className="font-bold text-blue-800">
+                                  {idx + 1}. {g.name}
+                                </p>
+                                <p className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">
+                                  {g._type === "adult"
+                                    ? "Adulto"
+                                    : `${g._policy_label}`}
+                                </p>
+                              </div>
+                              {idx === 0 && (
+                                <Badge className="bg-blue-600 text-white border-none text-[10px] h-5">
+                                  TITULAR
+                                </Badge>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-gray-700">
+                              <p>
+                                <span className="text-gray-500">Crachá:</span>{" "}
+                                {g.badge_name || g.name}
+                              </p>
+                              <p>
+                                <span className="text-gray-500">CPF:</span>{" "}
+                                {g.cpf_number}
+                              </p>
+                              <p>
+                                <span className="text-gray-500">E-mail:</span>{" "}
+                                {g.email}
+                              </p>
+                              <p>
+                                <span className="text-gray-500">Telefone:</span>{" "}
+                                {g.phone}
+                              </p>
+                              <p>
+                                <span className="text-gray-500">
+                                  Nascimento:
+                                </span>{" "}
+                                {g.birth_date
+                                  ? new Date(
+                                      g.birth_date.includes("T")
+                                        ? g.birth_date
+                                        : g.birth_date + "T12:00:00",
+                                    ).toLocaleDateString("pt-BR")
+                                  : "-"}
+                              </p>
+                              {g.rg_number && (
+                                <p>
+                                  <span className="text-gray-500">RG:</span>{" "}
+                                  {g.rg_number}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="mt-3 pt-2 border-t border-blue-100">
+                              <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">
+                                Saúde e Emergência
+                              </p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[13px] text-gray-700">
+                                <p>
+                                  <span className="text-gray-500">
+                                    Contato:
+                                  </span>{" "}
+                                  {g.emergency_contact_name} (
+                                  {g.emergency_contact_phone})
+                                </p>
+                                <p>
+                                  <span className="text-gray-500">
+                                    Tipo Sanguíneo:
+                                  </span>{" "}
+                                  {g.blood_type || "-"} (RH:{" "}
+                                  {g.blood_rh_factor || "-"})
+                                </p>
+                                <p>
+                                  <span className="text-gray-500">
+                                    Prob. Cardíacos:
+                                  </span>{" "}
+                                  {g.has_heart_condition ? "Sim" : "Não"}
+                                </p>
+                                <p>
+                                  <span className="text-gray-500">
+                                    Diabetes:
+                                  </span>{" "}
+                                  {g.has_diabetes ? "Sim" : "Não"}
+                                </p>
+                                <p>
+                                  <span className="text-gray-500">
+                                    Pressão Alta:
+                                  </span>{" "}
+                                  {g.has_high_blood_pressure ? "Sim" : "Não"}
+                                </p>
+                                <p>
+                                  <span className="text-gray-500">
+                                    Pressão Baixa:
+                                  </span>{" "}
+                                  {g.has_low_blood_pressure ? "Sim" : "Não"}
+                                </p>
+                                {g.medication_details && (
+                                  <p className="sm:col-span-2">
+                                    <span className="text-gray-500">
+                                      Medicamentos:
+                                    </span>{" "}
+                                    {g.medication_details}
+                                  </p>
+                                )}
+                                {g.health_observations && (
+                                  <p className="sm:col-span-2">
+                                    <span className="text-gray-500">
+                                      Obs/Alergias:
+                                    </span>{" "}
+                                    {g.health_observations}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -1499,7 +1814,7 @@ export default function CheckoutPage({
 
                         {isAssociate && (
                           <div className="flex justify-between text-sm text-green-600 font-medium">
-                            <span>Preço Especial Associado</span>
+                            <span>Preço Associado Abravidro</span>
                             <span>Já aplicado</span>
                           </div>
                         )}
@@ -1567,6 +1882,41 @@ export default function CheckoutPage({
                             Parcelado
                           </Button>
                         </div>
+                        {paymentMethod === "cash" && (
+                          <div className="space-y-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100 mt-4">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-blue-900 font-bold">
+                                Pagamento Único
+                              </Label>
+                              <Badge
+                                variant="secondary"
+                                className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
+                              >
+                                Total à Vista
+                              </Badge>
+                            </div>
+                            <div className="pt-2 border-t border-blue-100 flex flex-col gap-2">
+                              <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">
+                                Pagamento por boleto:
+                              </p>
+                              <div>
+                                <p className="text-[11px] text-blue-600 font-black flex justify-between items-center">
+                                  <span>VENCIMENTO</span>
+                                  <span>
+                                    {new Date(
+                                      generateInstallmentDates(
+                                        1,
+                                        room.hotel_check_in_date,
+                                      )[0],
+                                    ).toLocaleDateString("pt-BR", {
+                                      timeZone: "UTC",
+                                    })}
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                         {paymentMethod === "installments" && (
                           <div className="space-y-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
@@ -1578,7 +1928,7 @@ export default function CheckoutPage({
                                 variant="secondary"
                                 className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
                               >
-                                {maxInstallments}x Fixas
+                                {maxInstallments}x Parcelas
                               </Badge>
                             </div>
                             <div className="flex items-baseline gap-2">
@@ -1697,6 +2047,7 @@ export async function getServerSideProps(context) {
           ? JSON.parse(JSON.stringify(guestProfile))
           : null,
         initialDiscounts: JSON.parse(JSON.stringify(allDiscounts)),
+        initialQuery: context.query,
       },
     }
   } catch (error) {

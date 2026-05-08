@@ -64,7 +64,7 @@ export default function Panels({ scrollToSection }) {
               className="group relative flex items-center gap-8 p-10 bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] hover:bg-white/[0.08] hover:border-blue-500/30 transition-all duration-700 hover:-translate-y-2 overflow-hidden shadow-2xl"
             >
               {/* Accent glow on hover */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-[2.5rem] blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+              <div className="absolute -inset-1 bg-gradient-to-r from-brand-start/20 to-brand-end/20 rounded-[2.5rem] blur opacity-0 group-hover:opacity-100 transition duration-1000"></div>
 
               <div
                 className={`relative w-16 h-16 ${item.bg} rounded-2xl flex items-center justify-center shrink-0 border border-white/10 group-hover:scale-110 transition-transform duration-500`}
