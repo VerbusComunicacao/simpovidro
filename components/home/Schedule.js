@@ -36,14 +36,14 @@ export default function Schedule() {
         <Image
           src="/images/icone-simpovidro.svg"
           alt="Simpovidro Icon BG"
-          layout="fill"
-          objectFit="contain"
+          fill
+          className="object-contain"
         />
       </div>
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="flex flex-col lg:flex-row justify-between items-end gap-6 mb-16">
           <div className="max-w-2xl">
-            <h2 className="text-blue-600 font-bold uppercase tracking-widest text-sm mb-4">
+            <h2 className="text-blue-600 uppercase tracking-widest text-sm mb-4">
               Programação
             </h2>
             <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight">
@@ -68,7 +68,7 @@ export default function Schedule() {
                   </Badge>
                   <span className="text-slate-400 font-bold">{d.time}</span>
                 </div>
-                <CardTitle className="text-xl font-bold text-slate-900">
+                <CardTitle className="text-xl font-title text-slate-900">
                   {d.theme}
                 </CardTitle>
               </CardHeader>
@@ -81,7 +81,7 @@ export default function Schedule() {
 
         <div className="mt-4">
           <Button variant="ghost" className="text-blue-600 font-bold">
-            Ver Cronograma Completo <ChevronRight className="ml-1 h-4 w-4" />
+            Ver cronograma completo <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>
       </div>

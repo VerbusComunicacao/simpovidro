@@ -40,7 +40,7 @@ export default function Navbar({ scrollToSection, router }) {
             </a>
           ))}
           <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6"
+            className="bg-logo-navy hover:bg-blue-700 text-white rounded-full px-6"
             onClick={() => router.push("/inscricao")}
           >
             Inscreva-se

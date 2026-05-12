@@ -51,8 +51,8 @@ export default function Sponsors({ variant = "full" }) {
               <Image
                 src={sponsor.logo}
                 alt={`${sponsor.name} Logo`}
-                layout="fill"
-                objectFit="contain"
+                fill
+                className="object-contain"
               />
             </div>
           ))}
@@ -65,7 +65,7 @@ export default function Sponsors({ variant = "full" }) {
     <section id="patrocinadores" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6 text-center">
         <div className="mb-16">
-          <h2 className="text-3xl font-black text-slate-900 uppercase mb-12">
+          <h2 className="text-3xl font-title text-slate-900 uppercase mb-12">
             Patrocinadores
           </h2>
           <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
@@ -78,10 +78,9 @@ export default function Sponsors({ variant = "full" }) {
                   <Image
                     src={sponsor.logo}
                     alt={`${sponsor.name} Logo`}
-                    layout="intrinsic"
                     width={160}
                     height={80}
-                    objectFit="contain"
+                    className="object-contain"
                   />
                 </div>
               </div>
@@ -103,10 +102,9 @@ export default function Sponsors({ variant = "full" }) {
                   <Image
                     src={partner.logo}
                     alt={`${partner.name} Logo`}
-                    layout="intrinsic"
                     width={180}
                     height={180}
-                    objectFit="cover"
+                    className="object-cover"
                   />
                 </div>
               </div>
