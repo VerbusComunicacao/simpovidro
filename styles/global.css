@@ -37,6 +37,15 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Simpovidro Logo Colors */
+  --logo-red: #c11d1f;
+  --logo-green: #91ad2c;
+  --logo-orange-dark: #ea620f;
+  --logo-orange: #f4960d;
+  --logo-purple: #a7438d;
+  --logo-navy: #014991;
+  --logo-blue: #0c84c7;
 }
 
 .dark {
@@ -115,6 +124,15 @@
   --font-eastman: var(--font-eastman), sans-serif;
   --color-brand-start: #1b549c;
   --color-brand-end: #c02a39;
+
+  /* Logo Colors Mapping */
+  --color-logo-red: var(--logo-red);
+  --color-logo-green: var(--logo-green);
+  --color-logo-orange-dark: var(--logo-orange-dark);
+  --color-logo-orange: var(--logo-orange);
+  --color-logo-purple: var(--logo-purple);
+  --color-logo-navy: var(--logo-navy);
+  --color-logo-blue: var(--logo-blue);
 }
 
 @layer base {
@@ -125,9 +143,12 @@
     @apply bg-background text-foreground;
   }
   h2 {
-    @apply font-title;
-  }
-  button {
     @apply font-eastman;
+  }
+
+  h3,
+  h4,
+  h5 {
+    @apply font-title;
   }
 }

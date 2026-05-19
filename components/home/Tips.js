@@ -27,10 +27,10 @@ export default function Tips() {
     >
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-white font-bold uppercase tracking-widest text-sm mb-4">
+          <h2 className="text-white uppercase tracking-widest text-sm mb-4">
             Preparação
           </h2>
-          <h3 className="text-4xl md:text-5xl font-black text-white mb-6 italic tracking-tighter">
+          <h3 className="text-4xl md:text-5xl font-black text-white mb-6">
             Dicas & Lembretes
           </h3>
         </div>

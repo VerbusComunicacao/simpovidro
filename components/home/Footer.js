@@ -1,4 +1,5 @@
 import { Facebook, Instagram, Linkedin, Phone, Mail } from "lucide-react"
+import Image from "next/image"
 
 export default function Footer({ scrollToSection }) {
   return (
@@ -7,10 +8,16 @@ export default function Footer({ scrollToSection }) {
         <div className="grid md:grid-cols-4 gap-12 mb-16">
           <div className="col-span-2 md:col-span-1 space-y-6">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold">
-                S
-              </div>
-              <span className="text-white font-bold text-xl">Simpovidro</span>
+              <Image
+                src="/images/icon-17-simpovidro.png"
+                alt="Simpovidro Icon"
+                width={32}
+                height={32}
+                className="rounded-lg"
+              />
+              <span className="text-white font-title text-xl uppercase tracking-tight">
+                Simpovidro
+              </span>
             </div>
             <p className="text-sm leading-relaxed">
               Referência nacional e internacional no setor vidreiro. Excelência
@@ -24,7 +31,7 @@ export default function Footer({ scrollToSection }) {
           </div>
 
           <div>
-            <h4 className="text-white font-bold mb-6 italic tracking-tight uppercase text-xs">
+            <h4 className="text-white font-bold mb-6 tracking-tight uppercase text-xs">
               Menu
             </h4>
             <ul className="space-y-4 text-slate-400">
@@ -68,7 +75,7 @@ export default function Footer({ scrollToSection }) {
           </div>
 
           <div>
-            <h4 className="text-white font-bold mb-6 italic tracking-tight uppercase text-xs">
+            <h4 className="text-white font-bold mb-6 tracking-tight uppercase text-xs">
               Logística
             </h4>
             <ul className="space-y-4 text-sm">
@@ -112,7 +119,7 @@ export default function Footer({ scrollToSection }) {
           </div>
 
           <div>
-            <h4 className="text-white font-bold mb-6 italic tracking-tight uppercase text-xs">
+            <h4 className="text-white font-bold mb-6 tracking-tight uppercase text-xs">
               Organização
             </h4>
             <div className="space-y-2 text-sm">

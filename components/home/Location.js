@@ -3,7 +3,7 @@ import Image from "next/image"
 
 export default function Location() {
   return (
-    <section id="local" className="py-24 bg-slate-50 relative overflow-hidden">
+    <section id="local" className="py-24 bg-slate-50 relative overflow-hidden ">
       {/* Decorative background elements */}
       <div className="absolute top-1/2 left-0 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
 
@@ -26,8 +26,7 @@ export default function Location() {
               <Image
                 src="/images/costao-imagem.webp"
                 alt="Costão do Santinho Resort"
-                layout="fill"
-                objectFit="cover"
+                fill
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 font-bold"
               />
               <div className="absolute top-6 left-6 flex gap-2">
@@ -44,7 +43,7 @@ export default function Location() {
                   <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
                   <span className="ml-2 text-sm font-bold">5 Estrelas</span>
                 </div>
-                <h4 className="text-2xl font-black text-white italic">
+                <h4 className="text-2xl font-black text-white">
                   Costão do Santinho Resort
                 </h4>
                 <p className="text-white/80 font-medium">
@@ -56,11 +55,11 @@ export default function Location() {
 
           <div className="order-1 lg:order-2 space-y-8 mx-16 lg:ml-0">
             <div>
-              <div className="font-title flex items-center gap-2 text-blue-600 font-bold uppercase tracking-[0.2em] text-sm mb-4">
+              <div className="font-eastman flex items-center gap-2 text-blue-600  uppercase text-sm mb-4">
                 <MapPin className="h-4 w-4" /> O Novo Local
               </div>
-              <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight mb-6 uppercase italic tracking-tighter">
-                Costão do <span className="text-blue-600">Santinho</span>
+              <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight mb-6">
+                Costão do <span className="text-logo-red">Santinho</span>
               </h3>
               <p className="text-lg text-slate-600 leading-relaxed font-medium">
                 Em 2026, o 17º Simpovidro desembarca em um dos destinos mais

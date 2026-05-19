@@ -70,7 +70,7 @@ export default function Hero({ scrollToSection, router }) {
           <div className="flex justify-center sm:flex-row gap-4 w-full sm:w-auto">
             <Button
               size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full h-14 px-10 text-lg shadow-xl shadow-blue-500/25 transition-transform hover:scale-105"
+              className="bg-logo-blue hover:bg-logo-navy text-white rounded-full h-14 px-10 text-lg shadow-xl shadow-blue-500/25 transition-transform hover:scale-105"
               onClick={() => router.push("/inscricao")}
             >
               Quero me inscrever <ChevronRight className="ml-2 h-5 w-5" />
@@ -78,7 +78,7 @@ export default function Hero({ scrollToSection, router }) {
             <Button
               size="lg"
               variant="outline"
-              className="bg-orange-50/50 backdrop-blur-sm border-orange-200 text-orange-600 hover:bg-orange-100 hover:text-orange-700 rounded-full h-14 px-10 text-lg transition-all"
+              className="bg-logo-orange/20 backdrop-blur-sm border-orange-200 text-orange-600 hover:bg-logo-orange/10 hover:text-orange-700 rounded-full h-14 px-10 text-lg transition-all"
               onClick={(e) => scrollToSection(e, "sobre")}
             >
               Saber mais <Info />

@@ -10,7 +10,18 @@ export default function History() {
 
   const editions = useMemo(
     () => [
-      { num: "16ª", year: "2024", images: [] },
+      {
+        num: "16ª",
+        year: "2024",
+        images: [
+          "/images/edicoes-anteriores/simpovidro-2024/1.jpg",
+          "/images/edicoes-anteriores/simpovidro-2024/2.jpg",
+          "/images/edicoes-anteriores/simpovidro-2024/3.jpg",
+          "/images/edicoes-anteriores/simpovidro-2024/4.jpg",
+          "/images/edicoes-anteriores/simpovidro-2024/5.jpg",
+          "/images/edicoes-anteriores/simpovidro-2024/6.jpg",
+        ],
+      },
       {
         num: "15ª",
         year: "2022",
@@ -221,11 +232,11 @@ export default function History() {
       : galleryHighlights
 
   return (
-    <section className="py-24 bg-slate-50 border-y border-slate-200 overflow-hidden">
+    <section className="py-24 bg-slate-50 border-y border-slate-200 overflow-hidden ">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
+        <div className="grid lg:grid-cols-2 gap-16 ">
           <div className="relative z-10 sticky top-24">
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 uppercase leading-none">
+            <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 leading-none font-title">
               Uma Tradição <br />
               <span className="text-blue-600">de Sucesso</span>
             </h2>
@@ -276,7 +287,7 @@ export default function History() {
             {/* Gallery Header for Selected Year */}
             {selectedYear && (
               <div className="mb-6 animate-in fade-in slide-in-from-left duration-500">
-                <h4 className="text-2xl font-black text-slate-900 italic uppercase">
+                <h4 className="text-2xl font-black text-slate-900">
                   Galeria <span className="text-blue-600">{selectedYear}</span>
                 </h4>
                 <p className="text-slate-500 text-sm font-medium">
@@ -301,9 +312,8 @@ export default function History() {
                   <Image
                     src={img.src}
                     alt={`Simpovidro ${img.year}`}
-                    layout="fill"
-                    objectFit="cover"
-                    className="transition-transform duration-1000 group-hover:scale-110"
+                    fill
+                    className="transition-transform duration-1000 group-hover:scale-110 object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6 text-left">
                     <Badge className="bg-blue-600 text-white border-none text-xs font-black px-3 py-1">
@@ -351,9 +361,8 @@ export default function History() {
             <Image
               src={previewImage}
               alt="Simpovidro Preview"
-              layout="fill"
-              objectFit="contain"
-              className="bg-slate-900/50"
+              fill
+              className="bg-slate-900/50 object-contain"
             />
           </div>
         </div>

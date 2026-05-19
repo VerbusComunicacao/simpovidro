@@ -13,15 +13,15 @@ export default function Pricing() {
   return (
     <section
       id="beneficios"
-      className="py-24 bg-slate-50 border-y border-slate-200"
+      className="py-24 bg-logo-green border-y border-slate-200"
     >
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
-            <h2 className="text-4xl font-black text-slate-900 uppercase trac">
+            <h3 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">
               Benefícios & Inscrição
-            </h2>
-            <p className="text-slate-600 text-lg leading-relaxed font-medium">
+            </h3>
+            <p className="text-lg text-white leading-relaxed">
               O Simpovidro é um evento exclusivo. Garanta condições especiais
               através do associativismo e participe do maior encontro do setor.
             </p>
@@ -31,11 +31,9 @@ export default function Pricing() {
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                   <Zap className="w-16 h-16 text-blue-600" />
                 </div>
-                <h4 className="text-blue-900 font-black text-xl mb-2 italic">
-                  SÓCIO ABRAVIDRO
-                </h4>
+                <h4 className="text-blue-900 text-xl mb-2">SÓCIO ABRAVIDRO</h4>
                 <div className="text-5xl font-black text-blue-600 mb-4 tracking-tighter">
-                  50%{" "}
+                  20%{" "}
                   <span className="text-lg font-bold text-blue-400">OFF</span>
                 </div>
                 <p className="text-blue-700/70 text-sm font-bold leading-relaxed">
@@ -44,18 +42,18 @@ export default function Pricing() {
                 </p>
               </div>
 
-              <div className="p-8 bg-slate-900 border border-slate-800 rounded-[2rem] shadow-xl hover:shadow-blue-500/10 transition-shadow group relative overflow-hidden text-white">
+              <div className="p-8 bg-logo-navy rounded-[2rem] shadow-xl hover:shadow-blue-500/10 transition-shadow group relative overflow-hidden text-white">
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                   <MapPin className="w-16 h-16 text-blue-400" />
                 </div>
-                <h4 className="text-blue-400 font-black text-xl mb-2 italic uppercase">
+                <h4 className="text-blue-400 text-xl mb-2 uppercase">
                   Entidades Regionais
                 </h4>
                 <div className="text-5xl font-black text-white mb-4 tracking-tighter">
                   15%{" "}
-                  <span className="text-lg font-bold text-slate-500">OFF</span>
+                  <span className="text-lg font-bold text-slate-300">OFF</span>
                 </div>
-                <p className="text-slate-400 text-sm font-bold leading-relaxed">
+                <p className="text-slate-200 text-sm font-bold leading-relaxed">
                   Condição especial para associados de entidades regionais
                   parceiras do Simpovidro.
                 </p>
@@ -72,9 +70,9 @@ export default function Pricing() {
           </div>
 
           <div id="logistica" className="space-y-6">
-            <Card className="bg-blue-600 text-white border-none shadow-2xl">
+            <Card className="bg-logo-navy text-white border-none shadow-2xl">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-2xl font-title">
                   <Hotel className="h-5 w-5" /> Acomodações
                 </CardTitle>
                 <CardDescription className="text-blue-100">
@@ -96,7 +94,7 @@ export default function Pricing() {
 
             <Card className="bg-white border-slate-200 shadow-xl">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-slate-900">
+                <CardTitle className="flex items-center gap-2 text-slate-900 text-2xl font-title">
                   <Plane className="h-5 w-5 text-blue-600" /> Passagens Aéreas
                 </CardTitle>
               </CardHeader>

@@ -36,10 +36,7 @@ export default function Panels({ scrollToSection }) {
   ]
 
   return (
-    <section
-      id="paineis"
-      className="py-24 bg-[#0a0f1e] relative overflow-hidden"
-    >
+    <section id="paineis" className="py-24 bg-black relative overflow-hidden">
       {/* Subtle background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -48,7 +45,7 @@ export default function Panels({ scrollToSection }) {
           <h2 className="text-blue-400 font-bold uppercase tracking-[0.3em] text-xs mb-4">
             Conteúdo & Debate
           </h2>
-          <h3 className="text-5xl md:text-7xl font-black text-white mb-6 italic tracking-tighter uppercase">
+          <h3 className="text-5xl md:text-7xl font-black text-white mb-6">
             Painéis
           </h3>
           <p className="text-slate-400 max-w-2xl mx-auto text-xl font-medium">

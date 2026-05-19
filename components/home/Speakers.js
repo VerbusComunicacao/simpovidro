@@ -26,12 +26,12 @@ export default function Speakers() {
   return (
     <section
       id="palestrantes"
-      className="py-24 bg-gradient-to-r from-brand-start to-brand-end text-white overflow-hidden relative"
+      className="py-24 bg-gradient-to-b from-logo-orange-dark to-logo-orange text-white overflow-hidden relative"
     >
       <div className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl -translate-y-1/2"></div>
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-blue-400 font-bold uppercase tracking-widest text-sm mb-4">
+          <h2 className="text-slate-200 uppercase text-sm mb-4">
             Mentes Brilhantes
           </h2>
           <h3 className="text-4xl md:text-5xl font-black mb-6">Palestrantes</h3>
@@ -49,9 +49,8 @@ export default function Speakers() {
                   <Image
                     src={p.image}
                     alt={p.name}
-                    layout="fill"
-                    objectFit="cover"
-                    className="transition-all duration-500"
+                    fill
+                    className="transition-all duration-500 object-cover"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-slate-700">
