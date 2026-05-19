@@ -107,8 +107,8 @@ export default function Sponsors({ variant = "full" }) {
                   <Image
                     src={sponsor.logo}
                     alt={`${sponsor.name} Logo`}
-                    width={50}
-                    height={100}
+                    width={80}
+                    height={80}
                     className="object-contain"
                   />
                 </div>
