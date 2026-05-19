@@ -1,5 +1,4 @@
 import Head from "next/head"
-import Sponsors from "@/components/home/Sponsors"
 import Image from "next/image"
 
 export default function Breve() {
@@ -62,8 +61,6 @@ export default function Breve() {
           </div>
         </div>
       </main>
-
-      <Sponsors variant="full" />
     </div>
   )
 }
