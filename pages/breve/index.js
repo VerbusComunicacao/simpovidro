@@ -8,8 +8,40 @@ export default function Breve() {
         <title>17º Simpovidro | O Encontro do Setor Vidreiro</title>
         <meta
           name="description"
-          content="Onde o mercado vidreiro se encontra para redefinir o amanhã."
+          content="Infinitas possibilidades. De 5 a 8 de novembro."
         />
+
+        {/* Indexing */}
+        <meta name="robots" content="index, follow" />
+
+        {/* Open Graph / Social Sharing (WhatsApp, LinkedIn, Facebook, Slack) */}
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:title"
+          content="17º Simpovidro | O Encontro do Setor Vidreiro"
+        />
+        <meta
+          property="og:description"
+          content="Onde o mercado vidreiro se encontra para redefinir o amanhã. De 5 a 8 de novembro."
+        />
+        <meta property="og:image" content="/images/logo-17-simpovidro.webp" />
+        <meta property="og:image:alt" content="Logo do 17º Simpovidro" />
+        <meta property="og:locale" content="pt_BR" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content="17º Simpovidro | O Encontro do Setor Vidreiro"
+        />
+        <meta
+          name="twitter:description"
+          content="Onde o mercado vidreiro se encontra para redefinir o amanhã. De 5 a 8 de novembro."
+        />
+        <meta name="twitter:image" content="/images/logo-17-simpovidro.webp" />
+
+        {/* Premium Mobile Integration */}
+        <meta name="theme-color" content="#014991" />
       </Head>
 
       <main className="relative overflow-hidden">
