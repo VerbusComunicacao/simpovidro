@@ -29,7 +29,7 @@ export default function Breve() {
           <div className="relative z-10 w-full max-w-5xl ml-0 lg:ml-[30%] px-4">
             <div className="flex flex-col items-center justify-center">
               {/* Ícone branco de fundo (Marca d'água) */}
-              <div className="mb-6 md:mb-10 w-28 sm:w-36 md:w-40 lg:w-44">
+              <div className="mb-6 md:mb-5 w-28 sm:w-36 md:w-40 lg:w-44">
                 <svg
                   viewBox="0 0 372.42 183.42"
                   className="w-full h-auto fill-white"
@@ -54,7 +54,7 @@ export default function Breve() {
               De 5 a 8 <br />
               de novembro
             </div>
-            <div className="flex text-xl sm:text-2xl md:text-3xl lg:text-5xl mt-8 md:mt-10 font-title flex-col items-center text-center justify-center max-w-sm sm:max-w-lg md:max-w-2xl lg:max-w-none mx-auto">
+            <div className="flex text-xl sm:text-2xl md:text-3xl lg:text-4xl mt-8 md:mt-10 font-title flex-col items-center text-center justify-center max-w-sm sm:max-w-lg md:max-w-2xl lg:max-w-none mx-auto">
               Vem aí o principal <br />
               encontro do setor vidreiro <br />
               da América Latina

@@ -8,6 +8,11 @@ export default function Sponsors({ variant = "full" }) {
     { name: "Vivix", logo: "/images/logo_vivix.png" },
   ]
 
+  const supporters = [
+    { name: "Diamanfer", logo: "/images/apoiadores/diamanfer.jpeg" },
+    { name: "Vetro Maquinas", logo: "/images/apoiadores/vetro-maquinas.png" },
+  ]
+
   const support = [
     { name: "Abravid", logo: "/images/apoio-institucional/abravid.jpg" },
     { name: "Adivipar", logo: "/images/apoio-institucional/adivipar.jpg" },
@@ -80,6 +85,30 @@ export default function Sponsors({ variant = "full" }) {
                     alt={`${sponsor.name} Logo`}
                     width={160}
                     height={80}
+                    className="object-contain"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-2xl text-slate-400 uppercase mb-10 font-title">
+            Apoiadores
+          </h2>
+          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 mb-10">
+            {supporters.map((sponsor) => (
+              <div
+                key={sponsor.name}
+                className="group flex flex-col items-center gap-4 transition-all duration-500 hover:scale-110"
+              >
+                <div className="relative h-40 flex items-center justify-center p-4">
+                  <Image
+                    src={sponsor.logo}
+                    alt={`${sponsor.name} Logo`}
+                    width={50}
+                    height={100}
                     className="object-contain"
                   />
                 </div>
