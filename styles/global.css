@@ -126,13 +126,13 @@
   --color-brand-end: #c02a39;
 
   /* Logo Colors Mapping */
-  --color-logo-red: var(--logo-red);
-  --color-logo-green: var(--logo-green);
-  --color-logo-orange-dark: var(--logo-orange-dark);
-  --color-logo-orange: var(--logo-orange);
-  --color-logo-purple: var(--logo-purple);
-  --color-logo-navy: var(--logo-navy);
-  --color-logo-blue: var(--logo-blue);
+  --color-logo-red: #c11d1f;
+  --color-logo-green: #91ad2c;
+  --color-logo-orange-dark: #ea620f;
+  --color-logo-orange: #f4960d;
+  --color-logo-purple: #a7438d;
+  --color-logo-navy: #014991;
+  --color-logo-blue: #0c84c7;
 }
 
 @layer base {
