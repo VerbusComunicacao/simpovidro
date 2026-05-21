@@ -102,13 +102,15 @@ export default function Location() {
                   Clique na foto para passar
                 </span>
               </div>
-              
+
               <div
                 onClick={handleImageClick}
                 className="relative aspect-[4/3] w-full group cursor-pointer select-none"
               >
                 {resortImages.map((img, i) => {
-                  const rel = (i - activeImageIndex + resortImages.length) % resortImages.length
+                  const rel =
+                    (i - activeImageIndex + resortImages.length) %
+                    resortImages.length
                   const wasFront = prevActiveImageIndex === i
                   const goingToBack = wasFront && rel > 0
 
@@ -128,9 +130,9 @@ export default function Location() {
                     animateTarget = {
                       x: [0, 260, 0],
                       rotate: [0, 18, rel === 1 ? 5 : 12],
-                      scale: [1, 0.92, rel === 1 ? 0.95 : 0.90],
+                      scale: [1, 0.92, rel === 1 ? 0.95 : 0.9],
                       y: [0, 4, rel === 1 ? 6 : 12],
-                      opacity: [1, 0.7, rel === 1 ? 0.85 : 0.40],
+                      opacity: [1, 0.7, rel === 1 ? 0.85 : 0.4],
                       zIndex: [20, -10, rel === 1 ? 10 : 5],
                     }
                     customTransition = {
@@ -151,9 +153,9 @@ export default function Location() {
                     animateTarget = {
                       x: 0,
                       y: 12,
-                      scale: 0.90,
+                      scale: 0.9,
                       rotate: 12,
-                      opacity: 0.40,
+                      opacity: 0.4,
                       zIndex: 5,
                     }
                   } else {
@@ -324,8 +326,6 @@ export default function Location() {
             </div>
           </div>
         </div>
-
-
       </div>
     </section>
   )

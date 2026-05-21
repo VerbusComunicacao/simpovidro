@@ -3,11 +3,9 @@ import Image from "next/image"
 
 export default function AboutEvent({ scrollToSection }) {
   const benefits = [
-    "O principal encontro do setor na América do Sul",
+    "Networking",
     "Centenas de profissionais e suas famílias",
     "Programação técnica de alto nível",
-    "Networking internacional",
-    "Ambiente descontraído e lazer",
   ]
 
   return (
@@ -39,27 +37,31 @@ export default function AboutEvent({ scrollToSection }) {
                 O Evento
               </h2>
               <h3 className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-6">
-                A mesma tradição,{" "}
-                <span className="text-white">uma nova experiência!</span>
+                O principal encontro do setor vidreiro na América Latina!
               </h3>
-              <div className="space-y-4 text-lg text-white leading-relaxed">
+              <div className="space-y-4 text-lg text-white leading-relaxed mb-6">
                 <p>
-                  Organizado a cada dois anos pela Abravidro, o Simpovidro é o
-                  principal encontro do setor vidreiro na América do Sul. Reúne,
-                  em um ambiente descontraído, centenas de profissionais do
-                  segmento e suas famílias para uma programação cheia de
-                  conteúdo técnico, networking e lazer.
+                  A cada dois anos, os principais <em>players</em> vidreiros do
+                  Brasil se reúnem no Simpovidro. Organizado pela Abravidro, o
+                  evento tem como foco o <em>networking</em> entre os diversos
+                  elos da cadeia em meio a um ambiente descontraído, reunindo{" "}
+                  <strong>
+                    oportunidades de negócio, conteúdo técnico e lazer.
+                  </strong>
                 </p>
                 <p>
-                  De caráter internacional, o simpósio recebe participantes não
-                  só do Brasil, mas de outras partes do mundo. É uma grande
-                  oportunidade para se relacionar com atuais ou futuros
-                  clientes, trocar informações de mercado e fechar negócios.
+                  O simpósio recebe participantes não só do Brasil, mas de
+                  outras partes do mundo. É uma grande oportunidade para
+                  estreitar laços com clientes e parceiros, trocar informações
+                  sobre o mercado e fechar negócios.
                 </p>
               </div>
+              <p className="text-lg font-bold text-white mb-1">
+                Só no Simpovidro você encontra:
+              </p>
             </div>
 
-            <div className="space-y-4 pt-4">
+            <div className="space-y-4">
               {benefits.map((item, i) => (
                 <div
                   key={i}
@@ -101,7 +103,7 @@ export default function AboutEvent({ scrollToSection }) {
                     </svg>
                   </div>
                   <span className="font-semibold text-white transition-all group-hover:opacity-100 opacity-90">
-                    {item}
+                    {item === "Networking" ? <em>{item}</em> : item}
                   </span>
                 </div>
               ))}

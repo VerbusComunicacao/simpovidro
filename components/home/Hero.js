@@ -93,17 +93,12 @@ export default function Hero({ scrollToSection, router }) {
             variants={videoVariants}
             className="w-full aspect-video bg-slate-900 rounded-[2.5rem] md:rounded-[3rem] overflow-hidden shadow-2xl relative group border-[6px] md:border-[10px] border-white"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-brand-start/40 to-brand-end/40 opacity-60"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 md:w-24 md:h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform shadow-2xl">
-                <div className="w-0 h-0 border-t-[8px] md:border-t-[12px] border-t-transparent border-l-[14px] md:border-l-[22px] border-l-white border-b-[8px] md:border-b-[12px] border-b-transparent ml-1"></div>
-              </div>
-            </div>
-            <div className="absolute bottom-10 left-8">
-              <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">
-                Apresentação Oficial
-              </span>
-            </div>
+            <Image
+              src="/images/costao-imagem.webp"
+              alt="17º SIMPOVIDRO"
+              fill
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 font-bold"
+            />
           </motion.div>
 
           {/* Cards Flutuantes - Posicionados para sobrepor o vídeo */}
