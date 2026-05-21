@@ -134,8 +134,8 @@ export default function AboutEvent({ scrollToSection }) {
                   Vanguardismo & Tradição
                 </p>
                 <p className="text-sm opacity-90">
-                  Conectando a cadeia vidreira há mais de 16 edições com
-                  excelência e inovação.
+                  Conectando a cadeia vidreira há 16 edições com excelência e
+                  inovação.
                 </p>
               </div>
             </div>

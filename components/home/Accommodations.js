@@ -335,12 +335,17 @@ export default function Accommodations() {
             <button
               key={room.id}
               onClick={() => changeActiveRoom(room.id)}
-              className={`px-4 py-3.5 rounded-2xl text-xs font-bold transition-all duration-300 cursor-pointer shadow-xs flex flex-col items-center justify-center text-center border ${
+              className={`px-4 py-3.5 rounded-2xl text-xs font-bold transition-all duration-300 cursor-pointer shadow-xs flex flex-col items-center justify-center text-center border group ${
                 activeRoom === room.id
                   ? "bg-logo-blue text-white border-logo-blue shadow-md shadow-logo-blue/20 transform -translate-y-0.5"
                   : "bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-slate-200"
               }`}
             >
+              <span
+                className={`text-[10px] uppercase leading-tight font-semibold mb-2 ${activeRoom === room.id ? "underline" : "group-hover:underline"}`}
+              >
+                {room.category}
+              </span>
               <span className="text-sm leading-tight font-semibold">
                 {room.name
                   .replace(`${room.category} - `, "")
