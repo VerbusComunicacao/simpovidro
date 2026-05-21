@@ -8,9 +8,7 @@ import Navbar from "@/components/home/Navbar"
 import Hero from "@/components/home/Hero"
 import AboutEvent from "@/components/home/AboutEvent"
 import Location from "@/components/home/Location"
-import Speakers from "@/components/home/Speakers"
-import Panels from "@/components/home/Panels"
-import Schedule from "@/components/home/Schedule"
+import Accommodations from "@/components/home/Accommodations"
 import Pricing from "@/components/home/Pricing"
 import Tips from "@/components/home/Tips"
 import History from "@/components/home/History"
@@ -84,11 +82,7 @@ export default function Home() {
 
         <Location />
 
-        <Speakers />
-
-        <Panels scrollToSection={scrollToSection} />
-
-        <Schedule />
+        <Accommodations />
 
         <Pricing />
 

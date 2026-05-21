@@ -5,9 +5,6 @@ import Image from "next/image"
 export default function Navbar({ scrollToSection, router }) {
   const navItems = [
     { name: "Local", id: "local" },
-    { name: "Palestrantes", id: "palestrantes" },
-    { name: "Painéis", id: "paineis" },
-    { name: "Programação", id: "programacao" },
     { name: "Benefícios", id: "beneficios" },
     { name: "Dicas e lembretes", id: "dicas" },
   ]
