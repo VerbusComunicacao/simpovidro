@@ -55,7 +55,7 @@ export default function Location() {
         }}
       ></div>
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="max-w-7xl mx-auto px-6 relative z-10 ml-12 lg:ml-auto">
         <div className="grid lg:grid-cols-2 gap-16 items-start">
           <div className="order-2 lg:order-1 relative lg:sticky lg:top-24 self-start space-y-12">
             {/* Main Sticky Card at the top */}
@@ -198,11 +198,11 @@ export default function Location() {
             </div>
           </div>
 
-          <div className="order-1 lg:order-2 space-y-8 lg:ml-0">
+          <div className="order-1 lg:order-2 space-y-8 ">
             <div className="space-y-6">
               <div className="font-eastman flex items-center gap-2 text-logo-blue uppercase">
-                <MapPin className="h-4 w-4 text-logo-red animate-pulse" /> O
-                Destino
+                <MapPin className="h-4 w-4 text-logo-red animate-pulse" />
+                Local
               </div>
               <h3 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight font-title">
                 Costão do <span className="text-logo-red">Santinho</span>

@@ -1,12 +1,21 @@
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
-import { Camera, X } from "lucide-react"
-import { useState, useMemo } from "react"
+import { Camera, X, ChevronLeft, ChevronRight } from "lucide-react"
+import { useState, useMemo, useRef } from "react"
 
 export default function History() {
   const [activeYear, setActiveYear] = useState(null)
   const [selectedYear, setSelectedYear] = useState(null)
   const [previewImage, setPreviewImage] = useState(null)
+  const editionsRef = useRef(null)
+  const galleryRef = useRef(null)
+
+  const handleScroll = (ref, direction) => {
+    if (ref.current) {
+      const scrollAmount = direction === "left" ? -280 : 280
+      ref.current.scrollBy({ left: scrollAmount, behavior: "smooth" })
+    }
+  }
 
   const editions = useMemo(
     () => [
@@ -232,43 +241,66 @@ export default function History() {
       : galleryHighlights
 
   return (
-    <section className="py-24 bg-slate-50 border-y border-slate-200 overflow-hidden ">
+    <section className="py-16 md:py-24 bg-slate-50 border-y border-slate-200 overflow-hidden ">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 ">
-          <div className="relative z-10 sticky top-24">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 ">
+          <div className="relative z-10 lg:sticky lg:top-24">
             <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 leading-none font-title">
               Uma Tradição <br />
               <span className="text-blue-600">de Sucesso</span>
             </h2>
-            <p className="text-xl text-slate-600 mb-10 leading-relaxed font-medium max-w-xl">
-              Há quase 30 anos, o Simpovidro une o mercado para gerar bilhões em
-              parcerias e conexões. Explore os momentos que definiram a história
-              do nosso setor.
+            <p className="text-lg md:text-xl text-slate-600 mb-8 md:mb-10 leading-relaxed font-medium max-w-xl">
+              Há mais de 30 anos, o Simpovidro une o mercado para gerar bilhões
+              em parcerias e conexões. Explore os momentos que definiram a
+              história do nosso setor.
             </p>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
-              {editions.map((ed, i) => (
+            <div className="relative">
+              <div
+                ref={editionsRef}
+                className="flex overflow-x-auto pb-4 lg:pb-0 lg:grid lg:grid-cols-4 gap-3 mb-8 md:mb-10 -mx-6 px-6 lg:mx-0 lg:px-0 scrollbar-none snap-x snap-mandatory scroll-smooth"
+              >
+                {editions.map((ed, i) => (
+                  <button
+                    key={i}
+                    onMouseEnter={() => setActiveYear(ed.year)}
+                    onMouseLeave={() => setActiveYear(null)}
+                    onClick={() =>
+                      setSelectedYear(selectedYear === ed.year ? null : ed.year)
+                    }
+                    className={`flex-shrink-0 w-24 lg:w-auto snap-center px-3 py-2.5 rounded-xl border font-bold text-[10px] transition-all flex flex-col items-center justify-center text-center ${
+                      selectedYear === ed.year
+                        ? "bg-blue-600 border-blue-600 text-white scale-105 shadow-lg shadow-blue-500/40"
+                        : activeYear === ed.year
+                          ? "bg-blue-50 border-blue-200 text-blue-600"
+                          : "bg-white border-slate-200 text-slate-500 hover:border-blue-400 hover:text-blue-600"
+                    }`}
+                  >
+                    <span className="opacity-70">{ed.num} Edição</span>
+                    <span className="text-sm font-black tracking-tight">
+                      {ed.year}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Mobile navigation arrows for editions */}
+              <div className="flex lg:hidden justify-end gap-2 mb-4 -mt-2">
                 <button
-                  key={i}
-                  onMouseEnter={() => setActiveYear(ed.year)}
-                  onMouseLeave={() => setActiveYear(null)}
-                  onClick={() =>
-                    setSelectedYear(selectedYear === ed.year ? null : ed.year)
-                  }
-                  className={`px-3 py-2 rounded-xl border font-bold text-[10px] transition-all flex flex-col items-center justify-center text-center ${
-                    selectedYear === ed.year
-                      ? "bg-blue-600 border-blue-600 text-white scale-105 shadow-lg shadow-blue-500/40"
-                      : activeYear === ed.year
-                        ? "bg-blue-50 border-blue-200 text-blue-600"
-                        : "bg-white border-slate-200 text-slate-500 hover:border-blue-400 hover:text-blue-600"
-                  }`}
+                  onClick={() => handleScroll(editionsRef, "left")}
+                  className="bg-white p-2 rounded-xl border border-slate-200 text-slate-500 active:scale-95 transition-all shadow-sm flex items-center justify-center hover:bg-slate-50"
+                  aria-label="Ver edições anteriores"
                 >
-                  <span className="opacity-70">{ed.num} Edição</span>
-                  <span className="text-sm font-black tracking-tight">
-                    {ed.year}
-                  </span>
+                  <ChevronLeft className="w-4 h-4" />
                 </button>
-              ))}
+                <button
+                  onClick={() => handleScroll(editionsRef, "right")}
+                  className="bg-white p-2 rounded-xl border border-slate-200 text-slate-500 active:scale-95 transition-all shadow-sm flex items-center justify-center hover:bg-slate-50"
+                  aria-label="Ver edições seguintes"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
@@ -283,7 +315,7 @@ export default function History() {
             </div>
           </div>
 
-          <div className="relative min-h-[650px]">
+          <div className="relative min-h-0 lg:min-h-[650px]">
             {/* Gallery Header for Selected Year */}
             {selectedYear && (
               <div className="mb-6 animate-in fade-in slide-in-from-left duration-500">
@@ -297,11 +329,83 @@ export default function History() {
               </div>
             )}
 
-            {/* Gallery Grid */}
-            <div className="grid grid-cols-3 grid-rows-3 gap-4 h-[650px]">
+            {/* Mobile Gallery (Horizontal Scroll with Controls) */}
+            <div className="relative md:hidden group/gallery">
+              <div
+                ref={galleryRef}
+                className="flex overflow-x-auto gap-4 pb-6 -mx-6 px-6 scrollbar-none snap-x snap-mandatory h-[380px] scroll-smooth"
+              >
+                {displayImages.map((img, i) => (
+                  <div
+                    key={`mobile-${selectedYear || "highlights"}-${i}`}
+                    onClick={() => setPreviewImage(img.src)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        setPreviewImage(img.src)
+                      }
+                    }}
+                    className={`flex-shrink-0 w-[80vw] sm:w-[350px] snap-center relative rounded-[2rem] overflow-hidden shadow-xl transition-all duration-500 cursor-pointer ${
+                      !selectedYear && activeYear && activeYear !== img.year
+                        ? "opacity-30 scale-95 grayscale"
+                        : "opacity-100 scale-100"
+                    }`}
+                  >
+                    <Image
+                      src={img.src}
+                      alt={`Simpovidro ${img.year}`}
+                      fill
+                      className="object-cover pointer-events-none"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent p-6 flex items-end justify-between">
+                      <span className="text-white font-bold text-sm">
+                        {selectedYear ? `Foto ${i + 1}` : `${img.year}`}
+                      </span>
+                      <Badge className="bg-blue-600 text-white border-none text-[10px] font-black px-2 py-0.5">
+                        {img.year}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Empty state handling if a clicked year has no images yet (mobile) */}
+                {selectedYear && selectedEdition?.images.length === 0 && (
+                  <div className="flex-shrink-0 w-[80vw] sm:w-[350px] snap-center flex flex-col items-center justify-center bg-slate-100 rounded-[2rem] border-2 border-dashed border-slate-200">
+                    <Camera className="w-12 h-12 text-slate-300 mb-3" />
+                    <p className="text-slate-500 font-bold italic text-sm text-center px-4">
+                      Imagens desta edição em breve
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile scroll indicator arrows */}
+              {displayImages.length > 1 && (
+                <>
+                  <button
+                    onClick={() => handleScroll(galleryRef, "left")}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-2 rounded-full shadow-lg border border-slate-200 text-slate-700 active:scale-95 transition-all z-20 flex items-center justify-center hover:bg-white"
+                    aria-label="Ver imagem anterior"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleScroll(galleryRef, "right")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-2 rounded-full shadow-lg border border-slate-200 text-slate-700 active:scale-95 transition-all z-20 flex items-center justify-center hover:bg-white"
+                    aria-label="Ver próxima imagem"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Desktop Gallery (Classic Mosaico Grid) */}
+            <div className="hidden md:grid grid-cols-3 grid-rows-3 gap-4 h-[650px]">
               {displayImages.map((img, i) => (
                 <button
-                  key={`${selectedYear || "highlights"}-${i}`}
+                  key={`desktop-${selectedYear || "highlights"}-${i}`}
                   onClick={() => setPreviewImage(img.src)}
                   className={`group relative rounded-[2rem] overflow-hidden shadow-2xl transition-all duration-700 animate-in zoom-in-95 duration-500 ${img.span} ${
                     !selectedYear && activeYear && activeYear !== img.year
@@ -348,14 +452,14 @@ export default function History() {
           onClick={() => setPreviewImage(null)}
         >
           <button
-            className="absolute top-6 right-6 text-white hover:rotate-90 transition-transform p-2 bg-white/10 rounded-full backdrop-blur-lg"
+            className="absolute top-4 right-4 md:top-6 md:right-6 text-white hover:rotate-90 transition-transform p-2 bg-white/10 rounded-full backdrop-blur-lg"
             onClick={() => setPreviewImage(null)}
           >
-            <X className="w-8 h-8" />
+            <X className="w-6 h-6 md:w-8 md:h-8" />
           </button>
 
           <div
-            className="relative w-full max-w-5xl aspect-video rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500"
+            className="relative w-full max-w-5xl aspect-[4/3] md:aspect-video rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500"
             onClick={(e) => e.stopPropagation()}
           >
             <Image

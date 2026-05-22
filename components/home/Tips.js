@@ -4,11 +4,11 @@ export default function Tips() {
   const tips = [
     {
       title: "Vestimenta",
-      desc: "Esporte fino para as reuniões técnicas e casual chic para os eventos sociais.",
+      desc: "XXXXXX",
     },
     {
       title: "Check-in",
-      desc: "Início oficial às 15h do dia 31 de Outubro. Chegue cedo para o networking.",
+      desc: "XXXXXX",
     },
     {
       title: "Transporte",

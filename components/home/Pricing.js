@@ -22,8 +22,8 @@ export default function Pricing() {
               Benefícios & Inscrição
             </h3>
             <p className="text-lg text-white leading-relaxed">
-              O Simpovidro é um evento exclusivo. Garanta condições especiais
-              através do associativismo e participe do maior encontro do setor.
+              Associados Abravidro contam com condições especiais para
+              participar do simpósio.
             </p>
 
             <div className="grid sm:grid-cols-2 gap-6">
@@ -31,7 +31,9 @@ export default function Pricing() {
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                   <Zap className="w-16 h-16 text-blue-600" />
                 </div>
-                <h4 className="text-blue-900 text-xl mb-2">SÓCIO ABRAVIDRO</h4>
+                <h4 className="text-blue-900 text-xl mb-2 uppercase">
+                  Associado ABRAVIDRO
+                </h4>
                 <div className="text-5xl font-black text-blue-600 mb-4 tracking-tighter">
                   20%{" "}
                   <span className="text-lg font-bold text-blue-400">OFF</span>
@@ -75,9 +77,6 @@ export default function Pricing() {
                 <CardTitle className="flex items-center gap-2 text-2xl font-title">
                   <Hotel className="h-5 w-5" /> Acomodações
                 </CardTitle>
-                <CardDescription className="text-blue-100">
-                  Exclusividade Costão do Santinho
-                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm opacity-90">

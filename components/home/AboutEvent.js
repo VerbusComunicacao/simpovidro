@@ -131,7 +131,7 @@ export default function AboutEvent({ scrollToSection }) {
               />
               <div className="absolute -bottom-12 left-8 right-8 p-8 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl text-white z-20">
                 <p className="font-eastman text-xl mb-1">
-                  Vanguardismo & Tradição
+                  Vanguarda & tradição
                 </p>
                 <p className="text-sm opacity-90">
                   Conectando a cadeia vidreira há 16 edições com excelência e
