@@ -10,13 +10,6 @@ export default function History() {
   const editionsRef = useRef(null)
   const galleryRef = useRef(null)
 
-  const handleScroll = (ref, direction) => {
-    if (ref.current) {
-      const scrollAmount = direction === "left" ? -280 : 280
-      ref.current.scrollBy({ left: scrollAmount, behavior: "smooth" })
-    }
-  }
-
   const editions = useMemo(
     () => [
       {
@@ -244,7 +237,7 @@ export default function History() {
     <section className="py-16 md:py-24 bg-slate-50 border-y border-slate-200 overflow-hidden ">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 ">
-          <div className="relative z-10 lg:sticky lg:top-24">
+          <div className="relative z-10 lg:sticky lg:top-24 min-w-0">
             <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 leading-none font-title">
               Uma Tradição <br />
               <span className="text-blue-600">de Sucesso</span>
@@ -258,7 +251,7 @@ export default function History() {
             <div className="relative">
               <div
                 ref={editionsRef}
-                className="flex overflow-x-auto pb-4 lg:pb-0 lg:grid lg:grid-cols-4 gap-3 mb-8 md:mb-10 -mx-6 px-6 lg:mx-0 lg:px-0 scrollbar-none snap-x snap-mandatory scroll-smooth"
+                className="flex px-4 pt-4 pb-4 lg:pb-12 flex-nowrap touch-pan-x overflow-x-auto lg:grid lg:grid-cols-4 gap-3 -mx-6 lg:mx-0 scrollbar-none snap-x snap-mandatory scroll-smooth"
               >
                 {editions.map((ed, i) => (
                   <button
@@ -283,39 +276,10 @@ export default function History() {
                   </button>
                 ))}
               </div>
-
-              {/* Mobile navigation arrows for editions */}
-              <div className="flex lg:hidden justify-end gap-2 mb-4 -mt-2">
-                <button
-                  onClick={() => handleScroll(editionsRef, "left")}
-                  className="bg-white p-2 rounded-xl border border-slate-200 text-slate-500 active:scale-95 transition-all shadow-sm flex items-center justify-center hover:bg-slate-50"
-                  aria-label="Ver edições anteriores"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleScroll(editionsRef, "right")}
-                  className="bg-white p-2 rounded-xl border border-slate-200 text-slate-500 active:scale-95 transition-all shadow-sm flex items-center justify-center hover:bg-slate-50"
-                  aria-label="Ver edições seguintes"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4">
-              {selectedYear && (
-                <button
-                  onClick={() => setSelectedYear(null)}
-                  className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-slate-600 transition-colors text-xs font-bold uppercase tracking-widest"
-                >
-                  <X className="w-4 h-4" /> Resetar Galeria
-                </button>
-              )}
             </div>
           </div>
 
-          <div className="relative min-h-0 lg:min-h-[650px]">
+          <div className="relative min-h-0 lg:min-h-[650px] min-w-0">
             {/* Gallery Header for Selected Year */}
             {selectedYear && (
               <div className="mb-6 animate-in fade-in slide-in-from-left duration-500">
@@ -333,7 +297,7 @@ export default function History() {
             <div className="relative md:hidden group/gallery">
               <div
                 ref={galleryRef}
-                className="flex overflow-x-auto gap-4 pb-6 -mx-6 px-6 scrollbar-none snap-x snap-mandatory h-[380px] scroll-smooth"
+                className="flex flex-nowrap touch-pan-x overflow-x-auto gap-3 pb-6 -mx-6 px-6 scrollbar-none snap-x snap-mandatory h-[380px] scroll-smooth"
               >
                 {displayImages.map((img, i) => (
                   <div
@@ -346,7 +310,7 @@ export default function History() {
                         setPreviewImage(img.src)
                       }
                     }}
-                    className={`flex-shrink-0 w-[80vw] sm:w-[350px] snap-center relative rounded-[2rem] overflow-hidden shadow-xl transition-all duration-500 cursor-pointer ${
+                    className={`flex-shrink-0 w-[82vw] sm:w-[350px] snap-start relative rounded-[2rem] overflow-hidden shadow-xl transition-all duration-500 cursor-pointer ${
                       !selectedYear && activeYear && activeYear !== img.year
                         ? "opacity-30 scale-95 grayscale"
                         : "opacity-100 scale-100"
@@ -379,26 +343,6 @@ export default function History() {
                   </div>
                 )}
               </div>
-
-              {/* Mobile scroll indicator arrows */}
-              {displayImages.length > 1 && (
-                <>
-                  <button
-                    onClick={() => handleScroll(galleryRef, "left")}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-2 rounded-full shadow-lg border border-slate-200 text-slate-700 active:scale-95 transition-all z-20 flex items-center justify-center hover:bg-white"
-                    aria-label="Ver imagem anterior"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => handleScroll(galleryRef, "right")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-2 rounded-full shadow-lg border border-slate-200 text-slate-700 active:scale-95 transition-all z-20 flex items-center justify-center hover:bg-white"
-                    aria-label="Ver próxima imagem"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </>
-              )}
             </div>
 
             {/* Desktop Gallery (Classic Mosaico Grid) */}
