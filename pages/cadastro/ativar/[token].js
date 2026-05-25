@@ -26,9 +26,10 @@ export default function Activate() {
       })
 
       if (response.ok) {
+        const data = await response.json().catch(() => ({}))
         setStatus("success")
         setMessage(
-          "Sua conta foi ativada com sucesso! Agora você já pode fazer login.",
+          data.message || "Sua conta foi ativada com sucesso! Agora você já pode fazer login.",
         )
       } else {
         const data = await response.json()

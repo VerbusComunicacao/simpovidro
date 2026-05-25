@@ -2,13 +2,14 @@ import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import Image from "next/image"
 
+export const navItems = [
+  { name: "Sobre", id: "sobre" },
+  { name: "Local", id: "local" },
+  { name: "Condições Especiais", id: "condicoes-especiais" },
+  { name: "Dicas e lembretes", id: "dicas" },
+]
+
 export default function Navbar({ scrollToSection, router }) {
-  const navItems = [
-    { name: "Local", id: "local" },
-    { name: "Acomodações", id: "acomodacoes" },
-    { name: "Benefícios", id: "beneficios" },
-    { name: "Dicas e lembretes", id: "dicas" },
-  ]
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 py-3 bg-white/90 backdrop-blur-md shadow-sm">

@@ -3,13 +3,14 @@ import Image from "next/image"
 export default function Sponsors({ variant = "full" }) {
   const sponsors = [
     { name: "AGC", logo: "/images/agc-logo.png" },
-    { name: "Cebrace", logo: "/images/cebrace-logo.png" },
+    { name: "Cebrace", logo: "/images/cebrace-logo.webp" },
     { name: "Guardian Glass", logo: "/images/glass-guardian-logo.png" },
     { name: "Vivix", logo: "/images/logo_vivix.png" },
   ]
 
   const supporters = [
     { name: "Diamanfer", logo: "/images/apoiadores/diamanfer.jpeg" },
+    { name: "Glass Control", logo: "/images/apoiadores/glass-control.png" },
     { name: "Vetro Maquinas", logo: "/images/apoiadores/vetro-maquinas.png" },
   ]
 
@@ -66,6 +67,53 @@ export default function Sponsors({ variant = "full" }) {
     )
   }
 
+  if (variant === "compact-hero") {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-center gap-6 md:gap-12">
+        <span className="font-title text-sm font-black text-blue-900/40 uppercase tracking-[0.2em] hidden sm:block">
+          Patrocinadores
+        </span>
+        <div className="flex items-center gap-8 md:gap-12">
+          {sponsors.map((sponsor) => (
+            <div
+              key={sponsor.name}
+              className="relative w-20 h-8 md:w-28 md:h-18 opacity-80 hover:opacity-100 transition-opacity"
+            >
+              <Image
+                src={sponsor.logo}
+                alt={`${sponsor.name} Logo`}
+                fill
+                className="object-contain"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (variant === "mini") {
+    return (
+      <div className="max-w-2xl mx-auto mt-8 px-6 py-2 flex items-center justify-center gap-6 md:gap-12">
+        <div className="flex items-center gap-4 md:gap-4">
+          {sponsors.map((sponsor) => (
+            <div
+              key={sponsor.name}
+              className="relative w-18 h-8  opacity-80 hover:opacity-100 transition-opacity"
+            >
+              <Image
+                src={sponsor.logo}
+                alt={`${sponsor.name} Logo`}
+                fill
+                className="object-contain"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <section id="patrocinadores" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6 text-center">
@@ -77,17 +125,16 @@ export default function Sponsors({ variant = "full" }) {
             {sponsors.map((sponsor) => (
               <div
                 key={sponsor.name}
-                className="group flex flex-col items-center gap-4 transition-all duration-500 hover:scale-110"
+                className="group transition-all duration-500 hover:scale-110"
               >
-                <div className="relative w-40 h-24 flex items-center justify-center p-4">
-                  <Image
-                    src={sponsor.logo}
-                    alt={`${sponsor.name} Logo`}
-                    width={160}
-                    height={80}
-                    className="object-contain"
-                  />
-                </div>
+                <Image
+                  src={sponsor.logo}
+                  alt={`${sponsor.name} Logo`}
+                  width={300}
+                  height={150}
+                  style={{ width: "auto" }}
+                  className="h-16 md:h-16 object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                />
               </div>
             ))}
           </div>
@@ -101,17 +148,16 @@ export default function Sponsors({ variant = "full" }) {
             {supporters.map((sponsor) => (
               <div
                 key={sponsor.name}
-                className="group flex flex-col items-center gap-4 transition-all duration-500 hover:scale-110"
+                className="group transition-all duration-500 hover:scale-110"
               >
-                <div className="relative h-40 flex items-center justify-center p-4">
-                  <Image
-                    src={sponsor.logo}
-                    alt={`${sponsor.name} Logo`}
-                    width={80}
-                    height={80}
-                    className="object-contain"
-                  />
-                </div>
+                <Image
+                  src={sponsor.logo}
+                  alt={`${sponsor.name} Logo`}
+                  width={300}
+                  height={150}
+                  style={{ width: "auto" }}
+                  className="h-16 md:h-16 object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                />
               </div>
             ))}
           </div>
@@ -125,17 +171,16 @@ export default function Sponsors({ variant = "full" }) {
             {support.map((partner) => (
               <div
                 key={partner.name}
-                className="group flex flex-col items-center transition-all duration-500 hover:scale-110"
+                className="group transition-all duration-500 hover:scale-110"
               >
-                <div className="relative w-28 flex items-center justify-center p-2">
-                  <Image
-                    src={partner.logo}
-                    alt={`${partner.name} Logo`}
-                    width={180}
-                    height={180}
-                    className="object-cover"
-                  />
-                </div>
+                <Image
+                  src={partner.logo}
+                  alt={`${partner.name} Logo`}
+                  width={200}
+                  height={100}
+                  style={{ width: "auto" }}
+                  className="h-10 md:h-16 object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+                />
               </div>
             ))}
           </div>

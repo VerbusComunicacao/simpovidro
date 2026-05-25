@@ -154,34 +154,32 @@ export default function CheckoutPage({
 
   const isAdmin = user.features?.includes("update:user:others")
 
-  const initialGuest = isAdmin
-    ? { ...emptyGuest }
-    : {
-        ...emptyGuest,
-        name: guestProfile?.name || user.full_name || "",
-        badge_name: guestProfile?.badge_name || "",
-        email: user.email || "",
-        phone: guestProfile?.phone || "",
-        gender: guestProfile?.gender || "",
-        rg_number: guestProfile?.rg_number || "",
-        cpf_number: guestProfile?.cpf_number || "",
-        birth_date: guestProfile?.birth_date
-          ? new Date(guestProfile.birth_date).toISOString().split("T")[0]
-          : "",
-        ...locationState,
-        emergency_contact_name: guestProfile?.emergency_contact_name || "",
-        emergency_contact_phone: guestProfile?.emergency_contact_phone || "",
-        blood_type: guestProfile?.blood_type || "",
-        blood_rh_factor: guestProfile?.blood_rh_factor || "",
-        passport_number: guestProfile?.passport_number || "",
-        medication_details: guestProfile?.medication_details || "",
-        special_needs_details: guestProfile?.special_needs_details || "",
-        health_observations: guestProfile?.health_observations || "",
-        has_heart_condition: guestProfile?.has_heart_condition ?? false,
-        has_diabetes: guestProfile?.has_diabetes ?? false,
-        has_high_blood_pressure: guestProfile?.has_high_blood_pressure ?? false,
-        has_low_blood_pressure: guestProfile?.has_low_blood_pressure ?? false,
-      }
+  const initialGuest = {
+    ...emptyGuest,
+    name: guestProfile?.name || user.full_name || "",
+    badge_name: guestProfile?.badge_name || "",
+    email: user.email || "",
+    phone: guestProfile?.phone || "",
+    gender: guestProfile?.gender || "",
+    rg_number: guestProfile?.rg_number || "",
+    cpf_number: guestProfile?.cpf_number || "",
+    birth_date: guestProfile?.birth_date
+      ? new Date(guestProfile.birth_date).toISOString().split("T")[0]
+      : "",
+    ...locationState,
+    emergency_contact_name: guestProfile?.emergency_contact_name || "",
+    emergency_contact_phone: guestProfile?.emergency_contact_phone || "",
+    blood_type: guestProfile?.blood_type || "",
+    blood_rh_factor: guestProfile?.blood_rh_factor || "",
+    passport_number: guestProfile?.passport_number || "",
+    medication_details: guestProfile?.medication_details || "",
+    special_needs_details: guestProfile?.special_needs_details || "",
+    health_observations: guestProfile?.health_observations || "",
+    has_heart_condition: guestProfile?.has_heart_condition ?? false,
+    has_diabetes: guestProfile?.has_diabetes ?? false,
+    has_high_blood_pressure: guestProfile?.has_high_blood_pressure ?? false,
+    has_low_blood_pressure: guestProfile?.has_low_blood_pressure ?? false,
+  }
 
   const minRequired = room.min_guests || 1
 
@@ -1090,6 +1088,43 @@ export default function CheckoutPage({
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
+                              <Label htmlFor={`cpf_number-${index}`}>
+                                CPF *
+                              </Label>
+                              <Input
+                                id={`cpf_number-${index}`}
+                                name="cpf_number"
+                                value={guestData.cpf_number}
+                                onChange={(e) => handleChange(index, e)}
+                                placeholder="000.000.000-00"
+                                disabled={false}
+                                className={
+                                  guestErrors[index]?.cpf_number
+                                    ? "border-red-500"
+                                    : ""
+                                }
+                                required
+                              />
+                              {guestErrors[index]?.cpf_number && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {guestErrors[index].cpf_number}
+                                </p>
+                              )}
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`rg_number-${index}`}>RG *</Label>
+                              <Input
+                                id={`rg_number-${index}`}
+                                name="rg_number"
+                                value={guestData.rg_number}
+                                onChange={(e) => handleChange(index, e)}
+                                required
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
                               <Label htmlFor={`name-${index}`}>
                                 Nome Completo *
                               </Label>
@@ -1190,43 +1225,6 @@ export default function CheckoutPage({
                                   {guestErrors[index].gender}
                                 </p>
                               )}
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor={`cpf_number-${index}`}>
-                                CPF *
-                              </Label>
-                              <Input
-                                id={`cpf_number-${index}`}
-                                name="cpf_number"
-                                value={guestData.cpf_number}
-                                onChange={(e) => handleChange(index, e)}
-                                placeholder="000.000.000-00"
-                                disabled={false}
-                                className={
-                                  guestErrors[index]?.cpf_number
-                                    ? "border-red-500"
-                                    : ""
-                                }
-                                required
-                              />
-                              {guestErrors[index]?.cpf_number && (
-                                <p className="text-red-500 text-xs mt-1">
-                                  {guestErrors[index].cpf_number}
-                                </p>
-                              )}
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor={`rg_number-${index}`}>RG *</Label>
-                              <Input
-                                id={`rg_number-${index}`}
-                                name="rg_number"
-                                value={guestData.rg_number}
-                                onChange={(e) => handleChange(index, e)}
-                                required
-                              />
                             </div>
                           </div>
 
@@ -1894,6 +1892,14 @@ export default function CheckoutPage({
                               >
                                 Total à Vista
                               </Badge>
+                            </div>
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-2xl font-black text-blue-600">
+                                {new Intl.NumberFormat("pt-BR", {
+                                  style: "currency",
+                                  currency: "BRL",
+                                }).format(finalTotal)}
+                              </span>
                             </div>
                             <div className="pt-2 border-t border-blue-100 flex flex-col gap-2">
                               <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">

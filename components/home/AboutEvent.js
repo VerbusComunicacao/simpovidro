@@ -42,12 +42,18 @@ export default function AboutEvent({ scrollToSection }) {
               <div className="space-y-4 text-lg text-white leading-relaxed mb-6">
                 <p>
                   A cada dois anos, os principais <em>players</em> vidreiros do
-                  Brasil se reúnem no Simpovidro. Organizado pela Abravidro, o
-                  evento tem como foco o <em>networking</em> entre os diversos
-                  elos da cadeia em meio a um ambiente descontraído, reunindo{" "}
+                  Brasil se reúnem no Simpovidro. Em 2026, o encontro ocorrerá
+                  de{" "}
                   <strong>
-                    oportunidades de negócio, conteúdo técnico e lazer.
+                    5 a 8 de novembro, no Costão do Santinho Resort
                   </strong>
+                  , em Florianópolis. Organizado pela Abravidro, o evento tem
+                  como foco o <em>networking</em> entre os diversos elos da
+                  cadeia em meio a um ambiente descontraído, reunindo{" "}
+                  <strong>
+                    oportunidades de negócio, conteúdo técnico e lazer
+                  </strong>
+                  .
                 </p>
                 <p>
                   O simpósio recebe participantes não só do Brasil, mas de

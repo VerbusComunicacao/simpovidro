@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
+import Link from "next/link"
 
 export default function Location() {
   const [activeImageIndex, setActiveImageIndex] = useState(0)
@@ -21,6 +22,8 @@ export default function Location() {
   const resortImages = [
     "/images/gerais/1.jpg",
     "/images/gerais/2.jpg",
+    "/images/gerais/14.webp",
+    "/images/gerais/15.webp",
     "/images/gerais/3.jpg",
     "/images/gerais/4.jpg",
     "/images/gerais/5.jpg",
@@ -245,13 +248,21 @@ export default function Location() {
                 </h4>
                 <p className="text-sm text-slate-600 leading-relaxed mt-1">
                   Reconhecimento máximo da indústria de eventos e turismo
-                  nacional no Prêmio Caio 2025.
+                  nacional no{" "}
+                  <a
+                    className="underline cursor-pointer hover:text-logo-blue"
+                    href="https://www.premiocaio.com.br/noticias/premio-caio-2025-dobra-de-tamanho,-consagra--240-empresas-e-marca-edicao-historica"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Prêmio Caio 2025.
+                  </a>
                 </p>
               </div>
             </div>
 
             {/* Atrativos Section */}
-            <div className="space-y-4">
+            <div className="space-y-4 mt-[20px]">
               <h4 className="text-base uppercase text-logo-blue flex items-center gap-2 font-eastman">
                 <Compass className="h-5 w-5 text-logo-blue" />
                 Atrativos do Resort
@@ -263,7 +274,7 @@ export default function Location() {
                     isNew: true,
                     icon: Waves,
                   },
-                  { text: "Parque Aqua Kids", isNew: false, icon: Smile },
+                  { text: "Parque Aqua Kids", isNew: true, icon: Smile },
                   { text: "Vila Kids", isNew: true, icon: Smile },
                   { text: "Restaurante Sambaqui", isNew: true, icon: Utensils },
                   { text: "Sport Bar", isNew: true, icon: GlassWater },

@@ -28,9 +28,11 @@ export default function History() {
         num: "15ª",
         year: "2022",
         images: [
+          "/images/edicoes-anteriores/simpovidro-2022/6.jpg",
           "/images/edicoes-anteriores/simpovidro-2022/1.jpg",
           "/images/edicoes-anteriores/simpovidro-2022/2.jpg",
-          "/images/edicoes-anteriores/simpovidro-2022/3.jpg",
+          "/images/edicoes-anteriores/simpovidro-2022/4.jpg",
+          "/images/edicoes-anteriores/simpovidro-2022/5.jpg",
         ],
       },
       {
@@ -188,9 +190,14 @@ export default function History() {
   // Visual highlights for the grid (shown when no edition is selected)
   const galleryHighlights = [
     {
+      src: "/images/edicoes-anteriores/simpovidro-2024/1.jpg",
+      year: "2024",
+      span: "row-span-2 col-span-2",
+    },
+    {
       src: "/images/edicoes-anteriores/simpovidro-2022/1.jpg",
       year: "2022",
-      span: "row-span-2 col-span-2",
+      span: "row-span-1 col-span-1",
     },
     {
       src: "/images/edicoes-anteriores/simpovidro-2019/1.jpg",
@@ -205,16 +212,11 @@ export default function History() {
     {
       src: "/images/edicoes-anteriores/simpovidro-2015/1.jpg",
       year: "2015",
-      span: "row-span-2 col-span-1",
+      span: "row-span-1 col-span-1",
     },
     {
       src: "/images/edicoes-anteriores/simpovidro-2013/simpovidro_01.jpg",
       year: "2013",
-      span: "row-span-1 col-span-1",
-    },
-    {
-      src: "/images/edicoes-anteriores/simpovidro-2011/simpovidro_01.jpg",
-      year: "2011",
       span: "row-span-1 col-span-1",
     },
   ]
@@ -234,7 +236,10 @@ export default function History() {
       : galleryHighlights
 
   return (
-    <section className="py-16 md:py-24 bg-slate-50 border-y border-slate-200 overflow-hidden ">
+    <section
+      id="edicoes-anteriores"
+      className="py-16 md:py-24 bg-slate-50 border-y border-slate-200 overflow-hidden "
+    >
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 ">
           <div className="relative z-10 lg:sticky lg:top-24 min-w-0">

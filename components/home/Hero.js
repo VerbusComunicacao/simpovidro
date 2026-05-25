@@ -102,28 +102,44 @@ export default function Hero({ scrollToSection, router }) {
           </motion.div>
 
           {/* Cards Flutuantes - Posicionados para sobrepor o vídeo */}
-          <div className="flex flex-row gap-3 md:gap-4 w-full max-w-[95%] md:w-auto mt-[-20px] md:mt-0 md:absolute md:-bottom-16 md:-right-6 z-20">
+          <div className="flex flex-row items-center justify-center md:justify-start gap-2.5 md:gap-4 w-full max-w-[95%] md:w-auto mt-[-15px] md:mt-0 md:absolute md:-bottom-16 md:-right-6 z-20">
             {stats.map((stat, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 1.2 + i * 0.2, duration: 0.5 }}
-                className="flex-1 md:w-44 bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.12)] border border-slate-50 flex items-start gap-2 transform hover:-translate-y-2 transition-all cursor-default"
+                className="shrink-0 w-fit bg-white p-3 md:p-4 rounded-xl md:rounded-2xl shadow-[0_12px_30px_rgba(0,0,0,0.08)] border border-slate-50 flex items-center gap-2 md:gap-3 transform hover:-translate-y-2 transition-all cursor-default"
               >
-                <div className="bg-blue-50 p-2 rounded-xl">
-                  <stat.icon className="h-4 w-4 text-blue-600" />
+                <div className="bg-blue-50 p-1.5 md:p-2 rounded-lg md:rounded-xl shrink-0">
+                  <stat.icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-blue-600" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-black text-slate-900 text-xs md:text-lg leading-tight font-title">
+                  <span className="font-black text-slate-900 text-[10px] md:text-sm lg:text-base leading-tight font-title whitespace-nowrap">
                     {stat.label}
                   </span>
-                  <span className="text-[9px] md:text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-0.5">
+                  <span className="text-[8px] md:text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-0.5 whitespace-nowrap">
                     {stat.sub}
                   </span>
                 </div>
               </motion.div>
             ))}
+            <motion.div
+              key={4}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1.2 + 4 * 0.2, duration: 0.5 }}
+              className="shrink-0 w-20 md:w-32 flex items-center justify-center transform hover:-translate-y-2 transition-all cursor-default"
+            >
+              <Image
+                src="/images/premio.png"
+                alt="Premio Melhor Resort do Brasil"
+                width={200}
+                height={200}
+                className="w-full h-auto object-contain"
+                priority
+              />
+            </motion.div>
           </div>
         </div>
       </motion.div>
@@ -134,7 +150,7 @@ export default function Hero({ scrollToSection, router }) {
         transition={{ delay: 2 }}
         className="w-full mt-auto"
       >
-        <Sponsors variant="compact" />
+        <Sponsors variant="compact-hero" />
       </motion.div>
     </section>
   )

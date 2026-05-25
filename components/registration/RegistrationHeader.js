@@ -5,6 +5,7 @@ import useUser from "@/hooks/useUser"
 import { useRouter } from "next/router"
 import authorization from "@/models/authorization"
 import Image from "next/image"
+import { navItems } from "@/components/home/Navbar"
 
 export default function RegistrationHeader({ showBackButton = false }) {
   const { user, logout } = useUser()
@@ -32,42 +33,15 @@ export default function RegistrationHeader({ showBackButton = false }) {
 
           {/* Nav Items - Same as Home Navbar */}
           <nav className="hidden xl:flex items-center gap-6 text-sm font-bold text-slate-600">
-            <Link
-              href="/#sobre"
-              className="hover:text-blue-600 transition-colors"
-            >
-              Sobre
-            </Link>
-            <Link
-              href="/#palestrantes"
-              className="hover:text-blue-600 transition-colors"
-            >
-              Palestrantes
-            </Link>
-            <Link
-              href="/#paineis"
-              className="hover:text-blue-600 transition-colors"
-            >
-              Painéis
-            </Link>
-            <Link
-              href="/#programacao"
-              className="hover:text-blue-600 transition-colors"
-            >
-              Programação
-            </Link>
-            <Link
-              href="/#precos"
-              className="hover:text-blue-600 transition-colors"
-            >
-              Preços
-            </Link>
-            <Link
-              href="/#dicas"
-              className="hover:text-blue-600 transition-colors"
-            >
-              Dicas
-            </Link>
+            {navItems.map((item) => (
+              <Link
+                key={item.id}
+                href={`/#${item.id}`}
+                className="hover:text-blue-600 transition-colors"
+              >
+                {item.name}
+              </Link>
+            ))}
           </nav>
         </div>
 

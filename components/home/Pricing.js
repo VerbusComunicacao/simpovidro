@@ -12,14 +12,14 @@ import Link from "next/link"
 export default function Pricing() {
   return (
     <section
-      id="beneficios"
+      id="condicoes-especiais"
       className="py-24 bg-logo-green border-y border-slate-200"
     >
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
             <h3 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">
-              Benefícios & Inscrição
+              Condições Especiais
             </h3>
             <p className="text-lg text-white leading-relaxed">
               Associados Abravidro contam com condições especiais para
@@ -57,7 +57,7 @@ export default function Pricing() {
                 </div>
                 <p className="text-slate-200 text-sm font-bold leading-relaxed">
                   Condição especial para associados de entidades regionais
-                  parceiras do Simpovidro.
+                  afiliadas da Abravidro.
                 </p>
               </div>
             </div>
@@ -94,19 +94,21 @@ export default function Pricing() {
             <Card className="bg-white border-slate-200 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-slate-900 text-2xl font-title">
-                  <Plane className="h-5 w-5 text-blue-600" /> Passagens Aéreas
+                  <Plane className="h-5 w-5 text-blue-600" /> TRANSFER
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-slate-600">
-                  Nossa agência parceira oferece suporte logístico completo para
-                  o seu voo até Maceió.
+                  Para garantir seu lugar no <em>transfer</em> gratuito
+                  aeroporto-hotel e hotel-aeroporto oferecido pela Abravidro aos
+                  participantes do Simpovidro, precisamos saber as informações
+                  de seu voo de ida e volta.
                 </p>
                 <Button
                   variant="outline"
                   className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
                 >
-                  Solicitar Cotação
+                  Clique aqui e preencha o formulário.
                 </Button>
               </CardContent>
             </Card>
