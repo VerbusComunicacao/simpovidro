@@ -49,7 +49,7 @@ export default function Hero({ scrollToSection, router }) {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative z-10 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-[1fr_1.3fr] gap-12 md:gap-20 items-center mb-20 md:mb-24 mt-4"
+        className="relative z-10 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-[1fr_1.3fr] gap-12 md:gap-20 items-center mb-10 md:mb-14 mt-4"
       >
         {/* Coluna da Esquerda: Marca e CTAs */}
         <motion.div

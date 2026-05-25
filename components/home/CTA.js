@@ -85,7 +85,7 @@ export default function CTA({ router, HERO_IMAGE }) {
               variant="outline"
               className="bg-transparent border-2 border-white text-white rounded-full h-16 px-14 text-xl font-bold"
             >
-              Tem dúvidas? Fale conosco: 11- 3873-9908
+              Dúvidas? Fale conosco: 11- 3873-9908
             </Button>
           </div>
         </div>
