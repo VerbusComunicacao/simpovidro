@@ -95,9 +95,9 @@ async function activateAccount(token) {
 
     if (activationToken.alreadyUsed) {
       await client.query("ROLLBACK")
-      return { 
-        message: "Sua conta já havia sido ativada! Você pode fazer login.", 
-        user_id: activationToken.user_id 
+      return {
+        message: "Sua conta já havia sido ativada! Você pode fazer login.",
+        user_id: activationToken.user_id,
       }
     }
 
@@ -148,9 +148,9 @@ async function activateAdmAccount(token) {
 
     if (activationToken.alreadyUsed) {
       await client.query("ROLLBACK")
-      return { 
-        message: "Sua conta já havia sido ativada! Você pode fazer login.", 
-        user_id: activationToken.user_id 
+      return {
+        message: "Sua conta já havia sido ativada! Você pode fazer login.",
+        user_id: activationToken.user_id,
       }
     }
 

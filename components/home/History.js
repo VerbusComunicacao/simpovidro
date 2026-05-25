@@ -1,6 +1,6 @@
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
-import { Camera, X, ChevronLeft, ChevronRight } from "lucide-react"
+import { Camera, X } from "lucide-react"
 import { useState, useMemo, useRef } from "react"
 
 export default function History() {

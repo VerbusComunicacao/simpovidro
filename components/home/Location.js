@@ -13,7 +13,6 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import Link from "next/link"
 
 export default function Location() {
   const [activeImageIndex, setActiveImageIndex] = useState(0)
