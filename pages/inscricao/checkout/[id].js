@@ -102,6 +102,7 @@ export default function CheckoutPage({
   const [installmentsCount, setInstallmentsCount] = useState(1)
   const [globalDiscounts] = useState(initialDiscounts || [])
   const [guestErrors, setGuestErrors] = useState({})
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [occupancyCounts, setOccupancyCounts] = useState(() => {
     const counts = { adults: parseInt(initialQuery?.adults) || 1 }
     if (initialQuery) {
@@ -154,32 +155,34 @@ export default function CheckoutPage({
 
   const isAdmin = user.features?.includes("update:user:others")
 
-  const initialGuest = {
-    ...emptyGuest,
-    name: guestProfile?.name || user.full_name || "",
-    badge_name: guestProfile?.badge_name || "",
-    email: user.email || "",
-    phone: guestProfile?.phone || "",
-    gender: guestProfile?.gender || "",
-    rg_number: guestProfile?.rg_number || "",
-    cpf_number: guestProfile?.cpf_number || "",
-    birth_date: guestProfile?.birth_date
-      ? new Date(guestProfile.birth_date).toISOString().split("T")[0]
-      : "",
-    ...locationState,
-    emergency_contact_name: guestProfile?.emergency_contact_name || "",
-    emergency_contact_phone: guestProfile?.emergency_contact_phone || "",
-    blood_type: guestProfile?.blood_type || "",
-    blood_rh_factor: guestProfile?.blood_rh_factor || "",
-    passport_number: guestProfile?.passport_number || "",
-    medication_details: guestProfile?.medication_details || "",
-    special_needs_details: guestProfile?.special_needs_details || "",
-    health_observations: guestProfile?.health_observations || "",
-    has_heart_condition: guestProfile?.has_heart_condition ?? false,
-    has_diabetes: guestProfile?.has_diabetes ?? false,
-    has_high_blood_pressure: guestProfile?.has_high_blood_pressure ?? false,
-    has_low_blood_pressure: guestProfile?.has_low_blood_pressure ?? false,
-  }
+  const initialGuest = isAdmin
+    ? { ...emptyGuest }
+    : {
+        ...emptyGuest,
+        name: guestProfile?.name || user.full_name || "",
+        badge_name: guestProfile?.badge_name || "",
+        email: user.email || "",
+        phone: guestProfile?.phone || "",
+        gender: guestProfile?.gender || "",
+        rg_number: guestProfile?.rg_number || "",
+        cpf_number: guestProfile?.cpf_number || "",
+        birth_date: guestProfile?.birth_date
+          ? new Date(guestProfile.birth_date).toISOString().split("T")[0]
+          : "",
+        ...locationState,
+        emergency_contact_name: guestProfile?.emergency_contact_name || "",
+        emergency_contact_phone: guestProfile?.emergency_contact_phone || "",
+        blood_type: guestProfile?.blood_type || "",
+        blood_rh_factor: guestProfile?.blood_rh_factor || "",
+        passport_number: guestProfile?.passport_number || "",
+        medication_details: guestProfile?.medication_details || "",
+        special_needs_details: guestProfile?.special_needs_details || "",
+        health_observations: guestProfile?.health_observations || "",
+        has_heart_condition: guestProfile?.has_heart_condition ?? false,
+        has_diabetes: guestProfile?.has_diabetes ?? false,
+        has_high_blood_pressure: guestProfile?.has_high_blood_pressure ?? false,
+        has_low_blood_pressure: guestProfile?.has_low_blood_pressure ?? false,
+      }
 
   const minRequired = room.min_guests || 1
 
@@ -1977,6 +1980,35 @@ export default function CheckoutPage({
                         )}
                       </div>
 
+                      {/* Aceite de Condições Gerais */}
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-start gap-3 my-6">
+                        <Checkbox
+                          id="terms-checkbox"
+                          checked={acceptedTerms}
+                          onCheckedChange={(checked) =>
+                            setAcceptedTerms(checked)
+                          }
+                          className="mt-0.5 border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                        />
+                        <div className="space-y-1">
+                          <Label
+                            htmlFor="terms-checkbox"
+                            className="text-sm font-semibold text-slate-700 leading-snug cursor-pointer select-none"
+                          >
+                            Li e aceito as{" "}
+                            <a
+                              href="/condicoes-gerais.pdf"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-700 underline font-bold hover:no-underline transition-all"
+                            >
+                              Condições Gerais
+                            </a>
+                            . *
+                          </Label>
+                        </div>
+                      </div>
+
                       <div className="flex gap-4">
                         <Button
                           type="button"
@@ -1989,7 +2021,7 @@ export default function CheckoutPage({
                         <Button
                           type="submit"
                           className="flex-[2] bg-blue-600 hover:bg-blue-700 text-lg py-6"
-                          disabled={isLoading}
+                          disabled={isLoading || !acceptedTerms}
                         >
                           {isLoading ? (
                             <>
