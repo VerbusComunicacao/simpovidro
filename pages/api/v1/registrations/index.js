@@ -256,7 +256,7 @@ async function postHandler(request, response) {
     `
 
     await email.send({
-      from: `Abravidro <${process.env.EMAIL_SMTP_USER || "contato@simpovidro.com.br"}>`,
+      from: `Simpovidro <${process.env.EMAIL_SMTP_USER || "contato@simpovidro.com.br"}>`,
       to: recipientEmail,
       subject: `Confirmação de Inscrição - Pedido #${saleDetails.sale_number || saleDetails.id.slice(0, 8)}`,
       html: emailHtml,
