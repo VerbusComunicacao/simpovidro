@@ -8,14 +8,14 @@ beforeAll(async () => {
 describe("infra/email.js", () => {
   test("send", async () => {
     await email.send({
-      from: "Abravidro <contato@abravidro.org.br>",
+      from: "Simpovidro <contato@abravidro.org.br>",
       to: "contato@curso.dev",
       subject: "Teste de assunto",
       text: "Teste decorpo",
     })
 
     await email.send({
-      from: "Abravidro <contato@abravidro.org.br>",
+      from: "Simpovidro <contato@abravidro.org.br>",
       to: "contato@curso.dev",
       subject: "Ultimo email enviado",
       text: "corpo do último email.",
