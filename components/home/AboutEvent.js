@@ -37,7 +37,7 @@ export default function AboutEvent({ scrollToSection }) {
                 O Evento
               </h2>
               <h3 className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-6">
-                O principal encontro do setor vidreiro na América Latina!
+                O maior hub de relacionamento da comunidade vidreira!
               </h3>
               <div className="space-y-4 text-lg text-white leading-relaxed mb-6">
                 <p>
