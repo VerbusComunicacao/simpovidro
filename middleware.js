@@ -14,6 +14,26 @@ export function middleware(request) {
     return NextResponse.next()
   }
 
+  // Allow registration and admin routes to function normally
+  const allowedPrefixes = [
+    "/inscricao",
+    "/table",
+    "/cadastro",
+    "/login",
+    "/forgot-password",
+    "/reset-password",
+    "/meus-pedidos",
+    "/status",
+  ]
+
+  const shouldBypass = allowedPrefixes.some(
+    (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),
+  )
+
+  if (shouldBypass) {
+    return NextResponse.next()
+  }
+
   // If the request is for '/breve', redirect to root '/' to keep the URL clean
   if (pathname === "/breve") {
     return NextResponse.redirect(new URL("/", request.url))
