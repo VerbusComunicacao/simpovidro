@@ -48,7 +48,7 @@ async function sendRecoveryEmail(user, token) {
           <img src="${webserver.origin}/images/agc-logo.png" alt="AGC" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
           <img src="${webserver.origin}/images/cebrace-logo.webp" alt="Cebrace" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
           <img src="${webserver.origin}/images/glass-guardian-logo.png" alt="Guardian Glass" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
-          <img src="${webserver.origin}/images/logo_vivix.png" alt="Vivix" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+          <img src="${webserver.origin}/images/logo_vivix_nova.png" alt="Vivix" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
         </div>
       </div>
     `

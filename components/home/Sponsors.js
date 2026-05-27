@@ -5,7 +5,7 @@ export default function Sponsors({ variant = "full" }) {
     { name: "AGC", logo: "/images/agc-logo.png" },
     { name: "Cebrace", logo: "/images/cebrace-logo.webp" },
     { name: "Guardian Glass", logo: "/images/glass-guardian-logo.png" },
-    { name: "Vivix", logo: "/images/logo_vivix.png" },
+    { name: "Vivix", logo: "/images/logo_vivix_nova.png" },
   ]
 
   const supporters = [
