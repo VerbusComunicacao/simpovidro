@@ -74,7 +74,7 @@ async function sendEmailToUser(user, activationToken) {
     `
 
   await email.send({
-    from: "Abravidro <contato@simpovidro.com.br>",
+    from: "Abravidro <simpovidro@abravidro.org.br>",
     to: user.email,
     subject: "Ative seu cadastro!",
     html: emailHtml,

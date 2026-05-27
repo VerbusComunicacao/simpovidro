@@ -256,7 +256,7 @@ async function postHandler(request, response) {
     `
 
     await email.send({
-      from: "Abravidro <contato@simpovidro.com.br>",
+      from: "Abravidro <simpovidro@abravidro.org.br>",
       to: recipientEmail,
       subject: `Confirmação de Inscrição - Pedido #${saleDetails.sale_number || saleDetails.id.slice(0, 8)}`,
       html: emailHtml,
