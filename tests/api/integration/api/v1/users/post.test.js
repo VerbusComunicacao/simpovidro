@@ -137,7 +137,7 @@ describe("POST /api/v1/users", () => {
 
       // 5. Check if the email was sent
       const lastEmail = await orchestrator.getLastEmail()
-      expect(lastEmail.sender).toBe("<contato@simpovidro.com.br>")
+      expect(lastEmail.sender).toBe("<simpovidro@abravidro.org.br>")
       expect(lastEmail.recipients[0]).toBe(`<${userPayload.email}>`)
       expect(lastEmail.text).toContain(`ativar/${tokens.rows[0].token}`)
     })

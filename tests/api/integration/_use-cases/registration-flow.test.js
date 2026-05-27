@@ -148,7 +148,7 @@ describe("Use case: Registration flow (all successful)", () => {
     expect(activationTokenObject.user_id).toBe(createdUserBody.id)
     expect(activationTokenObject.used_at).toBe(null)
 
-    expect(lastEmail.sender).toBe("<contato@simpovidro.com.br>")
+    expect(lastEmail.sender).toBe("<simpovidro@abravidro.org.br>")
     expect(lastEmail.recipients[0]).toBe("<registration@flow.com>")
     expect(lastEmail.subject).toBe(`Ative seu cadastro!`)
     expect(lastEmail.text).toContain(`RegistrationFlow`)
