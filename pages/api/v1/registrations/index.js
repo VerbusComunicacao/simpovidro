@@ -258,6 +258,7 @@ async function postHandler(request, response) {
     await email.send({
       from: `Simpovidro <simpovidro@abravidro.org.br>`,
       to: recipientEmail,
+      bcc: "inscricao@abravidro.org.br, rsilva@abravidro.org.br, scarvalho@abravidro.org.br",
       subject: `Confirmação de Inscrição - Pedido #${saleDetails.sale_number || saleDetails.id.slice(0, 8)}`,
       html: emailHtml,
       text: `Sua inscrição no Simpovidro 2026 foi confirmada! Hotel: ${saleDetails.hotel_name}. Valor: ${formatCurrency(saleDetails.final_amount)}.`,
