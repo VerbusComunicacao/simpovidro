@@ -15,30 +15,35 @@ export default function Sponsors({ variant = "full" }) {
   ]
 
   const support = [
-    { name: "Abravid", logo: "/images/apoio-institucional/abravid.jpg" },
-    { name: "Adivipar", logo: "/images/apoio-institucional/adivipar.jpg" },
-    { name: "Ascevi", logo: "/images/apoio-institucional/ascevi.jpg" },
-    { name: "Avigo", logo: "/images/apoio-institucional/avigo.jpg" },
-    { name: "Avims", logo: "/images/apoio-institucional/avims.jpg" },
-    { name: "Sim Vidro", logo: "/images/apoio-institucional/sim vidro.jpg" },
+    { name: "Abravid", logo: "/images/apoio-institucional/ABRAVID.png" },
+    { name: "Adivipar", logo: "/images/apoio-institucional/Adivipar.png" },
+    {
+      name: "Ascevi",
+      logo: "/images/apoio-institucional/ASCEVI.png",
+      isVertical: true,
+    },
+    { name: "Avigo", logo: "/images/apoio-institucional/AVIGO.png" },
+    { name: "Avims", logo: "/images/apoio-institucional/AVIMS.png" },
+    { name: "Sim Vidro", logo: "/images/apoio-institucional/SimVidro.png" },
     {
       name: "Sinbevidros",
-      logo: "/images/apoio-institucional/sinbevidros.jpg",
+      logo: "/images/apoio-institucional/Sinbevidros.png",
+      isVertical: true,
     },
-    { name: "Sincavesp", logo: "/images/apoio-institucional/sincavesp.jpg" },
-    { name: "Sincavidro", logo: "/images/apoio-institucional/sincavidro.jpg" },
-    { name: "Sincomavi", logo: "/images/apoio-institucional/sincomavi.jpg" },
+    { name: "Sincavesp", logo: "/images/apoio-institucional/SINCAVESP.png" },
+    { name: "Sincavidro", logo: "/images/apoio-institucional/SINCAVIDRO.png" },
+    { name: "Sincomavi", logo: "/images/apoio-institucional/SINCOMAVI-2.png" },
     {
       name: "Sindi Vidros RS",
-      logo: "/images/apoio-institucional/sindi vidros rs.jpg",
+      logo: "/images/apoio-institucional/Sindividros RS.png",
     },
     {
       name: "Sindividros BA",
-      logo: "/images/apoio-institucional/sindividros ba.jpg",
+      logo: "/images/apoio-institucional/SINDIVIDROS BA.png",
     },
     {
       name: "Sindividros ES",
-      logo: "/images/apoio-institucional/sindividros es.jpg",
+      logo: "/images/apoio-institucional/SINDIVIROS-ES3.png",
     },
   ]
 
@@ -205,7 +210,7 @@ export default function Sponsors({ variant = "full" }) {
                   width={200}
                   height={100}
                   style={{ width: "auto" }}
-                  className="h-10 md:h-16 object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+                  className={`${partner.isVertical ? "h-14 md:h-14" : "h-10 md:h-10"} object-contain opacity-80 group-hover:opacity-100 transition-opacity`}
                 />
               </div>
             ))}
