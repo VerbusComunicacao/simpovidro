@@ -56,6 +56,7 @@ async function create(companyInputValues, options = { isImport: false }) {
       responsible_person = null,
       zip_code = null,
       last_registration_date = null,
+      activity_sector = null,
     } = values
 
     const results = await database.query({
@@ -65,10 +66,10 @@ async function create(companyInputValues, options = { isImport: false }) {
             corporate_name, badge, cnpj, address, address_number, 
             address_complement, neighborhood, city, state, country, 
             phone, permission, discount_id, custom_discount_percentage, email, 
-            responsible_person, zip_code, last_registration_date
+            responsible_person, zip_code, last_registration_date, activity_sector
           )
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
         RETURNING
           *
       `,
@@ -91,6 +92,7 @@ async function create(companyInputValues, options = { isImport: false }) {
         responsible_person,
         zip_code,
         last_registration_date,
+        activity_sector,
       ],
     })
 
@@ -180,6 +182,7 @@ async function update(companyId, companyInputNewValues) {
       responsible_person,
       zip_code,
       last_registration_date,
+      activity_sector,
     } = values
 
     const results = await database.query({
@@ -205,6 +208,7 @@ async function update(companyId, companyInputNewValues) {
           responsible_person = $17,
           zip_code = $18,
           last_registration_date = $19,
+          activity_sector = $20,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
@@ -231,6 +235,7 @@ async function update(companyId, companyInputNewValues) {
         responsible_person,
         zip_code,
         last_registration_date,
+        activity_sector,
       ],
     })
 
@@ -339,6 +344,7 @@ async function upsert(companyData, client) {
       responsible_person = null,
       zip_code = null,
       last_registration_date = null,
+      activity_sector = null,
     } = values
 
     const results = await dbClient.query({
@@ -348,10 +354,10 @@ async function upsert(companyData, client) {
             corporate_name, badge, cnpj, address, address_number, 
             address_complement, neighborhood, city, state, country, 
             phone, permission, discount_id, custom_discount_percentage, email, 
-            responsible_person, zip_code, last_registration_date
+            responsible_person, zip_code, last_registration_date, activity_sector
           )
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
         RETURNING
           *
       `,
@@ -374,6 +380,7 @@ async function upsert(companyData, client) {
         responsible_person,
         zip_code,
         last_registration_date,
+        activity_sector,
       ],
     })
 

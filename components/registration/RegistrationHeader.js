@@ -1,17 +1,20 @@
+import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { LogOut, ChevronLeft } from "lucide-react"
+import { LogOut, ChevronLeft, Menu, X } from "lucide-react"
 import useUser from "@/hooks/useUser"
 import { useRouter } from "next/router"
 import authorization from "@/models/authorization"
 import Image from "next/image"
+import { navItems } from "@/components/home/Navbar"
 
 export default function RegistrationHeader({ showBackButton = false }) {
   const { user, logout } = useUser()
   const router = useRouter()
+  const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <header className="bg-white/90 backdrop-blur-md shadow-sm border-b sticky top-0 z-50 py-3">
+    <header className="bg-white/90 backdrop-blur-md shadow-sm border-b sticky top-0 pgm-header-shadow z-50 py-3">
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link
@@ -32,42 +35,15 @@ export default function RegistrationHeader({ showBackButton = false }) {
 
           {/* Nav Items - Same as Home Navbar */}
           <nav className="hidden xl:flex items-center gap-6 text-sm font-bold text-slate-600">
-            <Link
-              href="/#sobre"
-              className="hover:text-blue-600 transition-colors"
-            >
-              Sobre
-            </Link>
-            <Link
-              href="/#palestrantes"
-              className="hover:text-blue-600 transition-colors"
-            >
-              Palestrantes
-            </Link>
-            <Link
-              href="/#paineis"
-              className="hover:text-blue-600 transition-colors"
-            >
-              Painéis
-            </Link>
-            <Link
-              href="/#programacao"
-              className="hover:text-blue-600 transition-colors"
-            >
-              Programação
-            </Link>
-            <Link
-              href="/#precos"
-              className="hover:text-blue-600 transition-colors"
-            >
-              Preços
-            </Link>
-            <Link
-              href="/#dicas"
-              className="hover:text-blue-600 transition-colors"
-            >
-              Dicas
-            </Link>
+            {navItems.map((item) => (
+              <Link
+                key={item.id}
+                href={`/#${item.id}`}
+                className="hover:text-blue-600 transition-colors"
+              >
+                {item.name}
+              </Link>
+            ))}
           </nav>
         </div>
 
@@ -145,8 +121,42 @@ export default function RegistrationHeader({ showBackButton = false }) {
               </Button>
             </div>
           )}
+
+          {/* Hamburger Menu on mobile */}
+          <button className="xl:hidden" onClick={() => setIsOpen(!isOpen)}>
+            {isOpen ? (
+              <X className="text-slate-900 h-6 w-6" />
+            ) : (
+              <Menu className="text-slate-900 h-6 w-6" />
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Menu Panel */}
+      {isOpen && (
+        <div className="xl:hidden bg-white/95 backdrop-blur-md border-t border-slate-100 absolute top-full left-0 right-0 py-6 px-6 shadow-xl flex flex-col gap-4 z-40 transition-all duration-300">
+          {navItems.map((item) => (
+            <Link
+              key={item.id}
+              href={`/#${item.id}`}
+              onClick={() => setIsOpen(false)}
+              className="text-slate-700 hover:text-blue-600 font-semibold text-base py-1 transition-colors"
+            >
+              {item.name}
+            </Link>
+          ))}
+          {!user && (
+            <Button
+              asChild
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-full py-6 text-base font-bold shadow-md shadow-blue-200 mt-2"
+              onClick={() => setIsOpen(false)}
+            >
+              <Link href="/inscricao">Inscreva-se</Link>
+            </Button>
+          )}
+        </div>
+      )}
     </header>
   )
 }

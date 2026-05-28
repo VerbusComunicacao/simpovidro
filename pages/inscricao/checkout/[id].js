@@ -65,6 +65,29 @@ function calculateIsHolder(birthDate) {
   return calculateAge(birthDate) >= 18
 }
 
+const ACTIVITY_SECTORS = [
+  "ACESSÓRIOS",
+  "ATACADISTA",
+  "CONSULTORIA",
+  "DISTRIBUIDOR",
+  "ENTIDADE DE CLASSE",
+  "ESQUADRIAS",
+  "FERRAGENS",
+  "INSTALAÇÃO",
+  "INSUMOS",
+  "INTERLAY",
+  "MAQUINÁRIO",
+  "PROCESSADOR",
+  "RECICLAGEM",
+  "REPRESENTAÇÃO",
+  "SERVIÇOS",
+  "SINDICATOS",
+  "SOFTWARE",
+  "USINA DE BASE",
+  "VIDRAÇARIA",
+  "OUTRO",
+]
+
 export default function CheckoutPage({
   room,
   user,
@@ -97,11 +120,31 @@ export default function CheckoutPage({
     stateCode: "",
     country: "Brazil",
     countryCode: "BR",
+    activity_sector: "",
   })
+  const [selectedSector, setSelectedSector] = useState("")
+  const [customSector, setCustomSector] = useState("")
+
+  useEffect(() => {
+    if (newCompanyData.activity_sector) {
+      const sector = newCompanyData.activity_sector
+      if (ACTIVITY_SECTORS.slice(0, 19).includes(sector)) {
+        setSelectedSector(sector)
+        setCustomSector("")
+      } else {
+        setSelectedSector("OUTRO")
+        setCustomSector(sector)
+      }
+    } else {
+      setSelectedSector("")
+      setCustomSector("")
+    }
+  }, [newCompanyData.cnpj, newCompanyData.activity_sector])
   const [paymentMethod, setPaymentMethod] = useState("cash")
   const [installmentsCount, setInstallmentsCount] = useState(1)
   const [globalDiscounts] = useState(initialDiscounts || [])
   const [guestErrors, setGuestErrors] = useState({})
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [occupancyCounts, setOccupancyCounts] = useState(() => {
     const counts = { adults: parseInt(initialQuery?.adults) || 1 }
     if (initialQuery) {
@@ -589,6 +632,7 @@ export default function CheckoutPage({
           stateCode: companyData.state || "",
           countryCode: companyData.country_code || "BR",
           cnpj: companyData.cnpj || cnpj,
+          activity_sector: companyData.activity_sector || "",
         })
         setCurrentStep(2)
       } else if (response.status === 404) {
@@ -607,6 +651,7 @@ export default function CheckoutPage({
           neighborhood: "",
           city: "",
           state: "",
+          activity_sector: "",
         })
         setCurrentStep(2) // Go to Company Form
       } else {
@@ -634,6 +679,17 @@ export default function CheckoutPage({
       newCompanyData.zip_code.replace(/\D/g, "").length !== 8
     ) {
       setError("CEP inválido.")
+      return
+    }
+
+    // Validate Activity Sector (Ramo de Atividade)
+    if (
+      !newCompanyData.activity_sector ||
+      !newCompanyData.activity_sector.trim()
+    ) {
+      setError(
+        "Por favor, selecione ou informe o ramo de atividade da empresa.",
+      )
       return
     }
     setIsLoading(true)
@@ -1031,6 +1087,67 @@ export default function CheckoutPage({
                       />
                     </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="activity_sector">
+                          Ramo de Atividade *
+                        </Label>
+                        <Select
+                          value={selectedSector}
+                          onValueChange={(val) => {
+                            setSelectedSector(val)
+                            if (val === "OUTRO") {
+                              setNewCompanyData({
+                                ...newCompanyData,
+                                activity_sector: customSector,
+                              })
+                            } else {
+                              setNewCompanyData({
+                                ...newCompanyData,
+                                activity_sector: val,
+                              })
+                              setCustomSector("")
+                            }
+                            setError("")
+                          }}
+                          required
+                        >
+                          <SelectTrigger id="activity_sector">
+                            <SelectValue placeholder="Selecione o ramo de atividade" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ACTIVITY_SECTORS.map((sector) => (
+                              <SelectItem key={sector} value={sector}>
+                                {sector}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {selectedSector === "OUTRO" && (
+                        <div className="space-y-2">
+                          <Label htmlFor="custom_activity_sector">
+                            Informar Ramo de Atividade *
+                          </Label>
+                          <Input
+                            id="custom_activity_sector"
+                            value={customSector}
+                            onChange={(e) => {
+                              setCustomSector(e.target.value)
+                              setNewCompanyData({
+                                ...newCompanyData,
+                                activity_sector: e.target.value,
+                              })
+                              setError("")
+                            }}
+                            placeholder="Digite o ramo de atividade"
+                            required
+                          />
+                        </div>
+                      )}
+                    </div>
+
                     <div className="mt-4">
                       <LocationSelector
                         key={`company-${newCompanyData.stateCode}-${newCompanyData.city}`}
@@ -1087,6 +1204,43 @@ export default function CheckoutPage({
                           <h3 className="font-semibold text-gray-900 border-b pb-2">
                             Dados Pessoais
                           </h3>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor={`cpf_number-${index}`}>
+                                CPF *
+                              </Label>
+                              <Input
+                                id={`cpf_number-${index}`}
+                                name="cpf_number"
+                                value={guestData.cpf_number}
+                                onChange={(e) => handleChange(index, e)}
+                                placeholder="000.000.000-00"
+                                disabled={false}
+                                className={
+                                  guestErrors[index]?.cpf_number
+                                    ? "border-red-500"
+                                    : ""
+                                }
+                                required
+                              />
+                              {guestErrors[index]?.cpf_number && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {guestErrors[index].cpf_number}
+                                </p>
+                              )}
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`rg_number-${index}`}>RG *</Label>
+                              <Input
+                                id={`rg_number-${index}`}
+                                name="rg_number"
+                                value={guestData.rg_number}
+                                onChange={(e) => handleChange(index, e)}
+                                required
+                              />
+                            </div>
+                          </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -1190,43 +1344,6 @@ export default function CheckoutPage({
                                   {guestErrors[index].gender}
                                 </p>
                               )}
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor={`cpf_number-${index}`}>
-                                CPF *
-                              </Label>
-                              <Input
-                                id={`cpf_number-${index}`}
-                                name="cpf_number"
-                                value={guestData.cpf_number}
-                                onChange={(e) => handleChange(index, e)}
-                                placeholder="000.000.000-00"
-                                disabled={false}
-                                className={
-                                  guestErrors[index]?.cpf_number
-                                    ? "border-red-500"
-                                    : ""
-                                }
-                                required
-                              />
-                              {guestErrors[index]?.cpf_number && (
-                                <p className="text-red-500 text-xs mt-1">
-                                  {guestErrors[index].cpf_number}
-                                </p>
-                              )}
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor={`rg_number-${index}`}>RG *</Label>
-                              <Input
-                                id={`rg_number-${index}`}
-                                name="rg_number"
-                                value={guestData.rg_number}
-                                onChange={(e) => handleChange(index, e)}
-                                required
-                              />
                             </div>
                           </div>
 
@@ -1895,6 +2012,14 @@ export default function CheckoutPage({
                                 Total à Vista
                               </Badge>
                             </div>
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-2xl font-black text-blue-600">
+                                {new Intl.NumberFormat("pt-BR", {
+                                  style: "currency",
+                                  currency: "BRL",
+                                }).format(finalTotal)}
+                              </span>
+                            </div>
                             <div className="pt-2 border-t border-blue-100 flex flex-col gap-2">
                               <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">
                                 Pagamento por boleto:
@@ -1971,6 +2096,35 @@ export default function CheckoutPage({
                         )}
                       </div>
 
+                      {/* Aceite de Condições Gerais */}
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-start gap-3 my-6">
+                        <Checkbox
+                          id="terms-checkbox"
+                          checked={acceptedTerms}
+                          onCheckedChange={(checked) =>
+                            setAcceptedTerms(checked)
+                          }
+                          className="mt-0.5 border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                        />
+                        <div className="space-y-1">
+                          <Label
+                            htmlFor="terms-checkbox"
+                            className="text-sm font-semibold text-slate-700 leading-snug cursor-pointer select-none"
+                          >
+                            Li e aceito as{" "}
+                            <a
+                              href="/condicoes-gerais.pdf"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-700 underline font-bold hover:no-underline transition-all"
+                            >
+                              Condições Gerais
+                            </a>
+                            . *
+                          </Label>
+                        </div>
+                      </div>
+
                       <div className="flex gap-4">
                         <Button
                           type="button"
@@ -1983,7 +2137,7 @@ export default function CheckoutPage({
                         <Button
                           type="submit"
                           className="flex-[2] bg-blue-600 hover:bg-blue-700 text-lg py-6"
-                          disabled={isLoading}
+                          disabled={isLoading || !acceptedTerms}
                         >
                           {isLoading ? (
                             <>

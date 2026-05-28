@@ -38,9 +38,17 @@ export default function CTA({ router, HERO_IMAGE }) {
               </a>
             </p>
           </div>
-          <p className="text-xs text-slate-400 font-medium tracking-widest uppercase">
-            ORGANIZAÇÃO: ABRAVIDRO
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-xs text-slate-400 font-medium tracking-widest uppercase">
+              ORGANIZAÇÃO:
+            </p>
+            <Image
+              src={"/images/logo_ABRAVIDRO.png"}
+              alt={`ABRAVIDRO`}
+              width={140}
+              height={140}
+            />
+          </div>
         </div>
       </section>
 
@@ -75,9 +83,9 @@ export default function CTA({ router, HERO_IMAGE }) {
             <Button
               size="lg"
               variant="outline"
-              className="bg-transparent border-2 border-white/20 text-white hover:bg-white/10 rounded-full h-16 px-14 text-xl font-bold"
+              className="bg-transparent border-2 border-white text-white rounded-full h-16 px-14 text-xl font-bold"
             >
-              FALAR COM CONSULTOR
+              Dúvidas? Fale conosco: 11- 3873-9908
             </Button>
           </div>
         </div>

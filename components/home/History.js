@@ -1,12 +1,14 @@
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Camera, X } from "lucide-react"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef } from "react"
 
 export default function History() {
   const [activeYear, setActiveYear] = useState(null)
   const [selectedYear, setSelectedYear] = useState(null)
   const [previewImage, setPreviewImage] = useState(null)
+  const editionsRef = useRef(null)
+  const galleryRef = useRef(null)
 
   const editions = useMemo(
     () => [
@@ -26,9 +28,11 @@ export default function History() {
         num: "15ª",
         year: "2022",
         images: [
+          "/images/edicoes-anteriores/simpovidro-2022/6.jpg",
           "/images/edicoes-anteriores/simpovidro-2022/1.jpg",
           "/images/edicoes-anteriores/simpovidro-2022/2.jpg",
-          "/images/edicoes-anteriores/simpovidro-2022/3.jpg",
+          "/images/edicoes-anteriores/simpovidro-2022/4.jpg",
+          "/images/edicoes-anteriores/simpovidro-2022/5.jpg",
         ],
       },
       {
@@ -186,9 +190,14 @@ export default function History() {
   // Visual highlights for the grid (shown when no edition is selected)
   const galleryHighlights = [
     {
+      src: "/images/edicoes-anteriores/simpovidro-2024/1.jpg",
+      year: "2024",
+      span: "row-span-2 col-span-2",
+    },
+    {
       src: "/images/edicoes-anteriores/simpovidro-2022/1.jpg",
       year: "2022",
-      span: "row-span-2 col-span-2",
+      span: "row-span-1 col-span-1",
     },
     {
       src: "/images/edicoes-anteriores/simpovidro-2019/1.jpg",
@@ -203,16 +212,11 @@ export default function History() {
     {
       src: "/images/edicoes-anteriores/simpovidro-2015/1.jpg",
       year: "2015",
-      span: "row-span-2 col-span-1",
+      span: "row-span-1 col-span-1",
     },
     {
       src: "/images/edicoes-anteriores/simpovidro-2013/simpovidro_01.jpg",
       year: "2013",
-      span: "row-span-1 col-span-1",
-    },
-    {
-      src: "/images/edicoes-anteriores/simpovidro-2011/simpovidro_01.jpg",
-      year: "2011",
       span: "row-span-1 col-span-1",
     },
   ]
@@ -232,58 +236,55 @@ export default function History() {
       : galleryHighlights
 
   return (
-    <section className="py-24 bg-slate-50 border-y border-slate-200 overflow-hidden ">
+    <section
+      id="edicoes-anteriores"
+      className="py-16 md:py-24 bg-slate-50 border-y border-slate-200 overflow-hidden "
+    >
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 ">
-          <div className="relative z-10 sticky top-24">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 ">
+          <div className="relative z-10 lg:sticky lg:top-24 min-w-0">
             <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 leading-none font-title">
               Uma Tradição <br />
               <span className="text-blue-600">de Sucesso</span>
             </h2>
-            <p className="text-xl text-slate-600 mb-10 leading-relaxed font-medium max-w-xl">
-              Há quase 30 anos, o Simpovidro une o mercado para gerar bilhões em
-              parcerias e conexões. Explore os momentos que definiram a história
-              do nosso setor.
+            <p className="text-lg md:text-xl text-slate-600 mb-8 md:mb-10 leading-relaxed font-medium max-w-xl">
+              Há mais de 30 anos, o Simpovidro une o mercado para gerar bilhões
+              em parcerias e conexões. Explore os momentos que definiram a
+              história do nosso setor.
             </p>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
-              {editions.map((ed, i) => (
-                <button
-                  key={i}
-                  onMouseEnter={() => setActiveYear(ed.year)}
-                  onMouseLeave={() => setActiveYear(null)}
-                  onClick={() =>
-                    setSelectedYear(selectedYear === ed.year ? null : ed.year)
-                  }
-                  className={`px-3 py-2 rounded-xl border font-bold text-[10px] transition-all flex flex-col items-center justify-center text-center ${
-                    selectedYear === ed.year
-                      ? "bg-blue-600 border-blue-600 text-white scale-105 shadow-lg shadow-blue-500/40"
-                      : activeYear === ed.year
-                        ? "bg-blue-50 border-blue-200 text-blue-600"
-                        : "bg-white border-slate-200 text-slate-500 hover:border-blue-400 hover:text-blue-600"
-                  }`}
-                >
-                  <span className="opacity-70">{ed.num} Edição</span>
-                  <span className="text-sm font-black tracking-tight">
-                    {ed.year}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4">
-              {selectedYear && (
-                <button
-                  onClick={() => setSelectedYear(null)}
-                  className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-slate-600 transition-colors text-xs font-bold uppercase tracking-widest"
-                >
-                  <X className="w-4 h-4" /> Resetar Galeria
-                </button>
-              )}
+            <div className="relative">
+              <div
+                ref={editionsRef}
+                className="flex px-4 pt-4 pb-4 lg:pb-12 flex-nowrap touch-pan-x overflow-x-auto lg:grid lg:grid-cols-4 gap-3 -mx-6 lg:mx-0 scrollbar-none snap-x snap-mandatory scroll-smooth"
+              >
+                {editions.map((ed, i) => (
+                  <button
+                    key={i}
+                    onMouseEnter={() => setActiveYear(ed.year)}
+                    onMouseLeave={() => setActiveYear(null)}
+                    onClick={() =>
+                      setSelectedYear(selectedYear === ed.year ? null : ed.year)
+                    }
+                    className={`flex-shrink-0 w-24 lg:w-auto snap-center px-3 py-2.5 rounded-xl border font-bold text-[10px] transition-all flex flex-col items-center justify-center text-center ${
+                      selectedYear === ed.year
+                        ? "bg-blue-600 border-blue-600 text-white scale-105 shadow-lg shadow-blue-500/40"
+                        : activeYear === ed.year
+                          ? "bg-blue-50 border-blue-200 text-blue-600"
+                          : "bg-white border-slate-200 text-slate-500 hover:border-blue-400 hover:text-blue-600"
+                    }`}
+                  >
+                    <span className="opacity-70">{ed.num} Edição</span>
+                    <span className="text-sm font-black tracking-tight">
+                      {ed.year}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="relative min-h-[650px]">
+          <div className="relative min-h-0 lg:min-h-[650px] min-w-0">
             {/* Gallery Header for Selected Year */}
             {selectedYear && (
               <div className="mb-6 animate-in fade-in slide-in-from-left duration-500">
@@ -297,11 +298,63 @@ export default function History() {
               </div>
             )}
 
-            {/* Gallery Grid */}
-            <div className="grid grid-cols-3 grid-rows-3 gap-4 h-[650px]">
+            {/* Mobile Gallery (Horizontal Scroll with Controls) */}
+            <div className="relative md:hidden group/gallery">
+              <div
+                ref={galleryRef}
+                className="flex flex-nowrap touch-pan-x overflow-x-auto gap-3 pb-6 -mx-6 px-6 scrollbar-none snap-x snap-mandatory h-[380px] scroll-smooth"
+              >
+                {displayImages.map((img, i) => (
+                  <div
+                    key={`mobile-${selectedYear || "highlights"}-${i}`}
+                    onClick={() => setPreviewImage(img.src)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        setPreviewImage(img.src)
+                      }
+                    }}
+                    className={`flex-shrink-0 w-[82vw] sm:w-[350px] snap-start relative rounded-[2rem] overflow-hidden shadow-xl transition-all duration-500 cursor-pointer ${
+                      !selectedYear && activeYear && activeYear !== img.year
+                        ? "opacity-30 scale-95 grayscale"
+                        : "opacity-100 scale-100"
+                    }`}
+                  >
+                    <Image
+                      src={img.src}
+                      alt={`Simpovidro ${img.year}`}
+                      fill
+                      className="object-cover pointer-events-none"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent p-6 flex items-end justify-between">
+                      <span className="text-white font-bold text-sm">
+                        {selectedYear ? `Foto ${i + 1}` : `${img.year}`}
+                      </span>
+                      <Badge className="bg-blue-600 text-white border-none text-[10px] font-black px-2 py-0.5">
+                        {img.year}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Empty state handling if a clicked year has no images yet (mobile) */}
+                {selectedYear && selectedEdition?.images.length === 0 && (
+                  <div className="flex-shrink-0 w-[80vw] sm:w-[350px] snap-center flex flex-col items-center justify-center bg-slate-100 rounded-[2rem] border-2 border-dashed border-slate-200">
+                    <Camera className="w-12 h-12 text-slate-300 mb-3" />
+                    <p className="text-slate-500 font-bold italic text-sm text-center px-4">
+                      Imagens desta edição em breve
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Desktop Gallery (Classic Mosaico Grid) */}
+            <div className="hidden md:grid grid-cols-3 grid-rows-3 gap-4 h-[650px]">
               {displayImages.map((img, i) => (
                 <button
-                  key={`${selectedYear || "highlights"}-${i}`}
+                  key={`desktop-${selectedYear || "highlights"}-${i}`}
                   onClick={() => setPreviewImage(img.src)}
                   className={`group relative rounded-[2rem] overflow-hidden shadow-2xl transition-all duration-700 animate-in zoom-in-95 duration-500 ${img.span} ${
                     !selectedYear && activeYear && activeYear !== img.year
@@ -348,14 +401,14 @@ export default function History() {
           onClick={() => setPreviewImage(null)}
         >
           <button
-            className="absolute top-6 right-6 text-white hover:rotate-90 transition-transform p-2 bg-white/10 rounded-full backdrop-blur-lg"
+            className="absolute top-4 right-4 md:top-6 md:right-6 text-white hover:rotate-90 transition-transform p-2 bg-white/10 rounded-full backdrop-blur-lg"
             onClick={() => setPreviewImage(null)}
           >
-            <X className="w-8 h-8" />
+            <X className="w-6 h-6 md:w-8 md:h-8" />
           </button>
 
           <div
-            className="relative w-full max-w-5xl aspect-video rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500"
+            className="relative w-full max-w-5xl aspect-[4/3] md:aspect-video rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500"
             onClick={(e) => e.stopPropagation()}
           >
             <Image

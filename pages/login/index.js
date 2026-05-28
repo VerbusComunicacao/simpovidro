@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Image from "next/image"
+import Sponsors from "@/components/home/Sponsors"
 
 export default function LoginPage() {
   const { user, isLoading } = useUser()
@@ -76,6 +77,7 @@ export default function LoginPage() {
                 </span>
               </Link>
             </div>
+            <Sponsors variant="mini" />
           </CardFooter>
         </Card>
       </div>

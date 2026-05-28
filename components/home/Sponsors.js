@@ -3,55 +3,134 @@ import Image from "next/image"
 export default function Sponsors({ variant = "full" }) {
   const sponsors = [
     { name: "AGC", logo: "/images/agc-logo.png" },
-    { name: "Cebrace", logo: "/images/cebrace-logo.png" },
+    { name: "Cebrace", logo: "/images/cebrace-logo.webp" },
     { name: "Guardian Glass", logo: "/images/glass-guardian-logo.png" },
-    { name: "Vivix", logo: "/images/logo_vivix.png" },
+    { name: "Vivix", logo: "/images/logo_vivix_nova.png" },
   ]
 
   const supporters = [
     { name: "Diamanfer", logo: "/images/apoiadores/diamanfer.jpeg" },
+    { name: "Glass Control", logo: "/images/apoiadores/glass-control.png" },
     { name: "Vetro Maquinas", logo: "/images/apoiadores/vetro-maquinas.png" },
   ]
 
   const support = [
-    { name: "Abravid", logo: "/images/apoio-institucional/abravid.jpg" },
-    { name: "Adivipar", logo: "/images/apoio-institucional/adivipar.jpg" },
-    { name: "Ascevi", logo: "/images/apoio-institucional/ascevi.jpg" },
-    { name: "Avigo", logo: "/images/apoio-institucional/avigo.jpg" },
-    { name: "Avims", logo: "/images/apoio-institucional/avims.jpg" },
-    { name: "Sim Vidro", logo: "/images/apoio-institucional/sim vidro.jpg" },
+    { name: "Abravid", logo: "/images/apoio-institucional/ABRAVID.png" },
+    { name: "Adivipar", logo: "/images/apoio-institucional/Adivipar.png" },
+    {
+      name: "Ascevi",
+      logo: "/images/apoio-institucional/ASCEVI.png",
+      isVertical: true,
+    },
+    { name: "Avigo", logo: "/images/apoio-institucional/AVIGO.png" },
+    { name: "Avims", logo: "/images/apoio-institucional/AVIMS.png" },
+    { name: "Sim Vidro", logo: "/images/apoio-institucional/SimVidro.png" },
     {
       name: "Sinbevidros",
-      logo: "/images/apoio-institucional/sinbevidros.jpg",
+      logo: "/images/apoio-institucional/Sinbevidros.png",
+      isVertical: true,
     },
-    { name: "Sincavesp", logo: "/images/apoio-institucional/sincavesp.jpg" },
-    { name: "Sincavidro", logo: "/images/apoio-institucional/sincavidro.jpg" },
-    { name: "Sincomavi", logo: "/images/apoio-institucional/sincomavi.jpg" },
+    { name: "Sincavesp", logo: "/images/apoio-institucional/SINCAVESP.png" },
+    { name: "Sincavidro", logo: "/images/apoio-institucional/SINCAVIDRO.png" },
+    { name: "Sincomavi", logo: "/images/apoio-institucional/SINCOMAVI-2.png" },
     {
       name: "Sindi Vidros RS",
-      logo: "/images/apoio-institucional/sindi vidros rs.jpg",
+      logo: "/images/apoio-institucional/Sindividros RS.png",
     },
     {
       name: "Sindividros BA",
-      logo: "/images/apoio-institucional/sindividros ba.jpg",
+      logo: "/images/apoio-institucional/SINDIVIDROS BA.png",
     },
     {
       name: "Sindividros ES",
-      logo: "/images/apoio-institucional/sindividros es.jpg",
+      logo: "/images/apoio-institucional/SINDIVIROS-ES3.png",
     },
   ]
 
   if (variant === "compact") {
     return (
-      <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-center gap-6 md:gap-12">
+      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-4 sm:gap-6 md:gap-12">
         <span className="font-title text-sm font-black text-blue-900/40 uppercase tracking-[0.2em] hidden sm:block">
           Patrocinadores
         </span>
-        <div className="flex items-center gap-8 md:gap-12">
+        <div className="flex items-center gap-4 sm:gap-6 md:gap-12">
           {sponsors.map((sponsor) => (
             <div
               key={sponsor.name}
-              className="relative w-20 h-8 md:w-24 md:h-10 opacity-80 hover:opacity-100 transition-opacity"
+              className="relative w-12 h-5 sm:w-16 sm:h-8 md:w-24 md:h-10 opacity-85 hover:opacity-100 transition-opacity"
+            >
+              <Image
+                src={sponsor.logo}
+                alt={`${sponsor.name} Logo`}
+                fill
+                className="object-contain"
+              />
+            </div>
+          ))}
+        </div>
+        <span className="font-title text-sm font-black text-blue-900/40 uppercase tracking-[0.2em] hidden sm:block">
+          Realização
+        </span>
+        <div className="relative w-12 h-5 sm:w-18 sm:h-8 md:w-32 md:h-10 opacity-85 hover:opacity-100 transition-opacity">
+          <Image
+            src="/images/logo_ABRAVIDRO.png"
+            alt="ABRAVIDRO Logo"
+            fill
+            className="object-contain"
+          />
+        </div>
+      </div>
+    )
+  }
+
+  if (variant === "compact-hero") {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-2 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 md:gap-12">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 md:gap-12">
+          <span className="font-title text-[9px] sm:text-sm font-black text-blue-900/40 uppercase tracking-[0.2em]">
+            Patrocinadores
+          </span>
+          <div className="flex items-center justify-center gap-4 sm:gap-6 md:gap-12">
+            {sponsors.map((sponsor) => (
+              <div
+                key={sponsor.name}
+                className="relative w-16 h-8 sm:w-18 sm:h-10 md:w-28 md:h-18 opacity-85 hover:opacity-100 transition-opacity"
+              >
+                <Image
+                  src={sponsor.logo}
+                  alt={`${sponsor.name} Logo`}
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 md:gap-12">
+          <span className="font-title text-[9px] sm:text-sm font-black text-blue-900/40 uppercase tracking-[0.2em]">
+            Realização
+          </span>
+          <div className="relative w-28 h-8 sm:w-24 sm:h-10 md:w-40 md:h-18 opacity-85 hover:opacity-100 transition-opacity">
+            <Image
+              src="/images/logo_ABRAVIDRO.png"
+              alt="ABRAVIDRO Logo"
+              fill
+              className="object-contain"
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (variant === "mini") {
+    return (
+      <div className="max-w-2xl mx-auto mt-8 px-6 py-2 flex items-center justify-center gap-6 md:gap-12">
+        <div className="flex items-center gap-4 md:gap-4">
+          {sponsors.map((sponsor) => (
+            <div
+              key={sponsor.name}
+              className="relative w-18 h-8  opacity-80 hover:opacity-100 transition-opacity"
             >
               <Image
                 src={sponsor.logo}
@@ -77,17 +156,16 @@ export default function Sponsors({ variant = "full" }) {
             {sponsors.map((sponsor) => (
               <div
                 key={sponsor.name}
-                className="group flex flex-col items-center gap-4 transition-all duration-500 hover:scale-110"
+                className="group transition-all duration-500 hover:scale-110"
               >
-                <div className="relative w-40 h-24 flex items-center justify-center p-4">
-                  <Image
-                    src={sponsor.logo}
-                    alt={`${sponsor.name} Logo`}
-                    width={160}
-                    height={80}
-                    className="object-contain"
-                  />
-                </div>
+                <Image
+                  src={sponsor.logo}
+                  alt={`${sponsor.name} Logo`}
+                  width={300}
+                  height={150}
+                  style={{ width: "auto" }}
+                  className="h-16 md:h-16 object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                />
               </div>
             ))}
           </div>
@@ -101,17 +179,16 @@ export default function Sponsors({ variant = "full" }) {
             {supporters.map((sponsor) => (
               <div
                 key={sponsor.name}
-                className="group flex flex-col items-center gap-4 transition-all duration-500 hover:scale-110"
+                className="group transition-all duration-500 hover:scale-110"
               >
-                <div className="relative h-40 flex items-center justify-center p-4">
-                  <Image
-                    src={sponsor.logo}
-                    alt={`${sponsor.name} Logo`}
-                    width={80}
-                    height={80}
-                    className="object-contain"
-                  />
-                </div>
+                <Image
+                  src={sponsor.logo}
+                  alt={`${sponsor.name} Logo`}
+                  width={300}
+                  height={150}
+                  style={{ width: "auto" }}
+                  className="h-16 md:h-16 object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                />
               </div>
             ))}
           </div>
@@ -125,17 +202,16 @@ export default function Sponsors({ variant = "full" }) {
             {support.map((partner) => (
               <div
                 key={partner.name}
-                className="group flex flex-col items-center transition-all duration-500 hover:scale-110"
+                className="group transition-all duration-500 hover:scale-110"
               >
-                <div className="relative w-28 flex items-center justify-center p-2">
-                  <Image
-                    src={partner.logo}
-                    alt={`${partner.name} Logo`}
-                    width={180}
-                    height={180}
-                    className="object-cover"
-                  />
-                </div>
+                <Image
+                  src={partner.logo}
+                  alt={`${partner.name} Logo`}
+                  width={200}
+                  height={100}
+                  style={{ width: "auto" }}
+                  className={`${partner.isVertical ? "h-14 md:h-14" : "h-10 md:h-10"} object-contain opacity-80 group-hover:opacity-100 transition-opacity`}
+                />
               </div>
             ))}
           </div>

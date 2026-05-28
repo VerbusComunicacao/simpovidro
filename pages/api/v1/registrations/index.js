@@ -196,9 +196,9 @@ async function postHandler(request, response) {
         <p style="color: #9ca3af; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px;">Patrocínio</p>
         <div style="display: inline-block;">
           <img src="${webserver.origin}/images/agc-logo.png" alt="AGC" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
-          <img src="${webserver.origin}/images/cebrace-logo.png" alt="Cebrace" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+          <img src="${webserver.origin}/images/cebrace-logo.webp" alt="Cebrace" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
           <img src="${webserver.origin}/images/glass-guardian-logo.png" alt="Guardian Glass" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
-          <img src="${webserver.origin}/images/logo_vivix.png" alt="Vivix" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+          <img src="${webserver.origin}/images/logo_vivix_nova.png" alt="Vivix" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
         </div>
       </div>
     `
@@ -258,6 +258,7 @@ async function postHandler(request, response) {
     await email.send({
       from: `Simpovidro <simpovidro@abravidro.org.br>`,
       to: recipientEmail,
+      bcc: "inscricao@abravidro.org.br, rsilva@abravidro.org.br, scarvalho@abravidro.org.br",
       subject: `Confirmação de Inscrição - Pedido #${saleDetails.sale_number || saleDetails.id.slice(0, 8)}`,
       html: emailHtml,
       text: `Sua inscrição no Simpovidro 2026 foi confirmada! Hotel: ${saleDetails.hotel_name}. Valor: ${formatCurrency(saleDetails.final_amount)}.`,

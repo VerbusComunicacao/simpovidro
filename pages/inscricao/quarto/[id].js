@@ -329,25 +329,32 @@ export default function RoomDetailsPage({ room }) {
                         )}
                     </div>
                   </div>
-                  <Button
-                    size="lg"
-                    disabled={searchData.adults === 2 && !beddingPreference}
-                    className="bg-blue-600 hover:bg-blue-700 px-8 text-lg font-semibold shadow-md active:scale-95 transition-all disabled:opacity-50"
-                    onClick={() => {
-                      const params = new URLSearchParams()
-                      Object.keys(searchData).forEach((key) => {
-                        params.append(key, searchData[key])
-                      })
-                      if (searchData.adults === 2) {
-                        params.append("bed_preference", beddingPreference)
-                      }
-                      router.push(
-                        `/inscricao/checkout/${room.id}?${params.toString()}`,
-                      )
-                    }}
-                  >
-                    Fazer minha inscrição
-                  </Button>
+                  <div>
+                    <Button
+                      size="lg"
+                      disabled={searchData.adults === 2 && !beddingPreference}
+                      className="bg-blue-600 hover:bg-blue-700 px-8 text-lg font-semibold shadow-md active:scale-95 transition-all disabled:opacity-50"
+                      onClick={() => {
+                        const params = new URLSearchParams()
+                        Object.keys(searchData).forEach((key) => {
+                          params.append(key, searchData[key])
+                        })
+                        if (searchData.adults === 2) {
+                          params.append("bed_preference", beddingPreference)
+                        }
+                        router.push(
+                          `/inscricao/checkout/${room.id}?${params.toString()}`,
+                        )
+                      }}
+                    >
+                      Fazer minha inscrição
+                    </Button>
+                    {searchData.adults === 2 && !beddingPreference && (
+                      <p className="text-sm text-red-500 mt-2">
+                        *Escolha o tipo de acomodação para continuar
+                      </p>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
