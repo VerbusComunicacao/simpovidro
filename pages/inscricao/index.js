@@ -448,7 +448,10 @@ export default function RegistrationPage({ hotels, discounts }) {
                               </Button>
                             </div>
 
-                            <div className="w-full text-sm">
+                            <div className="w-full text-sm bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2.5">
+                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                Descontos especiais:
+                              </p>
                               {discounts.map((discount, index) => {
                                 const isMemberDiscount =
                                   discount.name
@@ -464,28 +467,62 @@ export default function RegistrationPage({ hotels, discounts }) {
                                     : room.originalTotal *
                                       (1 - Number(discount.value || 0) / 100)
 
+                                const discountValue = isMemberDiscount
+                                  ? Math.round(
+                                      (1 -
+                                        room.memberTotal / room.originalTotal) *
+                                        100,
+                                    )
+                                  : Number(discount.value || 0)
+
+                                const savedAmount =
+                                  room.originalTotal - displayPrice
+
                                 return (
                                   <div
                                     key={discount.id}
-                                    className={`flex justify-between py-2 ${
+                                    className={`flex items-center justify-between py-2.5 ${
                                       index !== discounts.length - 1
-                                        ? "border-b border-gray-200"
+                                        ? "border-b border-slate-100"
                                         : ""
                                     }`}
                                   >
-                                    <span className="text-gray-600">
-                                      {discount.name.includes("Associada")
-                                        ? "Associado Abravidro"
-                                        : discount.name}
-                                    </span>
+                                    <div className="flex flex-col gap-1">
+                                      <span className="font-bold text-slate-800 text-sm md:text-base">
+                                        {discount.name.includes("Associada")
+                                          ? "Associado Abravidro"
+                                          : discount.name}
+                                      </span>
+                                      {discountValue > 0 && (
+                                        <span className="text-[10px] md:text-[11px] font-black text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2 py-0.5 rounded-full w-fit uppercase tracking-wider">
+                                          {discountValue}% OFF
+                                        </span>
+                                      )}
+                                    </div>
 
-                                    <span className="font-bold text-gray-900 bg-yellow-100 px-2 py-0.5 rounded-md">
-                                      {" "}
-                                      {new Intl.NumberFormat("pt-BR", {
-                                        style: "currency",
-                                        currency: "BRL",
-                                      }).format(displayPrice)}
-                                    </span>
+                                    <div className="flex flex-col items-end">
+                                      <span className="text-xs text-slate-400 line-through">
+                                        {new Intl.NumberFormat("pt-BR", {
+                                          style: "currency",
+                                          currency: "BRL",
+                                        }).format(room.originalTotal)}
+                                      </span>
+                                      <span className="font-black text-blue-600 text-base md:text-lg lg:text-xl animate-pulse-subtle">
+                                        {new Intl.NumberFormat("pt-BR", {
+                                          style: "currency",
+                                          currency: "BRL",
+                                        }).format(displayPrice)}
+                                      </span>
+                                      {savedAmount > 0 && (
+                                        <span className="text-xs text-emerald-600 font-extrabold">
+                                          Economize{" "}
+                                          {new Intl.NumberFormat("pt-BR", {
+                                            style: "currency",
+                                            currency: "BRL",
+                                          }).format(savedAmount)}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                 )
                               })}
