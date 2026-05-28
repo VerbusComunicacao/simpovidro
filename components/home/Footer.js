@@ -46,11 +46,11 @@ export default function Footer({ scrollToSection }) {
               </li>
               <li>
                 <a
-                  href="#palestrantes"
-                  onClick={(e) => scrollToSection(e, "palestrantes")}
+                  href="#local"
+                  onClick={(e) => scrollToSection(e, "local")}
                   className="hover:text-white transition-colors"
                 >
-                  Palestrantes
+                  Local
                 </a>
               </li>
               <li>
@@ -59,16 +59,7 @@ export default function Footer({ scrollToSection }) {
                   onClick={(e) => scrollToSection(e, "programacao")}
                   className="hover:text-white transition-colors"
                 >
-                  Programação
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#patrocinadores"
-                  onClick={(e) => scrollToSection(e, "patrocinadores")}
-                  className="hover:text-white transition-colors"
-                >
-                  Patrocinadores
+                  Programação (em breve)
                 </a>
               </li>
             </ul>
@@ -81,17 +72,17 @@ export default function Footer({ scrollToSection }) {
             <ul className="space-y-4 text-sm">
               <li>
                 <a
-                  href="#precos"
-                  onClick={(e) => scrollToSection(e, "precos")}
+                  href="#condicoes-especiais"
+                  onClick={(e) => scrollToSection(e, "condicoes-especiais")}
                   className="hover:text-white transition-colors"
                 >
-                  Benefícios & Investimento
+                  Condições Especiais
                 </a>
               </li>
               <li>
                 <a
-                  href="#logistica"
-                  onClick={(e) => scrollToSection(e, "logistica")}
+                  href="#acomodacoes"
+                  onClick={(e) => scrollToSection(e, "acomodacoes")}
                   className="hover:text-white transition-colors"
                 >
                   Acomodações
@@ -103,7 +94,7 @@ export default function Footer({ scrollToSection }) {
                   onClick={(e) => scrollToSection(e, "logistica")}
                   className="hover:text-white transition-colors"
                 >
-                  Passagens
+                  Informe seu voo
                 </a>
               </li>
               <li>
@@ -123,12 +114,19 @@ export default function Footer({ scrollToSection }) {
               Organização
             </h4>
             <div className="space-y-2 text-sm">
-              <p className="text-slate-200">Abravidro</p>
+              <div className="flex items-center gap-2">
+                <Image
+                  src={"/images/logo_branco_ABRAVIDRO.png"}
+                  alt={`Simpovidro Icon`}
+                  width={140}
+                  height={140}
+                />
+              </div>
               <p className="flex items-center gap-2 italic">
                 <Phone className="h-3 w-3" /> (11) 3873-9908
               </p>
               <p className="flex items-center gap-2 italic">
-                <Mail className="h-3 w-3" /> abravidro@abravidro.org.br
+                <Mail className="h-3 w-3" /> simpovidro@abravidro.org.br
               </p>
             </div>
           </div>

@@ -8,9 +8,7 @@ import Navbar from "@/components/home/Navbar"
 import Hero from "@/components/home/Hero"
 import AboutEvent from "@/components/home/AboutEvent"
 import Location from "@/components/home/Location"
-import Speakers from "@/components/home/Speakers"
-import Panels from "@/components/home/Panels"
-import Schedule from "@/components/home/Schedule"
+import Accommodations from "@/components/home/Accommodations"
 import Pricing from "@/components/home/Pricing"
 import Tips from "@/components/home/Tips"
 import History from "@/components/home/History"
@@ -49,8 +47,51 @@ export default function Home() {
         <title>17º Simpovidro | O Encontro do Setor Vidreiro</title>
         <meta
           name="description"
-          content="Onde o mercado vidreiro se encontra para redefinir o amanhã."
+          content="Participe do 17º Simpovidro (5 a 8 de novembro de 2026), o maior encontro do setor vidreiro no Brasil, realizado pela Abravidro no Costão do Santinho, Florianópolis. Networking, negócios e lazer."
         />
+        <meta
+          name="keywords"
+          content="Simpovidro, Simpovidro 2026, Abravidro, setor vidreiro, evento de vidro, Costão do Santinho, Florianópolis, networking, encontro vidreiro, indústria do vidro"
+        />
+        <meta name="robots" content="index, follow" />
+        <meta name="author" content="Abravidro" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.simpovidro.com.br/" />
+        <meta
+          property="og:title"
+          content="17º Simpovidro | O Encontro do Setor Vidreiro"
+        />
+        <meta
+          property="og:description"
+          content="Participe do maior encontro da cadeia produtiva do vidro no Brasil, de 5 a 8 de novembro de 2026, no Costão do Santinho Resort, Florianópolis."
+        />
+        <meta
+          property="og:image"
+          content="https://www.simpovidro.com.br/images/simpovidro.webp"
+        />
+        <meta property="og:site_name" content="Simpovidro" />
+        <meta property="og:locale" content="pt_BR" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://www.simpovidro.com.br/" />
+        <meta
+          name="twitter:title"
+          content="17º Simpovidro | O Encontro do Setor Vidreiro"
+        />
+        <meta
+          name="twitter:description"
+          content="Participe do maior encontro da cadeia produtiva do vidro no Brasil, de 5 a 8 de novembro de 2026, no Costão do Santinho Resort, Florianópolis."
+        />
+        <meta
+          name="twitter:image"
+          content="https://www.simpovidro.com.br/images/simpovidro.webp"
+        />
+
+        {/* Canonical */}
+        <link rel="canonical" href="https://www.simpovidro.com.br/" />
       </Head>
 
       <Navbar
@@ -84,13 +125,9 @@ export default function Home() {
 
         <Location />
 
-        <Speakers />
+        <Accommodations />
 
-        <Panels scrollToSection={scrollToSection} />
-
-        <Schedule />
-
-        <Pricing />
+        <Pricing scrollToSection={scrollToSection} />
 
         <Tips />
 

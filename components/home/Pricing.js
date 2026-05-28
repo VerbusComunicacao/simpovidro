@@ -1,10 +1,4 @@
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Zap, MapPin, Info, Hotel, Plane } from "lucide-react"
 import Link from "next/link"
@@ -12,18 +6,18 @@ import Link from "next/link"
 export default function Pricing() {
   return (
     <section
-      id="beneficios"
+      id="condicoes-especiais"
       className="py-24 bg-logo-green border-y border-slate-200"
     >
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
             <h3 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">
-              Benefícios & Inscrição
+              Condições Especiais
             </h3>
             <p className="text-lg text-white leading-relaxed">
-              O Simpovidro é um evento exclusivo. Garanta condições especiais
-              através do associativismo e participe do maior encontro do setor.
+              Associados Abravidro contam com condições especiais para
+              participar do simpósio.
             </p>
 
             <div className="grid sm:grid-cols-2 gap-6">
@@ -31,7 +25,9 @@ export default function Pricing() {
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                   <Zap className="w-16 h-16 text-blue-600" />
                 </div>
-                <h4 className="text-blue-900 text-xl mb-2">SÓCIO ABRAVIDRO</h4>
+                <h4 className="text-blue-900 text-xl mb-2 uppercase">
+                  Associado ABRAVIDRO
+                </h4>
                 <div className="text-5xl font-black text-blue-600 mb-4 tracking-tighter">
                   20%{" "}
                   <span className="text-lg font-bold text-blue-400">OFF</span>
@@ -55,7 +51,7 @@ export default function Pricing() {
                 </div>
                 <p className="text-slate-200 text-sm font-bold leading-relaxed">
                   Condição especial para associados de entidades regionais
-                  parceiras do Simpovidro.
+                  afiliadas da Abravidro.
                 </p>
               </div>
             </div>
@@ -75,9 +71,6 @@ export default function Pricing() {
                 <CardTitle className="flex items-center gap-2 text-2xl font-title">
                   <Hotel className="h-5 w-5" /> Acomodações
                 </CardTitle>
-                <CardDescription className="text-blue-100">
-                  Exclusividade Costão do Santinho
-                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm opacity-90">
@@ -95,19 +88,21 @@ export default function Pricing() {
             <Card className="bg-white border-slate-200 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-slate-900 text-2xl font-title">
-                  <Plane className="h-5 w-5 text-blue-600" /> Passagens Aéreas
+                  <Plane className="h-5 w-5 text-blue-600" /> TRANSFER
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-slate-600">
-                  Nossa agência parceira oferece suporte logístico completo para
-                  o seu voo até Maceió.
+                  Para garantir seu lugar no <em>transfer</em> gratuito
+                  aeroporto-hotel e hotel-aeroporto oferecido pela Abravidro aos
+                  participantes do Simpovidro, precisamos saber as informações
+                  de seu voo de ida e volta.
                 </p>
                 <Button
                   variant="outline"
                   className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
                 >
-                  Solicitar Cotação
+                  Clique aqui e preencha o formulário.
                 </Button>
               </CardContent>
             </Card>

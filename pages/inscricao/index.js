@@ -159,7 +159,9 @@ export default function RegistrationPage({ hotels, discounts }) {
                   <div className="bg-gray-50 border-b p-6">
                     <div className="flex items-center gap-2">
                       <Users className="h-5 w-5 text-blue-600" />
-                      <h2 className="text-xl font-bold">Quem vai com você?</h2>
+                      <h2 className="text-xl font-bold">
+                        Selecione a quantidade de pessoas
+                      </h2>
                     </div>
                   </div>
 

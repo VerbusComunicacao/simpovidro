@@ -36,9 +36,9 @@ async function sendEmailToUser(user, activationToken) {
         <p style="color: #9ca3af; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px;">Patrocínio</p>
         <div style="display: inline-block;">
           <img src="${webserver.origin}/images/agc-logo.png" alt="AGC" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
-          <img src="${webserver.origin}/images/cebrace-logo.png" alt="Cebrace" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+          <img src="${webserver.origin}/images/cebrace-logo.webp" alt="Cebrace" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
           <img src="${webserver.origin}/images/glass-guardian-logo.png" alt="Guardian Glass" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
-          <img src="${webserver.origin}/images/logo_vivix.png" alt="Vivix" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+          <img src="${webserver.origin}/images/logo_vivix_nova.png" alt="Vivix" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
         </div>
       </div>
     `
@@ -93,6 +93,14 @@ async function activateAccount(token) {
     await client.query("BEGIN")
     const activationToken = await findValidToken(token, client)
 
+    if (activationToken.alreadyUsed) {
+      await client.query("ROLLBACK")
+      return {
+        message: "Sua conta já havia sido ativada! Você pode fazer login.",
+        user_id: activationToken.user_id,
+      }
+    }
+
     const tokenResults = await client.query({
       text: `
         UPDATE 
@@ -138,6 +146,14 @@ async function activateAdmAccount(token) {
     await client.query("BEGIN")
     const activationToken = await findValidToken(token, client)
 
+    if (activationToken.alreadyUsed) {
+      await client.query("ROLLBACK")
+      return {
+        message: "Sua conta já havia sido ativada! Você pode fazer login.",
+        user_id: activationToken.user_id,
+      }
+    }
+
     const tokenResults = await client.query({
       text: `
         UPDATE 
@@ -176,8 +192,9 @@ async function activateAdmAccount(token) {
   }
 }
 
-async function findValidToken(token) {
-  const results = await database.query({
+async function findValidToken(token, client) {
+  const queryRunner = client || database
+  const results = await queryRunner.query({
     text: `
       SELECT
       *
@@ -186,7 +203,6 @@ async function findValidToken(token) {
       WHERE
         token = $1 
         AND expires_at > NOW()
-        AND used_at IS NULL
       LIMIT
         1
     `,
@@ -200,7 +216,13 @@ async function findValidToken(token) {
     })
   }
 
-  return results.rows[0]
+  const activationToken = results.rows[0]
+
+  if (activationToken.used_at !== null) {
+    activationToken.alreadyUsed = true
+  }
+
+  return activationToken
 }
 
 async function findAllValidTokensByUserId(userId) {

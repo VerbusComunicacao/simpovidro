@@ -5,15 +5,6 @@ import Sponsors from "@/components/home/Sponsors"
 import { motion } from "framer-motion"
 
 export default function Hero({ scrollToSection, router }) {
-  const stats = [
-    { icon: Calendar, label: "5 a 8 de Novembro", sub: "2026" },
-    {
-      icon: MapPin,
-      label: "Costão do Santinho",
-      sub: "Florianópolis, SC",
-    },
-  ]
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -34,22 +25,27 @@ export default function Hero({ scrollToSection, router }) {
     },
   }
 
-  const videoVariants = {
-    hidden: { opacity: 0, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: { duration: 1, ease: "easeOut", delay: 0.6 },
-    },
-  }
-
   return (
-    <section className="relative flex flex-col items-center justify-center overflow-hidden pt-24 pb-12">
+    <section className="relative flex flex-col items-center justify-center overflow-hidden min-h-[90vh] md:min-h-screen pt-28 pb-0 text-white">
+      {/* Imagem de Fundo (Costão) */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/images/costao-imagem.webp"
+          alt="17º SIMPOVIDRO"
+          fill
+          className="object-cover"
+          priority
+        />
+        {/* Overlays modernos para profundidade e legibilidade excelente */}
+        <div className="absolute inset-0 bg-slate-950/65" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/40" />
+      </div>
+
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative z-10 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-[1fr_1.3fr] gap-12 md:gap-20 items-center mb-20 md:mb-24 mt-4"
+        className="relative z-10 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 md:gap-20 items-center mb-10 md:mb-14 mt-4 w-full"
       >
         {/* Coluna da Esquerda: Marca e CTAs */}
         <motion.div
@@ -58,16 +54,16 @@ export default function Hero({ scrollToSection, router }) {
         >
           <div className="mb-8 md:mb-12">
             <Image
-              src="/images/logo-17-simpovidro.webp"
+              src="/images/logo-17-simpovidro.png"
               alt="17º SIMPOVIDRO"
               width={600}
               height={600}
-              className="w-full max-w-[320px] md:max-w-[500px] h-auto"
+              className="w-full max-w-[320px] md:max-w-[500px] h-auto drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)]"
               priority
             />
           </div>
 
-          <div className="flex justify-center sm:flex-row gap-4 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <Button
               size="lg"
               className="bg-logo-blue hover:bg-logo-navy text-white rounded-full h-14 px-10 text-lg shadow-xl shadow-blue-500/25 transition-transform hover:scale-105"
@@ -78,68 +74,84 @@ export default function Hero({ scrollToSection, router }) {
             <Button
               size="lg"
               variant="outline"
-              className="bg-logo-orange/20 backdrop-blur-sm border-orange-200 text-orange-600 hover:bg-logo-orange/10 hover:text-orange-700 rounded-full h-14 px-10 text-lg transition-all"
+              className="bg-logo-orange/20 backdrop-blur-sm border-orange-400/30 text-orange-400 hover:bg-logo-orange/35 hover:text-orange-300 rounded-full h-14 px-10 text-lg transition-all"
               onClick={(e) => scrollToSection(e, "sobre")}
             >
-              Saber mais <Info />
+              Saber mais <Info className="ml-2 h-5 w-5" />
             </Button>
           </div>
         </motion.div>
 
-        {/* Coluna da Direita: Vídeo e Cards Flutuantes */}
-        <div className="relative order-2 flex flex-col items-center">
-          {/* Vídeo - Agora Maior */}
-          <motion.div
-            variants={videoVariants}
-            className="w-full aspect-video bg-slate-900 rounded-[2.5rem] md:rounded-[3rem] overflow-hidden shadow-2xl relative group border-[6px] md:border-[10px] border-white"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-brand-start/40 to-brand-end/40 opacity-60"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 md:w-24 md:h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform shadow-2xl">
-                <div className="w-0 h-0 border-t-[8px] md:border-t-[12px] border-t-transparent border-l-[14px] md:border-l-[22px] border-l-white border-b-[8px] md:border-b-[12px] border-b-transparent ml-1"></div>
+        {/* Coluna da Direita: Data, Local e Prêmio sobrepostos */}
+        <motion.div
+          variants={itemVariants}
+          className="flex flex-col gap-6 items-center lg:items-end order-2 w-full"
+        >
+          {/* Cards de Data e Local */}
+          <div className="flex flex-col gap-4 w-full md:max-w-sm sm:max-w-md">
+            {/* Card 1: Data */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1.0, duration: 0.5 }}
+              className="w-full bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-white/20 flex items-center gap-4 transform hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 cursor-default text-slate-900"
+            >
+              <div className="p-3 rounded-xl shrink-0">
+                <Calendar className="h-6 w-6 text-blue-600" />
               </div>
-            </div>
-            <div className="absolute bottom-10 left-8">
-              <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">
-                Apresentação Oficial
-              </span>
-            </div>
-          </motion.div>
+              <div className="flex flex-col">
+                <span className="font-black text-slate-900 text-base md:text-lg leading-tight font-title whitespace-nowrap">
+                  5 a 8 de Novembro
+                </span>
+                <span className="text-xs uppercase font-bold text-slate-400 tracking-wider mt-0.5 whitespace-nowrap">
+                  2026
+                </span>
+              </div>
+            </motion.div>
 
-          {/* Cards Flutuantes - Posicionados para sobrepor o vídeo */}
-          <div className="flex flex-row gap-3 md:gap-4 w-full max-w-[95%] md:w-auto mt-[-20px] md:mt-0 md:absolute md:-bottom-16 md:-right-6 z-20">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1.2 + i * 0.2, duration: 0.5 }}
-                className="flex-1 md:w-44 bg-white p-4 md:p-5 rounded-2xl md:rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.12)] border border-slate-50 flex items-start gap-2 transform hover:-translate-y-2 transition-all cursor-default"
-              >
-                <div className="bg-blue-50 p-2 rounded-xl">
-                  <stat.icon className="h-4 w-4 text-blue-600" />
+            {/* Card 2: Local */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1.2, duration: 0.5 }}
+              className="w-full bg-white/95 backdrop-blur-md pl-4 pr-2 rounded-2xl shadow-2xl border border-white/20 flex items-center justify-between gap-4 transform hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 cursor-default text-slate-900"
+            >
+              <div className="flex items-center gap-4">
+                <div className=" p-3 rounded-xl shrink-0">
+                  <MapPin className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-black text-slate-900 text-xs md:text-lg leading-tight font-title">
-                    {stat.label}
+                  <span className="font-black text-slate-900 text-base md:text-lg leading-tight font-title whitespace-nowrap">
+                    Costão do Santinho
                   </span>
-                  <span className="text-[9px] md:text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-0.5">
-                    {stat.sub}
+                  <span className="text-xs uppercase font-bold text-slate-400 tracking-wider mt-0.5 whitespace-nowrap">
+                    Florianópolis, SC
                   </span>
                 </div>
-              </motion.div>
-            ))}
+              </div>
+
+              <div className="shrink-0 w-16 md:w-20 flex items-center justify-center">
+                <Image
+                  src="/images/premio.png"
+                  alt="Premio Melhor Resort do Brasil"
+                  width={100}
+                  height={100}
+                  className=" object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.1)]"
+                  priority
+                />
+              </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </motion.div>
 
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2 }}
-        className="w-full mt-auto"
+        transition={{ delay: 1.8 }}
+        className="w-full mt-auto relative z-10 bg-white py-4 md:py-6 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] border-t border-slate-100"
       >
-        <Sponsors variant="compact" />
+        <Sponsors variant="compact-hero" />
       </motion.div>
     </section>
   )
