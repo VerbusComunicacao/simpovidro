@@ -88,7 +88,7 @@ async function sendRecoveryEmail(user, token) {
     `
 
   await email.send({
-    from: "Abravidro <simpovidro@abravidro.org.br>",
+    from: `Simpovidro <simpovidro@abravidro.org.br>`,
     to: user.email,
     subject: "Recuperação de Senha",
     html: emailHtml,
