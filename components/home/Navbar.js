@@ -40,12 +40,13 @@ export default function Navbar({ scrollToSection, router }) {
               {item.name}
             </a>
           ))}
+          {/*
           <Button
             className="bg-logo-navy hover:bg-blue-700 text-white rounded-full px-6"
             onClick={() => router.push("/inscricao")}
           >
             Inscreva-se
-          </Button>
+          </Button>*/}
         </div>
 
         <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
@@ -73,7 +74,7 @@ export default function Navbar({ scrollToSection, router }) {
               {item.name}
             </a>
           ))}
-          <Button
+          {/*<Button
             className="bg-logo-navy hover:bg-blue-700 text-white rounded-full w-full py-6 text-base font-bold shadow-md shadow-blue-200 mt-2"
             onClick={() => {
               setIsOpen(false)
@@ -81,7 +82,7 @@ export default function Navbar({ scrollToSection, router }) {
             }}
           >
             Inscreva-se
-          </Button>
+          </Button>*/}
         </div>
       )}
     </nav>
