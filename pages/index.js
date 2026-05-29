@@ -129,8 +129,6 @@ export default function Home() {
 
         <Pricing scrollToSection={scrollToSection} />
 
-        <Tips />
-
         <History />
 
         <Sponsors variant="full" />
