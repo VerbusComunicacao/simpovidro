@@ -2,7 +2,7 @@ import guest from "models/guest.js"
 import userModel from "models/user.js"
 import sale from "models/sale.js"
 import company from "models/company.js"
-import { ValidationError, NotFoundError } from "infra/errors.js"
+import { ValidationError } from "infra/errors.js"
 import database from "infra/database.js"
 
 async function create(userOrId, registrationData) {
@@ -49,29 +49,14 @@ async function create(userOrId, registrationData) {
 
     const trustedEmail = registrantProfile?.email || userAccount.email
 
-    const isAdmin = userAccount.features.includes("create:content")
-
     for (let i = 0; i < guests_data.length; i++) {
       const currentGuestData = { ...guests_data[i] }
 
-      // Force first guest to be the logged-in user (UNLESS ADMIN)
-      if (i === 0 && !isAdmin) {
-        const inputEmail = (currentGuestData.email || "").trim().toLowerCase()
-        const dbEmail = (trustedEmail || "").trim().toLowerCase()
+      const inputEmail = (currentGuestData.email || "").trim().toLowerCase()
+      const dbEmail = (trustedEmail || "").trim().toLowerCase()
 
-        // Enforce that Guest 1 email matches the trusted account email
-        if (inputEmail !== dbEmail) {
-          throw new NotFoundError({
-            message:
-              "Titular da inscrição não encontrado na lista de hóspedes.",
-            action:
-              "Certifique-se de que o primeiro hóspede (Adulto 1) contém seus dados de perfil (Nome e E-mail).",
-          })
-        }
-      }
-
-      // First guest associated with logged-in user
-      const guestUserId = i === 0 ? userId : null
+      // First guest associated with logged-in user only if email matches
+      const guestUserId = i === 0 && inputEmail === dbEmail ? userId : null
 
       const guestDataWithCnpj = {
         ...currentGuestData,

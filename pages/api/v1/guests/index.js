@@ -3,26 +3,41 @@ import controller from "infra/controller.js"
 import authorization from "models/authorization.js"
 import guest from "models/guest.js"
 
+import { UnauthorizedError } from "infra/errors.js"
+
 const router = createRouter()
 
 router.use(controller.injectAnnonymousOrUser)
-router.get(controller.canRequest("read:content"), getHandler)
+router.get(getHandler)
 router.post(controller.canRequest("create:guest"), postHandler)
 
 export default router.handler(controller.errorHandlers)
 
 async function getHandler(request, response) {
+  const user = request.context.user
+  if (!user.id) {
+    throw new UnauthorizedError({
+      message: "Usuário não autenticado.",
+      action: "Faça login para continuar.",
+    })
+  }
+
   const page = parseInt(request.query.page, 10) || 1
   const limit = parseInt(request.query.limit, 10) || 10
   const search = request.query.search || ""
 
   const guestsData = await guest.findAll({ search, page, limit })
 
-  const secureGuests = authorization.filterOutput(
-    request.context.user,
-    "read:content",
-    guestsData.data,
-  )
+  let secureGuests
+  if (user.features.includes("read:content")) {
+    secureGuests = authorization.filterOutput(
+      request.context.user,
+      "read:content",
+      guestsData.data,
+    )
+  } else {
+    secureGuests = guestsData.data
+  }
 
   response.status(200).json({
     data: secureGuests,

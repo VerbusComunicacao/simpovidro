@@ -142,6 +142,34 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  const lookupGuestByCpf = async (cpf) => {
+    try {
+      const response = await fetch(
+        `/api/v1/guests?search=${encodeURIComponent(cpf)}`,
+      )
+      if (!response.ok) return
+
+      const result = await response.json()
+      const cleanCpf = cpf.replace(/\D/g, "")
+      const foundGuest = result.data.find(
+        (g) => g.cpf_number?.replace(/\D/g, "") === cleanCpf,
+      )
+
+      if (foundGuest) {
+        const birthDate = foundGuest.birth_date
+          ? new Date(foundGuest.birth_date).toISOString().split("T")[0]
+          : ""
+        setFormData((prev) => ({
+          ...prev,
+          ...foundGuest,
+          birth_date: birthDate,
+        }))
+      }
+    } catch (err) {
+      console.error("Error looking up guest:", err)
+    }
+  }
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
 
@@ -152,17 +180,11 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
 
     setFormData((prev) => ({ ...prev, [name]: maskedValue }))
 
-    // Dev Helper: Autofill on all ones (CPF)
-    if (
-      name === "cpf_number" &&
-      isTestEnvironment() &&
-      value.replace(/\D/g, "") === "1".repeat(11)
-    ) {
-      const randomGuest = generateRandomGuest()
-      setFormData((prev) => ({
-        ...prev,
-        ...randomGuest,
-      }))
+    if (name === "cpf_number") {
+      const cleanCpf = maskedValue.replace(/\D/g, "")
+      if (cleanCpf.length === 11) {
+        lookupGuestByCpf(maskedValue)
+      }
     }
   }
 
