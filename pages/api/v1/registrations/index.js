@@ -192,13 +192,23 @@ async function postHandler(request, response) {
     `
 
     const sponsorsFooter = `
-      <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #f3f4f6; text-align: center;">
-        <p style="color: #9ca3af; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px;">Patrocínio</p>
-        <div style="display: inline-block;">
-          <img src="${webserver.origin}/images/agc-logo.png" alt="AGC" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
-          <img src="${webserver.origin}/images/cebrace-logo.webp" alt="Cebrace" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
-          <img src="${webserver.origin}/images/glass-guardian-logo.png" alt="Guardian Glass" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
-          <img src="${webserver.origin}/images/logo_vivix_nova.png" alt="Vivix" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
+      <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #f3f4f6; display: table; width: 100%;">
+        <div style="display: table-row;">
+          <!-- Realização (Left Side) -->
+          <div style="display: table-cell; width: 35%; text-align: center; border-right: 2px solid #f3f4f6; vertical-align: middle; padding-right: 20px;">
+            <p style="color: #9ca3af; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 10px 0;">Realização</p>
+            <img src="${webserver.origin}/images/logo_ABRAVIDRO.png" alt="Abravidro" style="height: 35px; vertical-align: middle;">
+          </div>
+          <!-- Patrocínio (Right Side) -->
+          <div style="display: table-cell; width: 65%; text-align: center; vertical-align: middle; padding-left: 20px;">
+            <p style="color: #9ca3af; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 10px 0;">Patrocínio</p>
+            <div style="display: inline-block;">
+              <img src="${webserver.origin}/images/agc-logo.png" alt="AGC" style="height: 25px; margin: 5px 8px; vertical-align: middle;">
+              <img src="${webserver.origin}/images/cebrace-logo.webp" alt="Cebrace" style="height: 25px; margin: 5px 8px; vertical-align: middle;">
+              <img src="${webserver.origin}/images/glass-guardian-logo.png" alt="Guardian Glass" style="height: 25px; margin: 5px 8px; vertical-align: middle;">
+              <img src="${webserver.origin}/images/logo_vivix_nova.png" alt="Vivix" style="height: 25px; margin: 5px 8px; vertical-align: middle;">
+            </div>
+          </div>
         </div>
       </div>
     `
@@ -206,8 +216,9 @@ async function postHandler(request, response) {
     const emailHtml = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #374151; line-height: 1.5;">
         <div style="background-color: #2563eb; padding: 30px 20px; border-radius: 8px 8px 0 0; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 1.8em;">Inscrição Confirmada</h1>
-          <p style="color: #bfdbfe; margin-top: 10px;">Simpovidro 2026</p>
+          <img src="${webserver.origin}/images/logo-17-simpovidro.png" alt="17º Simpovidro" style="width: 260px; max-width: 80%; height: auto; margin-bottom: 15px; vertical-align: middle;">
+          <div style="color: #ffffff; font-weight: bold; font-size: 1.25em; margin-bottom: 4px; font-family: sans-serif;">5 a 8 de Novembro de 2026</div>
+          <div style="color: #bfdbfe; font-size: 1.05em; font-family: sans-serif;">Costão do Santinho – Florianópolis, SC</div>
         </div>
 
         <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
@@ -245,12 +256,17 @@ async function postHandler(request, response) {
             <p style="margin: 0; font-size: 1.8em; font-weight: bold; color: #2563eb;">${formatCurrency(saleDetails.final_amount)}</p>
           </div>
 
-          ${sponsorsFooter}
+          <div style="margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; font-family: sans-serif; font-size: 0.95em;">
+            <p style="margin: 0 0 8px 0; font-weight: bold; color: #111827;">Boletos:</p>
+            <p style="margin: 0 0 15px 0; color: #4b5563;">Os boletos serão enviados para o e-mail do titular.</p>
+            <p style="margin: 0 0 25px 0; color: #4b5563;">Sua inscrição estará efetivada após comprovação da veracidade das informações prestadas e do pagamento de todas as parcelas com vencimento antes do evento.</p>
+            <p style="margin: 0; color: #4b5563;">
+              Atenciosamente,<br/><br/>
+              <strong>Organização 17º Simpovidro</strong>
+            </p>
+          </div>
 
-          <p style="margin-top: 30px; font-size: 0.9em; color: #6b7280; text-align: center;">
-            Dúvidas? Entre em contato com nossa equipe.<br/>
-            <strong>Equipe Simpovidro</strong>
-          </p>
+          ${sponsorsFooter}
         </div>
       </div>
     `
@@ -259,7 +275,7 @@ async function postHandler(request, response) {
       from: `Simpovidro <simpovidro@abravidro.org.br>`,
       to: recipientEmail,
       bcc: "inscricao@abravidro.org.br, rsilva@abravidro.org.br, scarvalho@abravidro.org.br",
-      subject: `Confirmação de Inscrição - Pedido #${saleDetails.sale_number || saleDetails.id.slice(0, 8)}`,
+      subject: `17º Simpovidro - dados da inscrição - Nº ${saleDetails.sale_number || saleDetails.id.slice(0, 8)}`,
       html: emailHtml,
       text: `Sua inscrição no Simpovidro 2026 foi confirmada! Hotel: ${saleDetails.hotel_name}. Valor: ${formatCurrency(saleDetails.final_amount)}.`,
     })

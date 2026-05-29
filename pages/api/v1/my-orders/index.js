@@ -20,16 +20,8 @@ async function getHandler(request, response) {
     })
   }
 
-  // 1. Find Guest Profile
-  const userGuest = await guest.findOneByUserId(user.id)
-
-  if (!userGuest) {
-    // If no guest profile, user definitely has no orders yet (created via guest profile)
-    return response.status(200).json([])
-  }
-
-  // 2. Find Sales
-  const sales = await sale.findAllByGuestId(userGuest.id)
+  // 1. Find Sales
+  const sales = await sale.findAllByUserId(user.id)
 
   return response.status(200).json(sales)
 }

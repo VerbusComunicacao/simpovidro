@@ -645,7 +645,7 @@ describe("POST /api/v1/registrations", () => {
       expect(Number(saleData.final_amount)).toBe(850.0)
     })
 
-    test("should force the first guest to be the logged-in user even if different data is provided", async () => {
+    test("should allow registration when a different email is provided as first guest and NOT associate that guest with the logged-in user", async () => {
       // 1. Setup: Create a real guest profile for the regular user
       const userRealName = "Real User Name"
       const userRealEmail = "user-registration@example.com"
@@ -663,6 +663,7 @@ describe("POST /api/v1/registrations", () => {
       })
 
       // 2. Attempt to register with spoofed first guest data
+      const imposterEmail = "imposter@example.com"
       const response = await fetch(
         `${orchestrator.webserverUrl}/api/v1/registrations`,
         {
@@ -677,7 +678,7 @@ describe("POST /api/v1/registrations", () => {
               {
                 name: "Imposter Guest", // Different name
                 badge_name: "Crachá Impostor",
-                email: "imposter@example.com", // Different email
+                email: imposterEmail, // Different email
                 phone: "11900000000",
                 gender: "Feminino",
                 rg_number: "RG999",
@@ -689,10 +690,19 @@ describe("POST /api/v1/registrations", () => {
         },
       )
 
-      expect(response.status).toBe(404)
+      expect(response.status).toBe(201)
+
+      // Query database to check if user_id is null for this guest
+      const guestResult = await database.query({
+        text: "SELECT user_id, email FROM guests WHERE email = $1",
+        values: [imposterEmail],
+      })
+
+      expect(guestResult.rows[0].user_id).toBe(null)
+      expect(guestResult.rows[0].email).toBe(imposterEmail)
     })
 
-    test("should reject registration with spoofed data EVEN IF the user has no previous guest profile", async () => {
+    test("should allow registration with different first guest email when the user has no previous guest profile", async () => {
       // 1. Setup: Create a new user with NO guest profile
       const newUser = await orchestrator.createUser({
         full_name: "Brand New User",
@@ -702,6 +712,7 @@ describe("POST /api/v1/registrations", () => {
       const newSession = await orchestrator.createSession(newUser.id)
 
       // 2. Attempt to register with "111" spoofed data
+      const otherEmail = "111@example.com"
       const response = await fetch(
         `${orchestrator.webserverUrl}/api/v1/registrations`,
         {
@@ -716,11 +727,11 @@ describe("POST /api/v1/registrations", () => {
               {
                 name: "111", // Spoofed name
                 badge_name: "Crachá 111",
-                email: "111@example.com", // Spoofed email
+                email: otherEmail, // Spoofed email
                 phone: "11911111111",
                 gender: "Masculino",
-                rg_number: "111",
-                cpf_number: "111.111.111-11",
+                rg_number: "112",
+                cpf_number: "111.111.111-12",
                 birth_date: "1980-11-11",
               },
             ],
@@ -728,9 +739,16 @@ describe("POST /api/v1/registrations", () => {
         },
       )
 
-      // This is expected to BE 404 if the loophole is closed.
-      // If the loophole exists, it will return 201.
-      expect(response.status).toBe(404)
+      expect(response.status).toBe(201)
+
+      // Query database to check if user_id is null for this guest
+      const guestResult = await database.query({
+        text: "SELECT user_id, email FROM guests WHERE email = $1",
+        values: [otherEmail],
+      })
+
+      expect(guestResult.rows[0].user_id).toBe(null)
+      expect(guestResult.rows[0].email).toBe(otherEmail)
     })
 
     test("should generate incremental numeric sale_number starting at 100", async () => {

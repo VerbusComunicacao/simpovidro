@@ -167,11 +167,8 @@ export default function MyOrdersPage() {
                             <BedDouble className="h-5 w-5 text-blue-600" />
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-900">
+                            <p className="font-semibold text-gray-900 mt-1">
                               {order.room_name || order.room_type}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {order.room_category}
                             </p>
                             {order.room_description && (
                               <p className="text-sm text-gray-600 mt-2 leading-relaxed">
