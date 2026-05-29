@@ -410,11 +410,11 @@ export default function RegistrationPage({ hotels, discounts }) {
                           <div className="flex items-center gap-4 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                               <Users className="h-4 w-4" />
-                              <span> {room.max_adults} adultos</span>
+                              <span> {searchData.adults} adultos</span>
                             </div>
-                            {room.max_children > 0 && (
+                            {searchData.children > 0 && (
                               <div className="flex items-center gap-1">
-                                <span>+ {room.max_children} crianças</span>
+                                <span>+ {searchData.children} crianças</span>
                               </div>
                             )}
                           </div>
