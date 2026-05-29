@@ -216,9 +216,9 @@ async function postHandler(request, response) {
     const emailHtml = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #374151; line-height: 1.5;">
         <div style="background-color: #2563eb; padding: 30px 20px; border-radius: 8px 8px 0 0; text-align: center;">
-          <img src="${webserver.origin}/images/logo-17-simpovidro.png" alt="Simpovidro 2026" style="height: 60px; margin-bottom: 15px; vertical-align: middle;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 1.8em;">Inscrição Confirmada</h1>
-          <p style="color: #bfdbfe; margin-top: 10px;">Simpovidro 2026</p>
+          <img src="${webserver.origin}/images/logo-17-simpovidro.png" alt="17º Simpovidro" style="width: 260px; max-width: 80%; height: auto; margin-bottom: 15px; vertical-align: middle;">
+          <div style="color: #ffffff; font-weight: bold; font-size: 1.25em; margin-bottom: 4px; font-family: sans-serif;">5 a 8 de Novembro de 2026</div>
+          <div style="color: #bfdbfe; font-size: 1.05em; font-family: sans-serif;">Costão do Santinho – Florianópolis, SC</div>
         </div>
 
         <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
@@ -256,12 +256,17 @@ async function postHandler(request, response) {
             <p style="margin: 0; font-size: 1.8em; font-weight: bold; color: #2563eb;">${formatCurrency(saleDetails.final_amount)}</p>
           </div>
 
-          ${sponsorsFooter}
+          <div style="margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; font-family: sans-serif; font-size: 0.95em;">
+            <p style="margin: 0 0 8px 0; font-weight: bold; color: #111827;">Boletos:</p>
+            <p style="margin: 0 0 15px 0; color: #4b5563;">Os boletos serão enviados para o e-mail do titular.</p>
+            <p style="margin: 0 0 25px 0; color: #4b5563;">Sua inscrição estará efetivada após comprovação da veracidade das informações prestadas e do pagamento de todas as parcelas com vencimento antes do evento.</p>
+            <p style="margin: 0; color: #4b5563;">
+              Atenciosamente,<br/><br/>
+              <strong>Organização 17º Simpovidro</strong>
+            </p>
+          </div>
 
-          <p style="margin-top: 30px; font-size: 0.9em; color: #6b7280; text-align: center;">
-            Dúvidas? Entre em contato com nossa equipe.<br/>
-            <strong>Equipe Simpovidro</strong>
-          </p>
+          ${sponsorsFooter}
         </div>
       </div>
     `
@@ -270,7 +275,7 @@ async function postHandler(request, response) {
       from: `Simpovidro <simpovidro@abravidro.org.br>`,
       to: recipientEmail,
       bcc: "inscricao@abravidro.org.br, rsilva@abravidro.org.br, scarvalho@abravidro.org.br",
-      subject: `Confirmação de Inscrição - Pedido #${saleDetails.sale_number || saleDetails.id.slice(0, 8)}`,
+      subject: `17º Simpovidro - dados da inscrição - Nº ${saleDetails.sale_number || saleDetails.id.slice(0, 8)}`,
       html: emailHtml,
       text: `Sua inscrição no Simpovidro 2026 foi confirmada! Hotel: ${saleDetails.hotel_name}. Valor: ${formatCurrency(saleDetails.final_amount)}.`,
     })

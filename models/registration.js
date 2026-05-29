@@ -80,6 +80,7 @@ async function create(userOrId, registrationData) {
         payment_method: payment_method,
         installments_count: installments_count,
         bed_preference: registrationData.bed_preference,
+        user_id: userId,
       },
       client,
     )

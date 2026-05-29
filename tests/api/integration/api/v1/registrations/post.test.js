@@ -730,8 +730,8 @@ describe("POST /api/v1/registrations", () => {
                 email: otherEmail, // Spoofed email
                 phone: "11911111111",
                 gender: "Masculino",
-                rg_number: "111",
-                cpf_number: "111.111.111-11",
+                rg_number: "112",
+                cpf_number: "111.111.111-12",
                 birth_date: "1980-11-11",
               },
             ],

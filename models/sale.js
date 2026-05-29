@@ -257,6 +257,7 @@ async function create(saleInputValues, externalClient) {
       total_amount = calculatedTotalAmount,
       payment_method = "cash",
       installments_count = 1,
+      user_id = null,
     } = saleInputValues
 
     const dateSource = targetRoom.hotel_check_in_date
@@ -296,9 +297,9 @@ async function create(saleInputValues, externalClient) {
     const saleResults = await client.query({
       text: `
         INSERT INTO
-          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, discount_percentage, discount_amount, final_amount, company_id, payment_method, installments_count, bed_preference)
+          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, discount_percentage, discount_amount, final_amount, company_id, payment_method, installments_count, bed_preference, user_id)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         RETURNING
           *
       `,
@@ -316,6 +317,7 @@ async function create(saleInputValues, externalClient) {
         payment_method,
         installments_count,
         saleInputValues.bed_preference || null,
+        user_id,
       ],
     })
 
@@ -547,6 +549,54 @@ async function findAllByGuestId(guestId) {
   return results.rows
 }
 
+async function findAllByUserId(userId) {
+  validateUUID(userId)
+  const results = await database.query({
+    text: `
+      SELECT 
+        sales.*,
+        hotels.name as hotel_name,
+        hotels.address as hotel_address,
+        hotels.city as hotel_city,
+        hotels.state as hotel_state,
+        hotels.phone as hotel_phone,
+        rooms.name as room_name,
+        rooms.description as room_description,
+        "room-types".name as room_type,
+        "room-categories".name as room_category,
+        (
+          SELECT json_agg(g.*)
+          FROM sales_guests sg
+          JOIN guests g ON sg.guest_id = g.id
+          WHERE sg.sale_id = sales.id
+        ) as guests,
+        (
+          SELECT json_agg(si.* ORDER BY si.installment_number ASC)
+          FROM sale_installments si
+          WHERE si.sale_id = sales.id
+        ) as installments
+      FROM 
+        sales
+      JOIN
+        hotels ON sales.hotel_id = hotels.id
+      JOIN
+        rooms ON sales.room_id = rooms.id
+      JOIN
+        "room-types" ON rooms.room_type_id = "room-types".id
+      JOIN
+        "room-categories" ON rooms.room_category_id = "room-categories".id
+      WHERE 
+        sales.user_id = $1
+        OR sales.guest_id IN (SELECT id FROM guests WHERE user_id = $1)
+      ORDER BY 
+        sales.created_at DESC
+    `,
+    values: [userId],
+  })
+
+  return results.rows
+}
+
 async function findAll(options = {}) {
   const whereClause = options.hideCancelled
     ? "WHERE sales.status != 'cancelled'"
@@ -758,6 +808,7 @@ const sale = {
   findAll,
   findAllByHotelId,
   findAllByGuestId,
+  findAllByUserId,
   update,
   deleteById,
   calculateMaxInstallments,

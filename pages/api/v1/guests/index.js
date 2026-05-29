@@ -26,10 +26,22 @@ async function getHandler(request, response) {
   const limit = parseInt(request.query.limit, 10) || 10
   const search = request.query.search || ""
 
+  const hasReadContent = user.features.includes("read:content")
+  const isCpfSearch = search && search.replace(/\D/g, "").length === 11
+
+  if (!hasReadContent && !isCpfSearch) {
+    return response.status(403).json({
+      name: "ForbiddenError",
+      message: "Você não possui permissão para executar esta ação.",
+      action: 'Verifique se este usuário possui a feature "read:content".',
+      status_code: 403,
+    })
+  }
+
   const guestsData = await guest.findAll({ search, page, limit })
 
   let secureGuests
-  if (user.features.includes("read:content")) {
+  if (hasReadContent) {
     secureGuests = authorization.filterOutput(
       request.context.user,
       "read:content",

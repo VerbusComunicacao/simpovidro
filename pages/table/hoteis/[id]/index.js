@@ -18,6 +18,7 @@ import {
   Plus,
   BedDouble,
   CheckCircle,
+  Copy,
 } from "lucide-react"
 import ErrorDialog from "@/components/ui/ErrorDialog"
 import { useEffect, useState } from "react"
@@ -175,6 +176,58 @@ export default function HotelPage() {
     } catch (error) {
       setErrorInfo({
         title: "Erro ao Excluir Quarto",
+        message: "Ocorreu um erro de conexão.",
+      })
+      setIsErrorDialogOpen(true)
+    }
+  }
+
+  const handleDuplicateRoom = async (roomToDuplicate) => {
+    try {
+      const duplicatedPolicies =
+        roomToDuplicate.price_policies
+          ?.filter(
+            (p) => p.price !== null && p.price !== undefined && p.price !== "",
+          )
+          .map((p) => ({
+            id: p.id,
+            price: p.price,
+          })) || []
+
+      const response = await fetch("/api/v1/rooms", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          hotel_id: hotelId,
+          room_type_id: roomToDuplicate.room_type_id,
+          room_category_id: roomToDuplicate.room_category_id,
+          price_per_night: roomToDuplicate.price_per_night,
+          member_price_per_night: roomToDuplicate.member_price_per_night,
+          total_rooms: roomToDuplicate.total_rooms,
+          name: `${roomToDuplicate.name} - Cópia`,
+          description: roomToDuplicate.description || "",
+          photos: roomToDuplicate.photos || [],
+          min_guests: roomToDuplicate.min_guests || 1,
+          price_policies: duplicatedPolicies,
+        }),
+      })
+
+      if (response.ok) {
+        mutateRooms()
+      } else {
+        const data = await response.json()
+        setErrorInfo({
+          title: "Erro ao Duplicar Quarto",
+          message: data.message || "Ocorreu um erro ao duplicar o quarto.",
+          actionMessage: data.action,
+        })
+        setIsErrorDialogOpen(true)
+      }
+    } catch (error) {
+      setErrorInfo({
+        title: "Erro ao Duplicar Quarto",
         message: "Ocorreu um erro de conexão.",
       })
       setIsErrorDialogOpen(true)
@@ -409,6 +462,38 @@ export default function HotelPage() {
                       <Pencil className="h-4 w-4" />
                     </Button>
                   </EditRoomDialog>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        title="Duplicar Quarto"
+                      >
+                        <Copy className="h-4 w-4 text-blue-600" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Duplicar Quarto?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Deseja realmente criar uma cópia do quarto &ldquo;
+                          {room.name}&rdquo;? A cópia será criada com as mesmas
+                          configurações de preços e limites.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDuplicateRoom(room)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Duplicar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="destructive" size="sm">

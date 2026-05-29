@@ -412,6 +412,47 @@ export default function CheckoutPage({
     .filter((k) => k !== "adults")
     .reduce((acc, k) => acc + occupancyCounts[k], 0)
 
+  const basePrice = isAssociate
+    ? Number(room?.member_price_per_night || room?.price_per_night || 0)
+    : Number(room?.price_per_night || 0)
+
+  const checkoutItems = []
+
+  // Adults list
+  for (let i = 0; i < adultCount; i++) {
+    checkoutItems.push({
+      label: `Adulto ${i + 1}`,
+      price: basePrice,
+    })
+  }
+
+  // Children list
+  if (occupancyCounts) {
+    let childIndex = 1
+    Object.keys(occupancyCounts).forEach((key) => {
+      if (key === "adults") return
+      const count = Number(occupancyCounts[key]) || 0
+      if (count <= 0) return
+
+      const policy = room.price_policies?.find((p) => p.id === key)
+      for (let i = 0; i < count; i++) {
+        let childPrice = basePrice
+        if (policy) {
+          if (policy.use_percentage === false) {
+            childPrice = policy.price != null ? Number(policy.price) : basePrice
+          } else {
+            const percentage = Number(policy.percentage ?? 100)
+            childPrice = basePrice * (percentage / 100)
+          }
+        }
+        checkoutItems.push({
+          label: `Criança ${childIndex++}`,
+          price: childPrice,
+        })
+      }
+    })
+  }
+
   const maxInstallments = calculateInstallments(room.hotel_check_in_date)
 
   useEffect(() => {
@@ -813,22 +854,48 @@ export default function CheckoutPage({
                       : "--"}
                   </span>
                 </div>
+
                 <Separator />
-                <div>
-                  <p className="text-sm text-gray-500">Hóspedes:</p>
-                  <p className="font-semibold text-blue-600">
-                    {adultCount} {adultCount === 1 ? "Adulto" : "Adultos"}
-                    {childCount > 0 &&
-                      ` + ${childCount} ${childCount === 1 ? "Criança" : "Crianças"}`}
-                  </p>
+                <div className="space-y-2">
+                  <p className=" text-blue-600 font-medium">Hóspedes:</p>
+                  <div className="space-y-1.5 text-sm">
+                    {checkoutItems.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-center text-gray-600"
+                      >
+                        <span>{item.label}</span>
+                        <span className="font-medium">
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(item.price)}
+                        </span>
+                      </div>
+                    ))}
+                    {discountPercentage > 0 && (
+                      <div className="flex justify-between items-center text-green-600 font-medium border-t pt-1.5 mt-1.5">
+                        <span>Desconto ({discountPercentage}%)</span>
+                        <span>
+                          -
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(discountAmount)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <Separator />
                 <div>
-                  <p className="text-sm text-gray-500">Valor Total</p>
-                  <div className="flex flex-col">
+                  <p className="text-sm text-gray-500 font-medium">
+                    Valor Total
+                  </p>
+                  <div className="flex flex-col mt-1">
                     {(discountPercentage > 0 || isAssociate) &&
                       originalTotal > finalTotal && (
-                        <p className="text-2xl text-gray-400 line-through">
+                        <p className="text-xl text-gray-400 line-through">
                           {new Intl.NumberFormat("pt-BR", {
                             style: "currency",
                             currency: "BRL",
