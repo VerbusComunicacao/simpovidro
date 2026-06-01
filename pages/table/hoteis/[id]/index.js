@@ -399,129 +399,140 @@ export default function HotelPage() {
             {!rooms && !roomsError && <div>Carregando quartos...</div>}
             {rooms && rooms.length === 0 && renderEmptyState()}
             {rooms && rooms.length > 0 && (
-              <div
-                className="grid gap-4 text-sm border-b pb-2 mb-2"
-                style={{
-                  gridTemplateColumns: `repeat(${8 + (hotel.price_policies?.filter((p) => p.use_percentage === false).length || 0)}, minmax(0, 1fr)) auto`,
-                }}
-              >
-                <div>Nome</div>
-                <div>Tipo</div>
-                <div>Categoria</div>
-                <div>Preço por Pessoa</div>
-                <div>Preço Associado</div>
-                {hotel.price_policies
-                  ?.filter((p) => p.use_percentage === false)
-                  .map((policy) => (
-                    <div key={policy.id}>{policy.description}</div>
+              <div className="overflow-x-auto">
+                <div className="min-w-[1100px] w-full">
+                  <div
+                    className="grid gap-4 text-sm border-b pb-2 mb-2"
+                    style={{
+                      gridTemplateColumns: `repeat(${8 + (hotel.price_policies?.filter((p) => p.use_percentage === false).length || 0)}, minmax(0, 1fr)) 150px`,
+                    }}
+                  >
+                    <div>Nome</div>
+                    <div>Tipo</div>
+                    <div>Categoria</div>
+                    <div>Preço por Pessoa</div>
+                    <div>Preço Associado</div>
+                    {hotel.price_policies
+                      ?.filter((p) => p.use_percentage === false)
+                      .map((policy) => (
+                        <div key={policy.id}>{policy.description}</div>
+                      ))}
+                    <div>Total</div>
+                    <div>Disponível</div>
+                    <div>Bloqueado</div>
+                    <div>Ações</div>
+                  </div>
+                  {rooms?.map((room) => (
+                    <div
+                      key={room.id}
+                      className="grid gap-4 py-2 border-b items-center"
+                      style={{
+                        gridTemplateColumns: `repeat(${8 + (hotel.price_policies?.filter((p) => p.use_percentage === false).length || 0)}, minmax(0, 1fr)) 150px`,
+                      }}
+                    >
+                      <div className="font-medium text-blue-600">
+                        {room.name || "-"}
+                      </div>
+                      <div>{room.room_type}</div>
+                      <div>{room.room_category}</div>
+                      <div>R$ {room.price_per_night}</div>
+                      <div>R$ {room.member_price_per_night}</div>
+                      {hotel.price_policies
+                        ?.filter((p) => p.use_percentage === false)
+                        .map((policy) => {
+                          const roomPolicy = room.price_policies?.find(
+                            (rp) => rp.id === policy.id,
+                          )
+                          return (
+                            <div key={policy.id}>
+                              {roomPolicy?.price
+                                ? `R$ ${roomPolicy.price}`
+                                : "-"}
+                            </div>
+                          )
+                        })}
+                      <div>{room.total_rooms}</div>
+                      <div>{room.available_rooms}</div>
+                      <div>{room.blocked_rooms}</div>
+                      <div className="flex gap-2">
+                        <EditRoomDialog
+                          room={room}
+                          roomTypes={roomTypes}
+                          roomCategories={roomCategories}
+                          onRoomUpdated={mutateRooms}
+                        >
+                          <Button variant="outline" size="sm">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </EditRoomDialog>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              title="Duplicar Quarto"
+                            >
+                              <Copy className="h-4 w-4 text-blue-600" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Duplicar Quarto?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Deseja realmente criar uma cópia do quarto
+                                &ldquo;
+                                {room.name}&rdquo;? A cópia será criada com as
+                                mesmas configurações de preços e limites.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDuplicateRoom(room)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                              >
+                                Duplicar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Você tem certeza?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta ação excluirá permanentemente este quarto.
+                                Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteRoom(room.id)}
+                                className="bg-destructive hover:bg-destructive/90"
+                              >
+                                Excluir
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
                   ))}
-                <div>Total</div>
-                <div>Disponível</div>
-                <div>Bloqueado</div>
-                <div>Ações</div>
+                </div>
               </div>
             )}
-            {rooms?.map((room) => (
-              <div
-                key={room.id}
-                className="grid gap-4 py-2 border-b items-center"
-                style={{
-                  gridTemplateColumns: `repeat(${8 + (hotel.price_policies?.filter((p) => p.use_percentage === false).length || 0)}, minmax(0, 1fr)) auto`,
-                }}
-              >
-                <div className="font-medium text-blue-600">
-                  {room.name || "-"}
-                </div>
-                <div>{room.room_type}</div>
-                <div>{room.room_category}</div>
-                <div>R$ {room.price_per_night}</div>
-                <div>R$ {room.member_price_per_night}</div>
-                {hotel.price_policies
-                  ?.filter((p) => p.use_percentage === false)
-                  .map((policy) => {
-                    const roomPolicy = room.price_policies?.find(
-                      (rp) => rp.id === policy.id,
-                    )
-                    return (
-                      <div key={policy.id}>
-                        {roomPolicy?.price ? `R$ ${roomPolicy.price}` : "-"}
-                      </div>
-                    )
-                  })}
-                <div>{room.total_rooms}</div>
-                <div>{room.available_rooms}</div>
-                <div>{room.blocked_rooms}</div>
-                <div className="flex gap-2">
-                  <EditRoomDialog
-                    room={room}
-                    roomTypes={roomTypes}
-                    roomCategories={roomCategories}
-                    onRoomUpdated={mutateRooms}
-                  >
-                    <Button variant="outline" size="sm">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </EditRoomDialog>
-
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        title="Duplicar Quarto"
-                      >
-                        <Copy className="h-4 w-4 text-blue-600" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Duplicar Quarto?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Deseja realmente criar uma cópia do quarto &ldquo;
-                          {room.name}&rdquo;? A cópia será criada com as mesmas
-                          configurações de preços e limites.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDuplicateRoom(room)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          Duplicar
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Esta ação excluirá permanentemente este quarto. Esta
-                          ação não pode ser desfeita.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDeleteRoom(room.id)}
-                          className="bg-destructive hover:bg-destructive/90"
-                        >
-                          Excluir
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            ))}
           </CardContent>
         </Card>
       )}
