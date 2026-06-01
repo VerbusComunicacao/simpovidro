@@ -43,6 +43,7 @@ import {
   validateRoomCapacity,
   generateInstallmentDates,
   calculateSummaryPrice,
+  getChildrenCount,
 } from "@/lib/registration-helpers"
 
 function calculateAge(birthDate, referenceDate = new Date()) {
@@ -408,13 +409,13 @@ export default function CheckoutPage({
   )
 
   const adultCount = occupancyCounts.adults || 0
-  const childCount = Object.keys(occupancyCounts)
-    .filter((k) => k !== "adults")
-    .reduce((acc, k) => acc + occupancyCounts[k], 0)
+  const childCount = getChildrenCount(occupancyCounts)
 
   const basePrice = isAssociate
     ? Number(room?.member_price_per_night || room?.price_per_night || 0)
     : Number(room?.price_per_night || 0)
+
+  const publicBasePrice = Number(room?.price_per_night || 0)
 
   const checkoutItems = []
 
@@ -436,13 +437,13 @@ export default function CheckoutPage({
 
       const policy = room.price_policies?.find((p) => p.id === key)
       for (let i = 0; i < count; i++) {
-        let childPrice = basePrice
+        let childPrice = publicBasePrice
         if (policy) {
           if (policy.use_percentage === false) {
-            childPrice = policy.price != null ? Number(policy.price) : basePrice
+            childPrice = policy.price != null ? Number(policy.price) : publicBasePrice
           } else {
             const percentage = Number(policy.percentage ?? 100)
-            childPrice = basePrice * (percentage / 100)
+            childPrice = publicBasePrice * (percentage / 100)
           }
         }
         checkoutItems.push({

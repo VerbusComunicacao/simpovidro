@@ -179,9 +179,6 @@ export default function RegistrationDetailsPage() {
                   <p className="text-lg font-bold text-gray-900 mt-1">
                     {sale.room_name || sale.room_type}
                   </p>
-                  <Badge variant="outline" className="mt-1">
-                    {sale.room_category}
-                  </Badge>
                   {sale.bed_preference && (
                     <div className="mt-3">
                       <p className="text-xs font-bold text-gray-400 uppercase">

@@ -3,6 +3,7 @@ import database from "infra/database.js"
 import { ValidationError, NotFoundError } from "infra/errors.js"
 import { validateRequiredFields, validateUUID } from "infra/validator.js"
 import saleInstallment from "models/sale-installment.js"
+import { calculateAdultDiscount } from "../lib/registration-helpers.js"
 
 async function create(saleInputValues, externalClient) {
   validateRequiredFields(saleInputValues, ["guest_ids", "room_id"])
@@ -223,9 +224,7 @@ async function create(saleInputValues, externalClient) {
 
         if (matchedPolicy) {
           if (matchedPolicy.use_percentage) {
-            const basePrice = isMember
-              ? Number(targetRoom.member_price_per_night)
-              : Number(targetRoom.price_per_night)
+            const basePrice = Number(targetRoom.price_per_night)
             const percentage = Number(matchedPolicy.percentage || 0)
             guestPrice = basePrice * (percentage / 100)
           } else {
@@ -287,7 +286,9 @@ async function create(saleInputValues, externalClient) {
         final_discount_percentage = Number(companyData.global_discount_value)
       }
 
-      final_discount_amount = total_amount * (final_discount_percentage / 100)
+      const adultBasePrice = Number(targetRoom.price_per_night) || 0
+      const adultTotal = adultCount * adultBasePrice
+      final_discount_amount = calculateAdultDiscount(adultTotal, final_discount_percentage)
     }
 
     const final_amount = total_amount - final_discount_amount
