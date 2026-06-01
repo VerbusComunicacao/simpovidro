@@ -3,7 +3,11 @@ import database from "infra/database.js"
 import { ValidationError, NotFoundError } from "infra/errors.js"
 import { validateRequiredFields, validateUUID } from "infra/validator.js"
 import saleInstallment from "models/sale-installment.js"
-import { calculateAdultDiscount } from "../lib/registration-helpers.js"
+import discountModel from "models/discount.js"
+import {
+  calculateTotalPrice,
+  calculateMaxInstallments,
+} from "../lib/registration-helpers.js"
 
 async function create(saleInputValues, externalClient) {
   validateRequiredFields(saleInputValues, ["guest_ids", "room_id"])
@@ -187,73 +191,26 @@ async function create(saleInputValues, externalClient) {
 
     if (company_id) {
       const companyResults = await client.query({
-        text: `
-          SELECT 
-            c.custom_discount_percentage,
-            d.value as global_discount_value,
-            d.name as discount_name
-          FROM 
-            companies c
-          LEFT JOIN 
-            discounts d ON c.discount_id = d.id
-          WHERE 
-            c.id = $1 
-          LIMIT 1`,
+        text: `SELECT * FROM companies WHERE id = $1 LIMIT 1`,
         values: [company_id],
       })
       companyData = companyResults.rows[0]
     }
 
-    const isMember = companyData?.discount_name === "Associada"
+    const globalDiscounts = await discountModel.getAllActiveDiscounts()
 
-    // 5. Calculate Total Amount based on Age Policies
-    let calculatedTotalAmount = 0
-    const policies = targetRoom.price_policies || []
-
-    for (const { age } of guestAges) {
-      let guestPrice = 0
-
-      if (policies.length > 0) {
-        let matchedPolicy = null
-        for (const policy of policies) {
-          if (age <= policy.max_age) {
-            matchedPolicy = policy
-            break
-          }
-        }
-
-        if (matchedPolicy) {
-          if (matchedPolicy.use_percentage) {
-            const basePrice = Number(targetRoom.price_per_night)
-            const percentage = Number(matchedPolicy.percentage || 0)
-            guestPrice = basePrice * (percentage / 100)
-          } else {
-            // Use specific room price for this policy
-            guestPrice = Number(matchedPolicy.price || 0)
-          }
-        } else {
-          // No policy matched (adult/older child)
-          guestPrice = isMember
-            ? Number(targetRoom.member_price_per_night)
-            : Number(targetRoom.price_per_night)
-        }
-      } else {
-        // No policies at all
-        guestPrice = isMember
-          ? Number(targetRoom.member_price_per_night)
-          : Number(targetRoom.price_per_night)
-      }
-
-      // O cálculo é feito acumulando o preço por pessoa.
-      // Não é multiplicado pelo número de noites, pois o preço é por evento/pacote.
-      calculatedTotalAmount += guestPrice
-    }
+    const pricing = calculateTotalPrice(
+      targetRoom,
+      guests.rows,
+      companyData,
+      globalDiscounts
+    )
 
     let {
       check_in_date = targetRoom.hotel_check_in_date || new Date(),
       check_out_date = targetRoom.hotel_check_out_date ||
         new Date(new Date().setDate(new Date().getDate() + 3)),
-      total_amount = calculatedTotalAmount,
+      total_amount = pricing.originalTotal,
       payment_method = "cash",
       installments_count = 1,
       user_id = null,
@@ -269,32 +226,14 @@ async function create(saleInputValues, externalClient) {
 
     // Enforce fixed installments count if payment method is 'installments'
     if (payment_method === "installments") {
-      installments_count = calculateMaxInstallments(eventDate)
+      installments_count = calculateMaxInstallments(dateString)
     } else {
       installments_count = 1
     }
 
-    let final_discount_percentage = 0
-    let final_discount_amount = 0
-
-    if (companyData && !isMember) {
-      if (companyData.custom_discount_percentage !== null) {
-        final_discount_percentage = Number(
-          companyData.custom_discount_percentage,
-        )
-      } else if (companyData.global_discount_value !== null) {
-        final_discount_percentage = Number(companyData.global_discount_value)
-      }
-
-      const adultBasePrice = Number(targetRoom.price_per_night) || 0
-      const adultTotal = adultCount * adultBasePrice
-      final_discount_amount = calculateAdultDiscount(
-        adultTotal,
-        final_discount_percentage,
-      )
-    }
-
-    const final_amount = total_amount - final_discount_amount
+    const final_discount_percentage = pricing.discountPercentage
+    const final_discount_amount = pricing.discountAmount
+    const final_amount = pricing.finalTotal
 
     const lead_guest_id = guest_ids[0]
 
@@ -730,18 +669,6 @@ async function deleteById(saleId, hotelId) {
     `,
     values: [hotelId, saleId],
   })
-}
-
-function calculateMaxInstallments(eventDate) {
-  const today = Temporal.Now.plainDateISO()
-
-  if (Temporal.PlainDate.compare(eventDate, today) < 0) return 1
-
-  const monthsBetween = today
-    .with({ day: 1 })
-    .until(eventDate.with({ day: 1 }), { largestUnit: "months" }).months
-
-  return monthsBetween + 1
 }
 
 async function cancel(saleId) {
