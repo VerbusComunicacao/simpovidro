@@ -29,7 +29,11 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
-import { calculateSummaryPrice, calculateAdultDiscount, getChildrenCount } from "@/lib/registration-helpers"
+import {
+  calculateSummaryPrice,
+  calculateAdultDiscount,
+  getChildrenCount,
+} from "@/lib/registration-helpers"
 import Link from "next/link"
 import Image from "next/image"
 import webserver from "infra/webserver"
@@ -464,7 +468,8 @@ export default function RegistrationPage({ hotels, discounts }) {
                                     ? room.memberTotal
                                     : room.originalTotal -
                                       calculateAdultDiscount(
-                                        room.adultOriginalTotal ?? room.originalTotal,
+                                        room.adultOriginalTotal ??
+                                          room.originalTotal,
                                         Number(discount.value || 0),
                                       )
 

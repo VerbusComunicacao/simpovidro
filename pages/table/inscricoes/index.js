@@ -178,8 +178,7 @@ export default function RegistrationsTable() {
                         {sale.hotel_name}
                       </p>
                       <p className="text-sm text-gray-600 mt-1">
-                        {sale.room_name || sale.room_type} ({sale.room_category}
-                        )
+                        {sale.room_name || sale.room_type}
                       </p>
                       {sale.bed_preference && (
                         <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mt-1">

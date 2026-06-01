@@ -440,7 +440,8 @@ export default function CheckoutPage({
         let childPrice = publicBasePrice
         if (policy) {
           if (policy.use_percentage === false) {
-            childPrice = policy.price != null ? Number(policy.price) : publicBasePrice
+            childPrice =
+              policy.price != null ? Number(policy.price) : publicBasePrice
           } else {
             const percentage = Number(policy.percentage ?? 100)
             childPrice = publicBasePrice * (percentage / 100)

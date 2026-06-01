@@ -288,7 +288,10 @@ async function create(saleInputValues, externalClient) {
 
       const adultBasePrice = Number(targetRoom.price_per_night) || 0
       const adultTotal = adultCount * adultBasePrice
-      final_discount_amount = calculateAdultDiscount(adultTotal, final_discount_percentage)
+      final_discount_amount = calculateAdultDiscount(
+        adultTotal,
+        final_discount_percentage,
+      )
     }
 
     const final_amount = total_amount - final_discount_amount
