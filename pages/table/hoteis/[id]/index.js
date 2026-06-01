@@ -445,7 +445,9 @@ export default function HotelPage() {
                           )
                           return (
                             <div key={policy.id}>
-                              {roomPolicy?.price ? `R$ ${roomPolicy.price}` : "-"}
+                              {roomPolicy?.price
+                                ? `R$ ${roomPolicy.price}`
+                                : "-"}
                             </div>
                           )
                         })}
@@ -476,11 +478,14 @@ export default function HotelPage() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Duplicar Quarto?</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                Duplicar Quarto?
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Deseja realmente criar uma cópia do quarto &ldquo;
-                                {room.name}&rdquo;? A cópia será criada com as mesmas
-                                configurações de preços e limites.
+                                Deseja realmente criar uma cópia do quarto
+                                &ldquo;
+                                {room.name}&rdquo;? A cópia será criada com as
+                                mesmas configurações de preços e limites.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -503,10 +508,12 @@ export default function HotelPage() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                Você tem certeza?
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Esta ação excluirá permanentemente este quarto. Esta
-                                ação não pode ser desfeita.
+                                Esta ação excluirá permanentemente este quarto.
+                                Esta ação não pode ser desfeita.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
