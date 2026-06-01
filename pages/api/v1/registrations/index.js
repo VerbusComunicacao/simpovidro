@@ -164,12 +164,21 @@ async function postHandler(request, response) {
       ? `
       <div style="margin-top: 20px; padding: 15px; background-color: #f3f4f6; border-radius: 8px; border: 1px solid #e5e7eb;">
         <h3 style="margin-top: 0; color: #374151; font-size: 1.1em; border-bottom: 1px solid #d1d5db; padding-bottom: 8px; margin-bottom: 10px;">Dados da Empresa</h3>
-        <p style="margin: 5px 0;"><strong>Razão Social:</strong> ${saleDetails.company_corporate_name}</p>
-        ${saleDetails.company_badge ? `<p style="margin: 5px 0;"><strong>Fantasia/Crachá:</strong> ${saleDetails.company_badge.toUpperCase()}</p>` : ""}
         <p style="margin: 5px 0;"><strong>CNPJ:</strong> ${formatCnpj(saleDetails.company_cnpj)}</p>
-        ${saleDetails.company_responsible_person ? `<p style="margin: 5px 0;"><strong>Responsável:</strong> ${saleDetails.company_responsible_person}</p>` : ""}
-        ${saleDetails.company_phone ? `<p style="margin: 5px 0;"><strong>Telefone:</strong> ${saleDetails.company_phone}</p>` : ""}
-        ${saleDetails.company_address ? `<p style="margin: 5px 0;"><strong>Endereço:</strong> ${saleDetails.company_address}, ${saleDetails.company_address_number || ""} ${saleDetails.company_address_complement ? `(${saleDetails.company_address_complement})` : ""} - ${saleDetails.company_neighborhood || ""} - ${saleDetails.company_city || ""}/${saleDetails.company_state || ""}</p>` : ""}
+        <p style="margin: 5px 0;"><strong>Razão Social:</strong> ${saleDetails.company_corporate_name}</p>
+        ${saleDetails.company_badge ? `<p style="margin: 5px 0;"><strong>Nome da empresa no crachá:</strong> ${saleDetails.company_badge.toUpperCase()}</p>` : ""}
+        ${saleDetails.company_email ? `<p style="margin: 5px 0;"><strong>E-mail da empresa:</strong> ${saleDetails.company_email}</p>` : ""}
+        ${saleDetails.company_phone ? `<p style="margin: 5px 0;"><strong>Telefone comercial:</strong> ${saleDetails.company_phone}</p>` : ""}
+        ${saleDetails.company_responsible_person ? `<p style="margin: 5px 0;"><strong>Pessoa responsável:</strong> ${saleDetails.company_responsible_person}</p>` : ""}
+        ${saleDetails.company_zip_code ? `<p style="margin: 5px 0;"><strong>CEP:</strong> ${saleDetails.company_zip_code}</p>` : ""}
+        ${saleDetails.company_address ? `<p style="margin: 5px 0;"><strong>Endereço:</strong> ${saleDetails.company_address}</p>` : ""}
+        ${saleDetails.company_address_number ? `<p style="margin: 5px 0;"><strong>Número:</strong> ${saleDetails.company_address_number}</p>` : ""}
+        ${saleDetails.company_address_complement ? `<p style="margin: 5px 0;"><strong>Complemento:</strong> ${saleDetails.company_address_complement}</p>` : ""}
+        ${saleDetails.company_neighborhood ? `<p style="margin: 5px 0;"><strong>Bairro:</strong> ${saleDetails.company_neighborhood}</p>` : ""}
+        ${saleDetails.company_activity_sector ? `<p style="margin: 5px 0;"><strong>Ramo de atividade:</strong> ${saleDetails.company_activity_sector}</p>` : ""}
+        ${saleDetails.company_country ? `<p style="margin: 5px 0;"><strong>País:</strong> ${saleDetails.company_country}</p>` : ""}
+        ${saleDetails.company_state ? `<p style="margin: 5px 0;"><strong>Estado:</strong> ${saleDetails.company_state}</p>` : ""}
+        ${saleDetails.company_city ? `<p style="margin: 5px 0;"><strong>Cidade:</strong> ${saleDetails.company_city}</p>` : ""}
       </div>
     `
       : ""

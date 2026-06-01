@@ -388,7 +388,7 @@ export default function CheckoutPage({
           const isAdult = age >= 18
           const pendingEmail =
             updated[index].email ||
-            (isAdult ? `pendente_${Date.now()}@adefinir.com` : "")
+            (isAdult ? `pendente_${Date.now()}@adefinir.commm` : "")
 
           updated[index] = {
             ...updated[index],
@@ -1838,42 +1838,64 @@ export default function CheckoutPage({
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 text-sm">
                           <p>
-                            <span className="text-gray-500">Razão Social:</span>{" "}
-                            {newCompanyData.corporate_name ||
-                              foundCompany?.corporate_name}
-                          </p>
-                          <p>
-                            <span className="text-gray-500">Fantasia:</span>{" "}
-                            {newCompanyData.fantasy_name ||
-                              foundCompany?.fantasy_name ||
-                              "-"}
-                          </p>
-                          <p>
                             <span className="text-gray-500">CNPJ:</span>{" "}
-                            {newCompanyData.cnpj || foundCompany?.cnpj}
+                            {newCompanyData.cnpj || foundCompany?.cnpj || "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">Insc. Est.:</span>{" "}
-                            {newCompanyData.state_registration ||
-                              foundCompany?.state_registration ||
-                              "Isento"}
+                            <span className="text-gray-500">Razão Social:</span>{" "}
+                            {newCompanyData.corporate_name || foundCompany?.corporate_name || "-"}
                           </p>
-                          <p className="md:col-span-2">
+                          <p>
+                            <span className="text-gray-500">Nome da empresa no crachá:</span>{" "}
+                            {newCompanyData.badge || foundCompany?.badge || "-"}
+                          </p>
+                          <p>
+                            <span className="text-gray-500">E-mail da empresa:</span>{" "}
+                            {newCompanyData.email || foundCompany?.email || "-"}
+                          </p>
+                          <p>
+                            <span className="text-gray-500">Telefone comercial:</span>{" "}
+                            {newCompanyData.phone || foundCompany?.phone || "-"}
+                          </p>
+                          <p>
+                            <span className="text-gray-500">Pessoa responsável:</span>{" "}
+                            {newCompanyData.responsible_person || foundCompany?.responsible_person || "-"}
+                          </p>
+                          <p>
+                            <span className="text-gray-500">CEP:</span>{" "}
+                            {newCompanyData.zip_code || foundCompany?.zip_code || "-"}
+                          </p>
+                          <p>
                             <span className="text-gray-500">Endereço:</span>{" "}
-                            {newCompanyData.address || foundCompany?.address},{" "}
-                            {newCompanyData.address_number ||
-                              foundCompany?.address_number}{" "}
-                            - {newCompanyData.city || foundCompany?.city}/
-                            {newCompanyData.state || foundCompany?.state} (
-                            {newCompanyData.zip_code || foundCompany?.zip_code})
+                            {newCompanyData.address || foundCompany?.address || "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">Telefone:</span>{" "}
-                            {newCompanyData.phone || foundCompany?.phone}
+                            <span className="text-gray-500">Número:</span>{" "}
+                            {newCompanyData.address_number || foundCompany?.address_number || "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">E-mail:</span>{" "}
-                            {newCompanyData.email || foundCompany?.email}
+                            <span className="text-gray-500">Complemento:</span>{" "}
+                            {newCompanyData.address_complement || foundCompany?.address_complement || "-"}
+                          </p>
+                          <p>
+                            <span className="text-gray-500">Bairro:</span>{" "}
+                            {newCompanyData.neighborhood || foundCompany?.neighborhood || "-"}
+                          </p>
+                          <p>
+                            <span className="text-gray-500">Ramo de atividade:</span>{" "}
+                            {newCompanyData.activity_sector || foundCompany?.activity_sector || "-"}
+                          </p>
+                          <p>
+                            <span className="text-gray-500">País:</span>{" "}
+                            {newCompanyData.country || foundCompany?.country || "Brasil"}
+                          </p>
+                          <p>
+                            <span className="text-gray-500">Estado:</span>{" "}
+                            {newCompanyData.state || foundCompany?.state || "-"}
+                          </p>
+                          <p>
+                            <span className="text-gray-500">Cidade:</span>{" "}
+                            {newCompanyData.city || foundCompany?.city || "-"}
                           </p>
                         </div>
                       </div>

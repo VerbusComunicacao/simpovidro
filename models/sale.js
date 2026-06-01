@@ -97,7 +97,7 @@ async function create(saleInputValues, externalClient) {
       })
     }
 
-    // 3.5 Check for overlapping registrations for these guests in this hotel
+    // 3.5 Check for overlapping registrations for these guests in this hotel (ignoring cancelled bookings & pending placeholders)
     const overlapResults = await client.query({
       text: `
             SELECT 
@@ -113,6 +113,8 @@ async function create(saleInputValues, externalClient) {
             WHERE 
                 sg.guest_id = ANY($1) 
                 AND r.hotel_id = $2
+                AND s.status != 'cancelled'
+                AND g.is_pending_info = false
             LIMIT 1;`,
       values: [guest_ids, targetRoom.hotel_id],
     })
@@ -405,6 +407,9 @@ async function findOneByIdWithDetails(saleId) {
         companies.state as company_state,
         companies.zip_code as company_zip_code,
         companies.responsible_person as company_responsible_person,
+        companies.email as company_email,
+        companies.activity_sector as company_activity_sector,
+        companies.country as company_country,
         (
           SELECT json_agg(g.*)
           FROM sales_guests sg

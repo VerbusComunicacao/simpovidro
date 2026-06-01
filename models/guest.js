@@ -520,7 +520,7 @@ function applyPlaceholderLogic(guestData) {
       guestData.phone = "1111111111"
       guestData.is_pending_info = true
       if (calculateIsAdult(guestData.birth_date)) {
-        guestData.email = `pendente_${Date.now()}@adefinir.com`
+        guestData.email = `pendente_${Date.now()}@adefinir.commm`
       }
     } else {
       guestData.name = guestData.name || "A Definir"
@@ -528,7 +528,7 @@ function applyPlaceholderLogic(guestData) {
       guestData.phone = guestData.phone?.replace(/\D/g, "") || "1111111111"
       guestData.is_pending_info = true
       if (calculateIsAdult(guestData.birth_date) && !guestData.email) {
-        guestData.email = `pendente_${Date.now()}@adefinir.com`
+        guestData.email = `pendente_${Date.now()}@adefinir.commm`
       }
     }
   }
