@@ -25,6 +25,28 @@ if (process.env.FALLBACK_EMAIL_SMTP_HOST) {
 }
 
 async function send(mailOptions) {
+  const forceFallback = process.env.FORCE_FALLBACK_EMAIL === "true"
+
+  if (forceFallback && fallbackTransporter) {
+    try {
+      console.warn(
+        `[EMAIL] [FORÇADO] Ignorando provedor primário. Tentando Provedor de Backup (Fallback): "${mailOptions.subject}" para ${mailOptions.to}`,
+      )
+      const info = await fallbackTransporter.sendMail(mailOptions)
+      console.log(
+        `[EMAIL] [FORÇADO] Sucesso no Provedor de Backup! ID: ${info.messageId}`,
+      )
+      return info
+    } catch (fallbackError) {
+      console.error(
+        `[EMAIL] [FORÇADO] Falha no provedor de backup forçado: ${fallbackError.message}`,
+      )
+      console.warn(
+        `[EMAIL] Tentando Provedor Primário como última alternativa devido a erro no backup.`,
+      )
+    }
+  }
+
   try {
     console.log(
       `[EMAIL] Tentando enviar: "${mailOptions.subject}" para ${mailOptions.to} (Provedor Primário)`,
