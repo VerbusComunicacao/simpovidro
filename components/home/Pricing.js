@@ -1,7 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Zap, MapPin, Info, Hotel, Plane } from "lucide-react"
-import Link from "next/link"
 
 export default function Pricing() {
   return (

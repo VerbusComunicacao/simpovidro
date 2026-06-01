@@ -34,11 +34,6 @@ import { validateCPF, validateCNPJ, validatePhone } from "@/lib/validators"
 import { LocationSelector } from "@/components/ui/LocationSelector"
 import { getInitialLocationState } from "@/lib/location-utils"
 import {
-  isTestEnvironment,
-  generateRandomCompany,
-  generateRandomGuest,
-} from "@/lib/test-data-generator"
-import {
   calculateMaxInstallments as calculateInstallments,
   validateRoomCapacity,
   generateInstallmentDates,
@@ -1822,8 +1817,8 @@ export default function CheckoutPage({
                             <span className="text-gray-500">Endereço:</span>{" "}
                             {newCompanyData.address || foundCompany?.address},{" "}
                             {newCompanyData.address_number ||
-                              foundCompany?.address_number} -{" "}
-                            {newCompanyData.city || foundCompany?.city}/
+                              foundCompany?.address_number}{" "}
+                            - {newCompanyData.city || foundCompany?.city}/
                             {newCompanyData.state || foundCompany?.state} (
                             {newCompanyData.zip_code || foundCompany?.zip_code})
                           </p>

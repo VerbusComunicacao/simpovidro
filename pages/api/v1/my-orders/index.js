@@ -1,7 +1,6 @@
 import { createRouter } from "next-connect"
 import controller from "infra/controller"
 import { ValidationError } from "infra/errors"
-import guest from "models/guest"
 import sale from "models/sale"
 
 const router = createRouter()

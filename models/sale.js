@@ -203,7 +203,7 @@ async function create(saleInputValues, externalClient) {
       targetRoom,
       guests.rows,
       companyData,
-      globalDiscounts
+      globalDiscounts,
     )
 
     let {

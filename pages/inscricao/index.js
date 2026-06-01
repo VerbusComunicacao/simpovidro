@@ -108,7 +108,7 @@ export default function RegistrationPage({ hotels, discounts }) {
       roomTypes: Array.from(types),
       filteredRooms: roomsWithPrices,
     }
-  }, [activeHotel, selectedType, searchData, discounts])
+  }, [activeHotel, selectedType, searchData, discounts, childrenCount])
 
   if (!activeHotel) {
     return (
