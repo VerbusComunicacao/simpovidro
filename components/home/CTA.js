@@ -77,7 +77,7 @@ export default function CTA({ router, HERO_IMAGE }) {
             <Button
               size="lg"
               className="bg-logo-navy hover:bg-blue-700 text-white rounded-full h-16 px-14 text-xl font-bold shadow-2xl transition-all hover:scale-110 shadow-blue-500/50"
-              onClick={() => router.push("/inscricao")}
+              onClick={() => router.push("/")}
             >
               INSCREVA-SE EM BREVE
             </Button>
