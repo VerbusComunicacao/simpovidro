@@ -927,29 +927,58 @@ export default function CheckoutPage({
                         </span>
                       </div>
                     )}
+                    {isAssociate && originalTotal > finalTotal && (
+                      <div className="flex justify-between items-center text-green-600 font-medium border-t pt-1.5 mt-1.5">
+                        <span>Desconto Associado Abravidro</span>
+                        <span>
+                          -
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(originalTotal - finalTotal)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <Separator />
                 <div>
-                  <p className="text-sm text-gray-500 font-medium">
-                    Valor Total
-                  </p>
-                  <div className="flex flex-col mt-1">
-                    {(discountPercentage > 0 || isAssociate) &&
-                      originalTotal > finalTotal && (
-                        <p className="text-xl text-gray-400 line-through">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-gray-500 font-medium">
+                        Valor Total
+                      </p>
+                      <div className="flex flex-col mt-1">
+                        {(discountPercentage > 0 || isAssociate) &&
+                          originalTotal > finalTotal && (
+                            <p className="text-xl text-gray-400 line-through">
+                              {new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(originalTotal)}
+                            </p>
+                          )}
+                        <p className="text-3xl font-bold text-blue-600">
                           {new Intl.NumberFormat("pt-BR", {
                             style: "currency",
                             currency: "BRL",
-                          }).format(originalTotal)}
+                          }).format(finalTotal)}
                         </p>
-                      )}
-                    <p className="text-3xl font-bold text-blue-600">
-                      {new Intl.NumberFormat("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      }).format(finalTotal)}
-                    </p>
+                      </div>
+                    </div>
+                    {originalTotal > finalTotal && (
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500 font-medium">
+                          Você Economizou
+                        </p>
+                        <p className="text-lg font-bold text-green-600 mt-1">
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(originalTotal - finalTotal)}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>

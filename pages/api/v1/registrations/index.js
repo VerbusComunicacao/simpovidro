@@ -5,6 +5,7 @@ import sale from "models/sale.js"
 import { ValidationError, UnauthorizedError } from "infra/errors.js"
 import email from "infra/email.js"
 import webserver from "infra/webserver.js"
+import { calculateSalePriceBreakdown } from "lib/registration-helpers.js"
 
 const router = createRouter()
 
@@ -211,6 +212,34 @@ async function postHandler(request, response) {
       </div>
     `
 
+    const { originalTotal, economizedAmount, discountLabel } =
+      calculateSalePriceBreakdown(saleDetails)
+
+    const priceBreakdownSection = `
+      <div style="margin-top: 30px; padding: 20px; background-color: #f8fafc; border-radius: 8px; text-align: right; border: 1px solid #e5e7eb;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.95em; text-align: right; color: #374151;">
+          <tr>
+            <td style="padding: 4px 0; color: #64748b; text-align: left;">Valor original:</td>
+            <td style="padding: 4px 0; font-weight: 500; text-align: right; color: #64748b; ${economizedAmount > 0 ? "text-decoration: line-through;" : ""}">${formatCurrency(originalTotal)}</td>
+          </tr>
+          ${
+            economizedAmount > 0
+              ? `
+            <tr>
+              <td style="padding: 4px 0; color: #10b981; font-weight: bold; text-align: left;">${discountLabel}:</td>
+              <td style="padding: 4px 0; color: #10b981; font-weight: bold; text-align: right;">-${formatCurrency(economizedAmount)}</td>
+            </tr>
+          `
+              : ""
+          }
+          <tr>
+            <td style="padding: 8px 0 0 0; font-size: 0.95em; color: #64748b; border-top: 1px solid #e5e7eb; text-align: left;">Valor com desconto:</td>
+            <td style="padding: 8px 0 0 0; font-size: 1.4em; font-weight: bold; color: #2563eb; border-top: 1px solid #e5e7eb; text-align: right;">${formatCurrency(saleDetails.final_amount)}</td>
+          </tr>
+        </table>
+      </div>
+    `
+
     const emailHtml = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #374151; line-height: 1.5;">
         <div style="line-height: 0;">
@@ -247,10 +276,7 @@ async function postHandler(request, response) {
 
           ${installmentsSection}
           
-          <div style="margin-top: 30px; padding: 20px; background-color: #f8fafc; border-radius: 8px; text-align: right;">
-            <p style="margin: 0; font-size: 0.9em; color: #64748b;">Valor Total do Pedido</p>
-            <p style="margin: 0; font-size: 1.8em; font-weight: bold; color: #2563eb;">${formatCurrency(saleDetails.final_amount)}</p>
-          </div>
+          ${priceBreakdownSection}
 
           <div style="margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; font-family: sans-serif; font-size: 0.95em;">
             <p style="margin: 0 0 8px 0; font-weight: bold; color: #111827;">Boletos:</p>

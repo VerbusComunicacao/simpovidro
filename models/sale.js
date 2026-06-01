@@ -393,6 +393,8 @@ async function findOneByIdWithDetails(saleId) {
         hotels.phone as hotel_phone,
         rooms.name as room_name,
         rooms.description as room_description,
+        rooms.price_per_night as room_price_per_night,
+        rooms.member_price_per_night as room_member_price_per_night,
         "room-types".name as room_type,
         "room-categories".name as room_category,
         companies.corporate_name as company_corporate_name,
@@ -410,6 +412,7 @@ async function findOneByIdWithDetails(saleId) {
         companies.email as company_email,
         companies.activity_sector as company_activity_sector,
         companies.country as company_country,
+        (SELECT name FROM discounts WHERE id = companies.discount_id) as company_discount_name,
         (
           SELECT json_agg(g.*)
           FROM sales_guests sg
