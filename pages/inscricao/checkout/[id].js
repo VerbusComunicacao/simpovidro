@@ -1799,40 +1799,41 @@ export default function CheckoutPage({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 text-sm">
                           <p>
                             <span className="text-gray-500">Razão Social:</span>{" "}
-                            {foundCompany?.corporate_name ||
-                              newCompanyData.corporate_name}
+                            {newCompanyData.corporate_name ||
+                              foundCompany?.corporate_name}
                           </p>
                           <p>
                             <span className="text-gray-500">Fantasia:</span>{" "}
-                            {foundCompany?.fantasy_name ||
-                              newCompanyData.fantasy_name ||
+                            {newCompanyData.fantasy_name ||
+                              foundCompany?.fantasy_name ||
                               "-"}
                           </p>
                           <p>
                             <span className="text-gray-500">CNPJ:</span>{" "}
-                            {foundCompany?.cnpj || newCompanyData.cnpj}
+                            {newCompanyData.cnpj || foundCompany?.cnpj}
                           </p>
                           <p>
                             <span className="text-gray-500">Insc. Est.:</span>{" "}
-                            {foundCompany?.state_registration ||
-                              newCompanyData.state_registration ||
+                            {newCompanyData.state_registration ||
+                              foundCompany?.state_registration ||
                               "Isento"}
                           </p>
                           <p className="md:col-span-2">
                             <span className="text-gray-500">Endereço:</span>{" "}
-                            {foundCompany?.address || newCompanyData.address},{" "}
-                            {foundCompany?.number || newCompanyData.number} -{" "}
-                            {foundCompany?.city || newCompanyData.city}/
-                            {foundCompany?.state || newCompanyData.state} (
-                            {foundCompany?.zip_code || newCompanyData.zip_code})
+                            {newCompanyData.address || foundCompany?.address},{" "}
+                            {newCompanyData.address_number ||
+                              foundCompany?.address_number} -{" "}
+                            {newCompanyData.city || foundCompany?.city}/
+                            {newCompanyData.state || foundCompany?.state} (
+                            {newCompanyData.zip_code || foundCompany?.zip_code})
                           </p>
                           <p>
                             <span className="text-gray-500">Telefone:</span>{" "}
-                            {foundCompany?.phone || newCompanyData.phone}
+                            {newCompanyData.phone || foundCompany?.phone}
                           </p>
                           <p>
                             <span className="text-gray-500">E-mail:</span>{" "}
-                            {foundCompany?.email || newCompanyData.email}
+                            {newCompanyData.email || foundCompany?.email}
                           </p>
                         </div>
                       </div>
