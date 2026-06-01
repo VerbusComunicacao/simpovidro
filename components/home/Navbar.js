@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import Image from "next/image"
 
@@ -10,7 +9,7 @@ export const navItems = [
   { name: "Dicas e lembretes", id: "dicas" },
 ]
 
-export default function Navbar({ scrollToSection, router }) {
+export default function Navbar({ scrollToSection }) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (

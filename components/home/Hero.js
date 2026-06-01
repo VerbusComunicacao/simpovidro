@@ -4,7 +4,7 @@ import { ChevronRight, Calendar, MapPin, Info } from "lucide-react"
 import Sponsors from "@/components/home/Sponsors"
 import { motion } from "framer-motion"
 
-export default function Hero({ scrollToSection, router }) {
+export default function Hero({ scrollToSection }) {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {

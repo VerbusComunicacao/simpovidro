@@ -40,7 +40,7 @@ export default function RegistrationDetailsPage() {
 
   const formatDate = (dateString) => {
     if (!dateString) return ""
-    return new Date(dateString).toLocaleDateString("pt-BR")
+    return new Date(dateString).toLocaleDateString("pt-BR", { timeZone: "UTC" })
   }
 
   const formatCurrency = (value) => {
