@@ -43,6 +43,7 @@ import {
   validateRoomCapacity,
   generateInstallmentDates,
   calculateSummaryPrice,
+  getChildrenCount,
 } from "@/lib/registration-helpers"
 
 function calculateAge(birthDate, referenceDate = new Date()) {
@@ -360,16 +361,13 @@ export default function CheckoutPage({
     }
     setError("")
 
-    // 4. Admin actions (CPF Lookup)
-    if (name === "cpf_number" && isAdmin) {
+    // 4. CPF Lookup
+    if (name === "cpf_number") {
       const cleanCpf = maskedValue.replace(/\D/g, "")
       if (cleanCpf.length === 11) {
         lookupGuestByCpf(index, maskedValue)
       }
     }
-
-    // 5. Test actions
-    handleTestAutofill(index, name, maskedValue)
   }
 
   const applyFieldMask = (name, value) => {
@@ -383,16 +381,6 @@ export default function CheckoutPage({
         return maskPhone(value)
       default:
         return value
-    }
-  }
-
-  const handleTestAutofill = (index, name, value) => {
-    if (
-      name === "cpf_number" &&
-      isTestEnvironment() &&
-      value.replace(/\D/g, "") === "1".repeat(11)
-    ) {
-      updateGuestFields(index, generateRandomGuest())
     }
   }
 
@@ -421,13 +409,13 @@ export default function CheckoutPage({
   )
 
   const adultCount = occupancyCounts.adults || 0
-  const childCount = Object.keys(occupancyCounts)
-    .filter((k) => k !== "adults")
-    .reduce((acc, k) => acc + occupancyCounts[k], 0)
+  const childCount = getChildrenCount(occupancyCounts)
 
   const basePrice = isAssociate
     ? Number(room?.member_price_per_night || room?.price_per_night || 0)
     : Number(room?.price_per_night || 0)
+
+  const publicBasePrice = Number(room?.price_per_night || 0)
 
   const checkoutItems = []
 
@@ -449,13 +437,14 @@ export default function CheckoutPage({
 
       const policy = room.price_policies?.find((p) => p.id === key)
       for (let i = 0; i < count; i++) {
-        let childPrice = basePrice
+        let childPrice = publicBasePrice
         if (policy) {
           if (policy.use_percentage === false) {
-            childPrice = policy.price != null ? Number(policy.price) : basePrice
+            childPrice =
+              policy.price != null ? Number(policy.price) : publicBasePrice
           } else {
             const percentage = Number(policy.percentage ?? 100)
-            childPrice = basePrice * (percentage / 100)
+            childPrice = publicBasePrice * (percentage / 100)
           }
         }
         checkoutItems.push({
@@ -631,12 +620,25 @@ export default function CheckoutPage({
   }
 
   const handleCnpjStep = async () => {
-    // Dev Helper: Autofill on all ones (CNPJ)
-    if (isTestEnvironment() && cnpj.replace(/\D/g, "") === "1".repeat(14)) {
-      const randomCompany = generateRandomCompany()
+    // Autofill on all ones (CNPJ) with placeholder data
+    if (cnpj.replace(/\D/g, "") === "1".repeat(14)) {
       setNewCompanyData({
-        ...newCompanyData,
-        ...randomCompany,
+        cnpj: cnpj,
+        corporate_name: "A DEFINIR",
+        badge: "A DEFINIR",
+        email: "adefinir@email.com",
+        phone: "(11) 11111-1111",
+        responsible_person: "A DEFINIR",
+        zip_code: "01001-000",
+        address: "A DEFINIR",
+        address_number: "111",
+        address_complement: "A DEFINIR",
+        neighborhood: "A DEFINIR",
+        city: "São Paulo",
+        state: "SP",
+        stateCode: "SP",
+        countryCode: "BR",
+        activity_sector: "OUTRO",
       })
       setCurrentStep(2)
       return
@@ -1449,9 +1451,7 @@ export default function CheckoutPage({
                                 type="email"
                                 value={guestData.email}
                                 onChange={(e) => handleChange(index, e)}
-                                disabled={index === 0 && !isAdmin}
                                 className={`
-                                  ${index === 0 && !isAdmin ? "bg-gray-50 opacity-80" : ""}
                                   ${guestErrors[index]?.email ? "border-red-500" : ""}
                                 `}
                                 required={calculateIsAdult(

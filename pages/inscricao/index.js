@@ -29,7 +29,11 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
-import { calculateSummaryPrice } from "@/lib/registration-helpers"
+import {
+  calculateSummaryPrice,
+  calculateAdultDiscount,
+  getChildrenCount,
+} from "@/lib/registration-helpers"
 import Link from "next/link"
 import Image from "next/image"
 import webserver from "infra/webserver"
@@ -51,6 +55,8 @@ export default function RegistrationPage({ hotels, discounts }) {
   })
   const [selectedType, setSelectedType] = useState("all")
 
+  const childrenCount = getChildrenCount(searchData)
+
   const { roomTypes, filteredRooms } = useMemo(() => {
     if (!activeHotel)
       return { roomTypes: [], roomCategories: [], filteredRooms: [] }
@@ -62,10 +68,6 @@ export default function RegistrationPage({ hotels, discounts }) {
       types.add(room.room_type)
       categories.add(room.room_category)
     })
-
-    const childrenCount = Object.keys(searchData)
-      .filter((k) => k !== "adults")
-      .reduce((acc, k) => acc + searchData[k], 0)
 
     const filtered = activeHotel.rooms.filter((room) => {
       const maxAdults = room.max_adults ?? Infinity
@@ -410,11 +412,11 @@ export default function RegistrationPage({ hotels, discounts }) {
                           <div className="flex items-center gap-4 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                               <Users className="h-4 w-4" />
-                              <span> {room.max_adults} adultos</span>
+                              <span> {searchData.adults} adulto(s)</span>
                             </div>
-                            {room.max_children > 0 && (
+                            {childrenCount > 0 && (
                               <div className="flex items-center gap-1">
-                                <span>+ {room.max_children} crianças</span>
+                                <span>+ {childrenCount} criança(s)</span>
                               </div>
                             )}
                           </div>
@@ -464,8 +466,12 @@ export default function RegistrationPage({ hotels, discounts }) {
                                 const displayPrice =
                                   isMemberDiscount && room.memberTotal
                                     ? room.memberTotal
-                                    : room.originalTotal *
-                                      (1 - Number(discount.value || 0) / 100)
+                                    : room.originalTotal -
+                                      calculateAdultDiscount(
+                                        room.adultOriginalTotal ??
+                                          room.originalTotal,
+                                        Number(discount.value || 0),
+                                      )
 
                                 const discountValue = isMemberDiscount
                                   ? Math.round(

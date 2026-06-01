@@ -77,11 +77,9 @@ export default function Pricing() {
                   Centralizamos as reservas para garantir que você esteja no
                   coração do evento com tarifas especiais Simpovidro.
                 </p>
-                <Link href="/inscricao#acomodacoes">
-                  <Button className="w-full bg-white text-blue-600 hover:bg-slate-100">
-                    Consultar Quartos
-                  </Button>
-                </Link>
+                <Button className="w-full bg-white text-blue-600 hover:bg-slate-100">
+                  Reserve em breve
+                </Button>
               </CardContent>
             </Card>
 
@@ -102,7 +100,7 @@ export default function Pricing() {
                   variant="outline"
                   className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
                 >
-                  Clique aqui e preencha o formulário.
+                  Em breve
                 </Button>
               </CardContent>
             </Card>

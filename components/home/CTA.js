@@ -18,10 +18,11 @@ export default function CTA({ router, HERO_IMAGE }) {
           </p>
           <Button
             size="lg"
+            disabled
             className="bg-white text-blue-700 hover:bg-slate-100 rounded-full h-14 px-12 text-lg shadow-2xl transition-transform hover:scale-110"
             onClick={() => router.push("/inscricao")}
           >
-            Garantir Minha Vaga Agora
+            Garanta sua vaga em breve
           </Button>
         </div>
       </section>
@@ -78,7 +79,7 @@ export default function CTA({ router, HERO_IMAGE }) {
               className="bg-logo-navy hover:bg-blue-700 text-white rounded-full h-16 px-14 text-xl font-bold shadow-2xl transition-all hover:scale-110 shadow-blue-500/50"
               onClick={() => router.push("/inscricao")}
             >
-              INSCREVA-SE AGORA
+              INSCREVA-SE EM BREVE
             </Button>
             <Button
               size="lg"

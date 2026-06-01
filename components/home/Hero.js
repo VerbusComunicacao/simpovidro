@@ -67,9 +67,8 @@ export default function Hero({ scrollToSection, router }) {
             <Button
               size="lg"
               className="bg-logo-blue hover:bg-logo-navy text-white rounded-full h-14 px-10 text-lg shadow-xl shadow-blue-500/25 transition-transform hover:scale-105"
-              onClick={() => router.push("/inscricao")}
             >
-              Quero me inscrever <ChevronRight className="ml-2 h-5 w-5" />
+              Inscrições em breve <ChevronRight className="ml-2 h-5 w-5" />
             </Button>
             <Button
               size="lg"
