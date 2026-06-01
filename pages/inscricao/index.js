@@ -73,6 +73,7 @@ export default function RegistrationPage({ hotels, discounts }) {
       const maxAdults = room.max_adults ?? Infinity
       const maxChildren = room.max_children ?? Infinity
       const minGuests = room.min_guests ?? 0
+      const hasAvailability = (room.available_rooms ?? 0) > 0
 
       const adultCapacityMatch = maxAdults >= searchData.adults
       const childCapacityMatch = maxChildren >= childrenCount
@@ -82,7 +83,11 @@ export default function RegistrationPage({ hotels, discounts }) {
         selectedType === "all" || room.room_type === selectedType
 
       return (
-        adultCapacityMatch && childCapacityMatch && minAdultsMatch && typeMatch
+        hasAvailability &&
+        adultCapacityMatch &&
+        childCapacityMatch &&
+        minAdultsMatch &&
+        typeMatch
       )
     })
 
