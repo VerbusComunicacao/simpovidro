@@ -5,6 +5,7 @@ import sale from "models/sale.js"
 import { ValidationError, UnauthorizedError } from "infra/errors.js"
 import email from "infra/email.js"
 import webserver from "infra/webserver.js"
+import { calculateSalePriceBreakdown } from "lib/registration-helpers.js"
 
 const router = createRouter()
 
@@ -164,12 +165,21 @@ async function postHandler(request, response) {
       ? `
       <div style="margin-top: 20px; padding: 15px; background-color: #f3f4f6; border-radius: 8px; border: 1px solid #e5e7eb;">
         <h3 style="margin-top: 0; color: #374151; font-size: 1.1em; border-bottom: 1px solid #d1d5db; padding-bottom: 8px; margin-bottom: 10px;">Dados da Empresa</h3>
-        <p style="margin: 5px 0;"><strong>Razão Social:</strong> ${saleDetails.company_corporate_name}</p>
-        ${saleDetails.company_badge ? `<p style="margin: 5px 0;"><strong>Fantasia/Crachá:</strong> ${saleDetails.company_badge.toUpperCase()}</p>` : ""}
         <p style="margin: 5px 0;"><strong>CNPJ:</strong> ${formatCnpj(saleDetails.company_cnpj)}</p>
-        ${saleDetails.company_responsible_person ? `<p style="margin: 5px 0;"><strong>Responsável:</strong> ${saleDetails.company_responsible_person}</p>` : ""}
-        ${saleDetails.company_phone ? `<p style="margin: 5px 0;"><strong>Telefone:</strong> ${saleDetails.company_phone}</p>` : ""}
-        ${saleDetails.company_address ? `<p style="margin: 5px 0;"><strong>Endereço:</strong> ${saleDetails.company_address}, ${saleDetails.company_address_number || ""} ${saleDetails.company_address_complement ? `(${saleDetails.company_address_complement})` : ""} - ${saleDetails.company_neighborhood || ""} - ${saleDetails.company_city || ""}/${saleDetails.company_state || ""}</p>` : ""}
+        <p style="margin: 5px 0;"><strong>Razão Social:</strong> ${saleDetails.company_corporate_name}</p>
+        ${saleDetails.company_badge ? `<p style="margin: 5px 0;"><strong>Nome da empresa no crachá:</strong> ${saleDetails.company_badge.toUpperCase()}</p>` : ""}
+        ${saleDetails.company_email ? `<p style="margin: 5px 0;"><strong>E-mail da empresa:</strong> ${saleDetails.company_email}</p>` : ""}
+        ${saleDetails.company_phone ? `<p style="margin: 5px 0;"><strong>Telefone comercial:</strong> ${saleDetails.company_phone}</p>` : ""}
+        ${saleDetails.company_responsible_person ? `<p style="margin: 5px 0;"><strong>Pessoa responsável:</strong> ${saleDetails.company_responsible_person}</p>` : ""}
+        ${saleDetails.company_zip_code ? `<p style="margin: 5px 0;"><strong>CEP:</strong> ${saleDetails.company_zip_code}</p>` : ""}
+        ${saleDetails.company_address ? `<p style="margin: 5px 0;"><strong>Endereço:</strong> ${saleDetails.company_address}</p>` : ""}
+        ${saleDetails.company_address_number ? `<p style="margin: 5px 0;"><strong>Número:</strong> ${saleDetails.company_address_number}</p>` : ""}
+        ${saleDetails.company_address_complement ? `<p style="margin: 5px 0;"><strong>Complemento:</strong> ${saleDetails.company_address_complement}</p>` : ""}
+        ${saleDetails.company_neighborhood ? `<p style="margin: 5px 0;"><strong>Bairro:</strong> ${saleDetails.company_neighborhood}</p>` : ""}
+        ${saleDetails.company_activity_sector ? `<p style="margin: 5px 0;"><strong>Ramo de atividade:</strong> ${saleDetails.company_activity_sector}</p>` : ""}
+        ${saleDetails.company_country ? `<p style="margin: 5px 0;"><strong>País:</strong> ${saleDetails.company_country}</p>` : ""}
+        ${saleDetails.company_state ? `<p style="margin: 5px 0;"><strong>Estado:</strong> ${saleDetails.company_state}</p>` : ""}
+        ${saleDetails.company_city ? `<p style="margin: 5px 0;"><strong>Cidade:</strong> ${saleDetails.company_city}</p>` : ""}
       </div>
     `
       : ""
@@ -202,37 +212,41 @@ async function postHandler(request, response) {
       </div>
     `
 
-    const sponsorsFooter = `
-      <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #f3f4f6; display: table; width: 100%;">
-        <div style="display: table-row;">
-          <!-- Realização (Left Side) -->
-          <div style="display: table-cell; width: 35%; text-align: center; border-right: 2px solid #f3f4f6; vertical-align: middle; padding-right: 20px;">
-            <p style="color: #9ca3af; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 10px 0;">Realização</p>
-            <img src="${webserver.origin}/images/logo_ABRAVIDRO.png" alt="Abravidro" height="35" style="height: 35px; width: auto; vertical-align: middle;">
-          </div>
-          <!-- Patrocínio (Right Side) -->
-          <div style="display: table-cell; width: 65%; text-align: center; vertical-align: middle; padding-left: 20px;">
-            <p style="color: #9ca3af; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 10px 0;">Patrocínio</p>
-            <div style="display: inline-block;">
-              <img src="${webserver.origin}/images/agc-logo.png" alt="AGC" height="25" style="height: 25px; width: auto; margin: 5px 8px; vertical-align: middle;">
-              <img src="${webserver.origin}/images/cebrace-logo.webp" alt="Cebrace" height="25" style="height: 25px; width: auto; margin: 5px 8px; vertical-align: middle;">
-              <img src="${webserver.origin}/images/glass-guardian-logo.png" alt="Guardian Glass" height="25" style="height: 25px; width: auto; margin: 5px 8px; vertical-align: middle;">
-              <img src="${webserver.origin}/images/logo_vivix_nova.png" alt="Vivix" height="25" style="height: 25px; width: auto; margin: 5px 8px; vertical-align: middle;">
-            </div>
-          </div>
-        </div>
+    const { originalTotal, economizedAmount, discountLabel } =
+      calculateSalePriceBreakdown(saleDetails)
+
+    const priceBreakdownSection = `
+      <div style="margin-top: 30px; padding: 20px; background-color: #f8fafc; border-radius: 8px; text-align: right; border: 1px solid #e5e7eb;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.95em; text-align: right; color: #374151;">
+          <tr>
+            <td style="padding: 4px 0; color: #64748b; text-align: left;">Valor original:</td>
+            <td style="padding: 4px 0; font-weight: 500; text-align: right; color: #64748b; ${economizedAmount > 0 ? "text-decoration: line-through;" : ""}">${formatCurrency(originalTotal)}</td>
+          </tr>
+          ${
+            economizedAmount > 0
+              ? `
+            <tr>
+              <td style="padding: 4px 0; color: #10b981; font-weight: bold; text-align: left;">${discountLabel}:</td>
+              <td style="padding: 4px 0; color: #10b981; font-weight: bold; text-align: right;">-${formatCurrency(economizedAmount)}</td>
+            </tr>
+          `
+              : ""
+          }
+          <tr>
+            <td style="padding: 8px 0 0 0; font-size: 0.95em; color: #64748b; border-top: 1px solid #e5e7eb; text-align: left;">Valor com desconto:</td>
+            <td style="padding: 8px 0 0 0; font-size: 1.4em; font-weight: bold; color: #2563eb; border-top: 1px solid #e5e7eb; text-align: right;">${formatCurrency(saleDetails.final_amount)}</td>
+          </tr>
+        </table>
       </div>
     `
 
     const emailHtml = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #374151; line-height: 1.5;">
-        <div style="background-color: #2563eb; padding: 30px 20px; border-radius: 8px 8px 0 0; text-align: center;">
-          <img src="${webserver.origin}/images/logo-17-simpovidro.png" alt="17º Simpovidro" width="260" style="width: 260px; max-width: 80%; height: auto; margin-bottom: 15px; vertical-align: middle;">
-          <div style="color: #ffffff; font-weight: bold; font-size: 1.25em; margin-bottom: 4px; font-family: sans-serif;">5 a 8 de Novembro de 2026</div>
-          <div style="color: #bfdbfe; font-size: 1.05em; font-family: sans-serif;">Costão do Santinho – Florianópolis, SC</div>
+        <div style="line-height: 0;">
+          <img src="${webserver.origin}/images/banner-topo.png" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none;">
         </div>
 
-        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-bottom: none;">
           <p>Olá, <strong>${recipientName}</strong>!</p>
           <p>Sua inscrição foi finalizada com sucesso. Abaixo você encontra o resumo completo do seu pedido.</p>
           
@@ -262,10 +276,7 @@ async function postHandler(request, response) {
 
           ${installmentsSection}
           
-          <div style="margin-top: 30px; padding: 20px; background-color: #f8fafc; border-radius: 8px; text-align: right;">
-            <p style="margin: 0; font-size: 0.9em; color: #64748b;">Valor Total do Pedido</p>
-            <p style="margin: 0; font-size: 1.8em; font-weight: bold; color: #2563eb;">${formatCurrency(saleDetails.final_amount)}</p>
-          </div>
+          ${priceBreakdownSection}
 
           <div style="margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; font-family: sans-serif; font-size: 0.95em;">
             <p style="margin: 0 0 8px 0; font-weight: bold; color: #111827;">Boletos:</p>
@@ -276,8 +287,10 @@ async function postHandler(request, response) {
               <strong>Organização 17º Simpovidro</strong>
             </p>
           </div>
+        </div>
 
-          ${sponsorsFooter}
+        <div style="line-height: 0;">
+          <img src="${webserver.origin}/images/banner-rodape.png" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
         </div>
       </div>
     `

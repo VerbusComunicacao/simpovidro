@@ -31,26 +31,13 @@ async function generateToken(userId) {
 async function sendEmailToUser(user, activationToken) {
   const activationLink = `${webserver.origin}/cadastro/ativar/${activationToken}`
 
-  const sponsorsFooter = `
-      <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #f3f4f6; text-align: center;">
-        <p style="color: #9ca3af; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px;">Patrocínio</p>
-        <div style="display: inline-block;">
-          <img src="${webserver.origin}/images/agc-logo.png" alt="AGC" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
-          <img src="${webserver.origin}/images/cebrace-logo.webp" alt="Cebrace" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
-          <img src="${webserver.origin}/images/glass-guardian-logo.png" alt="Guardian Glass" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
-          <img src="${webserver.origin}/images/logo_vivix_nova.png" alt="Vivix" style="height: 30px; margin: 10px 15px; vertical-align: middle;">
-        </div>
-      </div>
-    `
-
   const emailHtml = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #374151; line-height: 1.5;">
-        <div style="background-color: #2563eb; padding: 30px 20px; border-radius: 8px 8px 0 0; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 1.8em;">Ative sua conta</h1>
-          <p style="color: #bfdbfe; margin-top: 10px;">Simpovidro 2026</p>
+        <div style="line-height: 0;">
+          <img src="${webserver.origin}/images/banner-topo.png" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none;">
         </div>
 
-        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-bottom: none;">
           <p>Olá, <strong>${user.full_name}</strong>!</p>
           <p>Falta pouco para você completar sua inscrição no Simpovidro 2026. Clique no botão abaixo para ativar seu cadastro:</p>
           
@@ -58,17 +45,19 @@ async function sendEmailToUser(user, activationToken) {
             <a href="${activationLink}" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">Ativar minha conta</a>
           </div>
 
-          <p style="font-size: 0.85em; color: #6b7280; text-align: center;">
+          <p style="font-size: 0.85em; color: #6b7280; text-align: center; margin-bottom: 30px;">
             Se o botão acima não funcionar, copie e cole o link abaixo no seu navegador:<br/>
             <a href="${activationLink}" style="color: #2563eb; word-break: break-all;">${activationLink}</a>
           </p>
 
-          ${sponsorsFooter}
-
-          <p style="margin-top: 30px; font-size: 0.9em; color: #6b7280; text-align: center;">
-            Atenciosamente,<br/>
+          <p style="margin-top: 30px; font-size: 0.95em; color: #4b5563;">
+            Atenciosamente,<br/><br/>
             <strong>Equipe Abravidro</strong>
           </p>
+        </div>
+
+        <div style="line-height: 0;">
+          <img src="${webserver.origin}/images/banner-rodape.png" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
         </div>
       </div>
     `
