@@ -2,40 +2,95 @@ import Image from "next/image"
 
 export default function Sponsors({ variant = "full" }) {
   const sponsors = [
-    { name: "AGC", logo: "/images/agc-logo.png" },
-    { name: "Cebrace", logo: "/images/cebrace-logo.webp" },
-    { name: "Guardian Glass", logo: "/images/glass-guardian-logo.png" },
-    { name: "Vivix", logo: "/images/logo_vivix_nova.png" },
+    {
+      name: "AGC",
+      logo: "/images/agc-logo.png",
+      link: "https://agcbrasil.com/",
+    },
+    {
+      name: "Cebrace",
+      logo: "/images/cebrace-logo.webp",
+      link: "https://www.cebrace.com.br/",
+    },
+    {
+      name: "Guardian Glass",
+      logo: "/images/glass-guardian-logo.png",
+      link: "https://www.guardianglass.com/la/pt",
+    },
+    {
+      name: "Vivix",
+      logo: "/images/logo_vivix_nova.png",
+      link: "https://vivix.com.br/",
+    },
   ]
 
   const supporters = [
-    { name: "Diamanfer", logo: "/images/apoiadores/diamanfer.jpeg" },
-    { name: "Glass Control", logo: "/images/apoiadores/glass-control.png" },
-    { name: "Vetro Maquinas", logo: "/images/apoiadores/vetro-maquinas.png" },
+    {
+      name: "Diamanfer",
+      logo: "/images/apoiadores/diamanfer.jpeg",
+      link: "https://diamanfer.com.br/",
+    },
+    {
+      name: "Glass Control",
+      logo: "/images/apoiadores/glass-control.png",
+      link: "https://sfti.com.br/",
+    },
+    {
+      name: "Vetro Maquinas",
+      logo: "/images/apoiadores/vetro-maquinas.png",
+      link: "https://vetromaquinas.com.br",
+    },
   ]
 
   const support = [
-    { name: "Abravid", logo: "/images/apoio-institucional/ABRAVID.png" },
-    { name: "Adivipar", logo: "/images/apoio-institucional/Adivipar.png" },
+    {
+      name: "Abravid",
+      logo: "/images/apoio-institucional/ABRAVID.png",
+      link: "",
+    },
+    {
+      name: "Adivipar",
+      logo: "/images/apoio-institucional/Adivipar.png",
+      link: "https://adivipar.com.br",
+    },
     {
       name: "Ascevi",
       logo: "/images/apoio-institucional/ASCEVI.png",
+      link: "",
       isVertical: true,
     },
-    { name: "Avigo", logo: "/images/apoio-institucional/AVIGO.png" },
-    { name: "Avims", logo: "/images/apoio-institucional/AVIMS.png" },
-    { name: "Sim Vidro", logo: "/images/apoio-institucional/SimVidro.png" },
+    {
+      name: "Avigo",
+      logo: "/images/apoio-institucional/AVIGO.png",
+      link: "",
+    },
+    {
+      name: "Avims",
+      logo: "/images/apoio-institucional/AVIMS.png",
+      link: "",
+    },
+    {
+      name: "Sim Vidro",
+      logo: "/images/apoio-institucional/SimVidro.png",
+      link: "https://www.simvidro.com.br",
+    },
     {
       name: "Sinbevidros",
       logo: "/images/apoio-institucional/Sinbevidros.png",
+      link: "https://www.sinbevidros.com.br",
       isVertical: true,
     },
     { name: "Sincavesp", logo: "/images/apoio-institucional/SINCAVESP.png" },
     { name: "Sincavidro", logo: "/images/apoio-institucional/SINCAVIDRO.png" },
-    { name: "Sincomavi", logo: "/images/apoio-institucional/SINCOMAVI-2.png" },
+    {
+      name: "Sincomavi",
+      logo: "/images/apoio-institucional/SINCOMAVI-2.png",
+      link: "https://sincomavi.org.br",
+    },
     {
       name: "Sindi Vidros RS",
       logo: "/images/apoio-institucional/Sindividros RS.png",
+      link: "https://sindividrosrs.com.br",
     },
     {
       name: "Sindividros BA",
@@ -44,6 +99,7 @@ export default function Sponsors({ variant = "full" }) {
     {
       name: "Sindividros ES",
       logo: "/images/apoio-institucional/SINDIVIROS-ES3.png",
+      link: "https://sindividros-es.com.br",
     },
   ]
 

@@ -293,7 +293,7 @@ export default function RegistrationPage({ hotels, discounts }) {
                   </h2>
                   <div className="flex items-center gap-3 text-gray-600 mt-1">
                     <span className="flex items-center gap-1 font-medium italic">
-                      {searchData.adults} adultos
+                      {searchData.adults} adulto(s)
                     </span>
                     {Object.keys(searchData)
                       .filter((k) => k !== "adults" && searchData[k] > 0)
