@@ -36,23 +36,34 @@ async function postHandler(request, response) {
   const usedRGs = new Set()
 
   for (const currentGuestData of guests_data) {
-    if (
-      currentGuestData.cpf_number &&
-      usedCPFs.has(currentGuestData.cpf_number)
-    ) {
-      throw new ValidationError({
-        message: "Os hóspedes informados não podem ser iguais (CPF duplicado).",
-        action: "Verifique os dados dos hóspedes e tente novamente.",
-      })
+    const cleanCpf = currentGuestData.cpf_number?.replace(/\D/g, "")
+    const isPlaceholder =
+      cleanCpf === "11111111111" || currentGuestData.is_pending_info === true
+
+    if (!isPlaceholder) {
+      if (
+        currentGuestData.cpf_number &&
+        usedCPFs.has(currentGuestData.cpf_number)
+      ) {
+        throw new ValidationError({
+          message:
+            "Os hóspedes informados não podem ser iguais (CPF duplicado).",
+          action: "Verifique os dados dos hóspedes e tente novamente.",
+        })
+      }
+      if (
+        currentGuestData.rg_number &&
+        usedRGs.has(currentGuestData.rg_number)
+      ) {
+        throw new ValidationError({
+          message:
+            "Os hóspedes informados não podem ser iguais (RG duplicado).",
+          action: "Verifique os dados dos hóspedes e tente novamente.",
+        })
+      }
+      if (currentGuestData.cpf_number) usedCPFs.add(currentGuestData.cpf_number)
+      if (currentGuestData.rg_number) usedRGs.add(currentGuestData.rg_number)
     }
-    if (currentGuestData.rg_number && usedRGs.has(currentGuestData.rg_number)) {
-      throw new ValidationError({
-        message: "Os hóspedes informados não podem ser iguais (RG duplicado).",
-        action: "Verifique os dados dos hóspedes e tente novamente.",
-      })
-    }
-    if (currentGuestData.cpf_number) usedCPFs.add(currentGuestData.cpf_number)
-    if (currentGuestData.rg_number) usedRGs.add(currentGuestData.rg_number)
   }
 
   // 2. Delegate registration logic to model

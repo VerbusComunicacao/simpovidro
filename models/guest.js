@@ -1,8 +1,10 @@
 import database from "infra/database.js"
 import { ConflictError, ValidationError, NotFoundError } from "infra/errors.js"
 import { validateRequiredFields, validateUUID } from "infra/validator.js"
+import { cpf } from "cpf-cnpj-validator"
 
 async function create(guestInputValues, userId, client, isImport = false) {
+  applyPlaceholderLogic(guestInputValues)
   const isAdult = calculateIsAdult(guestInputValues.birth_date)
 
   const requiredFields = [
@@ -70,6 +72,7 @@ async function create(guestInputValues, userId, client, isImport = false) {
       emergency_contact_name = null,
       emergency_contact_phone = null,
       company_cnpj = null,
+      is_pending_info = false,
     } = guestInputValues
 
     const cleanCompanyCnpj = company_cnpj?.replace(/\D/g, "")
@@ -78,9 +81,9 @@ async function create(guestInputValues, userId, client, isImport = false) {
     const results = await db.query({
       text: `
         INSERT INTO
-          guests (user_id, name, phone, badge_name, gender, rg_number, cpf_number, passport_number, medication_details, blood_type, blood_rh_factor, health_observations, special_needs_details, has_heart_condition, has_diabetes, has_high_blood_pressure, has_low_blood_pressure, birth_date, nationality, address, address_number, address_complement, neighborhood, city, state, country, emergency_contact_name, emergency_contact_phone, email, company_cnpj)
+          guests (user_id, name, phone, badge_name, gender, rg_number, cpf_number, passport_number, medication_details, blood_type, blood_rh_factor, health_observations, special_needs_details, has_heart_condition, has_diabetes, has_high_blood_pressure, has_low_blood_pressure, birth_date, nationality, address, address_number, address_complement, neighborhood, city, state, country, emergency_contact_name, emergency_contact_phone, email, company_cnpj, is_pending_info)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)
         RETURNING
           *
       `,
@@ -115,6 +118,7 @@ async function create(guestInputValues, userId, client, isImport = false) {
         emergency_contact_phone,
         email,
         cleanCompanyCnpj,
+        is_pending_info,
       ],
     })
 
@@ -184,6 +188,7 @@ async function findOneByUserId(userId, client) {
 }
 
 async function upsert(guestData, userId = null, client, isImport = false) {
+  applyPlaceholderLogic(guestData)
   const isAdult = calculateIsAdult(guestData.birth_date)
 
   const requiredFields = [
@@ -276,6 +281,15 @@ async function findAll({ search = "", page = 1, limit = 10 } = {}) {
 }
 
 async function update(guestId, guestInputNewValues, client) {
+  if (guestInputNewValues.cpf_number) {
+    const cleanCpf = guestInputNewValues.cpf_number.replace(/\D/g, "")
+    if (cleanCpf === "11111111111") {
+      applyPlaceholderLogic(guestInputNewValues)
+    } else if (guestInputNewValues.is_pending_info === undefined) {
+      guestInputNewValues.is_pending_info = false
+    }
+  }
+
   if (Object.keys(guestInputNewValues).length === 0) {
     throw new ValidationError({
       message: `Nenhum campo enviado para atualização.`,
@@ -333,6 +347,7 @@ async function update(guestId, guestInputNewValues, client) {
       emergency_contact_phone,
       company_cnpj,
       user_id,
+      is_pending_info = false,
     } = guestWithNewValues
 
     const cleanCompanyCnpj = company_cnpj?.replace(/\D/g, "")
@@ -373,7 +388,8 @@ async function update(guestId, guestInputNewValues, client) {
           updated_at = timezone('utc', now()),
           email = $29,
           company_cnpj = $30,
-          user_id = $31
+          user_id = $31,
+          is_pending_info = $32
         WHERE
           id = $1
         RETURNING
@@ -411,6 +427,7 @@ async function update(guestId, guestInputNewValues, client) {
         email,
         cleanCompanyCnpj,
         user_id,
+        is_pending_info,
       ],
     })
 
@@ -488,6 +505,33 @@ function calculateIsAdult(birthDate) {
     age--
   }
   return age >= 18
+}
+
+function applyPlaceholderLogic(guestData) {
+  const cleanCpf = guestData.cpf_number?.replace(/\D/g, "")
+  if (cleanCpf === "11111111111" || guestData.is_pending_info === true) {
+    if (cleanCpf === "11111111111") {
+      guestData.cpf_number = cpf.generate()
+      guestData.rg_number = Math.floor(
+        Math.random() * 9000000000 + 1000000000,
+      ).toString()
+      guestData.name = "A Definir"
+      guestData.badge_name = "A DEFINIR"
+      guestData.phone = "1111111111"
+      guestData.is_pending_info = true
+      if (calculateIsAdult(guestData.birth_date)) {
+        guestData.email = `pendente_${Date.now()}@adefinir.com`
+      }
+    } else {
+      guestData.name = guestData.name || "A Definir"
+      guestData.badge_name = guestData.badge_name || "A DEFINIR"
+      guestData.phone = guestData.phone?.replace(/\D/g, "") || "1111111111"
+      guestData.is_pending_info = true
+      if (calculateIsAdult(guestData.birth_date) && !guestData.email) {
+        guestData.email = `pendente_${Date.now()}@adefinir.com`
+      }
+    }
+  }
 }
 
 const guest = {
