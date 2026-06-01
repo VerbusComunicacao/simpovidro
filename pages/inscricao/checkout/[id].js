@@ -1843,51 +1843,79 @@ export default function CheckoutPage({
                           </p>
                           <p>
                             <span className="text-gray-500">Razão Social:</span>{" "}
-                            {newCompanyData.corporate_name || foundCompany?.corporate_name || "-"}
+                            {newCompanyData.corporate_name ||
+                              foundCompany?.corporate_name ||
+                              "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">Nome da empresa no crachá:</span>{" "}
+                            <span className="text-gray-500">
+                              Nome da empresa no crachá:
+                            </span>{" "}
                             {newCompanyData.badge || foundCompany?.badge || "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">E-mail da empresa:</span>{" "}
+                            <span className="text-gray-500">
+                              E-mail da empresa:
+                            </span>{" "}
                             {newCompanyData.email || foundCompany?.email || "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">Telefone comercial:</span>{" "}
+                            <span className="text-gray-500">
+                              Telefone comercial:
+                            </span>{" "}
                             {newCompanyData.phone || foundCompany?.phone || "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">Pessoa responsável:</span>{" "}
-                            {newCompanyData.responsible_person || foundCompany?.responsible_person || "-"}
+                            <span className="text-gray-500">
+                              Pessoa responsável:
+                            </span>{" "}
+                            {newCompanyData.responsible_person ||
+                              foundCompany?.responsible_person ||
+                              "-"}
                           </p>
                           <p>
                             <span className="text-gray-500">CEP:</span>{" "}
-                            {newCompanyData.zip_code || foundCompany?.zip_code || "-"}
+                            {newCompanyData.zip_code ||
+                              foundCompany?.zip_code ||
+                              "-"}
                           </p>
                           <p>
                             <span className="text-gray-500">Endereço:</span>{" "}
-                            {newCompanyData.address || foundCompany?.address || "-"}
+                            {newCompanyData.address ||
+                              foundCompany?.address ||
+                              "-"}
                           </p>
                           <p>
                             <span className="text-gray-500">Número:</span>{" "}
-                            {newCompanyData.address_number || foundCompany?.address_number || "-"}
+                            {newCompanyData.address_number ||
+                              foundCompany?.address_number ||
+                              "-"}
                           </p>
                           <p>
                             <span className="text-gray-500">Complemento:</span>{" "}
-                            {newCompanyData.address_complement || foundCompany?.address_complement || "-"}
+                            {newCompanyData.address_complement ||
+                              foundCompany?.address_complement ||
+                              "-"}
                           </p>
                           <p>
                             <span className="text-gray-500">Bairro:</span>{" "}
-                            {newCompanyData.neighborhood || foundCompany?.neighborhood || "-"}
+                            {newCompanyData.neighborhood ||
+                              foundCompany?.neighborhood ||
+                              "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">Ramo de atividade:</span>{" "}
-                            {newCompanyData.activity_sector || foundCompany?.activity_sector || "-"}
+                            <span className="text-gray-500">
+                              Ramo de atividade:
+                            </span>{" "}
+                            {newCompanyData.activity_sector ||
+                              foundCompany?.activity_sector ||
+                              "-"}
                           </p>
                           <p>
                             <span className="text-gray-500">País:</span>{" "}
-                            {newCompanyData.country || foundCompany?.country || "Brasil"}
+                            {newCompanyData.country ||
+                              foundCompany?.country ||
+                              "Brasil"}
                           </p>
                           <p>
                             <span className="text-gray-500">Estado:</span>{" "}
