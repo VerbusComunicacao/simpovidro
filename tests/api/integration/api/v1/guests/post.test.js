@@ -89,6 +89,7 @@ describe("POST /api/v1/guests", () => {
         country: "Brasil",
         emergency_contact_name: null,
         emergency_contact_phone: null,
+        is_pending_info: false,
         user_id: createdUser.id,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
@@ -119,7 +120,7 @@ describe("POST /api/v1/guests", () => {
           phone: "+5511999999991",
           gender: "Female",
           rg_number: "111111111",
-          cpf_number: "111.111.111-11",
+          cpf_number: "111.222.333-44",
           birth_date: "1991-01-01",
         }),
       })

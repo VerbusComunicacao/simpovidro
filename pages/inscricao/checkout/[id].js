@@ -30,6 +30,7 @@ import room from "models/room"
 import userModel from "models/user"
 import discountModel from "models/discount"
 import { maskCPF, maskPhone, maskRG, maskCNPJ, maskCEP } from "@/lib/masks"
+import { cpf } from "cpf-cnpj-validator"
 import { validateCPF, validateCNPJ, validatePhone } from "@/lib/validators"
 import { LocationSelector } from "@/components/ui/LocationSelector"
 import { getInitialLocationState } from "@/lib/location-utils"
@@ -342,6 +343,19 @@ export default function CheckoutPage({
         ...updated[index],
         [name]: e.target.type === "checkbox" ? e.target.checked : valueToStore,
       }
+
+      // If the guest had pending info and they manually edit CPF or RG, clear the flag
+      if (prev[index]?.is_pending_info) {
+        if (name === "cpf_number" && valueToStore !== prev[index].cpf_number) {
+          updated[index].is_pending_info = false
+        } else if (
+          name === "rg_number" &&
+          valueToStore !== prev[index].rg_number
+        ) {
+          updated[index].is_pending_info = false
+        }
+      }
+
       return updated
     })
 
@@ -359,7 +373,38 @@ export default function CheckoutPage({
     // 4. CPF Lookup
     if (name === "cpf_number") {
       const cleanCpf = maskedValue.replace(/\D/g, "")
-      if (cleanCpf.length === 11) {
+      if (cleanCpf === "11111111111") {
+        const randomCpf = cpf.generate()
+        const randomRgNum = Math.floor(
+          Math.random() * 9000000000 + 1000000000,
+        ).toString()
+        const maskedCpf = maskCPF(randomCpf)
+        const maskedRg = maskRG(randomRgNum)
+
+        setGuests((prev) => {
+          const updated = [...prev]
+          const birthDateVal = updated[index].birth_date || "2000-01-01"
+          const age = calculateAge(birthDateVal, room.hotel_check_in_date)
+          const isAdult = age >= 18
+          const pendingEmail =
+            updated[index].email ||
+            (isAdult ? `pendente_${Date.now()}@adefinir.com` : "")
+
+          updated[index] = {
+            ...updated[index],
+            name: "A Definir",
+            badge_name: "A DEFINIR",
+            phone: "(11) 11111-1111",
+            rg_number: maskedRg,
+            cpf_number: maskedCpf,
+            is_pending_info: true,
+            gender: updated[index].gender || "M",
+            birth_date: birthDateVal,
+            email: pendingEmail,
+          }
+          return updated
+        })
+      } else if (cleanCpf.length === 11) {
         lookupGuestByCpf(index, maskedValue)
       }
     }
@@ -1265,8 +1310,8 @@ export default function CheckoutPage({
                       <CardContent className="pt-6 space-y-6">
                         {/* Personal Data */}
                         <div className="space-y-4">
-                          <h3 className="font-semibold text-gray-900 border-b pb-2">
-                            Dados Pessoais
+                          <h3 className="font-semibold text-gray-900 border-b pb-2 flex items-center gap-2 flex-wrap">
+                            <span>Dados Pessoais</span>
                           </h3>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
