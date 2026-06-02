@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
+import SectionTitle from "@/components/ui/SectionTitle"
 
 function ItalicizeNonPortuguese({ text }) {
   if (!text) return null
@@ -319,9 +320,7 @@ export default function Accommodations() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <h3 className="text-3xl md:text-4xl font-black text-slate-900 font-title">
-            Acomodações Disponíveis
-          </h3>
+          <SectionTitle>Acomodações disponíveis</SectionTitle>
           <p className="text-slate-600 mt-4 font-medium text-base leading-relaxed">
             Um dos focos da reforma pela qual o hotel passou é oferecer um
             serviço ainda mais <em>premium</em> aos hóspedes. Confira abaixo as

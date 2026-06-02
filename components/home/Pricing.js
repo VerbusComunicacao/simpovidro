@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Zap, MapPin, Info, Hotel, Plane } from "lucide-react"
+import SectionTitle from "../ui/SectionTitle"
 
 export default function Pricing() {
   return (
@@ -11,9 +12,9 @@ export default function Pricing() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
-            <h3 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">
-              Condições Especiais
-            </h3>
+            <SectionTitle className="text-white">
+              Condições especiais
+            </SectionTitle>
             <p className="text-lg text-white leading-relaxed">
               Associados Abravidro contam com condições especiais para
               participar do simpósio.
@@ -58,7 +59,9 @@ export default function Pricing() {
             <div className="flex items-center gap-4 p-6 bg-slate-50 border border-slate-200 rounded-2xl border-l-4 border-l-blue-600">
               <Info className="h-6 w-6 text-blue-600 shrink-0" />
               <p className="text-sm text-slate-600 font-bold italic">
-                As inscrições contemplam acesso total às palestras, feira de
+                As inscrições contemplam, além da hospedagem no sistema
+                all-inclusive durante todo o período do evento, transfer
+                aeroporto-hotel-aeroporto, acesso às palestras, feira de
                 negócios, coquetel de abertura e jantar de encerramento.
               </p>
             </div>

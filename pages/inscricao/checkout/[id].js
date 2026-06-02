@@ -40,6 +40,7 @@ import {
   generateInstallmentDates,
   calculateSummaryPrice,
   getChildrenCount,
+  getGuestCountsString,
 } from "@/lib/registration-helpers"
 
 function calculateAge(birthDate, referenceDate = new Date()) {
@@ -420,6 +421,15 @@ export default function CheckoutPage({
       case "phone":
       case "emergency_contact_phone":
         return maskPhone(value)
+      case "birth_date":
+        if (value) {
+          const parts = value.split("-")
+          if (parts[0] && parts[0].length > 4) {
+            parts[0] = parts[0].slice(0, 4)
+            return parts.join("-")
+          }
+        }
+        return value
       default:
         return value
     }
@@ -1429,6 +1439,7 @@ export default function CheckoutPage({
                                 type="date"
                                 value={guestData.birth_date}
                                 onChange={(e) => handleChange(index, e)}
+                                max="9999-12-31"
                                 className={
                                   guestErrors[index]?.birth_date
                                     ? "border-red-500"
@@ -1783,8 +1794,17 @@ export default function CheckoutPage({
                           <p className="text-xs text-gray-600">
                             {room.room_type}
                           </p>
+
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-1 py-0.5 bg-gray-50 rounded-full w-fit">
+                            Quantidade de pessoas:{" "}
+                            {getGuestCountsString({
+                              check_in_date: room.hotel_check_in_date,
+                              guests: guests,
+                              price_policies: room.price_policies,
+                            })}
+                          </p>
                           {router.query.bed_preference && (
-                            <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mt-1 px-2 py-0.5 bg-blue-50 rounded-full w-fit">
+                            <p className="text-[10px] font-bold text-blue-900 uppercase tracking-wider mt-1 rounded-sm w-fit">
                               Tipo de acomodação: {router.query.bed_preference}
                             </p>
                           )}
@@ -1983,30 +2003,38 @@ export default function CheckoutPage({
                                   {g.blood_type || "-"} (RH:{" "}
                                   {g.blood_rh_factor || "-"})
                                 </p>
-                                <p>
-                                  <span className="text-gray-500">
-                                    Prob. Cardíacos:
-                                  </span>{" "}
-                                  {g.has_heart_condition ? "Sim" : "Não"}
-                                </p>
-                                <p>
-                                  <span className="text-gray-500">
-                                    Diabetes:
-                                  </span>{" "}
-                                  {g.has_diabetes ? "Sim" : "Não"}
-                                </p>
-                                <p>
-                                  <span className="text-gray-500">
-                                    Pressão Alta:
-                                  </span>{" "}
-                                  {g.has_high_blood_pressure ? "Sim" : "Não"}
-                                </p>
-                                <p>
-                                  <span className="text-gray-500">
-                                    Pressão Baixa:
-                                  </span>{" "}
-                                  {g.has_low_blood_pressure ? "Sim" : "Não"}
-                                </p>
+                                {g.has_heart_condition && (
+                                  <p>
+                                    <span className="text-gray-500">
+                                      Prob. Cardíacos:
+                                    </span>{" "}
+                                    Sim
+                                  </p>
+                                )}
+                                {g.has_diabetes && (
+                                  <p>
+                                    <span className="text-gray-500">
+                                      Diabetes:
+                                    </span>{" "}
+                                    Sim
+                                  </p>
+                                )}
+                                {g.has_high_blood_pressure && (
+                                  <p>
+                                    <span className="text-gray-500">
+                                      Pressão Alta:
+                                    </span>{" "}
+                                    Sim
+                                  </p>
+                                )}
+                                {g.has_low_blood_pressure && (
+                                  <p>
+                                    <span className="text-gray-500">
+                                      Pressão Baixa:
+                                    </span>{" "}
+                                    Sim
+                                  </p>
+                                )}
                                 {g.medication_details && (
                                   <p className="sm:col-span-2">
                                     <span className="text-gray-500">

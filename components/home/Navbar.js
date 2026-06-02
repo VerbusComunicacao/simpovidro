@@ -23,8 +23,9 @@ export default function Navbar({ scrollToSection }) {
             height={40}
             className="rounded-lg"
           />
-          <span className="text-xl font-bold tracking-tight text-slate-900 font-title uppercase">
-            Simpovidro
+          <span className="text-xl font-title font-bold text-slate-900 sm:inline-block">
+            17
+            <span className="text-xl font-sans font-bold">º</span> SIMPOVIDRO
           </span>
         </div>
 
