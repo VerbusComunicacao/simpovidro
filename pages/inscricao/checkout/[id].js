@@ -606,16 +606,6 @@ export default function CheckoutPage({
         hasError = true
       }
 
-      // Validate Emergency Phone
-      if (
-        guest.emergency_contact_phone &&
-        !validatePhone(guest.emergency_contact_phone)
-      ) {
-        if (!newErrors[index]) newErrors[index] = {}
-        newErrors[index].emergency_contact_phone = "Telefone inválido."
-        hasError = true
-      }
-
       // Basic Required Fields
       if (!guest.name) {
         if (!newErrors[index]) newErrors[index] = {}
@@ -1542,48 +1532,8 @@ export default function CheckoutPage({
                         {/* Health & Emergency */}
                         <div className="space-y-4">
                           <h3 className="font-semibold text-gray-900 border-b pb-2">
-                            Saúde e Emergência
+                            Saúde
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label
-                                htmlFor={`emergency_contact_name-${index}`}
-                              >
-                                Nome Contato Emergência *
-                              </Label>
-                              <Input
-                                id={`emergency_contact_name-${index}`}
-                                name="emergency_contact_name"
-                                value={guestData.emergency_contact_name}
-                                onChange={(e) => handleChange(index, e)}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label
-                                htmlFor={`emergency_contact_phone-${index}`}
-                              >
-                                Telefone Emergência *
-                              </Label>
-                              <Input
-                                id={`emergency_contact_phone-${index}`}
-                                name="emergency_contact_phone"
-                                value={guestData.emergency_contact_phone}
-                                onChange={(e) => handleChange(index, e)}
-                                required
-                                className={
-                                  guestErrors[index]?.emergency_contact_phone
-                                    ? "border-red-500"
-                                    : ""
-                                }
-                              />
-                              {guestErrors[index]?.emergency_contact_phone && (
-                                <p className="text-red-500 text-xs mt-1">
-                                  {guestErrors[index].emergency_contact_phone}
-                                </p>
-                              )}
-                            </div>
-                          </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor={`blood_type-${index}`}>
@@ -1648,7 +1598,8 @@ export default function CheckoutPage({
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor={`health_observations-${index}`}>
-                              Observações de Saúde / Alergias
+                              Observações de Saúde / Alergias / Restrições
+                              alimentares
                             </Label>
                             <Input
                               id={`health_observations-${index}`}
@@ -2010,16 +1961,9 @@ export default function CheckoutPage({
 
                             <div className="mt-3 pt-2 border-t border-blue-100">
                               <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">
-                                Saúde e Emergência
+                                Saúde
                               </p>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[13px] text-gray-700">
-                                <p>
-                                  <span className="text-gray-500">
-                                    Contato:
-                                  </span>{" "}
-                                  {g.emergency_contact_name} (
-                                  {g.emergency_contact_phone})
-                                </p>
                                 <p>
                                   <span className="text-gray-500">
                                     Tipo Sanguíneo:
@@ -2062,7 +2006,8 @@ export default function CheckoutPage({
                                 {g.health_observations && (
                                   <p className="sm:col-span-2">
                                     <span className="text-gray-500">
-                                      Obs/Alergias:
+                                      Observações de Saúde/Alergias/Restrições
+                                      alimentares:
                                     </span>{" "}
                                     {g.health_observations}
                                   </p>

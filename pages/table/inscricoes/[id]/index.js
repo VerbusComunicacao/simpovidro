@@ -417,9 +417,9 @@ export default function RegistrationDetailsPage() {
                     </div>
                   </div>
 
-                  <div>
+                   <div>
                     <h4 className="text-[10px] uppercase font-black text-gray-400 tracking-wider mb-3">
-                      Contato e Emergência
+                      Contato
                     </h4>
                     <div className="space-y-2">
                       <p className="text-sm text-gray-600">
@@ -430,14 +430,6 @@ export default function RegistrationDetailsPage() {
                         <span className="font-bold text-gray-900">Fone:</span>{" "}
                         {guest.phone || "-"}
                       </p>
-                      <div className="mt-4 pt-4 border-t border-dashed">
-                        <p className="text-sm font-bold text-gray-900">
-                          {guest.emergency_contact_name || "-"}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {guest.emergency_contact_phone || "-"}
-                        </p>
-                      </div>
                     </div>
                   </div>
                 </CardContent>

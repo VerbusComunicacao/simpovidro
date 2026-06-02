@@ -127,7 +127,7 @@ async function postHandler(request, response) {
           value: guest.has_low_blood_pressure ? "Sim" : null,
         },
         { label: "Medicamentos", value: guest.medication_details },
-        { label: "Obs. Saúde", value: guest.health_observations },
+        { label: "Obs. Saúde / Alergias / Restrições alimentares", value: guest.health_observations },
         {
           label: "Necessidades Especiais",
           value: guest.special_needs_details,
