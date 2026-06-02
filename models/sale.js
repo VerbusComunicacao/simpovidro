@@ -414,6 +414,11 @@ async function findOneByIdWithDetails(saleId) {
         companies.country as company_country,
         (SELECT name FROM discounts WHERE id = companies.discount_id) as company_discount_name,
         (
+          SELECT json_agg(pp.* ORDER BY pp.max_age ASC)
+          FROM "price_policies" pp
+          WHERE pp.hotel_id = sales.hotel_id
+        ) as price_policies,
+        (
           SELECT json_agg(g.*)
           FROM sales_guests sg
           JOIN guests g ON sg.guest_id = g.id
@@ -566,6 +571,11 @@ async function findAll(options = {}) {
         rooms.description as room_description,
         "room-types".name as room_type,
         "room-categories".name as room_category,
+        (
+          SELECT json_agg(pp.* ORDER BY pp.max_age ASC)
+          FROM "price_policies" pp
+          WHERE pp.hotel_id = sales.hotel_id
+        ) as price_policies,
         (
           SELECT json_agg(g.*)
           FROM sales_guests sg

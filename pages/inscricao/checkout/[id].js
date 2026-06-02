@@ -929,7 +929,7 @@ export default function CheckoutPage({
                     )}
                     {isAssociate && originalTotal > finalTotal && (
                       <div className="flex justify-between items-center text-green-600 font-medium border-t pt-1.5 mt-1.5">
-                        <span>Desconto Associado Abravidro</span>
+                        <span>Desconto associado Abravidro</span>
                         <span>
                           -
                           {new Intl.NumberFormat("pt-BR", {
@@ -966,19 +966,6 @@ export default function CheckoutPage({
                         </p>
                       </div>
                     </div>
-                    {originalTotal > finalTotal && (
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500 font-medium">
-                          Você Economizou
-                        </p>
-                        <p className="text-lg font-bold text-green-600 mt-1">
-                          {new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(originalTotal - finalTotal)}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </div>
               </CardContent>

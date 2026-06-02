@@ -14,6 +14,7 @@ import {
 import TableLayout from "@/components/layout/TableLayout"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { getGuestCountsString } from "@/lib/registration-helpers"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -189,6 +190,14 @@ export default function RegistrationDetailsPage() {
                       </p>
                     </div>
                   )}
+                  <div className="mt-3">
+                    <p className="text-xs font-bold text-gray-400 uppercase">
+                      Quantidade de pessoas
+                    </p>
+                    <p className="text-sm text-gray-700 mt-0.5">
+                      {getGuestCountsString(sale)}
+                    </p>
+                  </div>
                 </div>
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase">

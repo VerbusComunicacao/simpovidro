@@ -5,7 +5,7 @@ import sale from "models/sale.js"
 import { ValidationError, UnauthorizedError } from "infra/errors.js"
 import email from "infra/email.js"
 import webserver from "infra/webserver.js"
-import { calculateSalePriceBreakdown } from "lib/registration-helpers.js"
+import { calculateSalePriceBreakdown, getGuestCountsString } from "lib/registration-helpers.js"
 
 const router = createRouter()
 
@@ -212,6 +212,8 @@ async function postHandler(request, response) {
       </div>
     `
 
+    const guestCountsString = getGuestCountsString(saleDetails)
+
     const { originalTotal, economizedAmount, discountLabel } =
       calculateSalePriceBreakdown(saleDetails)
 
@@ -222,16 +224,10 @@ async function postHandler(request, response) {
             <td style="padding: 4px 0; color: #64748b; text-align: left;">Valor original:</td>
             <td style="padding: 4px 0; font-weight: 500; text-align: right; color: #64748b; ${economizedAmount > 0 ? "text-decoration: line-through;" : ""}">${formatCurrency(originalTotal)}</td>
           </tr>
-          ${
-            economizedAmount > 0
-              ? `
-            <tr>
-              <td style="padding: 4px 0; color: #10b981; font-weight: bold; text-align: left;">${discountLabel}:</td>
-              <td style="padding: 4px 0; color: #10b981; font-weight: bold; text-align: right;">-${formatCurrency(economizedAmount)}</td>
-            </tr>
-          `
-              : ""
-          }
+          <tr>
+            <td style="padding: 4px 0; ${economizedAmount > 0 ? "color: #10b981; font-weight: bold;" : "color: #64748b;"} text-align: left;">${economizedAmount > 0 ? discountLabel : "Desconto"}:</td>
+            <td style="padding: 4px 0; ${economizedAmount > 0 ? "color: #10b981; font-weight: bold;" : "color: #64748b;"} text-align: right;">${economizedAmount > 0 ? "-" : ""}${formatCurrency(economizedAmount)}</td>
+          </tr>
           <tr>
             <td style="padding: 8px 0 0 0; font-size: 0.95em; color: #64748b; border-top: 1px solid #e5e7eb; text-align: left;">Valor com desconto:</td>
             <td style="padding: 8px 0 0 0; font-size: 1.4em; font-weight: bold; color: #2563eb; border-top: 1px solid #e5e7eb; text-align: right;">${formatCurrency(saleDetails.final_amount)}</td>
@@ -255,6 +251,7 @@ async function postHandler(request, response) {
             <p style="margin: 5px 0;"><strong>Hotel:</strong> ${saleDetails.hotel_name}</p>
             <p style="margin: 5px 0;"><strong>Quarto:</strong> ${saleDetails.room_name || saleDetails.room_type}</p>
             ${saleDetails.bed_preference ? `<p style="margin: 5px 0;"><strong>Tipo de acomodação:</strong> ${saleDetails.bed_preference}</p>` : ""}
+            <p style="margin: 5px 0;"><strong>Quantidade de pessoas:</strong> ${guestCountsString}</p>
             <p style="margin: 5px 0;"><strong>Período:</strong> ${formatDate(saleDetails.check_in_date)} à ${formatDate(saleDetails.check_out_date)}</p>
           </div>
 
