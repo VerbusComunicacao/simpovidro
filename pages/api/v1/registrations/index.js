@@ -5,7 +5,10 @@ import sale from "models/sale.js"
 import { ValidationError, UnauthorizedError } from "infra/errors.js"
 import email from "infra/email.js"
 import webserver from "infra/webserver.js"
-import { calculateSalePriceBreakdown, getGuestCountsString } from "lib/registration-helpers.js"
+import {
+  calculateSalePriceBreakdown,
+  getGuestCountsString,
+} from "lib/registration-helpers.js"
 
 const router = createRouter()
 
@@ -127,7 +130,10 @@ async function postHandler(request, response) {
           value: guest.has_low_blood_pressure ? "Sim" : null,
         },
         { label: "Medicamentos", value: guest.medication_details },
-        { label: "Obs. Saúde / Alergias / Restrições alimentares", value: guest.health_observations },
+        {
+          label: "Obs. Saúde / Alergias / Restrições alimentares",
+          value: guest.health_observations,
+        },
         {
           label: "Necessidades Especiais",
           value: guest.special_needs_details,
@@ -254,6 +260,18 @@ async function postHandler(request, response) {
             <p style="margin: 5px 0;"><strong>Quantidade de pessoas:</strong> ${guestCountsString}</p>
             <p style="margin: 5px 0;"><strong>Período:</strong> ${formatDate(saleDetails.check_in_date)} à ${formatDate(saleDetails.check_out_date)}</p>
           </div>
+
+          ${
+            saleDetails.hotel_checkout_question &&
+            saleDetails.checkout_question_response
+              ? `
+          <div style="background-color: #eff6ff; padding: 15px 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #bfdbfe; font-size: 0.95em;">
+            <p style="margin: 0 0 6px 0; color: #1e3a8a; font-weight: bold;">${saleDetails.hotel_checkout_question}</p>
+            <p style="margin: 0; color: #1d4ed8; font-style: italic; font-weight: 500;">Resposta: ${saleDetails.checkout_question_response}</p>
+          </div>
+          `
+              : ""
+          }
 
           ${companySection}
           

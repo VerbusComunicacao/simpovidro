@@ -103,6 +103,7 @@ describe("POST /api/v1/hotels", () => {
         check_out_date: "2026-01-10T20:43:12.021Z",
         email: "hotel@paradise.com",
         active: false,
+        checkout_question: null,
         price_policies: [],
         user_id: createdUser.id,
         created_at: expect.any(String),

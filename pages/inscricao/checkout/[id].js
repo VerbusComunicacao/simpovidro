@@ -142,6 +142,7 @@ export default function CheckoutPage({
   const [globalDiscounts] = useState(initialDiscounts || [])
   const [guestErrors, setGuestErrors] = useState({})
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [checkoutQuestionResponse, setCheckoutQuestionResponse] = useState("")
   const [occupancyCounts, setOccupancyCounts] = useState(() => {
     const counts = { adults: parseInt(initialQuery?.adults) || 1 }
     if (initialQuery) {
@@ -521,6 +522,16 @@ export default function CheckoutPage({
       return
     }
 
+    // 1.5. Validate Custom Hotel Question if present
+    if (room.hotel_checkout_question && !checkoutQuestionResponse.trim()) {
+      setError(
+        `Por favor, responda à pergunta: "${room.hotel_checkout_question}"`,
+      )
+      setIsLoading(false)
+      window.scrollTo({ top: 0, behavior: "smooth" })
+      return
+    }
+
     try {
       const response = await fetch("/api/v1/registrations", {
         method: "POST",
@@ -535,6 +546,7 @@ export default function CheckoutPage({
           payment_method: paymentMethod,
           installments_count: installmentsCount,
           bed_preference: router.query.bed_preference,
+          checkout_question_response: checkoutQuestionResponse,
         }),
       })
 
@@ -2214,6 +2226,27 @@ export default function CheckoutPage({
                           </div>
                         )}
                       </div>
+
+                      {/* Pergunta Personalizada do Hotel */}
+                      {room.hotel_checkout_question && (
+                        <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-3 my-6">
+                          <Label
+                            htmlFor="checkout-question-response"
+                            className="text-sm font-bold text-slate-800"
+                          >
+                            {room.hotel_checkout_question} *
+                          </Label>
+                          <Input
+                            id="checkout-question-response"
+                            value={checkoutQuestionResponse}
+                            onChange={(e) =>
+                              setCheckoutQuestionResponse(e.target.value)
+                            }
+                            placeholder="Sua resposta..."
+                            required
+                          />
+                        </div>
+                      )}
 
                       {/* Aceite de Condições Gerais */}
                       <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-start gap-3 my-6">

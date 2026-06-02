@@ -13,6 +13,7 @@ async function create(userOrId, registrationData) {
     company_cnpj,
     payment_method,
     installments_count,
+    checkout_question_response,
   } = registrationData
 
   if (!Array.isArray(guests_data) || guests_data.length === 0) {
@@ -81,6 +82,7 @@ async function create(userOrId, registrationData) {
         installments_count: installments_count,
         bed_preference: registrationData.bed_preference,
         user_id: userId,
+        checkout_question_response: checkout_question_response,
       },
       client,
     )

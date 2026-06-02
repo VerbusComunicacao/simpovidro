@@ -36,6 +36,11 @@ const reportTypes = [
     description: "Todos os participantes com informações completas",
   },
   {
+    value: "checkout-questions",
+    label: "Respostas do Checkout",
+    description: "Apenas as respostas dos participantes à pergunta.",
+  },
+  {
     value: "by-company",
     label: "Participantes por Empresa",
     description: "Agrupado por empresa (CNPJ)",

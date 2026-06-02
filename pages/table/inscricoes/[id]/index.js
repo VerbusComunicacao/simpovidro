@@ -215,6 +215,17 @@ export default function RegistrationDetailsPage() {
                     {formatDate(sale.check_out_date)}
                   </p>
                 </div>
+                {sale.hotel_checkout_question && (
+                  <div className="md:col-span-2 mt-4 pt-4 border-t border-gray-100">
+                    <p className="text-base font-bold text-blue-700 uppercase">
+                      {sale.hotel_checkout_question}
+                    </p>
+                    <p className="text-sm mt-1 font-bold italic">
+                      Resposta:{" "}
+                      {sale.checkout_question_response || "Não respondida"}
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -417,7 +428,7 @@ export default function RegistrationDetailsPage() {
                     </div>
                   </div>
 
-                   <div>
+                  <div>
                     <h4 className="text-[10px] uppercase font-black text-gray-400 tracking-wider mb-3">
                       Contato
                     </h4>

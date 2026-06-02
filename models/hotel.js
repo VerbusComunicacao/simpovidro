@@ -37,14 +37,15 @@ async function create(hotelInputValues, userId) {
       country = null,
       check_in_date = null,
       check_out_date = null,
+      checkout_question = null,
     } = hotelInputValues
 
     const results = await database.query({
       text: `
         INSERT INTO
-          hotels (user_id, name, email, phone, address, city, state, country, active, check_in_date, check_out_date)
+          hotels (user_id, name, email, phone, address, city, state, country, active, check_in_date, check_out_date, checkout_question)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING
           *
       `,
@@ -60,6 +61,7 @@ async function create(hotelInputValues, userId) {
         false,
         check_in_date,
         check_out_date,
+        checkout_question,
       ],
     })
 
@@ -162,6 +164,7 @@ async function update(hotelId, hotelInputNewValues, userId) {
       active,
       check_in_date,
       check_out_date,
+      checkout_question,
     } = hotelWithNewValues
 
     const client = await database.getNewClient()
@@ -188,6 +191,7 @@ async function update(hotelId, hotelInputNewValues, userId) {
             active = $9,
             check_in_date = $10,
             check_out_date = $11,
+            checkout_question = $12,
             updated_at = timezone('utc', now())
           WHERE
             id = $1
@@ -206,6 +210,7 @@ async function update(hotelId, hotelInputNewValues, userId) {
           active,
           check_in_date,
           check_out_date,
+          checkout_question,
         ],
       })
 
@@ -321,6 +326,7 @@ async function getAllActiveHotels() {
         h.check_in_date,
         h.check_out_date,
         h.active,
+        h.checkout_question,
         COALESCE(
           (
             SELECT json_agg(pp.* ORDER BY pp.max_age ASC)

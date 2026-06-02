@@ -90,10 +90,10 @@ export default function Pricing() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-slate-600">
-                  Para garantir seu lugar no <em>transfer</em> gratuito
-                  aeroporto-hotel e hotel-aeroporto oferecido pela Abravidro aos
-                  participantes do Simpovidro, precisamos saber as informações
-                  de seu voo de ida e volta.
+                  Para garantir seu lugar no <em>transfer</em> aeroporto-hotel e
+                  hotel-aeroporto oferecido pela Abravidro aos participantes do
+                  Simpovidro, precisamos saber as informações de seu voo de ida
+                  e volta.
                 </p>
                 <Button
                   variant="outline"

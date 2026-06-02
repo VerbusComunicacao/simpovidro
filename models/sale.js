@@ -216,6 +216,7 @@ async function create(saleInputValues, externalClient) {
       payment_method = "cash",
       installments_count = 1,
       user_id = null,
+      checkout_question_response = null,
     } = saleInputValues
 
     const dateSource = targetRoom.hotel_check_in_date
@@ -242,9 +243,9 @@ async function create(saleInputValues, externalClient) {
     const saleResults = await client.query({
       text: `
         INSERT INTO
-          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, discount_percentage, discount_amount, final_amount, company_id, payment_method, installments_count, bed_preference, user_id)
+          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, discount_percentage, discount_amount, final_amount, company_id, payment_method, installments_count, bed_preference, user_id, checkout_question_response)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
         RETURNING
           *
       `,
@@ -263,6 +264,7 @@ async function create(saleInputValues, externalClient) {
         installments_count,
         saleInputValues.bed_preference || null,
         user_id,
+        checkout_question_response,
       ],
     })
 
@@ -391,6 +393,7 @@ async function findOneByIdWithDetails(saleId) {
         hotels.city as hotel_city,
         hotels.state as hotel_state,
         hotels.phone as hotel_phone,
+        hotels.checkout_question as hotel_checkout_question,
         rooms.name as room_name,
         rooms.description as room_description,
         rooms.price_per_night as room_price_per_night,
@@ -634,6 +637,7 @@ async function update(saleId, saleInputNewValues) {
       installments_count,
       status,
       payment_status,
+      checkout_question_response,
     } = saleWithNewValues
 
     const results = await database.query({
@@ -651,6 +655,7 @@ async function update(saleId, saleInputNewValues) {
           installments_count = $9,
           status = $10,
           payment_status = $11,
+          checkout_question_response = $12,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
@@ -669,6 +674,7 @@ async function update(saleId, saleInputNewValues) {
         installments_count,
         status,
         payment_status,
+        checkout_question_response,
       ],
     })
 

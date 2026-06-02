@@ -53,6 +53,9 @@ async function getHandler(request, response) {
     case "by-uf":
       reportData = await report.generateByUF(hotel_id)
       break
+    case "checkout-questions":
+      reportData = await report.generateCheckoutQuestionsReport(hotel_id)
+      break
     default:
       throw new ValidationError({
         message: "Tipo de relatório inválido.",
