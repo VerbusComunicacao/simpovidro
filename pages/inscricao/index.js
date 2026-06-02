@@ -483,13 +483,9 @@ export default function RegistrationPage({ hotels, discounts }) {
                                         Number(discount.value || 0),
                                       )
 
-                                const discountValue = isMemberDiscount
-                                  ? Math.round(
-                                      (1 -
-                                        room.memberTotal / room.originalTotal) *
-                                        100,
-                                    )
-                                  : Number(discount.value || 0)
+                                const discountValue = Number(
+                                  discount.value || 0,
+                                )
 
                                 const savedAmount =
                                   room.originalTotal - displayPrice
