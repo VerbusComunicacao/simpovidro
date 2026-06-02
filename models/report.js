@@ -230,12 +230,41 @@ async function generateByUF(hotelId) {
   return result.rows
 }
 
+async function generateCheckoutQuestionsReport(hotelId) {
+  if (!hotelId) {
+    throw new Error("Hotel ID é obrigatório para gerar relatórios.")
+  }
+
+  const query = `
+    SELECT 
+      s.sale_number as "Número da Inscrição",
+      g.name as "Titular da Inscrição",
+      h.name as "Hotel",
+      h.checkout_question as "Pergunta",
+      COALESCE(s.checkout_question_response, 'Não respondido') as "Resposta",
+      TO_CHAR(s.created_at, 'DD/MM/YYYY') as "Data da Inscrição"
+    FROM sales s
+    JOIN guests g ON s.guest_id = g.id
+    JOIN rooms r ON s.room_id = r.id
+    JOIN hotels h ON r.hotel_id = h.id
+    WHERE s.status != 'cancelled' AND h.id = $1
+    ORDER BY s.sale_number ASC
+  `
+
+  const result = await database.query({
+    text: query,
+    values: [hotelId],
+  })
+  return result.rows
+}
+
 const report = {
   generateCompleteReport,
   generateByCompany,
   generateByAge,
   generateByCountry,
   generateByUF,
+  generateCheckoutQuestionsReport,
 }
 
 export default report

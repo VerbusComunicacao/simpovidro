@@ -14,6 +14,7 @@ import {
 import TableLayout from "@/components/layout/TableLayout"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { getGuestCountsString } from "@/lib/registration-helpers"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -189,6 +190,14 @@ export default function RegistrationDetailsPage() {
                       </p>
                     </div>
                   )}
+                  <div className="mt-3">
+                    <p className="text-xs font-bold text-gray-400 uppercase">
+                      Quantidade de pessoas
+                    </p>
+                    <p className="text-sm text-gray-700 mt-0.5">
+                      {getGuestCountsString(sale)}
+                    </p>
+                  </div>
                 </div>
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase">
@@ -206,6 +215,17 @@ export default function RegistrationDetailsPage() {
                     {formatDate(sale.check_out_date)}
                   </p>
                 </div>
+                {sale.hotel_checkout_question && (
+                  <div className="md:col-span-2 mt-4 pt-4 border-t border-gray-100">
+                    <p className="text-base font-bold text-blue-700 uppercase">
+                      {sale.hotel_checkout_question}
+                    </p>
+                    <p className="text-sm mt-1 font-bold italic">
+                      Resposta:{" "}
+                      {sale.checkout_question_response || "Não respondida"}
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -410,7 +430,7 @@ export default function RegistrationDetailsPage() {
 
                   <div>
                     <h4 className="text-[10px] uppercase font-black text-gray-400 tracking-wider mb-3">
-                      Contato e Emergência
+                      Contato
                     </h4>
                     <div className="space-y-2">
                       <p className="text-sm text-gray-600">
@@ -421,14 +441,6 @@ export default function RegistrationDetailsPage() {
                         <span className="font-bold text-gray-900">Fone:</span>{" "}
                         {guest.phone || "-"}
                       </p>
-                      <div className="mt-4 pt-4 border-t border-dashed">
-                        <p className="text-sm font-bold text-gray-900">
-                          {guest.emergency_contact_name || "-"}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {guest.emergency_contact_phone || "-"}
-                        </p>
-                      </div>
                     </div>
                   </div>
                 </CardContent>

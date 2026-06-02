@@ -142,6 +142,7 @@ export default function CheckoutPage({
   const [globalDiscounts] = useState(initialDiscounts || [])
   const [guestErrors, setGuestErrors] = useState({})
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [checkoutQuestionResponse, setCheckoutQuestionResponse] = useState("")
   const [occupancyCounts, setOccupancyCounts] = useState(() => {
     const counts = { adults: parseInt(initialQuery?.adults) || 1 }
     if (initialQuery) {
@@ -521,6 +522,16 @@ export default function CheckoutPage({
       return
     }
 
+    // 1.5. Validate Custom Hotel Question if present
+    if (room.hotel_checkout_question && !checkoutQuestionResponse.trim()) {
+      setError(
+        `Por favor, responda à pergunta: "${room.hotel_checkout_question}"`,
+      )
+      setIsLoading(false)
+      window.scrollTo({ top: 0, behavior: "smooth" })
+      return
+    }
+
     try {
       const response = await fetch("/api/v1/registrations", {
         method: "POST",
@@ -535,6 +546,7 @@ export default function CheckoutPage({
           payment_method: paymentMethod,
           installments_count: installmentsCount,
           bed_preference: router.query.bed_preference,
+          checkout_question_response: checkoutQuestionResponse,
         }),
       })
 
@@ -603,16 +615,6 @@ export default function CheckoutPage({
       if (guest.phone && !validatePhone(guest.phone)) {
         if (!newErrors[index]) newErrors[index] = {}
         newErrors[index].phone = "Telefone inválido."
-        hasError = true
-      }
-
-      // Validate Emergency Phone
-      if (
-        guest.emergency_contact_phone &&
-        !validatePhone(guest.emergency_contact_phone)
-      ) {
-        if (!newErrors[index]) newErrors[index] = {}
-        newErrors[index].emergency_contact_phone = "Telefone inválido."
         hasError = true
       }
 
@@ -929,7 +931,7 @@ export default function CheckoutPage({
                     )}
                     {isAssociate && originalTotal > finalTotal && (
                       <div className="flex justify-between items-center text-green-600 font-medium border-t pt-1.5 mt-1.5">
-                        <span>Desconto Associado Abravidro</span>
+                        <span>Desconto associado Abravidro</span>
                         <span>
                           -
                           {new Intl.NumberFormat("pt-BR", {
@@ -966,19 +968,6 @@ export default function CheckoutPage({
                         </p>
                       </div>
                     </div>
-                    {originalTotal > finalTotal && (
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500 font-medium">
-                          Você Economizou
-                        </p>
-                        <p className="text-lg font-bold text-green-600 mt-1">
-                          {new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(originalTotal - finalTotal)}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </div>
               </CardContent>
@@ -1555,48 +1544,8 @@ export default function CheckoutPage({
                         {/* Health & Emergency */}
                         <div className="space-y-4">
                           <h3 className="font-semibold text-gray-900 border-b pb-2">
-                            Saúde e Emergência
+                            Saúde
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label
-                                htmlFor={`emergency_contact_name-${index}`}
-                              >
-                                Nome Contato Emergência *
-                              </Label>
-                              <Input
-                                id={`emergency_contact_name-${index}`}
-                                name="emergency_contact_name"
-                                value={guestData.emergency_contact_name}
-                                onChange={(e) => handleChange(index, e)}
-                                required
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label
-                                htmlFor={`emergency_contact_phone-${index}`}
-                              >
-                                Telefone Emergência *
-                              </Label>
-                              <Input
-                                id={`emergency_contact_phone-${index}`}
-                                name="emergency_contact_phone"
-                                value={guestData.emergency_contact_phone}
-                                onChange={(e) => handleChange(index, e)}
-                                required
-                                className={
-                                  guestErrors[index]?.emergency_contact_phone
-                                    ? "border-red-500"
-                                    : ""
-                                }
-                              />
-                              {guestErrors[index]?.emergency_contact_phone && (
-                                <p className="text-red-500 text-xs mt-1">
-                                  {guestErrors[index].emergency_contact_phone}
-                                </p>
-                              )}
-                            </div>
-                          </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor={`blood_type-${index}`}>
@@ -1661,7 +1610,8 @@ export default function CheckoutPage({
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor={`health_observations-${index}`}>
-                              Observações de Saúde / Alergias
+                              Observações de Saúde / Alergias / Restrições
+                              alimentares
                             </Label>
                             <Input
                               id={`health_observations-${index}`}
@@ -2023,16 +1973,9 @@ export default function CheckoutPage({
 
                             <div className="mt-3 pt-2 border-t border-blue-100">
                               <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">
-                                Saúde e Emergência
+                                Saúde
                               </p>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[13px] text-gray-700">
-                                <p>
-                                  <span className="text-gray-500">
-                                    Contato:
-                                  </span>{" "}
-                                  {g.emergency_contact_name} (
-                                  {g.emergency_contact_phone})
-                                </p>
                                 <p>
                                   <span className="text-gray-500">
                                     Tipo Sanguíneo:
@@ -2075,7 +2018,8 @@ export default function CheckoutPage({
                                 {g.health_observations && (
                                   <p className="sm:col-span-2">
                                     <span className="text-gray-500">
-                                      Obs/Alergias:
+                                      Observações de Saúde/Alergias/Restrições
+                                      alimentares:
                                     </span>{" "}
                                     {g.health_observations}
                                   </p>
@@ -2282,6 +2226,27 @@ export default function CheckoutPage({
                           </div>
                         )}
                       </div>
+
+                      {/* Pergunta Personalizada do Hotel */}
+                      {room.hotel_checkout_question && (
+                        <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-3 my-6">
+                          <Label
+                            htmlFor="checkout-question-response"
+                            className="text-sm font-bold text-slate-800"
+                          >
+                            {room.hotel_checkout_question} *
+                          </Label>
+                          <Input
+                            id="checkout-question-response"
+                            value={checkoutQuestionResponse}
+                            onChange={(e) =>
+                              setCheckoutQuestionResponse(e.target.value)
+                            }
+                            placeholder="Sua resposta..."
+                            required
+                          />
+                        </div>
+                      )}
 
                       {/* Aceite de Condições Gerais */}
                       <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-start gap-3 my-6">

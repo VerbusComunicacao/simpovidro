@@ -176,9 +176,11 @@ export default function RegistrationPage({ hotels, discounts }) {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                       {/* Adultos */}
                       <div className="space-y-3">
-                        <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-                          Adultos
-                        </h3>
+                        <div className="flex items-end md:h-10">
+                          <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                            Adultos
+                          </h3>
+                        </div>
                         <div className="flex items-center justify-between border rounded-lg p-2 bg-white">
                           <Button
                             variant="ghost"
@@ -219,7 +221,7 @@ export default function RegistrationPage({ hotels, discounts }) {
                         ?.filter((p) => p.max_age < 12)
                         .map((policy) => (
                           <div key={policy.id} className="space-y-3">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-end gap-2 md:h-10">
                               <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
                                 {policy.description}
                               </h3>
@@ -307,7 +309,10 @@ export default function RegistrationPage({ hotels, discounts }) {
                             className="flex items-center gap-1 font-medium italic"
                           >
                             <span className="text-gray-300">•</span>
-                            {searchData[k]} {policy?.description}
+                            {searchData[k]}{" "}
+                            {policy?.description
+                              ?.replace(/Crianças/g, "Criança(s)")
+                              .replace(/crianças/g, "criança(s)")}
                           </span>
                         )
                       })}
@@ -478,13 +483,9 @@ export default function RegistrationPage({ hotels, discounts }) {
                                         Number(discount.value || 0),
                                       )
 
-                                const discountValue = isMemberDiscount
-                                  ? Math.round(
-                                      (1 -
-                                        room.memberTotal / room.originalTotal) *
-                                        100,
-                                    )
-                                  : Number(discount.value || 0)
+                                const discountValue = Number(
+                                  discount.value || 0,
+                                )
 
                                 const savedAmount =
                                   room.originalTotal - displayPrice

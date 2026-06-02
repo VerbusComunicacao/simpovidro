@@ -25,6 +25,9 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
   const [country, setCountry] = useState(hotel.country)
   const [checkInDate, setCheckInDate] = useState("")
   const [checkOutDate, setCheckOutDate] = useState("")
+  const [checkoutQuestion, setCheckoutQuestion] = useState(
+    hotel.checkout_question || "",
+  )
   const [error, setError] = useState("")
   const [action, setAction] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
@@ -49,6 +52,7 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
         ? new Date(hotel.check_out_date).toISOString().slice(0, 16)
         : "",
     )
+    setCheckoutQuestion(hotel.checkout_question || "")
     setPricePolicies(hotel.price_policies || [])
   }, [hotel])
 
@@ -73,6 +77,7 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
         country,
         check_in_date: checkInDate,
         check_out_date: checkOutDate,
+        checkout_question: checkoutQuestion,
         price_policies: pricePolicies,
       }),
     })
@@ -208,6 +213,21 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
                     onChange={(e) => setCheckOutDate(e.target.value)}
                     className="col-span-3"
                     required
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label
+                    htmlFor="checkout-question-edit"
+                    className="text-right"
+                  >
+                    Pergunta Checkout
+                  </Label>
+                  <Input
+                    id="checkout-question-edit"
+                    value={checkoutQuestion}
+                    onChange={(e) => setCheckoutQuestion(e.target.value)}
+                    className="col-span-3"
+                    placeholder="Pergunta opcional a ser respondida no checkout"
                   />
                 </div>
               </div>

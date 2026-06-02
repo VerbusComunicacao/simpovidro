@@ -5,7 +5,10 @@ import sale from "models/sale.js"
 import { ValidationError, UnauthorizedError } from "infra/errors.js"
 import email from "infra/email.js"
 import webserver from "infra/webserver.js"
-import { calculateSalePriceBreakdown } from "lib/registration-helpers.js"
+import {
+  calculateSalePriceBreakdown,
+  getGuestCountsString,
+} from "lib/registration-helpers.js"
 
 const router = createRouter()
 
@@ -127,7 +130,10 @@ async function postHandler(request, response) {
           value: guest.has_low_blood_pressure ? "Sim" : null,
         },
         { label: "Medicamentos", value: guest.medication_details },
-        { label: "Obs. Saúde", value: guest.health_observations },
+        {
+          label: "Obs. Saúde / Alergias / Restrições alimentares",
+          value: guest.health_observations,
+        },
         {
           label: "Necessidades Especiais",
           value: guest.special_needs_details,
@@ -212,6 +218,8 @@ async function postHandler(request, response) {
       </div>
     `
 
+    const guestCountsString = getGuestCountsString(saleDetails)
+
     const { originalTotal, economizedAmount, discountLabel } =
       calculateSalePriceBreakdown(saleDetails)
 
@@ -222,16 +230,10 @@ async function postHandler(request, response) {
             <td style="padding: 4px 0; color: #64748b; text-align: left;">Valor original:</td>
             <td style="padding: 4px 0; font-weight: 500; text-align: right; color: #64748b; ${economizedAmount > 0 ? "text-decoration: line-through;" : ""}">${formatCurrency(originalTotal)}</td>
           </tr>
-          ${
-            economizedAmount > 0
-              ? `
-            <tr>
-              <td style="padding: 4px 0; color: #10b981; font-weight: bold; text-align: left;">${discountLabel}:</td>
-              <td style="padding: 4px 0; color: #10b981; font-weight: bold; text-align: right;">-${formatCurrency(economizedAmount)}</td>
-            </tr>
-          `
-              : ""
-          }
+          <tr>
+            <td style="padding: 4px 0; ${economizedAmount > 0 ? "color: #10b981; font-weight: bold;" : "color: #64748b;"} text-align: left;">${economizedAmount > 0 ? discountLabel : "Desconto"}:</td>
+            <td style="padding: 4px 0; ${economizedAmount > 0 ? "color: #10b981; font-weight: bold;" : "color: #64748b;"} text-align: right;">${economizedAmount > 0 ? "-" : ""}${formatCurrency(economizedAmount)}</td>
+          </tr>
           <tr>
             <td style="padding: 8px 0 0 0; font-size: 0.95em; color: #64748b; border-top: 1px solid #e5e7eb; text-align: left;">Valor com desconto:</td>
             <td style="padding: 8px 0 0 0; font-size: 1.4em; font-weight: bold; color: #2563eb; border-top: 1px solid #e5e7eb; text-align: right;">${formatCurrency(saleDetails.final_amount)}</td>
@@ -243,7 +245,7 @@ async function postHandler(request, response) {
     const emailHtml = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #374151; line-height: 1.5;">
         <div style="line-height: 0;">
-          <img src="${webserver.origin}/images/banner-topo.png" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none;">
+          <img src="${webserver.origin}/images/banner-topo.webp" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none;">
         </div>
 
         <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-bottom: none;">
@@ -255,8 +257,21 @@ async function postHandler(request, response) {
             <p style="margin: 5px 0;"><strong>Hotel:</strong> ${saleDetails.hotel_name}</p>
             <p style="margin: 5px 0;"><strong>Quarto:</strong> ${saleDetails.room_name || saleDetails.room_type}</p>
             ${saleDetails.bed_preference ? `<p style="margin: 5px 0;"><strong>Tipo de acomodação:</strong> ${saleDetails.bed_preference}</p>` : ""}
+            <p style="margin: 5px 0;"><strong>Quantidade de pessoas:</strong> ${guestCountsString}</p>
             <p style="margin: 5px 0;"><strong>Período:</strong> ${formatDate(saleDetails.check_in_date)} à ${formatDate(saleDetails.check_out_date)}</p>
           </div>
+
+          ${
+            saleDetails.hotel_checkout_question &&
+            saleDetails.checkout_question_response
+              ? `
+          <div style="background-color: #eff6ff; padding: 15px 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #bfdbfe; font-size: 0.95em;">
+            <p style="margin: 0 0 6px 0; color: #1e3a8a; font-weight: bold;">${saleDetails.hotel_checkout_question}</p>
+            <p style="margin: 0; color: #1d4ed8; font-style: italic; font-weight: 500;">Resposta: ${saleDetails.checkout_question_response}</p>
+          </div>
+          `
+              : ""
+          }
 
           ${companySection}
           
@@ -290,7 +305,7 @@ async function postHandler(request, response) {
         </div>
 
         <div style="line-height: 0;">
-          <img src="${webserver.origin}/images/banner-rodape.png" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+          <img src="${webserver.origin}/images/banner-rodape.webp" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
         </div>
       </div>
     `
