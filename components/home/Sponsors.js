@@ -19,7 +19,7 @@ export default function Sponsors({ variant = "full" }) {
     },
     {
       name: "Vivix",
-      logo: "/images/logo_vivix_nova.png",
+      logo: "/images/vivix.png",
       link: "https://vivix.com.br/",
     },
   ]
@@ -249,7 +249,7 @@ export default function Sponsors({ variant = "full" }) {
             </a>
           </div>
           <h2 className="text-3xl font-title text-slate-900 uppercase mb-12">
-            Patrocíncio
+            Patrocínio
           </h2>
           <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
             {sponsors.map((sponsor) => (

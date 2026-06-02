@@ -247,75 +247,84 @@ async function postHandler(request, response) {
     `
 
     const emailHtml = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #374151; line-height: 1.5;">
-        <div style="line-height: 0;">
-          <img src="${webserver.origin}/images/banner-topo.png" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none;">
-        </div>
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="width: 600px; max-width: 100%; font-family: sans-serif; color: #374151; line-height: 1.5; border-collapse: collapse; margin: 0 auto;">
+        <!-- Header Image -->
+        <tr>
+          <td style="padding: 0; line-height: 0;">
+            <img src="${webserver.origin}/images/banner-topo.png" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none;">
+          </td>
+        </tr>
 
-        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-bottom: none;">
-          <p>Olá, <strong>${recipientName}</strong>!</p>
-          <p>Sua inscrição foi finalizada com sucesso. Abaixo você encontra o resumo completo do seu pedido.</p>
-          
-          <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #f3f4f6;">
-            <h2 style="margin-top: 0; color: #111827; font-size: 1.25em;">Pedido #${saleDetails.sale_number || saleDetails.id.slice(0, 8)}</h2>
-            <p style="margin: 5px 0;"><strong>Hotel:</strong> ${saleDetails.hotel_name}</p>
-            <p style="margin: 5px 0;"><strong>Quarto:</strong> ${saleDetails.room_name || saleDetails.room_type}</p>
-            ${saleDetails.bed_preference ? `<p style="margin: 5px 0;"><strong>Tipo de acomodação:</strong> ${saleDetails.bed_preference}</p>` : ""}
-            <p style="margin: 5px 0;"><strong>Quantidade de pessoas:</strong> ${guestCountsString}</p>
-            <p style="margin: 5px 0;"><strong>Período:</strong> ${formatDate(saleDetails.check_in_date)} à ${formatDate(saleDetails.check_out_date)}</p>
-          </div>
+        <!-- Body Content -->
+        <tr>
+          <td style="padding: 20px; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; background-color: #ffffff; text-align: left;">
+            <p>Olá, <strong>${recipientName}</strong>!</p>
+            <p>Sua inscrição foi finalizada com sucesso. Abaixo você encontra o resumo completo do seu pedido.</p>
+            
+            <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #f3f4f6;">
+              <h2 style="margin-top: 0; color: #111827; font-size: 1.25em;">Pedido #${saleDetails.sale_number || saleDetails.id.slice(0, 8)}</h2>
+              <p style="margin: 5px 0;"><strong>Hotel:</strong> ${saleDetails.hotel_name}</p>
+              <p style="margin: 5px 0;"><strong>Quarto:</strong> ${saleDetails.room_name || saleDetails.room_type}</p>
+              ${saleDetails.bed_preference ? `<p style="margin: 5px 0;"><strong>Tipo de acomodação:</strong> ${saleDetails.bed_preference}</p>` : ""}
+              <p style="margin: 5px 0;"><strong>Quantidade de pessoas:</strong> ${guestCountsString}</p>
+              <p style="margin: 5px 0;"><strong>Período:</strong> ${formatDate(saleDetails.check_in_date)} à ${formatDate(saleDetails.check_out_date)}</p>
+            </div>
 
-          ${
-            saleDetails.hotel_checkout_question &&
-            saleDetails.checkout_question_response
-              ? `
-          <div style="background-color: #eff6ff; padding: 15px 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #bfdbfe; font-size: 0.95em;">
-            <p style="margin: 0 0 6px 0; color: #1e3a8a; font-weight: bold;">${saleDetails.hotel_checkout_question}</p>
-            <p style="margin: 0; color: #1d4ed8; font-style: italic; font-weight: 500;">Resposta: ${saleDetails.checkout_question_response}</p>
-          </div>
-          `
-              : ""
-          }
+            ${companySection}
+            
+            <h3 style="color: #374151; margin-top: 25px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">Hóspedes Inscritos</h3>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px; border-collapse: collapse;">
+              ${saleDetails.guests
+                .map(
+                  (g, index) => `
+                <tr>
+                  <td style="padding: 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top;">
+                    <div style="font-weight: bold; color: #111827; margin-bottom: 6px; font-size: 14px;">${index + 1}. ${g.name}</div>
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;">
+                      ${formatGuestDetails(g)}
+                    </table>
+                  </td>
+                </tr>
+              `,
+                )
+                .join("")}
+            </table>
 
-          ${companySection}
-          
-          <h3 style="color: #374151; margin-top: 25px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">Hóspedes Inscritos</h3>
-          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px; border-collapse: collapse;">
-            ${saleDetails.guests
-              .map(
-                (g, index) => `
-              <tr>
-                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top;">
-                  <div style="font-weight: bold; color: #111827; margin-bottom: 6px; font-size: 14px;">${index + 1}. ${g.name}</div>
-                  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;">
-                    ${formatGuestDetails(g)}
-                  </table>
-                </td>
-              </tr>
-            `,
-              )
-              .join("")}
-          </table>
+            ${
+              saleDetails.hotel_checkout_question &&
+              saleDetails.checkout_question_response
+                ? `
+            <div style="background-color: #eff6ff; padding: 15px 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #bfdbfe; font-size: 0.95em;">
+              <p style="margin: 0 0 6px 0; color: #1e3a8a; font-weight: bold;">${saleDetails.hotel_checkout_question}</p>
+              <p style="margin: 0; color: #1d4ed8; font-style: italic; font-weight: 500;">Resposta: ${saleDetails.checkout_question_response}</p>
+            </div>
+            `
+                : ""
+            }
 
-          ${installmentsSection}
-          
-          ${priceBreakdownSection}
+            ${installmentsSection}
+            
+            ${priceBreakdownSection}
 
-          <div style="margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; font-family: sans-serif; font-size: 0.95em;">
-            <p style="margin: 0 0 8px 0; font-weight: bold; color: #111827;">Boletos:</p>
-            <p style="margin: 0 0 15px 0; color: #4b5563;">Os boletos serão enviados para o e-mail do titular.</p>
-            <p style="margin: 0 0 25px 0; color: #4b5563;">Sua inscrição estará efetivada após comprovação da veracidade das informações prestadas e do pagamento de todas as parcelas com vencimento antes do evento.</p>
-            <p style="margin: 0; color: #4b5563;">
-              Atenciosamente,<br/><br/>
-              <strong>Organização 17º Simpovidro</strong>
-            </p>
-          </div>
-        </div>
+            <div style="margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; font-family: sans-serif; font-size: 0.95em;">
+              <p style="margin: 0 0 8px 0; font-weight: bold; color: #111827;">Boletos:</p>
+              <p style="margin: 0 0 15px 0; color: #4b5563;">Os boletos serão enviados para o e-mail do titular.</p>
+              <p style="margin: 0 0 25px 0; color: #4b5563;">Sua inscrição estará efetivada após comprovação da veracidade das informações prestadas e do pagamento de todas as parcelas com vencimento antes do evento.</p>
+              <p style="margin: 0; color: #4b5563;">
+                Atenciosamente,<br/><br/>
+                <strong>Organização 17º Simpovidro</strong>
+              </p>
+            </div>
+          </td>
+        </tr>
 
-        <div style="line-height: 0;">
-          <img src="${webserver.origin}/images/banner-rodape.png" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
-        </div>
-      </div>
+        <!-- Footer Image -->
+        <tr>
+          <td style="padding: 0; line-height: 0;">
+            <img src="${webserver.origin}/images/banner-rodape.png" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+          </td>
+        </tr>
+      </table>
     `
 
     await email.send({
