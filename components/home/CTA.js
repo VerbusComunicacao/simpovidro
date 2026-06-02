@@ -66,12 +66,12 @@ export default function CTA({ router, HERO_IMAGE }) {
           <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
         </div>
         <div className="relative z-10 max-w-4xl mx-auto px-6">
-          <h2 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter leading-none uppercase">
+          <h2 className="text-5xl md:text-7xl font-black mb-8 leading-none uppercase font-title">
             Presença Única. Futuro Sólido.
           </h2>
           <p className="text-xl md:text-2xl text-slate-300 mb-12 opacity-80 font-light leading-relaxed">
-            Não fique de fora do ambiente de negócios mais qualificado da
-            América Latina.
+            Não fique de fora do ambiente de negócios do setor vidreiro mais
+            qualificado na América Latina.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-6 items-center">
             <Button

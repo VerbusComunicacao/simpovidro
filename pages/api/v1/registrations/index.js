@@ -149,8 +149,12 @@ async function postHandler(request, response) {
 
       return fields
         .map(
-          (f) =>
-            `<div style="font-size: 0.9em; margin-bottom: 2px;"><span style="color: #6b7280; font-weight: 500;">${f.label}:</span> ${f.value}</div>`,
+          (f) => `
+            <tr>
+              <td style="font-size: 13px; padding: 3px 0; color: #6b7280; font-weight: 500; width: 180px; vertical-align: top;">${f.label}:</td>
+              <td style="font-size: 13px; padding: 3px 0; color: #374151; vertical-align: top;">${f.value}</td>
+            </tr>
+          `,
         )
         .join("")
     }
@@ -245,7 +249,7 @@ async function postHandler(request, response) {
     const emailHtml = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #374151; line-height: 1.5;">
         <div style="line-height: 0;">
-          <img src="${webserver.origin}/images/banner-topo.webp" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none;">
+          <img src="${webserver.origin}/images/banner-topo.png" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none;">
         </div>
 
         <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-bottom: none;">
@@ -276,18 +280,22 @@ async function postHandler(request, response) {
           ${companySection}
           
           <h3 style="color: #374151; margin-top: 25px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">Hóspedes Inscritos</h3>
-          <div style="margin-bottom: 20px;">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px; border-collapse: collapse;">
             ${saleDetails.guests
               .map(
                 (g, index) => `
-              <div style="padding: 12px; border-bottom: 1px solid #f3f4f6;">
-                <div style="font-weight: bold; color: #111827;">${index + 1}. ${g.name}</div>
-                ${formatGuestDetails(g)}
-              </div>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top;">
+                  <div style="font-weight: bold; color: #111827; margin-bottom: 6px; font-size: 14px;">${index + 1}. ${g.name}</div>
+                  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;">
+                    ${formatGuestDetails(g)}
+                  </table>
+                </td>
+              </tr>
             `,
               )
               .join("")}
-          </div>
+          </table>
 
           ${installmentsSection}
           
@@ -305,7 +313,7 @@ async function postHandler(request, response) {
         </div>
 
         <div style="line-height: 0;">
-          <img src="${webserver.origin}/images/banner-rodape.webp" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+          <img src="${webserver.origin}/images/banner-rodape.png" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
         </div>
       </div>
     `

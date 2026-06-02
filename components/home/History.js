@@ -244,8 +244,8 @@ export default function History() {
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 ">
           <div className="relative z-10 lg:sticky lg:top-24 min-w-0">
             <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 leading-none font-title">
-              Uma Tradição <br />
-              <span className="text-blue-600">de Sucesso</span>
+              Uma tradição <br />
+              <span className="text-blue-600">de sucesso</span>
             </h2>
             <p className="text-lg md:text-xl text-slate-600 mb-8 md:mb-10 leading-relaxed font-medium max-w-xl">
               Há mais de 30 anos, o Simpovidro une o mercado para gerar bilhões

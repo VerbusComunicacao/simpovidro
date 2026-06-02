@@ -28,8 +28,9 @@ export default function RegistrationHeader({ showBackButton = false }) {
               height={40}
               className="group-hover:scale-110 transition-transform"
             />
-            <span className="text-xl font-title tracking-tight text-slate-900 hidden sm:inline-block">
-              Simpovidro
+            <span className="text-xl font-title font-bold text-slate-900 sm:inline-block">
+              17
+              <span className="text-xl font-sans font-bold">º</span> SIMPOVIDRO
             </span>
           </Link>
 
