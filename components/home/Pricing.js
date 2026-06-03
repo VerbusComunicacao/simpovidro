@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Zap, MapPin, Info, Hotel, Plane } from "lucide-react"
 import SectionTitle from "../ui/SectionTitle"
 
-export default function Pricing() {
+export default function Pricing({ router }) {
   return (
     <section
       id="condicoes-especiais"
@@ -79,8 +79,11 @@ export default function Pricing() {
                   Centralizamos as reservas para garantir que você esteja no
                   coração do evento com tarifas especiais Simpovidro.
                 </p>
-                <Button className="w-full bg-white text-blue-600 hover:bg-slate-100">
-                  Reserve em breve
+                <Button
+                  onClick={() => router.push("/inscricao")}
+                  className="w-full bg-white text-blue-600 hover:bg-slate-100"
+                >
+                  Reserve agora
                 </Button>
               </CardContent>
             </Card>

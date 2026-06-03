@@ -126,7 +126,7 @@ export default function Home() {
 
         <Accommodations />
 
-        <Pricing scrollToSection={scrollToSection} />
+        <Pricing router={router} scrollToSection={scrollToSection} />
 
         <History />
 

@@ -1,6 +1,8 @@
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 export const navItems = [
   { name: "Sobre", id: "sobre" },
@@ -9,13 +11,16 @@ export const navItems = [
   { name: "Dicas e lembretes", id: "dicas" },
 ]
 
-export default function Navbar({ scrollToSection }) {
+export default function Navbar({ scrollToSection, router }) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 py-3 bg-white/90 backdrop-blur-md shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <Link
+          href="/"
+          className="flex items-center gap-2 cursor-pointer no-underline"
+        >
           <Image
             src="/images/icon-17-simpovidro.png"
             alt="Simpovidro Icon"
@@ -27,7 +32,7 @@ export default function Navbar({ scrollToSection }) {
             17
             <span className="text-xl font-sans font-bold">º</span> SIMPOVIDRO
           </span>
-        </div>
+        </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm font-medium">
           {navItems.map((item) => (
@@ -40,13 +45,12 @@ export default function Navbar({ scrollToSection }) {
               {item.name}
             </a>
           ))}
-          {/*
           <Button
-            className="bg-logo-navy hover:bg-blue-700 text-white rounded-full px-6"
+            className="bg-logo-navy hover:bg-blue-700 text-white rounded-full px-6 cursor-pointer"
             onClick={() => router.push("/inscricao")}
           >
             Inscreva-se
-          </Button>*/}
+          </Button>
         </div>
 
         <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
@@ -74,15 +78,15 @@ export default function Navbar({ scrollToSection }) {
               {item.name}
             </a>
           ))}
-          {/*<Button
-            className="bg-logo-navy hover:bg-blue-700 text-white rounded-full w-full py-6 text-base font-bold shadow-md shadow-blue-200 mt-2"
+          <Button
+            className="bg-logo-navy hover:bg-blue-700 text-white rounded-full w-full py-6 text-base font-bold shadow-md shadow-blue-200 mt-2 cursor-pointer"
             onClick={() => {
               setIsOpen(false)
               router.push("/inscricao")
             }}
           >
             Inscreva-se
-          </Button>*/}
+          </Button>
         </div>
       )}
     </nav>
