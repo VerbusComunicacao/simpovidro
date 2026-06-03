@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ShieldCheck } from "lucide-react"
+import Link from "next/link"
 
 export default function CTA({ router, HERO_IMAGE }) {
   return (
@@ -18,11 +19,10 @@ export default function CTA({ router, HERO_IMAGE }) {
           </p>
           <Button
             size="lg"
-            disabled
-            className="bg-white text-blue-700 hover:bg-slate-100 rounded-full h-14 px-12 text-lg shadow-2xl transition-transform hover:scale-110"
+            className="bg-white text-blue-700 hover:bg-slate-100 rounded-full h-14 px-12 text-lg shadow-2xl transition-transform hover:scale-110 cursor-pointer"
             onClick={() => router.push("/inscricao")}
           >
-            Garanta sua vaga em breve
+            Garanta sua vaga
           </Button>
         </div>
       </section>
@@ -34,9 +34,12 @@ export default function CTA({ router, HERO_IMAGE }) {
             <ShieldCheck className="h-6 w-6 text-green-600" />
             <p className="text-sm font-bold text-slate-700">
               A sua segurança e privacidade são prioridades.{" "}
-              <a href="#" className="underline text-blue-600 ml-1">
+              <Link
+                href="/condicoes-gerais.pdf"
+                className="underline text-blue-600 ml-1"
+              >
                 Leia as Condições Gerais.
-              </a>
+              </Link>
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -76,10 +79,10 @@ export default function CTA({ router, HERO_IMAGE }) {
           <div className="flex flex-col sm:flex-row justify-center gap-6 items-center">
             <Button
               size="lg"
-              className="bg-logo-navy hover:bg-blue-700 text-white rounded-full h-16 px-14 text-xl font-bold shadow-2xl transition-all hover:scale-110 shadow-blue-500/50"
-              onClick={() => router.push("/")}
+              className="bg-logo-navy hover:bg-blue-700 text-white rounded-full h-16 px-14 text-xl font-bold shadow-2xl transition-all hover:scale-110 shadow-blue-500/50 cursor-pointer"
+              onClick={() => router.push("/inscricao")}
             >
-              INSCREVA-SE EM BREVE
+              INSCREVA-SE
             </Button>
             <Button
               size="lg"

@@ -4,7 +4,7 @@ import { ChevronRight, Calendar, MapPin, Info } from "lucide-react"
 import Sponsors from "@/components/home/Sponsors"
 import { motion } from "framer-motion"
 
-export default function Hero({ scrollToSection }) {
+export default function Hero({ scrollToSection, router }) {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -66,9 +66,10 @@ export default function Hero({ scrollToSection }) {
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <Button
               size="lg"
-              className="bg-logo-blue hover:bg-logo-navy text-white rounded-full h-14 px-10 text-lg shadow-xl shadow-blue-500/25 transition-transform hover:scale-105"
+              className="bg-logo-blue hover:bg-logo-navy text-white rounded-full h-14 px-10 text-lg shadow-xl shadow-blue-500/25 transition-transform hover:scale-105 cursor-pointer"
+              onClick={() => router.push("/inscricao")}
             >
-              Inscrições em breve <ChevronRight className="ml-2 h-5 w-5" />
+              Inscreva-se <ChevronRight className="ml-2 h-5 w-5" />
             </Button>
             <Button
               size="lg"

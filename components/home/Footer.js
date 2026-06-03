@@ -1,5 +1,6 @@
 import { Facebook, Instagram, Linkedin, Phone, Mail } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 
 export default function Footer({ scrollToSection }) {
   return (
@@ -139,9 +140,12 @@ export default function Footer({ scrollToSection }) {
           </p>
           <div className="flex gap-6">
             <span className="cursor-pointer hover:text-white">Privacidade</span>
-            <span className="cursor-pointer hover:text-white">
+            <Link
+              href="/condicoes-gerais.pdf"
+              className="cursor-pointer hover:text-white"
+            >
               Condições Gerais
-            </span>
+            </Link>
           </div>
         </div>
       </div>
