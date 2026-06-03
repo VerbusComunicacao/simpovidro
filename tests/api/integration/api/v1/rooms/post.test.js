@@ -156,6 +156,7 @@ describe("POST /api/v1/rooms", () => {
         available_rooms: 6,
         blocked_rooms: 0,
         user_id: createdUser.id,
+        parent_room_id: null,
         created_at: expect.any(String),
         updated_at: expect.any(String),
         hotel_name: hotel.name,

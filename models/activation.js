@@ -32,34 +32,43 @@ async function sendEmailToUser(user, activationToken) {
   const activationLink = `${webserver.origin}/cadastro/ativar/${activationToken}`
 
   const emailHtml = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #374151; line-height: 1.5;">
-        <div style="line-height: 0;">
-          <img src="${webserver.origin}/images/banner-topo.png" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none;">
-        </div>
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="width: 600px; max-width: 100%; font-family: sans-serif; color: #374151; line-height: 1.5; border-collapse: collapse; margin: 0 auto;">
+        <!-- Header Image -->
+        <tr>
+          <td style="padding: 0; line-height: 0;">
+            <img src="${webserver.origin}/images/banner-topo.png" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none;">
+          </td>
+        </tr>
 
-        <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-bottom: none;">
-          <p>Olá, <strong>${user.full_name}</strong>!</p>
-          <p>Falta pouco para você completar sua inscrição no Simpovidro 2026. Clique no botão abaixo para ativar seu cadastro:</p>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${activationLink}" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">Ativar minha conta</a>
-          </div>
+        <!-- Body Content -->
+        <tr>
+          <td style="padding: 20px; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; background-color: #ffffff; text-align: left;">
+            <p>Olá, <strong>${user.full_name}</strong>!</p>
+            <p>Falta pouco para você completar sua inscrição no Simpovidro 2026. Clique no botão abaixo para ativar seu cadastro:</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${activationLink}" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">Ativar minha conta</a>
+            </div>
 
-          <p style="font-size: 0.85em; color: #6b7280; text-align: center; margin-bottom: 30px;">
-            Se o botão acima não funcionar, copie e cole o link abaixo no seu navegador:<br/>
-            <a href="${activationLink}" style="color: #2563eb; word-break: break-all;">${activationLink}</a>
-          </p>
+            <p style="font-size: 0.85em; color: #6b7280; text-align: center; margin-bottom: 30px;">
+              Se o botão acima não funcionar, copie e cole o link abaixo no seu navegador:<br/>
+              <a href="${activationLink}" style="color: #2563eb; word-break: break-all;">${activationLink}</a>
+            </p>
 
-          <p style="margin-top: 30px; font-size: 0.95em; color: #4b5563;">
-            Atenciosamente,<br/><br/>
-            <strong>Equipe Abravidro</strong>
-          </p>
-        </div>
+            <p style="margin-top: 30px; font-size: 0.95em; color: #4b5563;">
+              Atenciosamente,<br/><br/>
+              <strong>Equipe Abravidro</strong>
+            </p>
+          </td>
+        </tr>
 
-        <div style="line-height: 0;">
-          <img src="${webserver.origin}/images/banner-rodape.png" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
-        </div>
-      </div>
+        <!-- Footer Image -->
+        <tr>
+          <td style="padding: 0; line-height: 0;">
+            <img src="${webserver.origin}/images/banner-rodape.png" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+          </td>
+        </tr>
+      </table>
     `
 
   await email.send({

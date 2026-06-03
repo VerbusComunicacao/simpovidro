@@ -26,6 +26,7 @@ export function EditRoomDialog({
   room,
   roomTypes,
   roomCategories,
+  rooms = [],
   onRoomUpdated,
 }) {
   const [open, setOpen] = useState(false)
@@ -43,6 +44,7 @@ export function EditRoomDialog({
     room.photos && room.photos.length > 0 ? room.photos : [""],
   )
   const [minGuests, setMinGuests] = useState(room.min_guests || 1)
+  const [parentRoomId, setParentRoomId] = useState(room.parent_room_id || "")
   const [error, setError] = useState("")
   const [action, setAction] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
@@ -106,6 +108,7 @@ export function EditRoomDialog({
     setDescription(room.description || "")
     setPhotos(room.photos && room.photos.length > 0 ? room.photos : [""])
     setMinGuests(room.min_guests || 1)
+    setParentRoomId(room.parent_room_id || "")
     setRoomPricePolicies(
       room.price_policies
         ?.filter((p) => p.price !== null)
@@ -113,12 +116,36 @@ export function EditRoomDialog({
     )
   }, [room])
 
+  const potentialParents =
+    rooms?.filter((r) => !r.parent_room_id && r.id !== room.id) || []
+
+  const handleParentSelect = (val) => {
+    if (val === "none" || !val) {
+      setParentRoomId("")
+      return
+    }
+    setParentRoomId(val)
+    const selectedParent = rooms.find((r) => r.id === val)
+    if (selectedParent) {
+      setName(selectedParent.name || "")
+      setRoomTypeId(selectedParent.room_type_id || "")
+      setTotalRooms(selectedParent.total_rooms || "")
+      setBlockedRooms(selectedParent.blocked_rooms || 0)
+      setDescription(selectedParent.description || "")
+      setPhotos(
+        selectedParent.photos && selectedParent.photos.length > 0
+          ? selectedParent.photos
+          : [""],
+      )
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
     setAction("")
 
-    if (parseInt(blockedRooms) > parseInt(totalRooms)) {
+    if (!parentRoomId && parseInt(blockedRooms) > parseInt(totalRooms)) {
       setError(
         "O número de quartos bloqueados não pode ser maior que o total de quartos.",
       )
@@ -138,13 +165,14 @@ export function EditRoomDialog({
         room_category_id: roomCategoryId,
         price_per_night: pricePerNight,
         member_price_per_night: memberPricePerNight,
-        total_rooms: parseInt(totalRooms),
-        blocked_rooms: parseInt(blockedRooms),
+        total_rooms: parentRoomId ? undefined : parseInt(totalRooms),
+        blocked_rooms: parentRoomId ? undefined : parseInt(blockedRooms),
         name,
         description,
         photos: photos.filter((p) => p.trim() !== ""),
         min_guests: parseInt(minGuests) || 1,
         price_policies: roomPricePolicies,
+        parent_room_id: parentRoomId || null,
       }),
     })
 
@@ -176,6 +204,29 @@ export function EditRoomDialog({
             <div className="max-h-[70vh] overflow-y-auto px-1">
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="parent-room-edit" className="text-right">
+                    Quarto Pai (Inventário)
+                  </Label>
+                  <Select
+                    onValueChange={handleParentSelect}
+                    value={parentRoomId || "none"}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Nenhum (Quarto Independente)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">
+                        Nenhum (Quarto Independente)
+                      </SelectItem>
+                      {potentialParents.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.name || r.room_type} ({r.room_category})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="name-edit" className="text-right">
                     Nome
                   </Label>
@@ -186,6 +237,7 @@ export function EditRoomDialog({
                     className="col-span-3"
                     placeholder="Ex: Suíte Presidencial"
                     required
+                    disabled={!!parentRoomId}
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -196,6 +248,7 @@ export function EditRoomDialog({
                     onValueChange={setRoomTypeId}
                     value={roomTypeId}
                     name="room-type-edit"
+                    disabled={!!parentRoomId}
                   >
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Selecione o tipo" />
@@ -261,9 +314,12 @@ export function EditRoomDialog({
                   <Input
                     id="total-rooms-edit"
                     type="number"
-                    value={totalRooms}
+                    value={parentRoomId ? "" : totalRooms}
                     onChange={(e) => setTotalRooms(e.target.value)}
                     className="col-span-3"
+                    disabled={!!parentRoomId}
+                    placeholder={parentRoomId ? "Herdado do pai" : ""}
+                    required={!parentRoomId}
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -273,9 +329,11 @@ export function EditRoomDialog({
                   <Input
                     id="blocked-rooms-edit"
                     type="number"
-                    value={blockedRooms}
+                    value={parentRoomId ? "" : blockedRooms}
                     onChange={(e) => setBlockedRooms(e.target.value)}
                     className="col-span-3"
+                    disabled={!!parentRoomId}
+                    placeholder={parentRoomId ? "Herdado do pai" : ""}
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -305,6 +363,7 @@ export function EditRoomDialog({
                         className="h-8 w-8 p-0"
                         onClick={() => handleInsertTag("b")}
                         title="Negrito"
+                        disabled={!!parentRoomId}
                       >
                         <Bold className="h-4 w-4" />
                       </Button>
@@ -315,6 +374,7 @@ export function EditRoomDialog({
                         className="h-8 w-8 p-0"
                         onClick={() => handleInsertTag("i")}
                         title="Itálico"
+                        disabled={!!parentRoomId}
                       >
                         <Italic className="h-4 w-4" />
                       </Button>
@@ -325,6 +385,7 @@ export function EditRoomDialog({
                         className="h-8 w-8 p-0"
                         onClick={() => handleInsertTag("sup")}
                         title="Sobrescrito (Ex: m²)"
+                        disabled={!!parentRoomId}
                       >
                         <Superscript className="h-4 w-4" />
                       </Button>
@@ -335,6 +396,7 @@ export function EditRoomDialog({
                       onChange={(e) => setDescription(e.target.value)}
                       className="w-full min-h-[100px] border rounded-md p-2 text-sm"
                       placeholder="Descreva as comodidades do quarto... Use os botões acima para formatar."
+                      disabled={!!parentRoomId}
                     />
                   </div>
                 </div>
@@ -349,13 +411,17 @@ export function EditRoomDialog({
                             handlePhotoChange(index, e.target.value)
                           }
                           placeholder="https://exemplo.com/foto.jpg"
+                          disabled={!!parentRoomId}
                         />
                         <Button
                           type="button"
                           variant="outline"
                           size="icon"
                           onClick={() => handleRemovePhoto(index)}
-                          disabled={photos.length === 1 && photos[0] === ""}
+                          disabled={
+                            !!parentRoomId ||
+                            (photos.length === 1 && photos[0] === "")
+                          }
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -367,6 +433,7 @@ export function EditRoomDialog({
                       size="sm"
                       className="mt-2"
                       onClick={handleAddPhoto}
+                      disabled={!!parentRoomId}
                     >
                       <Plus className="h-4 w-4 mr-2" /> Adicionar outra foto
                     </Button>

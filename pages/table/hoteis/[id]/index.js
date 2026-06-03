@@ -314,6 +314,7 @@ export default function HotelPage() {
           roomTypes={roomTypes}
           roomCategories={roomCategories}
           pricePolicies={hotel.price_policies}
+          rooms={rooms}
           onRoomAdded={mutateRooms}
         >
           <Button>
@@ -387,6 +388,7 @@ export default function HotelPage() {
                 roomTypes={roomTypes}
                 roomCategories={roomCategories}
                 pricePolicies={hotel.price_policies}
+                rooms={rooms}
                 onRoomAdded={mutateRooms}
               >
                 <Button variant="outline">
@@ -459,6 +461,7 @@ export default function HotelPage() {
                           room={room}
                           roomTypes={roomTypes}
                           roomCategories={roomCategories}
+                          rooms={rooms}
                           onRoomUpdated={mutateRooms}
                         >
                           <Button variant="outline" size="sm">
