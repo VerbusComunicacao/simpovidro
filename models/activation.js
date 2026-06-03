@@ -65,7 +65,7 @@ async function sendEmailToUser(user, activationToken) {
         <!-- Footer Image -->
         <tr>
           <td style="padding: 0; line-height: 0;">
-            <img src="${webserver.origin}/images/banner-rodape.png" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+            <img src="${webserver.origin}/images/banner-rodape2.png" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
           </td>
         </tr>
       </table>

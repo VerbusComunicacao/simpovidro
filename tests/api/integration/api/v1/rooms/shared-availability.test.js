@@ -24,11 +24,11 @@ describe("Shared Room Availability (Parent-Child Inheritance)", () => {
     const roomType = await orchestrator.createRoomType(createdUser.id)
     const categoryParent = await orchestrator.createRoomCategory(
       createdUser.id,
-      { name: "Luxo Single" },
+      { name: "Luxo Single", max_adults: 2, max_children: 2 },
     )
     const categoryChild = await orchestrator.createRoomCategory(
       createdUser.id,
-      { name: "Luxo Duplo" },
+      { name: "Luxo Duplo", max_adults: 2, max_children: 2 },
     )
 
     // 1. Create Parent Room (with 5 total rooms)

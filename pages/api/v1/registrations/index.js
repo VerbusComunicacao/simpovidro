@@ -368,7 +368,7 @@ async function postHandler(request, response) {
                 <!-- Footer Image -->
                 <tr>
                   <td style="padding: 0; line-height: 0; font-family: Arial, Helvetica, sans-serif;">
-                    <img src="${webserver.origin}/images/banner-rodape.png" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px;">
+                    <img src="${webserver.origin}/images/banner-rodape2.png" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px;">
                   </td>
                 </tr>
               </table>
