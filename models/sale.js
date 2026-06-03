@@ -30,22 +30,22 @@ async function create(saleInputValues, externalClient) {
     // 1. Validate if room exists and fetch parent/inventory settings
     const parentCheck = await client.query({
       text: `SELECT parent_room_id FROM "rooms" WHERE id = $1`,
-      values: [room_id]
+      values: [room_id],
     })
-    
+
     if (parentCheck.rowCount === 0) {
       throw new NotFoundError({
         message: "Quarto não encontrado.",
         action: "Selecione outro quarto.",
       })
     }
-    
+
     const inventoryRoomId = parentCheck.rows[0].parent_room_id || room_id
-    
+
     // Acquire exclusive row-level lock on the master inventory room to serialize concurrent bookings
     await client.query({
       text: `SELECT id FROM "rooms" WHERE id = $1 FOR UPDATE`,
-      values: [inventoryRoomId]
+      values: [inventoryRoomId],
     })
 
     // Fetch the room capacity, pricing, policies, and the latest available room count from parent
@@ -772,7 +772,7 @@ async function cancel(saleId) {
       text: `SELECT parent_room_id FROM "rooms" WHERE id = $1`,
       values: [sale.room_id],
     })
-    
+
     const parentRoomId = roomCheck.rows[0]?.parent_room_id
     const inventoryRoomId = parentRoomId || sale.room_id
 

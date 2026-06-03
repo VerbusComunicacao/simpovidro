@@ -8,7 +8,8 @@ async function create(roomInputValues, userId) {
     const parent = await findOneById(roomInputValues.parent_room_id)
     if (parent.parent_room_id) {
       throw new ValidationError({
-        message: "Não é possível aninhar quartos. O quarto pai selecionado já é um quarto filho.",
+        message:
+          "Não é possível aninhar quartos. O quarto pai selecionado já é um quarto filho.",
         action: "Selecione um quarto que não seja filho de outro.",
       })
     }
@@ -268,11 +269,18 @@ async function update(roomId, roomInputNewValues, userId) {
   const currentRoom = await findOneById(roomId)
 
   // Resolve and validate parent_room_id
-  const parentRoomId = "parent_room_id" in roomInputNewValues ? roomInputNewValues.parent_room_id : currentRoom.parent_room_id;
+  const parentRoomId =
+    "parent_room_id" in roomInputNewValues
+      ? roomInputNewValues.parent_room_id
+      : currentRoom.parent_room_id
   if (parentRoomId) {
-    if ("total_rooms" in roomInputNewValues || "blocked_rooms" in roomInputNewValues) {
+    if (
+      "total_rooms" in roomInputNewValues ||
+      "blocked_rooms" in roomInputNewValues
+    ) {
       throw new ValidationError({
-        message: "Este quarto é um quarto filho e herda a disponibilidade do quarto pai. Altere a disponibilidade no quarto pai.",
+        message:
+          "Este quarto é um quarto filho e herda a disponibilidade do quarto pai. Altere a disponibilidade no quarto pai.",
         action: "Edite o quarto pai correspondente.",
       })
     }
@@ -281,7 +289,8 @@ async function update(roomId, roomInputNewValues, userId) {
     const parent = await findOneById(parentRoomId)
     if (parent.parent_room_id) {
       throw new ValidationError({
-        message: "Não é possível aninhar quartos. O quarto pai selecionado já é um quarto filho.",
+        message:
+          "Não é possível aninhar quartos. O quarto pai selecionado já é um quarto filho.",
         action: "Selecione um quarto que não seja filho de outro.",
       })
     }
@@ -379,7 +388,10 @@ async function update(roomId, roomInputNewValues, userId) {
   }
 
   // Recalculate old parent availability if relationship changed
-  if (currentRoom.parent_room_id && currentRoom.parent_room_id !== updatedRoom.parent_room_id) {
+  if (
+    currentRoom.parent_room_id &&
+    currentRoom.parent_room_id !== updatedRoom.parent_room_id
+  ) {
     const oldParentId = currentRoom.parent_room_id
     const oldParent = await findOneById(oldParentId)
     const salesResults = await database.query({
@@ -392,8 +404,9 @@ async function update(roomId, roomInputNewValues, userId) {
       values: [oldParentId],
     })
     const soldRooms = salesResults.rows[0].sold_rooms
-    const newAvailable = oldParent.total_rooms - oldParent.blocked_rooms - soldRooms
-    
+    const newAvailable =
+      oldParent.total_rooms - oldParent.blocked_rooms - soldRooms
+
     // Update old parent
     await database.query({
       text: `
@@ -403,7 +416,7 @@ async function update(roomId, roomInputNewValues, userId) {
       `,
       values: [oldParentId, newAvailable],
     })
-    
+
     // Sync other children of the old parent
     await database.query({
       text: `
@@ -478,12 +491,15 @@ async function update(roomId, roomInputNewValues, userId) {
   }
 
   async function validateAndNormalizeRoomAvailability(currentRoom, newValues) {
-    const parentRoomId = "parent_room_id" in newValues ? newValues.parent_room_id : currentRoom.parent_room_id
+    const parentRoomId =
+      "parent_room_id" in newValues
+        ? newValues.parent_room_id
+        : currentRoom.parent_room_id
 
     if (parentRoomId) {
       // It is a child room, so its inventory is bound to the parent's inventory.
       const parent = await findOneById(parentRoomId)
-      
+
       // Calculate sales under this parent (including all its children and the current room being updated)
       const salesResults = await database.query({
         text: `
@@ -498,13 +514,14 @@ async function update(roomId, roomInputNewValues, userId) {
         `,
         values: [parentRoomId, currentRoom.id],
       })
-      
+
       const soldRooms = salesResults.rows[0].sold_rooms
       const available = parent.total_rooms - parent.blocked_rooms - soldRooms
 
       if (available < 0) {
         throw new ValidationError({
-          message: "O total de quartos do pai é insuficiente para as vendas do pai e de todos os filhos.",
+          message:
+            "O total de quartos do pai é insuficiente para as vendas do pai e de todos os filhos.",
           action: "Aumente o total de quartos no quarto pai.",
         })
       }
@@ -519,7 +536,7 @@ async function update(roomId, roomInputNewValues, userId) {
           `,
           values: [parentRoomId, available],
         })
-        
+
         // Also propagate this to all other sibling child rooms to keep them in sync
         await database.query({
           text: `

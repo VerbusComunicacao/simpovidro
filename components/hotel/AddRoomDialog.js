@@ -183,12 +183,17 @@ export function AddRoomDialog({
                   <Label htmlFor="parent-room" className="text-right">
                     Quarto Pai (Inventário)
                   </Label>
-                  <Select onValueChange={handleParentSelect} value={parentRoomId}>
+                  <Select
+                    onValueChange={handleParentSelect}
+                    value={parentRoomId}
+                  >
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Nenhum (Quarto Independente)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Nenhum (Quarto Independente)</SelectItem>
+                      <SelectItem value="none">
+                        Nenhum (Quarto Independente)
+                      </SelectItem>
                       {potentialParents.map((r) => (
                         <SelectItem key={r.id} value={r.id}>
                           {r.name || r.room_type} ({r.room_category})
@@ -215,7 +220,11 @@ export function AddRoomDialog({
                   <Label htmlFor="room-type" className="text-right">
                     Tipo
                   </Label>
-                  <Select onValueChange={setRoomTypeId} value={roomTypeId} disabled={!!parentRoomId}>
+                  <Select
+                    onValueChange={setRoomTypeId}
+                    value={roomTypeId}
+                    disabled={!!parentRoomId}
+                  >
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Selecione o tipo" />
                     </SelectTrigger>
@@ -368,7 +377,10 @@ export function AddRoomDialog({
                           variant="outline"
                           size="icon"
                           onClick={() => handleRemovePhoto(index)}
-                          disabled={!!parentRoomId || (photos.length === 1 && photos[0] === "")}
+                          disabled={
+                            !!parentRoomId ||
+                            (photos.length === 1 && photos[0] === "")
+                          }
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

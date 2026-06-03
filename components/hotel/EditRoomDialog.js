@@ -116,7 +116,8 @@ export function EditRoomDialog({
     )
   }, [room])
 
-  const potentialParents = rooms?.filter((r) => !r.parent_room_id && r.id !== room.id) || []
+  const potentialParents =
+    rooms?.filter((r) => !r.parent_room_id && r.id !== room.id) || []
 
   const handleParentSelect = (val) => {
     if (val === "none" || !val) {
@@ -206,12 +207,17 @@ export function EditRoomDialog({
                   <Label htmlFor="parent-room-edit" className="text-right">
                     Quarto Pai (Inventário)
                   </Label>
-                  <Select onValueChange={handleParentSelect} value={parentRoomId || "none"}>
+                  <Select
+                    onValueChange={handleParentSelect}
+                    value={parentRoomId || "none"}
+                  >
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Nenhum (Quarto Independente)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Nenhum (Quarto Independente)</SelectItem>
+                      <SelectItem value="none">
+                        Nenhum (Quarto Independente)
+                      </SelectItem>
                       {potentialParents.map((r) => (
                         <SelectItem key={r.id} value={r.id}>
                           {r.name || r.room_type} ({r.room_category})
@@ -412,7 +418,10 @@ export function EditRoomDialog({
                           variant="outline"
                           size="icon"
                           onClick={() => handleRemovePhoto(index)}
-                          disabled={!!parentRoomId || (photos.length === 1 && photos[0] === "")}
+                          disabled={
+                            !!parentRoomId ||
+                            (photos.length === 1 && photos[0] === "")
+                          }
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
