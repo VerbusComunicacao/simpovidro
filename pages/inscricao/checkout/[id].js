@@ -2293,7 +2293,7 @@ export default function CheckoutPage({
                           >
                             Li e aceito as{" "}
                             <a
-                              href="/condicoes-gerais.pdf"
+                              href="/condicoes-gerais"
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:text-blue-700 underline font-bold hover:no-underline transition-all"

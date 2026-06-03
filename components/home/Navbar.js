@@ -8,7 +8,6 @@ export const navItems = [
   { name: "Sobre", id: "sobre" },
   { name: "Local", id: "local" },
   { name: "Condições Especiais", id: "condicoes-especiais" },
-  { name: "Dicas e lembretes", id: "dicas" },
 ]
 
 export default function Navbar({ scrollToSection, router }) {

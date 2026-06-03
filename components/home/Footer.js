@@ -141,7 +141,7 @@ export default function Footer({ scrollToSection }) {
           <div className="flex gap-6">
             <span className="cursor-pointer hover:text-white">Privacidade</span>
             <Link
-              href="/condicoes-gerais.pdf"
+              href="/condicoes-gerais"
               className="cursor-pointer hover:text-white"
             >
               Condições Gerais

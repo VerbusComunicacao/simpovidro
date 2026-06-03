@@ -285,7 +285,7 @@ async function postHandler(request, response) {
                 <!-- Header Image -->
                 <tr>
                   <td style="padding: 0; line-height: 0; font-family: Arial, Helvetica, sans-serif;">
-                    <img src="${webserver.origin}/images/banner-topo.png" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0;">
+                    <img src="${webserver.origin}/images/banner-topo2.png" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0;">
                   </td>
                 </tr>
 

@@ -35,7 +35,7 @@ export default function CTA({ router, HERO_IMAGE }) {
             <p className="text-sm font-bold text-slate-700">
               A sua segurança e privacidade são prioridades.{" "}
               <Link
-                href="/condicoes-gerais.pdf"
+                href="/condicoes-gerais"
                 className="underline text-blue-600 ml-1"
               >
                 Leia as Condições Gerais.
