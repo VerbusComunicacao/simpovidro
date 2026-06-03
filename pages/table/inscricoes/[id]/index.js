@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import useSWR from "swr"
@@ -10,11 +11,14 @@ import {
   Building2,
   Info,
   ArrowLeft,
+  Trash2,
 } from "lucide-react"
 import TableLayout from "@/components/layout/TableLayout"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { getGuestCountsString } from "@/lib/registration-helpers"
+import { GuestDialog } from "@/components/guest/GuestDialog"
+import { ReplaceGuestDialog } from "@/components/guest/ReplaceGuestDialog"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -37,7 +41,40 @@ export default function RegistrationDetailsPage() {
     data: sale,
     error,
     isLoading,
+    mutate,
   } = useSWR(id ? `/api/v1/sales/${id}` : null, fetcher)
+
+  const [isCancelling, setIsCancelling] = useState(false)
+
+  const handleCancelSale = async () => {
+    if (
+      !confirm(
+        "Tem certeza que deseja cancelar esta inscrição? Esta ação irá restaurar a disponibilidade do quarto e não pode ser desfeita.",
+      )
+    ) {
+      return
+    }
+
+    setIsCancelling(true)
+    try {
+      const response = await fetch(`/api/v1/sales/${sale.id}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || "Falha ao cancelar a inscrição")
+      }
+
+      alert("Inscrição cancelada com sucesso!")
+      mutate()
+    } catch (error) {
+      console.error(error)
+      alert(error.message)
+    } finally {
+      setIsCancelling(false)
+    }
+  }
 
   const formatDate = (dateString) => {
     if (!dateString) return ""
@@ -148,6 +185,23 @@ export default function RegistrationDetailsPage() {
             >
               Imprimir Detalhes
             </Button>
+            {sale.status !== "cancelled" && (
+              <Button
+                variant="destructive"
+                className="gap-2"
+                onClick={handleCancelSale}
+                disabled={isCancelling}
+              >
+                {isCancelling ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Cancelar Inscrição
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -322,11 +376,11 @@ export default function RegistrationDetailsPage() {
                 key={guest.id}
                 className="overflow-hidden border-l-4 border-l-blue-500"
               >
-                <div className="bg-gray-50 px-6 py-3 border-b flex items-center justify-between">
+                <div className="bg-gray-50 px-6 py-3 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span className="font-bold text-gray-900">
                     {idx + 1}. {guest.name}
                   </span>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline" className="bg-white">
                       {guest.gender}
                     </Badge>
@@ -335,6 +389,20 @@ export default function RegistrationDetailsPage() {
                         ? guest.badge_name.toUpperCase()
                         : "SEM NOME NO CRACHÁ"}
                     </Badge>
+                    {sale.status !== "cancelled" && (
+                      <>
+                        <GuestDialog guestToEdit={guest} onGuestSuccess={() => mutate()}>
+                          <Button variant="outline" size="sm" className="h-7 text-xs px-2.5">
+                            Editar
+                          </Button>
+                        </GuestDialog>
+                        <ReplaceGuestDialog sale={sale} oldGuest={guest} onSuccess={() => mutate()}>
+                          <Button variant="outline" size="sm" className="h-7 text-xs px-2.5 text-blue-600 border-blue-200 hover:bg-blue-50">
+                            Trocar
+                          </Button>
+                        </ReplaceGuestDialog>
+                      </>
+                    )}
                   </div>
                 </div>
                 <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8">
