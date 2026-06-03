@@ -3,6 +3,25 @@ import { ValidationError, NotFoundError } from "infra/errors.js"
 import { validateRequiredFields, validateUUID } from "infra/validator.js"
 
 async function create(roomInputValues, userId) {
+  if (roomInputValues.parent_room_id) {
+    validateUUID(roomInputValues.parent_room_id)
+    const parent = await findOneById(roomInputValues.parent_room_id)
+    if (parent.parent_room_id) {
+      throw new ValidationError({
+        message: "Não é possível aninhar quartos. O quarto pai selecionado já é um quarto filho.",
+        action: "Selecione um quarto que não seja filho de outro.",
+      })
+    }
+    roomInputValues.hotel_id = parent.hotel_id
+    roomInputValues.room_type_id = parent.room_type_id
+    roomInputValues.name = parent.name
+    roomInputValues.description = parent.description
+    roomInputValues.photos = parent.photos
+    roomInputValues.total_rooms = parent.total_rooms
+    roomInputValues.blocked_rooms = parent.blocked_rooms
+    roomInputValues.available_rooms = parent.available_rooms
+  }
+
   validateRequiredFields(roomInputValues, [
     "hotel_id",
     "room_type_id",
@@ -47,14 +66,15 @@ async function create(roomInputValues, userId) {
       photos,
       member_price_per_night = 0,
       min_guests = 1,
+      parent_room_id = null,
     } = roomInputValues
 
     const results = await database.query({
       text: `
         INSERT INTO
-          "rooms" (user_id, hotel_id, room_type_id, room_category_id, price_per_night, member_price_per_night, total_rooms, available_rooms, blocked_rooms, name, description, photos, min_guests)
+          "rooms" (user_id, hotel_id, room_type_id, room_category_id, price_per_night, member_price_per_night, total_rooms, available_rooms, blocked_rooms, name, description, photos, min_guests, parent_room_id)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         RETURNING
           *
       `,
@@ -72,6 +92,7 @@ async function create(roomInputValues, userId) {
         description,
         photos || [],
         min_guests,
+        parent_room_id,
       ],
     })
 
@@ -149,6 +170,7 @@ async function findAll() {
     text: `
       SELECT 
         id,
+        parent_room_id,
         hotel_id,
         room_type_id,
         room_category_id,
@@ -180,6 +202,7 @@ async function findAllByHotelId(hotelId) {
     text: `
       SELECT 
         r.id,
+        r.parent_room_id,
         r.hotel_id,
         rt.name as room_type,
         rc.name as room_category,
@@ -244,6 +267,36 @@ async function update(roomId, roomInputNewValues, userId) {
 
   const currentRoom = await findOneById(roomId)
 
+  // Resolve and validate parent_room_id
+  const parentRoomId = "parent_room_id" in roomInputNewValues ? roomInputNewValues.parent_room_id : currentRoom.parent_room_id;
+  if (parentRoomId) {
+    if ("total_rooms" in roomInputNewValues || "blocked_rooms" in roomInputNewValues) {
+      throw new ValidationError({
+        message: "Este quarto é um quarto filho e herda a disponibilidade do quarto pai. Altere a disponibilidade no quarto pai.",
+        action: "Edite o quarto pai correspondente.",
+      })
+    }
+
+    validateUUID(parentRoomId)
+    const parent = await findOneById(parentRoomId)
+    if (parent.parent_room_id) {
+      throw new ValidationError({
+        message: "Não é possível aninhar quartos. O quarto pai selecionado já é um quarto filho.",
+        action: "Selecione um quarto que não seja filho de outro.",
+      })
+    }
+
+    // Force inherited values from parent
+    roomInputNewValues.hotel_id = parent.hotel_id
+    roomInputNewValues.room_type_id = parent.room_type_id
+    roomInputNewValues.name = parent.name
+    roomInputNewValues.description = parent.description
+    roomInputNewValues.photos = parent.photos
+    roomInputNewValues.total_rooms = parent.total_rooms
+    roomInputNewValues.blocked_rooms = parent.blocked_rooms
+    roomInputNewValues.available_rooms = parent.available_rooms
+  }
+
   if ("hotel_id" in roomInputNewValues) {
     validateUUID(roomInputNewValues.hotel_id)
     await verifyHotelBelongsToUser(roomInputNewValues.hotel_id, userId)
@@ -283,6 +336,38 @@ async function update(roomId, roomInputNewValues, userId) {
 
   const updatedRoom = await runUpdateQuery(roomWithNewValues)
 
+  // Propagate updates to children if this is a parent room
+  if (!updatedRoom.parent_room_id) {
+    await database.query({
+      text: `
+        UPDATE "rooms"
+        SET 
+          hotel_id = $2,
+          room_type_id = $3,
+          name = $4,
+          description = $5,
+          photos = $6,
+          total_rooms = $7,
+          blocked_rooms = $8,
+          available_rooms = $9,
+          updated_at = timezone('utc', now())
+        WHERE
+          parent_room_id = $1
+      `,
+      values: [
+        roomId,
+        updatedRoom.hotel_id,
+        updatedRoom.room_type_id,
+        updatedRoom.name,
+        updatedRoom.description,
+        updatedRoom.photos || [],
+        updatedRoom.total_rooms,
+        updatedRoom.blocked_rooms,
+        updatedRoom.available_rooms,
+      ],
+    })
+  }
+
   if (
     roomInputNewValues.price_policies &&
     Array.isArray(roomInputNewValues.price_policies)
@@ -293,6 +378,43 @@ async function update(roomId, roomInputNewValues, userId) {
     )
   }
 
+  // Recalculate old parent availability if relationship changed
+  if (currentRoom.parent_room_id && currentRoom.parent_room_id !== updatedRoom.parent_room_id) {
+    const oldParentId = currentRoom.parent_room_id
+    const oldParent = await findOneById(oldParentId)
+    const salesResults = await database.query({
+      text: `
+        SELECT count(*)::int as sold_rooms
+        FROM "sales"
+        WHERE (room_id = $1 OR room_id IN (SELECT id FROM "rooms" WHERE parent_room_id = $1))
+          AND status != 'cancelled'
+      `,
+      values: [oldParentId],
+    })
+    const soldRooms = salesResults.rows[0].sold_rooms
+    const newAvailable = oldParent.total_rooms - oldParent.blocked_rooms - soldRooms
+    
+    // Update old parent
+    await database.query({
+      text: `
+        UPDATE "rooms"
+        SET available_rooms = $2, updated_at = timezone('utc', now())
+        WHERE id = $1
+      `,
+      values: [oldParentId, newAvailable],
+    })
+    
+    // Sync other children of the old parent
+    await database.query({
+      text: `
+        UPDATE "rooms"
+        SET available_rooms = $2, updated_at = timezone('utc', now())
+        WHERE parent_room_id = $1
+      `,
+      values: [oldParentId, newAvailable],
+    })
+  }
+
   return await findOneById(updatedRoom.id)
 
   async function runUpdateQuery(roomWithNewValues) {
@@ -301,14 +423,13 @@ async function update(roomId, roomInputNewValues, userId) {
       hotel_id,
       room_type_id,
       room_category_id,
-      // No banco de dados, o campo é chamado de 'price_per_night',
-      // mas para a regra de negócio do Simpovidro, ele representa o "Preço por Pessoa" para o evento.
       price_per_night,
       member_price_per_night,
       total_rooms,
       available_rooms,
       blocked_rooms,
       min_guests,
+      parent_room_id = null,
     } = roomWithNewValues
 
     const results = await database.query({
@@ -328,6 +449,7 @@ async function update(roomId, roomInputNewValues, userId) {
           description = $11,
           photos = $12,
           min_guests = $13,
+          parent_room_id = $14,
           updated_at = timezone('utc', now())
         WHERE
           id = $1
@@ -348,6 +470,7 @@ async function update(roomId, roomInputNewValues, userId) {
         roomWithNewValues.description,
         roomWithNewValues.photos || [],
         min_guests,
+        parent_room_id,
       ],
     })
 
@@ -355,6 +478,67 @@ async function update(roomId, roomInputNewValues, userId) {
   }
 
   async function validateAndNormalizeRoomAvailability(currentRoom, newValues) {
+    const parentRoomId = "parent_room_id" in newValues ? newValues.parent_room_id : currentRoom.parent_room_id
+
+    if (parentRoomId) {
+      // It is a child room, so its inventory is bound to the parent's inventory.
+      const parent = await findOneById(parentRoomId)
+      
+      // Calculate sales under this parent (including all its children and the current room being updated)
+      const salesResults = await database.query({
+        text: `
+          SELECT count(*)::int as sold_rooms
+          FROM "sales"
+          WHERE (
+            room_id = $1 
+            OR room_id IN (SELECT id FROM "rooms" WHERE parent_room_id = $1)
+            OR room_id = $2
+          )
+          AND status != 'cancelled'
+        `,
+        values: [parentRoomId, currentRoom.id],
+      })
+      
+      const soldRooms = salesResults.rows[0].sold_rooms
+      const available = parent.total_rooms - parent.blocked_rooms - soldRooms
+
+      if (available < 0) {
+        throw new ValidationError({
+          message: "O total de quartos do pai é insuficiente para as vendas do pai e de todos os filhos.",
+          action: "Aumente o total de quartos no quarto pai.",
+        })
+      }
+
+      // If the parent's current available count differs from what we just calculated, update the parent's record
+      if (parent.available_rooms !== available) {
+        await database.query({
+          text: `
+            UPDATE "rooms" 
+            SET available_rooms = $2, updated_at = timezone('utc', now())
+            WHERE id = $1
+          `,
+          values: [parentRoomId, available],
+        })
+        
+        // Also propagate this to all other sibling child rooms to keep them in sync
+        await database.query({
+          text: `
+            UPDATE "rooms"
+            SET available_rooms = $2, updated_at = timezone('utc', now())
+            WHERE parent_room_id = $1 AND id != $3
+          `,
+          values: [parentRoomId, available, currentRoom.id],
+        })
+      }
+
+      return {
+        ...newValues,
+        total_rooms: parent.total_rooms,
+        blocked_rooms: parent.blocked_rooms,
+        available_rooms: available,
+      }
+    }
+
     const roomId = currentRoom.id
     const currentTotal = currentRoom.total_rooms
     const currentBlocked = currentRoom.blocked_rooms
@@ -363,11 +547,13 @@ async function update(roomId, roomInputNewValues, userId) {
     let blocked = newValues.blocked_rooms ?? currentBlocked
 
     // Calculate sold rooms from "sales" table (Source of Truth)
+    // We sum sales of this room and sales of any children sharing this room's inventory
     const salesResults = await database.query({
       text: `
         SELECT count(*)::int as sold_rooms
         FROM "sales"
-        WHERE room_id = $1 AND status != 'cancelled'
+        WHERE (room_id = $1 OR room_id IN (SELECT id FROM "rooms" WHERE parent_room_id = $1))
+          AND status != 'cancelled'
       `,
       values: [roomId],
     })

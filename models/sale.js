@@ -27,11 +27,33 @@ async function create(saleInputValues, externalClient) {
   try {
     if (isInternalTransaction) await client.query("BEGIN")
 
-    // 1. Validate if room exists and fetch hotel_id, capacity and policies
+    // 1. Validate if room exists and fetch parent/inventory settings
+    const parentCheck = await client.query({
+      text: `SELECT parent_room_id FROM "rooms" WHERE id = $1`,
+      values: [room_id]
+    })
+    
+    if (parentCheck.rowCount === 0) {
+      throw new NotFoundError({
+        message: "Quarto não encontrado.",
+        action: "Selecione outro quarto.",
+      })
+    }
+    
+    const inventoryRoomId = parentCheck.rows[0].parent_room_id || room_id
+    
+    // Acquire exclusive row-level lock on the master inventory room to serialize concurrent bookings
+    await client.query({
+      text: `SELECT id FROM "rooms" WHERE id = $1 FOR UPDATE`,
+      values: [inventoryRoomId]
+    })
+
+    // Fetch the room capacity, pricing, policies, and the latest available room count from parent
     const roomResults = await client.query({
       text: `
         SELECT 
           r.*,
+          (SELECT available_rooms FROM "rooms" WHERE id = $2) as latest_available_rooms,
           h.check_in_date as hotel_check_in_date,
           h.check_out_date as hotel_check_out_date,
           rc.max_adults,
@@ -62,9 +84,8 @@ async function create(saleInputValues, externalClient) {
           "room-categories" rc ON r.room_category_id = rc.id
         WHERE 
           r.id = $1
-        LIMIT 1
-        FOR UPDATE OF r;`,
-      values: [room_id],
+        LIMIT 1;`,
+      values: [room_id, inventoryRoomId],
     })
 
     const targetRoom = roomResults.rows[0]
@@ -77,7 +98,7 @@ async function create(saleInputValues, externalClient) {
     }
 
     // 2. Check room availability
-    if (targetRoom.available_rooms <= 0) {
+    if (targetRoom.latest_available_rooms <= 0) {
       throw new ValidationError({
         message: "Este quarto não está mais disponível.",
         action: "Selecione outro quarto.",
@@ -281,14 +302,23 @@ async function create(saleInputValues, externalClient) {
       })
     }
 
-    // 5. Update Room Availability
+    // 5. Update Room Availability (on the parent/inventory room and sync children)
     await client.query({
       text: `
         UPDATE "rooms"
         SET available_rooms = available_rooms - 1
         WHERE id = $1
       `,
-      values: [room_id],
+      values: [inventoryRoomId],
+    })
+
+    await client.query({
+      text: `
+        UPDATE "rooms"
+        SET available_rooms = (SELECT available_rooms FROM "rooms" WHERE id = $1)
+        WHERE parent_room_id = $1 OR id = $1
+      `,
+      values: [inventoryRoomId],
     })
 
     // 6. Generate and Create Installments
@@ -737,14 +767,31 @@ async function cancel(saleId) {
       values: [saleId],
     })
 
-    // 3. Restore Room Availability
+    // 3. Restore Room Availability (on the parent/inventory room and sync children)
+    const roomCheck = await client.query({
+      text: `SELECT parent_room_id FROM "rooms" WHERE id = $1`,
+      values: [sale.room_id],
+    })
+    
+    const parentRoomId = roomCheck.rows[0]?.parent_room_id
+    const inventoryRoomId = parentRoomId || sale.room_id
+
     await client.query({
       text: `
         UPDATE "rooms"
         SET available_rooms = available_rooms + 1
         WHERE id = $1
       `,
-      values: [sale.room_id],
+      values: [inventoryRoomId],
+    })
+
+    await client.query({
+      text: `
+        UPDATE "rooms"
+        SET available_rooms = (SELECT available_rooms FROM "rooms" WHERE id = $1)
+        WHERE parent_room_id = $1 OR id = $1
+      `,
+      values: [inventoryRoomId],
     })
 
     await client.query("COMMIT")
