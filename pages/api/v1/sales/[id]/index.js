@@ -2,6 +2,7 @@ import { createRouter } from "next-connect"
 import controller from "infra/controller"
 import sale from "models/sale"
 import authorization from "models/authorization"
+import { sendRegistrationEmail } from "models/email-notifications.js"
 
 const router = createRouter()
 router.use(controller.injectAnnonymousOrUser)
@@ -25,7 +26,16 @@ async function getHandler(request, response) {
 
 async function deleteHandler(request, response) {
   const saleId = request.query.id
+  const sendEmail = request.query.send_email === "true"
+
   await sale.cancel(saleId)
+
+  if (sendEmail) {
+    await sendRegistrationEmail(saleId, {
+      isAlteration: true,
+      user: request.context.user,
+    })
+  }
 
   return response.status(204).end()
 }

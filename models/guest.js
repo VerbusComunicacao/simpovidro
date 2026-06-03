@@ -246,7 +246,8 @@ function formatPartialCPF(numbers) {
   if (clean.length === 0) return ""
   if (clean.length <= 3) return clean
   if (clean.length <= 6) return `${clean.slice(0, 3)}.${clean.slice(3)}`
-  if (clean.length <= 9) return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6)}`
+  if (clean.length <= 9)
+    return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6)}`
   return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}-${clean.slice(9, 11)}`
 }
 

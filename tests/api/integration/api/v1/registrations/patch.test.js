@@ -485,7 +485,141 @@ describe("POST /api/v1/sales/[id]/replace-guest", () => {
     )
     expect(swapFailResponse.status).toBe(400)
     const swapFailBody = await swapFailResponse.json()
-    expect(swapFailBody.message).toContain("Não é possível alterar hóspedes de uma inscrição cancelada")
+    expect(swapFailBody.message).toContain(
+      "Não é possível alterar hóspedes de uma inscrição cancelada",
+    )
+  })
+
+  test("should send email when swapping guest with send_email: true", async () => {
+    // Create a new sale
+    const regResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId1,
+          guests_data: [
+            {
+              name: "Fernando Silva",
+              badge_name: "FERNANDO",
+              email: "fernando@example.com",
+              phone: "11977777777",
+              gender: "Masculino",
+              rg_number: "334445556",
+              cpf_number: "333.444.555-66",
+              birth_date: "1994-04-14",
+            },
+          ],
+        }),
+      },
+    )
+    expect(regResponse.status).toBe(201)
+    const regData = await regResponse.json()
+    const newSaleId = regData.saleId
+
+    // Get the guest in the sale
+    const saleDetailsResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${newSaleId}`,
+      {
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    const saleDetails = await saleDetailsResponse.json()
+    const originalGuest = saleDetails.guests[0]
+
+    // Let's create a new guest to swap into
+    const tempGuestResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/guests`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          name: "Roberto Carlos",
+          badge_name: "ROBERTO",
+          email: "roberto@example.com",
+          phone: "11944443333",
+          gender: "Masculino",
+          rg_number: "998887776",
+          cpf_number: "999.888.777-66",
+          birth_date: "1980-08-08",
+        }),
+      },
+    )
+    const newGuest = await tempGuestResponse.json()
+
+    // Now swap originalGuest with Roberto, sending email
+    const swapResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${newSaleId}/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: originalGuest.id,
+          new_guest_id: newGuest.id,
+          send_email: true,
+        }),
+      },
+    )
+    expect(swapResponse.status).toBe(200)
+
+    const lastEmail = await orchestrator.getLastEmail()
+    expect(lastEmail.subject).toContain("Alteração da inscrição")
+  })
+
+  test("should send email when cancelling sale with ?send_email=true", async () => {
+    // Create a new sale
+    const regResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId1,
+          guests_data: [
+            {
+              name: "Maria Flor",
+              badge_name: "MARIA",
+              email: "maria.flor@example.com",
+              phone: "11988887777",
+              gender: "Feminino",
+              rg_number: "887776665",
+              cpf_number: "888.777.666-55",
+              birth_date: "1990-10-10",
+            },
+          ],
+        }),
+      },
+    )
+    expect(regResponse.status).toBe(201)
+    const regData = await regResponse.json()
+    const newSaleId = regData.saleId
+
+    // Cancel this new sale with send_email=true
+    const cancelResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${newSaleId}?send_email=true`,
+      {
+        method: "DELETE",
+        headers: {
+          Cookie: `session_id=${adminToken}`,
+        },
+      },
+    )
+    expect(cancelResponse.status).toBe(204)
+
+    const lastEmail = await orchestrator.getLastEmail()
+    expect(lastEmail.subject).toContain("Inscrição cancelada")
   })
 })
-

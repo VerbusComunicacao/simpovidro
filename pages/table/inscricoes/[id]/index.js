@@ -19,6 +19,14 @@ import Link from "next/link"
 import { getGuestCountsString } from "@/lib/registration-helpers"
 import { GuestDialog } from "@/components/guest/GuestDialog"
 import { ReplaceGuestDialog } from "@/components/guest/ReplaceGuestDialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -45,21 +53,28 @@ export default function RegistrationDetailsPage() {
   } = useSWR(id ? `/api/v1/sales/${id}` : null, fetcher)
 
   const [isCancelling, setIsCancelling] = useState(false)
+  const [showCancelEmailConfirm, setShowCancelEmailConfirm] = useState(false)
 
-  const handleCancelSale = async () => {
+  const handleCancelSaleClick = () => {
     if (
-      !confirm(
+      confirm(
         "Tem certeza que deseja cancelar esta inscrição? Esta ação irá restaurar a disponibilidade do quarto e não pode ser desfeita.",
       )
     ) {
-      return
+      setShowCancelEmailConfirm(true)
     }
+  }
 
+  const executeCancelSale = async (sendEmail) => {
+    setShowCancelEmailConfirm(false)
     setIsCancelling(true)
     try {
-      const response = await fetch(`/api/v1/sales/${sale.id}`, {
-        method: "DELETE",
-      })
+      const response = await fetch(
+        `/api/v1/sales/${sale.id}?send_email=${sendEmail}`,
+        {
+          method: "DELETE",
+        },
+      )
 
       if (!response.ok) {
         const data = await response.json()
@@ -189,7 +204,7 @@ export default function RegistrationDetailsPage() {
               <Button
                 variant="destructive"
                 className="gap-2"
-                onClick={handleCancelSale}
+                onClick={handleCancelSaleClick}
                 disabled={isCancelling}
               >
                 {isCancelling ? (
@@ -391,13 +406,28 @@ export default function RegistrationDetailsPage() {
                     </Badge>
                     {sale.status !== "cancelled" && (
                       <>
-                        <GuestDialog guestToEdit={guest} onGuestSuccess={() => mutate()}>
-                          <Button variant="outline" size="sm" className="h-7 text-xs px-2.5">
+                        <GuestDialog
+                          guestToEdit={guest}
+                          onGuestSuccess={() => mutate()}
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs px-2.5"
+                          >
                             Editar
                           </Button>
                         </GuestDialog>
-                        <ReplaceGuestDialog sale={sale} oldGuest={guest} onSuccess={() => mutate()}>
-                          <Button variant="outline" size="sm" className="h-7 text-xs px-2.5 text-blue-600 border-blue-200 hover:bg-blue-50">
+                        <ReplaceGuestDialog
+                          sale={sale}
+                          oldGuest={guest}
+                          onSuccess={() => mutate()}
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs px-2.5 text-blue-600 border-blue-200 hover:bg-blue-50"
+                          >
                             Trocar
                           </Button>
                         </ReplaceGuestDialog>
@@ -610,6 +640,45 @@ export default function RegistrationDetailsPage() {
           </Card>
         </div>
       </div>
+
+      <Dialog
+        open={showCancelEmailConfirm}
+        onOpenChange={setShowCancelEmailConfirm}
+      >
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-gray-900">
+              Aviso de Alteração por E-mail
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 pt-2">
+              Deseja enviar e-mail avisando da alteração para o participante?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="border-t pt-4 mt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowCancelEmailConfirm(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => executeCancelSale(false)}
+            >
+              Não enviar
+            </Button>
+            <Button
+              type="button"
+              onClick={() => executeCancelSale(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Sim, enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TableLayout>
   )
 }

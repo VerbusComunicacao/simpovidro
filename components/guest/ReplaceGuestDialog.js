@@ -27,6 +27,7 @@ export function ReplaceGuestDialog({ children, sale, oldGuest, onSuccess }) {
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
 
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
+  const [showEmailConfirm, setShowEmailConfirm] = useState(false)
 
   // Reset state when dialog opens/closes
   useEffect(() => {
@@ -37,6 +38,7 @@ export function ReplaceGuestDialog({ children, sale, oldGuest, onSuccess }) {
       setSelectedNewGuest(null)
       setError("")
       setAction("")
+      setShowEmailConfirm(false)
     }
   }, [open])
 
@@ -89,7 +91,7 @@ export function ReplaceGuestDialog({ children, sale, oldGuest, onSuccess }) {
     setSelectedNewGuest(newGuest)
   }
 
-  const handleConfirmSwap = async () => {
+  const handleConfirmSwap = async (sendEmail) => {
     if (!selectedNewGuest) return
 
     setSubmitting(true)
@@ -105,6 +107,7 @@ export function ReplaceGuestDialog({ children, sale, oldGuest, onSuccess }) {
         body: JSON.stringify({
           old_guest_id: oldGuest.id,
           new_guest_id: selectedNewGuest.id,
+          send_email: sendEmail,
         }),
       })
 
@@ -212,6 +215,19 @@ export function ReplaceGuestDialog({ children, sale, oldGuest, onSuccess }) {
                   )}
                 </div>
               </div>
+            ) : showEmailConfirm ? (
+              /* Step 3: Email Confirmation */
+              <div className="space-y-4">
+                <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg space-y-3">
+                  <h4 className="font-bold text-blue-900 text-sm">
+                    Aviso de Alteração por E-mail
+                  </h4>
+                  <p className="text-sm text-gray-700">
+                    Deseja enviar e-mail avisando da alteração para o
+                    participante?
+                  </p>
+                </div>
+              </div>
             ) : (
               /* Step 2: Confirmation */
               <div className="space-y-4">
@@ -259,23 +275,54 @@ export function ReplaceGuestDialog({ children, sale, oldGuest, onSuccess }) {
           </div>
 
           <DialogFooter className="border-t pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={submitting}
-            >
-              Cancelar
-            </Button>
-            {selectedNewGuest && (
-              <Button
-                type="button"
-                onClick={handleConfirmSwap}
-                disabled={submitting}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {submitting ? "Confirmando..." : "Confirmar Substituição"}
-              </Button>
+            {showEmailConfirm ? (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowEmailConfirm(false)}
+                  disabled={submitting}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleConfirmSwap(false)}
+                  disabled={submitting}
+                >
+                  Não enviar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => handleConfirmSwap(true)}
+                  disabled={submitting}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {submitting ? "Confirmando..." : "Sim, enviar"}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                  disabled={submitting}
+                >
+                  Cancelar
+                </Button>
+                {selectedNewGuest && (
+                  <Button
+                    type="button"
+                    onClick={() => setShowEmailConfirm(true)}
+                    disabled={submitting}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Confirmar Substituição
+                  </Button>
+                )}
+              </>
             )}
           </DialogFooter>
         </DialogContent>

@@ -904,8 +904,10 @@ async function replaceGuest(saleId, oldGuestId, newGuestId, externalClient) {
       text: `SELECT guest_id FROM sales_guests WHERE sale_id = $1`,
       values: [saleId],
     })
-    const currentGuestIds = salesGuestsResult.rows.map(r => r.guest_id)
-    const newGuestIds = currentGuestIds.map(id => id === oldGuestId ? newGuestId : id)
+    const currentGuestIds = salesGuestsResult.rows.map((r) => r.guest_id)
+    const newGuestIds = currentGuestIds.map((id) =>
+      id === oldGuestId ? newGuestId : id,
+    )
 
     const guests = await client.query({
       text: `SELECT id, birth_date, name FROM guests WHERE id = ANY($1)`,
@@ -939,31 +941,15 @@ async function replaceGuest(saleId, oldGuestId, newGuestId, externalClient) {
     })
     const targetRoom = roomResults.rows[0]
 
-    const referenceDate = new Date(targetSale.check_in_date || targetRoom.hotel_check_in_date || new Date())
+    const referenceDate = new Date(
+      targetSale.check_in_date || targetRoom.hotel_check_in_date || new Date(),
+    )
     let adultCount = 0
     let childCount = 0
 
-    const guestAges = guests.rows.map((guest) => {
-      const birth = new Date(guest.birth_date)
-      let age = referenceDate.getUTCFullYear() - birth.getUTCFullYear()
-      const m = referenceDate.getUTCMonth() - birth.getUTCMonth()
-      if (
-        m < 0 ||
-        (m === 0 && referenceDate.getUTCDate() < birth.getUTCDate())
-      ) {
-        age--
-      }
-
-      if (age >= 12) {
-        adultCount++
-      } else {
-        childCount++
-      }
-      return { guest, age }
-    })
-
-    const leadGuestId = targetSale.guest_id === oldGuestId ? newGuestId : targetSale.guest_id
-    const leadGuestObj = guests.rows.find(g => g.id === leadGuestId)
+    const leadGuestId =
+      targetSale.guest_id === oldGuestId ? newGuestId : targetSale.guest_id
+    const leadGuestObj = guests.rows.find((g) => g.id === leadGuestId)
     if (leadGuestObj) {
       const leadBirth = new Date(leadGuestObj.birth_date)
       let leadAge = referenceDate.getUTCFullYear() - leadBirth.getUTCFullYear()
@@ -1063,4 +1049,3 @@ const sale = {
 }
 
 export default sale
-
