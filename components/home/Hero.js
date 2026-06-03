@@ -87,7 +87,7 @@ export default function Hero({ scrollToSection }) {
           className="flex flex-col gap-6 items-center lg:items-end order-2 w-full"
         >
           {/* Cards de Data e Local */}
-          <div className="flex flex-col gap-4 w-full md:max-w-sm sm:max-w-md">
+          <div className="flex flex-col gap-4 w-full md:max-w-md sm:max-w-md">
             {/* Card 1: Data */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -113,7 +113,7 @@ export default function Hero({ scrollToSection }) {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 1.2, duration: 0.5 }}
-              className="w-full bg-white/95 backdrop-blur-md pl-4 pr-2 rounded-2xl shadow-2xl border border-white/20 flex items-center justify-between gap-4 transform hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 cursor-default text-slate-900"
+              className="w-full bg-white/95 backdrop-blur-md pl-4 pr-3 py-1 rounded-2xl shadow-2xl border border-white/20 flex items-center justify-between gap-4 transform hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 cursor-default text-slate-900"
             >
               <div className="flex items-center gap-4">
                 <div className=" p-3 rounded-xl shrink-0">
@@ -129,13 +129,21 @@ export default function Hero({ scrollToSection }) {
                 </div>
               </div>
 
-              <div className="shrink-0 w-16 md:w-20 flex items-center justify-center">
+              <div className="shrink-0 flex items-center gap-2">
                 <Image
                   src="/images/premio.png"
                   alt="Premio Melhor Resort do Brasil"
-                  width={100}
-                  height={100}
-                  className=" object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.1)]"
+                  width={120}
+                  height={120}
+                  className="w-20 h-20 md:w-20 md:h-20 object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.1)]"
+                  priority
+                />
+                <Image
+                  src="/images/selo_caio.png"
+                  alt="Selo Caio"
+                  width={120}
+                  height={120}
+                  className="w-20 h-20 md:w-20 md:h-20 p-1 object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.1)]"
                   priority
                 />
               </div>
