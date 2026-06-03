@@ -36,7 +36,7 @@ async function sendEmailToUser(user, activationToken) {
         <!-- Header Image -->
         <tr>
           <td style="padding: 0; line-height: 0;">
-            <img src="${webserver.origin}/images/banner-topo.png" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none;">
+            <img src="${webserver.origin}/images/banner-topo2.png" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none;">
           </td>
         </tr>
 

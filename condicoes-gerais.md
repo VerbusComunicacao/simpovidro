@@ -252,7 +252,7 @@ O Costão do Santinho Resort oferece muitas opções de esportes e lazer, boa pa
 
 Horário da recreação infantil: das 9h00 às 22h00
 
-## 17. Dos horários dos Alimentos e Bebidas:
+## 17. Dos horários dos Alimentos e Bebidas
 
 - Café da manhã: das 7h00 às 10h30, nos restaurantes Nossa Senhora das Ondas e no Parador Sambaqui.
 - Almoço _buffet_ livre: das 12h00 às 15h00 nos restaurantes Nossa Senhora das Ondas, Parador Sambaqui e Ninho dos Pássaros
@@ -260,7 +260,7 @@ Horário da recreação infantil: das 9h00 às 22h00
 - Lanches rápidos durante todo o dia: área social, das 10h30 às 20h00 e das 21h00 às 2h00. No Hotel Internacional, das 11h00 às 18h00.
 - Restaurante infantil: almoço, das 11h00 às 14h00, e jantar, das 18h30 às 21h00.
 
-## 18. Reservas de Restaurantes Temáticos – Jantar:
+## 18. Reservas de Restaurantes Temáticos – Jantar
 
 O participante do 17º Simpovidro terá direito a **1 reserva** em qualquer dos restaurantes temáticos que abrem conforme programação da semana:
 
@@ -272,7 +272,7 @@ As reservas devem ser feitas, **obrigatoriamente,** pelo aplicativo ou presencia
 
 **Cancelamentos** devem ser feitos pessoalmente na Central do Hóspede até as 18h00 do dia da reserva.
 
-## 19. Bares:
+## 19. Bares
 
 - Bar da piscina: das 10h30 às 18h00;
 - Bar Carijós: das 17h00 às 22h00;
@@ -281,7 +281,7 @@ As reservas devem ser feitas, **obrigatoriamente,** pelo aplicativo ou presencia
 
 Bebidas: Águas, refrigerantes, sucos, caipirinhas, caipiroscas, caipiríssimas, sakerina, _vodka_, cerveja (Brahma, Bohemia e Budwiser), chope Brahma, uísque 8 anos, espumante francês, vinho branco e tinto chileno e argentino. (Rótulos conforme preferência do hotel).
 
-## 20. Frigobar dos apartamentos:
+## 20. Frigobar dos apartamentos
 
 **20.1 – Apartamento das Vilas**: Água e refrigerantes
 

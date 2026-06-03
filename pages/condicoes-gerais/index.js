@@ -188,7 +188,7 @@ export default function CondicoesGerais({ sections }) {
       <Navbar scrollToSection={handleHomeScroll} />
 
       {/* Premium Gradient Hero Header */}
-      <header className="relative bg-gradient-to-br from-slate-900 via-logo-navy to-slate-950 text-white pt-36 pb-20 px-6 overflow-hidden">
+      <header className="relative bg-gradient-to-br from-slate-900 via-logo-navy to-slate-950 text-white pt-36 pb-10 px-6 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 -left-4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl animate-blob"></div>
           <div className="absolute top-10 -right-4 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-2xl animate-blob animation-delay-2000"></div>
@@ -203,10 +203,6 @@ export default function CondicoesGerais({ sections }) {
           <h1 className="text-4xl md:text-5xl font-title font-bold tracking-tight mb-4 leading-tight">
             Condições Gerais de Contratação
           </h1>
-          <p className="text-lg text-slate-300 max-w-2xl font-light leading-relaxed">
-            Consulte as normas, hospedagens inclusas, políticas de cancelamento
-            e o regulamento original completo do 17º Simpovidro.
-          </p>
         </div>
       </header>
 
