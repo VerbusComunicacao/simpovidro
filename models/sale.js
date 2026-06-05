@@ -947,6 +947,24 @@ async function replaceGuest(saleId, oldGuestId, newGuestId, externalClient) {
     let adultCount = 0
     let childCount = 0
 
+    guests.rows.forEach((guest) => {
+      const birth = new Date(guest.birth_date)
+      let age = referenceDate.getUTCFullYear() - birth.getUTCFullYear()
+      const m = referenceDate.getUTCMonth() - birth.getUTCMonth()
+      if (
+        m < 0 ||
+        (m === 0 && referenceDate.getUTCDate() < birth.getUTCDate())
+      ) {
+        age--
+      }
+
+      if (age >= 12) {
+        adultCount++
+      } else {
+        childCount++
+      }
+    })
+
     const leadGuestId =
       targetSale.guest_id === oldGuestId ? newGuestId : targetSale.guest_id
     const leadGuestObj = guests.rows.find((g) => g.id === leadGuestId)

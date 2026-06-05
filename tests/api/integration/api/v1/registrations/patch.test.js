@@ -622,4 +622,294 @@ describe("POST /api/v1/sales/[id]/replace-guest", () => {
     const lastEmail = await orchestrator.getLastEmail()
     expect(lastEmail.subject).toContain("Inscrição cancelada")
   })
+
+  test("should return 400 when swap results in lead guest under 18 years old", async () => {
+    // 1. Create a registration with 1 adult
+    const regResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId1,
+          guests_data: [
+            {
+              name: "Adult Person",
+              badge_name: "ADULT",
+              email: "adult@example.com",
+              phone: "11999999999",
+              gender: "Masculino",
+              rg_number: "112223334",
+              cpf_number: "111.222.333-44",
+              birth_date: "1990-01-01",
+            },
+          ],
+        }),
+      },
+    )
+    expect(regResponse.status).toBe(201)
+    const regData = await regResponse.json()
+    const singleGuestSaleId = regData.saleId
+
+    // Get the guest in this sale
+    const saleDetailsResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${singleGuestSaleId}`,
+      {
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    const saleDetails = await saleDetailsResponse.json()
+    const adultGuest = saleDetails.guests[0]
+
+    // Create a child guest (under 12 years old)
+    const childResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/guests`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          name: "Child Person",
+          badge_name: "CHILD",
+          email: "child@example.com",
+          phone: "11988888888",
+          gender: "Masculino",
+          rg_number: "554443332",
+          cpf_number: "555.444.333-22",
+          birth_date: "2020-01-01", // 6 years old in 2026
+        }),
+      },
+    )
+    expect(childResponse.status).toBe(201)
+    const childGuest = await childResponse.json()
+
+    // Try to swap the adult for the child (leaving 0 adults in the room)
+    const swapResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${singleGuestSaleId}/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: adultGuest.id,
+          new_guest_id: childGuest.id,
+        }),
+      },
+    )
+    expect(swapResponse.status).toBe(400)
+    const body = await swapResponse.json()
+    expect(body.message).toContain("O titular da inscrição deve ser maior de 18 anos")
+  })
+
+  test("should return 400 when swap exceeds child capacity for the room", async () => {
+    // 1. Create a registration with 1 adult (Carla) and 1 adult (Fernando)
+    const regResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId1, // Lux category has max_children: 0
+          guests_data: [
+            {
+              name: "Parent One",
+              badge_name: "PARENT1",
+              email: "parent1@example.com",
+              phone: "11988888881",
+              gender: "Masculino",
+              rg_number: "888888881",
+              cpf_number: "888.888.888-81",
+              birth_date: "1990-01-01",
+            },
+            {
+              name: "Parent Two",
+              badge_name: "PARENT2",
+              email: "parent2@example.com",
+              phone: "11988888882",
+              gender: "Feminino",
+              rg_number: "888888882",
+              cpf_number: "888.888.888-82",
+              birth_date: "1992-02-02",
+            },
+          ],
+        }),
+      },
+    )
+    expect(regResponse.status).toBe(201)
+    const regData = await regResponse.json()
+    const coupleSaleId = regData.saleId
+
+    // Get guests
+    const saleDetailsResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${coupleSaleId}`,
+      {
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    const saleDetails = await saleDetailsResponse.json()
+    const parentTwo = saleDetails.guests.find(g => g.name === "Parent Two")
+
+    // Create a child guest
+    const childResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/guests`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          name: "Little Kid",
+          badge_name: "KID",
+          email: "kid@example.com",
+          phone: "11955555555",
+          gender: "Masculino",
+          rg_number: "555555555",
+          cpf_number: "555.555.555-55",
+          birth_date: "2022-02-02", // 4 years old in 2026
+        }),
+      },
+    )
+    expect(childResponse.status).toBe(201)
+    const childGuest = await childResponse.json()
+
+    // Try to swap Parent Two (adult) with Little Kid (child)
+    // The room category only allows 0 children, so it should fail
+    const swapResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${coupleSaleId}/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: parentTwo.id,
+          new_guest_id: childGuest.id,
+        }),
+      },
+    )
+    expect(swapResponse.status).toBe(400)
+    const body = await swapResponse.json()
+    expect(body.message).toContain("excede a capacidade máxima do quarto (0)")
+  })
+
+  test("should swap one guest in a couple registration (multiple guests) successfully", async () => {
+    // 1. Create a registration with a couple (2 adults)
+    const regResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId1,
+          guests_data: [
+            {
+              name: "Hubby Person",
+              badge_name: "HUBBY",
+              email: "hubby@example.com",
+              phone: "11999998888",
+              gender: "Masculino",
+              rg_number: "777777771",
+              cpf_number: "777.777.777-71",
+              birth_date: "1990-01-01",
+            },
+            {
+              name: "Wifey Person",
+              badge_name: "WIFEY",
+              email: "wifey@example.com",
+              phone: "11999998887",
+              gender: "Feminino",
+              rg_number: "777777772",
+              cpf_number: "777.777.777-72",
+              birth_date: "1992-02-02",
+            },
+          ],
+        }),
+      },
+    )
+    expect(regResponse.status).toBe(201)
+    const regData = await regResponse.json()
+    const coupleSaleId = regData.saleId
+
+    // Get the guests in this sale
+    const saleDetailsResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${coupleSaleId}`,
+      {
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    const saleDetails = await saleDetailsResponse.json()
+    const hubby = saleDetails.guests.find(g => g.name === "Hubby Person")
+    const wifey = saleDetails.guests.find(g => g.name === "Wifey Person")
+
+    // Create a new adult guest to swap into the sale
+    const newAdultResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/guests`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          name: "Friend Adult",
+          badge_name: "FRIEND",
+          email: "friend@example.com",
+          phone: "11988887777",
+          gender: "Masculino",
+          rg_number: "666666661",
+          cpf_number: "666.666.666-61",
+          birth_date: "1991-11-11",
+        }),
+      },
+    )
+    expect(newAdultResponse.status).toBe(201)
+    const newAdult = await newAdultResponse.json()
+
+    // Swap wifey (second guest) with Friend Adult
+    const swapResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${coupleSaleId}/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: wifey.id,
+          new_guest_id: newAdult.id,
+        }),
+      },
+    )
+    expect(swapResponse.status).toBe(200)
+
+    // Verify results
+    const updatedSaleDetailsResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${coupleSaleId}`,
+      {
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    const updatedSaleDetails = await updatedSaleDetailsResponse.json()
+    const guests = updatedSaleDetails.guests
+
+    expect(guests.length).toBe(2)
+    expect(guests.some(g => g.id === hubby.id)).toBe(true)
+    expect(guests.some(g => g.id === newAdult.id)).toBe(true)
+    expect(guests.some(g => g.id === wifey.id)).toBe(false)
+  })
 })
