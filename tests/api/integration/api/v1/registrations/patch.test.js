@@ -705,7 +705,9 @@ describe("POST /api/v1/sales/[id]/replace-guest", () => {
     )
     expect(swapResponse.status).toBe(400)
     const body = await swapResponse.json()
-    expect(body.message).toContain("O titular da inscrição deve ser maior de 18 anos")
+    expect(body.message).toContain(
+      "O titular da inscrição deve ser maior de 18 anos",
+    )
   })
 
   test("should return 400 when swap exceeds child capacity for the room", async () => {
@@ -757,7 +759,7 @@ describe("POST /api/v1/sales/[id]/replace-guest", () => {
       },
     )
     const saleDetails = await saleDetailsResponse.json()
-    const parentTwo = saleDetails.guests.find(g => g.name === "Parent Two")
+    const parentTwo = saleDetails.guests.find((g) => g.name === "Parent Two")
 
     // Create a child guest
     const childResponse = await fetch(
@@ -853,8 +855,8 @@ describe("POST /api/v1/sales/[id]/replace-guest", () => {
       },
     )
     const saleDetails = await saleDetailsResponse.json()
-    const hubby = saleDetails.guests.find(g => g.name === "Hubby Person")
-    const wifey = saleDetails.guests.find(g => g.name === "Wifey Person")
+    const hubby = saleDetails.guests.find((g) => g.name === "Hubby Person")
+    const wifey = saleDetails.guests.find((g) => g.name === "Wifey Person")
 
     // Create a new adult guest to swap into the sale
     const newAdultResponse = await fetch(
@@ -908,8 +910,8 @@ describe("POST /api/v1/sales/[id]/replace-guest", () => {
     const guests = updatedSaleDetails.guests
 
     expect(guests.length).toBe(2)
-    expect(guests.some(g => g.id === hubby.id)).toBe(true)
-    expect(guests.some(g => g.id === newAdult.id)).toBe(true)
-    expect(guests.some(g => g.id === wifey.id)).toBe(false)
+    expect(guests.some((g) => g.id === hubby.id)).toBe(true)
+    expect(guests.some((g) => g.id === newAdult.id)).toBe(true)
+    expect(guests.some((g) => g.id === wifey.id)).toBe(false)
   })
 })

@@ -1051,6 +1051,62 @@ async function replaceGuest(saleId, oldGuestId, newGuestId, externalClient) {
   }
 }
 
+async function updateBedPreference(saleId, bedPreference) {
+  if (!["Duplo Casal", "Duplo Solteiro"].includes(bedPreference)) {
+    throw new ValidationError({
+      message: "Preferência de cama inválida.",
+      action: "Selecione 'Duplo Casal' ou 'Duplo Solteiro'.",
+    })
+  }
+
+  const client = await database.getNewClient()
+  try {
+    await client.query("BEGIN")
+
+    const saleResult = await client.query({
+      text: `SELECT * FROM sales WHERE id = $1 FOR UPDATE`,
+      values: [saleId],
+    })
+
+    const targetSale = saleResult.rows[0]
+
+    if (!targetSale) {
+      throw new NotFoundError({
+        message: "Inscrição não encontrada.",
+        action: "Verifique o ID da inscrição.",
+      })
+    }
+
+    if (targetSale.status === "cancelled") {
+      throw new ValidationError({
+        message:
+          "Não é possível alterar a acomodação de uma inscrição cancelada.",
+        action: "Inscrições canceladas não podem sofrer alterações.",
+      })
+    }
+
+    const results = await client.query({
+      text: `
+        UPDATE sales
+        SET 
+          bed_preference = $2,
+          updated_at = timezone('utc', now())
+        WHERE id = $1
+        RETURNING *
+      `,
+      values: [saleId, bedPreference],
+    })
+
+    await client.query("COMMIT")
+    return results.rows[0]
+  } catch (error) {
+    await client.query("ROLLBACK")
+    throw error
+  } finally {
+    await client.end()
+  }
+}
+
 const sale = {
   create,
   findOneById,
@@ -1064,6 +1120,7 @@ const sale = {
   calculateMaxInstallments,
   cancel,
   replaceGuest,
+  updateBedPreference,
 }
 
 export default sale
