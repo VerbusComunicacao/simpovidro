@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import useSWR from "swr"
@@ -10,11 +11,22 @@ import {
   Building2,
   Info,
   ArrowLeft,
+  Trash2,
 } from "lucide-react"
 import TableLayout from "@/components/layout/TableLayout"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { getGuestCountsString } from "@/lib/registration-helpers"
+import { GuestDialog } from "@/components/guest/GuestDialog"
+import { ReplaceGuestDialog } from "@/components/guest/ReplaceGuestDialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -37,7 +49,137 @@ export default function RegistrationDetailsPage() {
     data: sale,
     error,
     isLoading,
+    mutate,
   } = useSWR(id ? `/api/v1/sales/${id}` : null, fetcher)
+
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [showCancelEmailConfirm, setShowCancelEmailConfirm] = useState(false)
+  const [isUpdatingBedPreference, setIsUpdatingBedPreference] = useState(false)
+  const [showBedPreferenceConfirm, setShowBedPreferenceConfirm] =
+    useState(false)
+  const [showBedPreferenceEmailConfirm, setShowBedPreferenceEmailConfirm] =
+    useState(false)
+  const [pendingBedPreference, setPendingBedPreference] = useState("")
+
+  const [showSwapEmailConfirm, setShowSwapEmailConfirm] = useState(false)
+  const [isSwapping, setIsSwapping] = useState(false)
+  const [pendingSwap, setPendingSwap] = useState(null)
+
+  const handleToggleBedPreferenceClick = () => {
+    const nextPreference =
+      sale.bed_preference === "Duplo Casal" ? "Duplo Solteiro" : "Duplo Casal"
+    setPendingBedPreference(nextPreference)
+    setShowBedPreferenceConfirm(true)
+  }
+
+  const handleConfirmBedPreferenceChange = () => {
+    setShowBedPreferenceConfirm(false)
+    setShowBedPreferenceEmailConfirm(true)
+  }
+
+  const executeChangeBedPreference = async (sendEmail) => {
+    setShowBedPreferenceEmailConfirm(false)
+    setIsUpdatingBedPreference(true)
+    try {
+      const response = await fetch(`/api/v1/sales/${sale.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bed_preference: pendingBedPreference,
+          send_email: sendEmail,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || "Falha ao alterar a acomodação")
+      }
+
+      alert("Acomodação alterada com sucesso!")
+      mutate()
+    } catch (error) {
+      console.error(error)
+      alert(error.message)
+    } finally {
+      setIsUpdatingBedPreference(false)
+    }
+  }
+
+  const handleConfirmSwap = (oldGuest, newGuest) => {
+    setPendingSwap({ oldGuest, newGuest })
+    setShowSwapEmailConfirm(true)
+  }
+
+  const executeSwapGuest = async (sendEmail) => {
+    if (!pendingSwap) return
+    setShowSwapEmailConfirm(false)
+    setIsSwapping(true)
+    try {
+      const response = await fetch(`/api/v1/sales/${sale.id}/replace-guest`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          old_guest_id: pendingSwap.oldGuest.id,
+          new_guest_id: pendingSwap.newGuest.id,
+          send_email: sendEmail,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || "Falha ao realizar a troca de hóspede")
+      }
+
+      alert("Hóspede substituído com sucesso!")
+      mutate()
+    } catch (error) {
+      console.error(error)
+      alert(error.message)
+    } finally {
+      setIsSwapping(false)
+      setPendingSwap(null)
+    }
+  }
+
+  const handleCancelSaleClick = () => {
+    if (
+      confirm(
+        "Tem certeza que deseja cancelar esta inscrição? Esta ação irá restaurar a disponibilidade do quarto e não pode ser desfeita.",
+      )
+    ) {
+      setShowCancelEmailConfirm(true)
+    }
+  }
+
+  const executeCancelSale = async (sendEmail) => {
+    setShowCancelEmailConfirm(false)
+    setIsCancelling(true)
+    try {
+      const response = await fetch(
+        `/api/v1/sales/${sale.id}?send_email=${sendEmail}`,
+        {
+          method: "DELETE",
+        },
+      )
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || "Falha ao cancelar a inscrição")
+      }
+
+      alert("Inscrição cancelada com sucesso!")
+      mutate()
+    } catch (error) {
+      console.error(error)
+      alert(error.message)
+    } finally {
+      setIsCancelling(false)
+    }
+  }
 
   const formatDate = (dateString) => {
     if (!dateString) return ""
@@ -148,6 +290,23 @@ export default function RegistrationDetailsPage() {
             >
               Imprimir Detalhes
             </Button>
+            {sale.status !== "cancelled" && (
+              <Button
+                variant="destructive"
+                className="gap-2"
+                onClick={handleCancelSaleClick}
+                disabled={isCancelling}
+              >
+                {isCancelling ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Cancelar Inscrição
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -185,9 +344,22 @@ export default function RegistrationDetailsPage() {
                       <p className="text-xs font-bold text-gray-400 uppercase">
                         Tipo de acomodação
                       </p>
-                      <p className="text-sm font-bold text-blue-600 uppercase mt-0.5">
-                        {sale.bed_preference}
-                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-sm font-bold text-blue-600 uppercase">
+                          {sale.bed_preference}
+                        </p>
+                        {sale.status !== "cancelled" && (
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-xs text-blue-600 hover:text-blue-700 underline font-semibold cursor-pointer"
+                            onClick={handleToggleBedPreferenceClick}
+                            disabled={isUpdatingBedPreference}
+                          >
+                            Alterar
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   )}
                   <div className="mt-3">
@@ -322,11 +494,11 @@ export default function RegistrationDetailsPage() {
                 key={guest.id}
                 className="overflow-hidden border-l-4 border-l-blue-500"
               >
-                <div className="bg-gray-50 px-6 py-3 border-b flex items-center justify-between">
+                <div className="bg-gray-50 px-6 py-3 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span className="font-bold text-gray-900">
                     {idx + 1}. {guest.name}
                   </span>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="outline" className="bg-white">
                       {guest.gender}
                     </Badge>
@@ -335,6 +507,37 @@ export default function RegistrationDetailsPage() {
                         ? guest.badge_name.toUpperCase()
                         : "SEM NOME NO CRACHÁ"}
                     </Badge>
+                    {sale.status !== "cancelled" && (
+                      <>
+                        <GuestDialog
+                          guestToEdit={guest}
+                          onGuestSuccess={() => mutate()}
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs px-2.5"
+                          >
+                            Editar
+                          </Button>
+                        </GuestDialog>
+                        <ReplaceGuestDialog
+                          sale={sale}
+                          oldGuest={guest}
+                          onConfirm={(newGuest) =>
+                            handleConfirmSwap(guest, newGuest)
+                          }
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs px-2.5 text-blue-600 border-blue-200 hover:bg-blue-50"
+                          >
+                            Trocar
+                          </Button>
+                        </ReplaceGuestDialog>
+                      </>
+                    )}
                   </div>
                 </div>
                 <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -542,6 +745,160 @@ export default function RegistrationDetailsPage() {
           </Card>
         </div>
       </div>
+
+      <Dialog
+        open={showBedPreferenceConfirm}
+        onOpenChange={setShowBedPreferenceConfirm}
+      >
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-gray-900">
+              Confirmar Alteração de Acomodação
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 pt-2 font-medium">
+              Você deseja alterar o tipo de acomodação de{" "}
+              <strong className="text-gray-900">{sale?.bed_preference}</strong>{" "}
+              para{" "}
+              <strong className="text-gray-900">{pendingBedPreference}</strong>?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="border-t pt-4 mt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowBedPreferenceConfirm(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmBedPreferenceChange}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showBedPreferenceEmailConfirm}
+        onOpenChange={setShowBedPreferenceEmailConfirm}
+      >
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-gray-900">
+              Aviso de Alteração por E-mail
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 pt-2">
+              Deseja enviar e-mail avisando da alteração para o participante?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="border-t pt-4 mt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowBedPreferenceEmailConfirm(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => executeChangeBedPreference(false)}
+            >
+              Não enviar
+            </Button>
+            <Button
+              type="button"
+              onClick={() => executeChangeBedPreference(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Sim, enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showSwapEmailConfirm}
+        onOpenChange={setShowSwapEmailConfirm}
+      >
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-gray-900">
+              Aviso de Alteração por E-mail
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 pt-2">
+              Deseja enviar e-mail avisando da alteração para o participante?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="border-t pt-4 mt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowSwapEmailConfirm(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => executeSwapGuest(false)}
+              disabled={isSwapping}
+            >
+              Não enviar
+            </Button>
+            <Button
+              type="button"
+              onClick={() => executeSwapGuest(true)}
+              disabled={isSwapping}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Sim, enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showCancelEmailConfirm}
+        onOpenChange={setShowCancelEmailConfirm}
+      >
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-gray-900">
+              Aviso de Alteração por E-mail
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 pt-2">
+              Deseja enviar e-mail avisando da alteração para o participante?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="border-t pt-4 mt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowCancelEmailConfirm(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => executeCancelSale(false)}
+            >
+              Não enviar
+            </Button>
+            <Button
+              type="button"
+              onClick={() => executeCancelSale(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Sim, enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TableLayout>
   )
 }

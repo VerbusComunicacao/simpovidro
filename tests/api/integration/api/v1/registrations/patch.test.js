@@ -1,0 +1,917 @@
+import orchestrator from "tests/orchestrator.js"
+
+beforeAll(async () => {
+  await orchestrator.waitForAllServices()
+  await orchestrator.clearDatabase()
+  await orchestrator.runPendingMigrations()
+})
+
+describe("POST /api/v1/sales/[id]/replace-guest", () => {
+  jest.useFakeTimers()
+
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
+  let adminToken
+  let userToken
+  let hotelId
+  let roomId1
+  let roomId2
+  let guestCarla
+  let guestFernando
+  let guestAlessandra
+  let saleId
+
+  beforeAll(async () => {
+    // 1. Create and Setup Admin User
+    const adminUser = await orchestrator.createUser({
+      full_name: "Admin User",
+      email: "admin-patch@example.com",
+      password: "password123",
+    })
+    await orchestrator.activateAdmUser(adminUser.id)
+    const adminSession = await orchestrator.createSession(adminUser.id)
+    adminToken = adminSession.token
+
+    // 2. Create Regular User (without update:content)
+    const regularUser = await orchestrator.createUser({
+      full_name: "Regular User",
+      email: "user-patch@example.com",
+      password: "password123",
+    })
+    await orchestrator.activateUser(regularUser.id)
+    await orchestrator.setUserFeatures(regularUser.id, [
+      "create:session",
+      "read:session",
+      "read:content",
+    ])
+    const regularSession = await orchestrator.createSession(regularUser.id)
+    userToken = regularSession.token
+
+    // 3. Create a hotel (as admin)
+    const hotelResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/hotels`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          name: "Test Hotel",
+          city: "São Paulo",
+          country: "Brasil",
+          check_in_date: "2026-11-01",
+          check_out_date: "2026-11-10",
+        }),
+      },
+    )
+    const hotelData = await hotelResponse.json()
+    hotelId = hotelData.id
+
+    // 4. Create a room type (as admin)
+    const roomTypeResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/room-types`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({ name: "Double Room" }),
+      },
+    )
+    const roomTypeData = await roomTypeResponse.json()
+
+    // 5. Create a room category (as admin)
+    const roomCategoryResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/room-categories`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          name: "Lux",
+          max_adults: 4,
+          max_children: 0,
+        }),
+      },
+    )
+    const roomCategoryData = await roomCategoryResponse.json()
+
+    // 6. Create two rooms (as admin)
+    const roomResponse1 = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/rooms`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          hotel_id: hotelId,
+          room_type_id: roomTypeData.id,
+          room_category_id: roomCategoryData.id,
+          price_per_night: 1000.0,
+          total_rooms: 10,
+          name: "Quarto A",
+        }),
+      },
+    )
+    const roomData1 = await roomResponse1.json()
+    roomId1 = roomData1.id
+
+    const roomResponse2 = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/rooms`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          hotel_id: hotelId,
+          room_type_id: roomTypeData.id,
+          room_category_id: roomCategoryData.id,
+          price_per_night: 1000.0,
+          total_rooms: 10,
+          name: "Quarto B",
+        }),
+      },
+    )
+    const roomData2 = await roomResponse2.json()
+    roomId2 = roomData2.id
+  })
+
+  test("should swap Carla with Alessandra successfully, and Carla can register again", async () => {
+    // 1. Create registration for Carla and Fernando (in Quarto A)
+    const regResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId1,
+          guests_data: [
+            {
+              name: "Carla Souza",
+              badge_name: "CARLA",
+              email: "carla@example.com",
+              phone: "11988888888",
+              gender: "Feminino",
+              rg_number: "223334445",
+              cpf_number: "222.333.444-55",
+              birth_date: "1995-05-15",
+            },
+            {
+              name: "Fernando Silva",
+              badge_name: "FERNANDO",
+              email: "fernando@example.com",
+              phone: "11977777777",
+              gender: "Masculino",
+              rg_number: "334445556",
+              cpf_number: "333.444.555-66",
+              birth_date: "1994-04-14",
+            },
+          ],
+        }),
+      },
+    )
+
+    expect(regResponse.status).toBe(201)
+    const regData = await regResponse.json()
+    saleId = regData.saleId
+
+    // Retrieve guest IDs from database or details endpoint
+    const saleDetailsResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
+      {
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    const saleDetails = await saleDetailsResponse.json()
+    guestCarla = saleDetails.guests.find((g) => g.name === "Carla Souza")
+    guestFernando = saleDetails.guests.find((g) => g.name === "Fernando Silva")
+
+    expect(guestCarla).toBeDefined()
+    expect(guestFernando).toBeDefined()
+
+    // 2. Create Alessandra as a guest via api
+    const guestAlessandraResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/guests`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          name: "Alessandra Lima",
+          badge_name: "ALESSANDRA",
+          email: "alessandra@example.com",
+          phone: "11966666666",
+          gender: "Feminino",
+          rg_number: "445556667",
+          cpf_number: "444.555.666-77",
+          birth_date: "1993-03-13",
+        }),
+      },
+    )
+    expect(guestAlessandraResponse.status).toBe(201)
+    guestAlessandra = await guestAlessandraResponse.json()
+
+    // 3. Swap Carla with Alessandra
+    const swapResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${saleId}/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: guestCarla.id,
+          new_guest_id: guestAlessandra.id,
+        }),
+      },
+    )
+    if (swapResponse.status !== 200) {
+      console.log(
+        "swapResponse FAIL:",
+        swapResponse.status,
+        await swapResponse.text(),
+      )
+    }
+    expect(swapResponse.status).toBe(200)
+    const swappedSale = await swapResponse.json()
+
+    // Verify Alessandra is in, Carla is out
+    const updatedGuests = swappedSale.guests
+    expect(updatedGuests.some((g) => g.id === guestAlessandra.id)).toBe(true)
+    expect(updatedGuests.some((g) => g.id === guestCarla.id)).toBe(false)
+    expect(updatedGuests.some((g) => g.id === guestFernando.id)).toBe(true)
+
+    // 4. Carla register again (in Quarto B)
+    const secondRegResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId2,
+          guests_data: [
+            {
+              name: "Carla Souza",
+              badge_name: "CARLA",
+              email: "carla@example.com",
+              phone: "11988888888",
+              gender: "Feminino",
+              rg_number: "223334445",
+              cpf_number: "222.333.444-55",
+              birth_date: "1995-05-15",
+            },
+          ],
+        }),
+      },
+    )
+
+    expect(secondRegResponse.status).toBe(201)
+    const secondRegData = await secondRegResponse.json()
+    expect(secondRegData.saleId).toBeDefined()
+  })
+
+  test("should return 400 when trying to swap with a guest already active in the same hotel", async () => {
+    // Alessandra is now in the first sale. Let's create a new sale with another guest.
+    const tempGuestResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/guests`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          name: "Hugo Boss",
+          badge_name: "HUGO",
+          email: "hugo@example.com",
+          phone: "11955555555",
+          gender: "Masculino",
+          rg_number: "556667778",
+          cpf_number: "555.666.777-88",
+          birth_date: "1992-02-12",
+        }),
+      },
+    )
+    const tempGuest = await tempGuestResponse.json()
+
+    // Create a sale for Hugo Boss in Room B
+    const hugoRegResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId2,
+          guests_data: [
+            {
+              name: "Hugo Boss",
+              badge_name: "HUGO",
+              email: "hugo@example.com",
+              phone: "11955555555",
+              gender: "Masculino",
+              rg_number: "556667778",
+              cpf_number: "555.666.777-88",
+              birth_date: "1992-02-12",
+            },
+          ],
+        }),
+      },
+    )
+    const hugoRegData = await hugoRegResponse.json()
+    const hugoSaleId = hugoRegData.saleId
+
+    // Try to replace Hugo Boss with Alessandra (who is already in saleId at the same hotel)
+    const swapFailResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${hugoSaleId}/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: tempGuest.id,
+          new_guest_id: guestAlessandra.id,
+        }),
+      },
+    )
+    if (swapFailResponse.status !== 400) {
+      console.log(
+        "swapFailResponse (400 check) FAIL:",
+        swapFailResponse.status,
+        await swapFailResponse.text(),
+      )
+    }
+    expect(swapFailResponse.status).toBe(400)
+    const swapFailBody = await swapFailResponse.json()
+    expect(swapFailBody.message).toContain(
+      "já possui uma inscrição ativa para este hotel",
+    )
+  })
+
+  test("should return 403 when trying to swap guest as non-admin regular user", async () => {
+    const swapFailResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${saleId}/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${userToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: guestFernando.id,
+          new_guest_id: guestAlessandra.id,
+        }),
+      },
+    )
+    expect(swapFailResponse.status).toBe(403)
+  })
+
+  test("should return 404 when trying to swap on a non-existent sale", async () => {
+    const swapFailResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/99999999-9999-4999-9999-999999999999/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: guestFernando.id,
+          new_guest_id: guestAlessandra.id,
+        }),
+      },
+    )
+    if (swapFailResponse.status !== 404) {
+      console.log(
+        "swapFailResponse (404 check) FAIL:",
+        swapFailResponse.status,
+        await swapFailResponse.text(),
+      )
+    }
+    expect(swapFailResponse.status).toBe(404)
+  })
+
+  test("should return 404 when trying to swap a guest not in the sale", async () => {
+    // Hugo is not in saleId (which has Alessandra and Fernando)
+    const nonExistentGuestResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/guests`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          name: "Random Guy",
+          badge_name: "RANDOM",
+          email: "random@example.com",
+          phone: "11944444444",
+          gender: "Masculino",
+          rg_number: "667778889",
+          cpf_number: "666.777.888-99",
+          birth_date: "1991-01-11",
+        }),
+      },
+    )
+    const randomGuest = await nonExistentGuestResponse.json()
+
+    const swapFailResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${saleId}/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: randomGuest.id,
+          new_guest_id: guestFernando.id,
+        }),
+      },
+    )
+    expect(swapFailResponse.status).toBe(404)
+  })
+
+  test("should return 400 when trying to swap guest on a cancelled sale", async () => {
+    // 1. Cancel the sale
+    const cancelResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Cookie: `session_id=${adminToken}`,
+        },
+      },
+    )
+    expect(cancelResponse.status).toBe(204)
+
+    // 2. Try to swap guest on the cancelled sale
+    const swapFailResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${saleId}/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: guestFernando.id,
+          new_guest_id: guestCarla.id,
+        }),
+      },
+    )
+    expect(swapFailResponse.status).toBe(400)
+    const swapFailBody = await swapFailResponse.json()
+    expect(swapFailBody.message).toContain(
+      "Não é possível alterar hóspedes de uma inscrição cancelada",
+    )
+  })
+
+  test("should send email when swapping guest with send_email: true", async () => {
+    // Create a new sale
+    const regResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId1,
+          guests_data: [
+            {
+              name: "Fernando Silva",
+              badge_name: "FERNANDO",
+              email: "fernando@example.com",
+              phone: "11977777777",
+              gender: "Masculino",
+              rg_number: "334445556",
+              cpf_number: "333.444.555-66",
+              birth_date: "1994-04-14",
+            },
+          ],
+        }),
+      },
+    )
+    expect(regResponse.status).toBe(201)
+    const regData = await regResponse.json()
+    const newSaleId = regData.saleId
+
+    // Get the guest in the sale
+    const saleDetailsResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${newSaleId}`,
+      {
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    const saleDetails = await saleDetailsResponse.json()
+    const originalGuest = saleDetails.guests[0]
+
+    // Let's create a new guest to swap into
+    const tempGuestResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/guests`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          name: "Roberto Carlos",
+          badge_name: "ROBERTO",
+          email: "roberto@example.com",
+          phone: "11944443333",
+          gender: "Masculino",
+          rg_number: "998887776",
+          cpf_number: "999.888.777-66",
+          birth_date: "1980-08-08",
+        }),
+      },
+    )
+    const newGuest = await tempGuestResponse.json()
+
+    // Now swap originalGuest with Roberto, sending email
+    const swapResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${newSaleId}/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: originalGuest.id,
+          new_guest_id: newGuest.id,
+          send_email: true,
+        }),
+      },
+    )
+    expect(swapResponse.status).toBe(200)
+
+    const lastEmail = await orchestrator.getLastEmail()
+    expect(lastEmail.subject).toContain("Alteração da inscrição")
+  })
+
+  test("should send email when cancelling sale with ?send_email=true", async () => {
+    // Create a new sale
+    const regResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId1,
+          guests_data: [
+            {
+              name: "Maria Flor",
+              badge_name: "MARIA",
+              email: "maria.flor@example.com",
+              phone: "11988887777",
+              gender: "Feminino",
+              rg_number: "887776665",
+              cpf_number: "888.777.666-55",
+              birth_date: "1990-10-10",
+            },
+          ],
+        }),
+      },
+    )
+    expect(regResponse.status).toBe(201)
+    const regData = await regResponse.json()
+    const newSaleId = regData.saleId
+
+    // Cancel this new sale with send_email=true
+    const cancelResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${newSaleId}?send_email=true`,
+      {
+        method: "DELETE",
+        headers: {
+          Cookie: `session_id=${adminToken}`,
+        },
+      },
+    )
+    expect(cancelResponse.status).toBe(204)
+
+    const lastEmail = await orchestrator.getLastEmail()
+    expect(lastEmail.subject).toContain("Inscrição cancelada")
+  })
+
+  test("should return 400 when swap results in lead guest under 18 years old", async () => {
+    // 1. Create a registration with 1 adult
+    const regResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId1,
+          guests_data: [
+            {
+              name: "Adult Person",
+              badge_name: "ADULT",
+              email: "adult@example.com",
+              phone: "11999999999",
+              gender: "Masculino",
+              rg_number: "112223334",
+              cpf_number: "111.222.333-44",
+              birth_date: "1990-01-01",
+            },
+          ],
+        }),
+      },
+    )
+    expect(regResponse.status).toBe(201)
+    const regData = await regResponse.json()
+    const singleGuestSaleId = regData.saleId
+
+    // Get the guest in this sale
+    const saleDetailsResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${singleGuestSaleId}`,
+      {
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    const saleDetails = await saleDetailsResponse.json()
+    const adultGuest = saleDetails.guests[0]
+
+    // Create a child guest (under 12 years old)
+    const childResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/guests`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          name: "Child Person",
+          badge_name: "CHILD",
+          email: "child@example.com",
+          phone: "11988888888",
+          gender: "Masculino",
+          rg_number: "554443332",
+          cpf_number: "555.444.333-22",
+          birth_date: "2020-01-01", // 6 years old in 2026
+        }),
+      },
+    )
+    expect(childResponse.status).toBe(201)
+    const childGuest = await childResponse.json()
+
+    // Try to swap the adult for the child (leaving 0 adults in the room)
+    const swapResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${singleGuestSaleId}/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: adultGuest.id,
+          new_guest_id: childGuest.id,
+        }),
+      },
+    )
+    expect(swapResponse.status).toBe(400)
+    const body = await swapResponse.json()
+    expect(body.message).toContain(
+      "O titular da inscrição deve ser maior de 18 anos",
+    )
+  })
+
+  test("should return 400 when swap exceeds child capacity for the room", async () => {
+    // 1. Create a registration with 1 adult (Carla) and 1 adult (Fernando)
+    const regResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId1, // Lux category has max_children: 0
+          guests_data: [
+            {
+              name: "Parent One",
+              badge_name: "PARENT1",
+              email: "parent1@example.com",
+              phone: "11988888881",
+              gender: "Masculino",
+              rg_number: "888888881",
+              cpf_number: "888.888.888-81",
+              birth_date: "1990-01-01",
+            },
+            {
+              name: "Parent Two",
+              badge_name: "PARENT2",
+              email: "parent2@example.com",
+              phone: "11988888882",
+              gender: "Feminino",
+              rg_number: "888888882",
+              cpf_number: "888.888.888-82",
+              birth_date: "1992-02-02",
+            },
+          ],
+        }),
+      },
+    )
+    expect(regResponse.status).toBe(201)
+    const regData = await regResponse.json()
+    const coupleSaleId = regData.saleId
+
+    // Get guests
+    const saleDetailsResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${coupleSaleId}`,
+      {
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    const saleDetails = await saleDetailsResponse.json()
+    const parentTwo = saleDetails.guests.find((g) => g.name === "Parent Two")
+
+    // Create a child guest
+    const childResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/guests`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          name: "Little Kid",
+          badge_name: "KID",
+          email: "kid@example.com",
+          phone: "11955555555",
+          gender: "Masculino",
+          rg_number: "555555555",
+          cpf_number: "555.555.555-55",
+          birth_date: "2022-02-02", // 4 years old in 2026
+        }),
+      },
+    )
+    expect(childResponse.status).toBe(201)
+    const childGuest = await childResponse.json()
+
+    // Try to swap Parent Two (adult) with Little Kid (child)
+    // The room category only allows 0 children, so it should fail
+    const swapResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${coupleSaleId}/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: parentTwo.id,
+          new_guest_id: childGuest.id,
+        }),
+      },
+    )
+    expect(swapResponse.status).toBe(400)
+    const body = await swapResponse.json()
+    expect(body.message).toContain("excede a capacidade máxima do quarto (0)")
+  })
+
+  test("should swap one guest in a couple registration (multiple guests) successfully", async () => {
+    // 1. Create a registration with a couple (2 adults)
+    const regResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId1,
+          guests_data: [
+            {
+              name: "Hubby Person",
+              badge_name: "HUBBY",
+              email: "hubby@example.com",
+              phone: "11999998888",
+              gender: "Masculino",
+              rg_number: "777777771",
+              cpf_number: "777.777.777-71",
+              birth_date: "1990-01-01",
+            },
+            {
+              name: "Wifey Person",
+              badge_name: "WIFEY",
+              email: "wifey@example.com",
+              phone: "11999998887",
+              gender: "Feminino",
+              rg_number: "777777772",
+              cpf_number: "777.777.777-72",
+              birth_date: "1992-02-02",
+            },
+          ],
+        }),
+      },
+    )
+    expect(regResponse.status).toBe(201)
+    const regData = await regResponse.json()
+    const coupleSaleId = regData.saleId
+
+    // Get the guests in this sale
+    const saleDetailsResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${coupleSaleId}`,
+      {
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    const saleDetails = await saleDetailsResponse.json()
+    const hubby = saleDetails.guests.find((g) => g.name === "Hubby Person")
+    const wifey = saleDetails.guests.find((g) => g.name === "Wifey Person")
+
+    // Create a new adult guest to swap into the sale
+    const newAdultResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/guests`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          name: "Friend Adult",
+          badge_name: "FRIEND",
+          email: "friend@example.com",
+          phone: "11988887777",
+          gender: "Masculino",
+          rg_number: "666666661",
+          cpf_number: "666.666.666-61",
+          birth_date: "1991-11-11",
+        }),
+      },
+    )
+    expect(newAdultResponse.status).toBe(201)
+    const newAdult = await newAdultResponse.json()
+
+    // Swap wifey (second guest) with Friend Adult
+    const swapResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${coupleSaleId}/replace-guest`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          old_guest_id: wifey.id,
+          new_guest_id: newAdult.id,
+        }),
+      },
+    )
+    expect(swapResponse.status).toBe(200)
+
+    // Verify results
+    const updatedSaleDetailsResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${coupleSaleId}`,
+      {
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    const updatedSaleDetails = await updatedSaleDetailsResponse.json()
+    const guests = updatedSaleDetails.guests
+
+    expect(guests.length).toBe(2)
+    expect(guests.some((g) => g.id === hubby.id)).toBe(true)
+    expect(guests.some((g) => g.id === newAdult.id)).toBe(true)
+    expect(guests.some((g) => g.id === wifey.id)).toBe(false)
+  })
+})

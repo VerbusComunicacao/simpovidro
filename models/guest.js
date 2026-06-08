@@ -241,9 +241,21 @@ async function findOneByCpfOrRg(cpf_number, rg_number, client) {
   return results.rows[0] || null
 }
 
+function formatPartialCPF(numbers) {
+  const clean = numbers.replace(/\D/g, "")
+  if (clean.length === 0) return ""
+  if (clean.length <= 3) return clean
+  if (clean.length <= 6) return `${clean.slice(0, 3)}.${clean.slice(3)}`
+  if (clean.length <= 9)
+    return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6)}`
+  return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}-${clean.slice(9, 11)}`
+}
+
 async function findAll({ search = "", page = 1, limit = 10 } = {}) {
   const offset = (page - 1) * limit
   const searchPattern = `%${search}%`
+  const formattedSearch = formatPartialCPF(search)
+  const formattedSearchPattern = formattedSearch ? `%${formattedSearch}%` : ""
 
   const results = await database.query({
     text: `
@@ -253,12 +265,16 @@ async function findAll({ search = "", page = 1, limit = 10 } = {}) {
       FROM
         guests
       WHERE
-        $1 = '' OR name ILIKE $2 OR cpf_number ILIKE $2 OR email ILIKE $2
+        $1 = '' 
+        OR name ILIKE $2 
+        OR ($5 != '' AND cpf_number ILIKE $5)
+        OR cpf_number ILIKE $2 
+        OR email ILIKE $2
       ORDER BY
         created_at DESC
       LIMIT $3 OFFSET $4
     `,
-    values: [search, searchPattern, limit, offset],
+    values: [search, searchPattern, limit, offset, formattedSearchPattern],
   })
 
   const total =

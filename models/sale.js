@@ -803,6 +803,310 @@ async function cancel(saleId) {
   }
 }
 
+async function replaceGuest(saleId, oldGuestId, newGuestId, externalClient) {
+  validateUUID(saleId)
+  validateUUID(oldGuestId)
+  validateUUID(newGuestId)
+
+  if (oldGuestId === newGuestId) {
+    throw new ValidationError({
+      message: "O novo hóspede é o mesmo que o hóspede atual.",
+      action: "Selecione um hóspede diferente para realizar a troca.",
+    })
+  }
+
+  const client = externalClient || (await database.getNewClient())
+  const isInternalTransaction = !externalClient
+
+  try {
+    if (isInternalTransaction) await client.query("BEGIN")
+
+    // 1. Lock and fetch sale
+    const saleResult = await client.query({
+      text: `SELECT * FROM sales WHERE id = $1 FOR UPDATE`,
+      values: [saleId],
+    })
+
+    const targetSale = saleResult.rows[0]
+
+    if (!targetSale) {
+      throw new NotFoundError({
+        message: "Inscrição não encontrada.",
+        action: "Verifique o ID da inscrição.",
+      })
+    }
+
+    if (targetSale.status === "cancelled") {
+      throw new ValidationError({
+        message: "Não é possível alterar hóspedes de uma inscrição cancelada.",
+        action: "Inscrições canceladas não podem sofrer alterações.",
+      })
+    }
+
+    // 2. Verify that oldGuestId is in sales_guests for this sale
+    const oldGuestCheck = await client.query({
+      text: `SELECT 1 FROM sales_guests WHERE sale_id = $1 AND guest_id = $2`,
+      values: [saleId, oldGuestId],
+    })
+
+    if (oldGuestCheck.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O hóspede atual não faz parte desta inscrição.",
+        action: "Verifique se selecionou o hóspede correto.",
+      })
+    }
+
+    // 3. Verify that newGuestId is not already in the same sale
+    const newGuestInSaleCheck = await client.query({
+      text: `SELECT 1 FROM sales_guests WHERE sale_id = $1 AND guest_id = $2`,
+      values: [saleId, newGuestId],
+    })
+
+    if (newGuestInSaleCheck.rowCount > 0) {
+      throw new ValidationError({
+        message: "O novo hóspede já faz parte desta inscrição.",
+        action: "Selecione outro hóspede para a troca.",
+      })
+    }
+
+    // 4. Verify new guest capacity/overlap checks
+    const overlapResults = await client.query({
+      text: `
+        SELECT 
+          g.name
+        FROM 
+          sales_guests sg
+        JOIN 
+          sales s ON sg.sale_id = s.id
+        JOIN 
+          rooms r ON s.room_id = r.id
+        JOIN
+          guests g ON sg.guest_id = g.id
+        WHERE 
+          sg.guest_id = $1 
+          AND r.hotel_id = $2
+          AND s.status != 'cancelled'
+          AND g.is_pending_info = false
+          AND s.id != $3
+        LIMIT 1;`,
+      values: [newGuestId, targetSale.hotel_id, saleId],
+    })
+
+    if (overlapResults.rowCount > 0) {
+      throw new ValidationError({
+        message: `O hóspede ${overlapResults.rows[0].name} já possui uma inscrição ativa para este hotel.`,
+        action: "Verifique as inscrições deste hóspede.",
+      })
+    }
+
+    // 5. Fetch all guests in the sale after the swap to check capacity
+    const salesGuestsResult = await client.query({
+      text: `SELECT guest_id FROM sales_guests WHERE sale_id = $1`,
+      values: [saleId],
+    })
+    const currentGuestIds = salesGuestsResult.rows.map((r) => r.guest_id)
+    const newGuestIds = currentGuestIds.map((id) =>
+      id === oldGuestId ? newGuestId : id,
+    )
+
+    const guests = await client.query({
+      text: `SELECT id, birth_date, name FROM guests WHERE id = ANY($1)`,
+      values: [newGuestIds],
+    })
+
+    if (guests.rowCount !== newGuestIds.length) {
+      throw new NotFoundError({
+        message: "O novo hóspede informado não foi encontrado.",
+        action: "Selecione um hóspede cadastrado.",
+      })
+    }
+
+    const roomResults = await client.query({
+      text: `
+        SELECT 
+          rc.max_adults,
+          rc.max_children,
+          r.min_guests,
+          h.check_in_date as hotel_check_in_date
+        FROM 
+          "rooms" r
+        JOIN 
+          "hotels" h ON r.hotel_id = h.id
+        JOIN
+          "room-categories" rc ON r.room_category_id = rc.id
+        WHERE 
+          r.id = $1
+        LIMIT 1;`,
+      values: [targetSale.room_id],
+    })
+    const targetRoom = roomResults.rows[0]
+
+    const referenceDate = new Date(
+      targetSale.check_in_date || targetRoom.hotel_check_in_date || new Date(),
+    )
+    let adultCount = 0
+    let childCount = 0
+
+    guests.rows.forEach((guest) => {
+      const birth = new Date(guest.birth_date)
+      let age = referenceDate.getUTCFullYear() - birth.getUTCFullYear()
+      const m = referenceDate.getUTCMonth() - birth.getUTCMonth()
+      if (
+        m < 0 ||
+        (m === 0 && referenceDate.getUTCDate() < birth.getUTCDate())
+      ) {
+        age--
+      }
+
+      if (age >= 12) {
+        adultCount++
+      } else {
+        childCount++
+      }
+    })
+
+    const leadGuestId =
+      targetSale.guest_id === oldGuestId ? newGuestId : targetSale.guest_id
+    const leadGuestObj = guests.rows.find((g) => g.id === leadGuestId)
+    if (leadGuestObj) {
+      const leadBirth = new Date(leadGuestObj.birth_date)
+      let leadAge = referenceDate.getUTCFullYear() - leadBirth.getUTCFullYear()
+      const lm = referenceDate.getUTCMonth() - leadBirth.getUTCMonth()
+      if (
+        lm < 0 ||
+        (lm === 0 && referenceDate.getUTCDate() < leadBirth.getUTCDate())
+      ) {
+        leadAge--
+      }
+      if (leadAge < 18) {
+        throw new ValidationError({
+          message: "O titular da inscrição deve ser maior de 18 anos.",
+          action: "Altere o titular da inscrição para um adulto maior de 18.",
+        })
+      }
+    }
+
+    if (adultCount === 0) {
+      throw new ValidationError({
+        message: "Deve haver pelo menos um hóspede adulto por quarto.",
+        action: "Adicione um hóspede adulto à inscrição.",
+      })
+    }
+
+    if (targetRoom) {
+      if (adultCount > (targetRoom.max_adults || 0)) {
+        throw new ValidationError({
+          message: `O número de adultos (${adultCount}) excede a capacidade máxima do quarto (${targetRoom.max_adults}).`,
+          action: "Selecione um quarto com maior capacidade para adultos.",
+        })
+      }
+
+      if (childCount > (targetRoom.max_children || 0)) {
+        throw new ValidationError({
+          message: `O número de crianças (${childCount}) excede a capacidade máxima do quarto (${targetRoom.max_children}).`,
+          action: "Selecione um quarto com maior capacidade para crianças.",
+        })
+      }
+
+      if (adultCount < (targetRoom.min_guests || 1)) {
+        throw new ValidationError({
+          message: `Este quarto exige no mínimo ${targetRoom.min_guests} hóspedes adultos.`,
+          action: "Adicione mais hóspedes adultos para continuar.",
+        })
+      }
+    }
+
+    // 6. Update sales_guests table
+    await client.query({
+      text: `
+        UPDATE sales_guests 
+        SET guest_id = $3 
+        WHERE sale_id = $1 AND guest_id = $2
+      `,
+      values: [saleId, oldGuestId, newGuestId],
+    })
+
+    // 7. If lead guest is being replaced, update the lead guest ID in sales table
+    if (targetSale.guest_id === oldGuestId) {
+      await client.query({
+        text: `
+          UPDATE sales 
+          SET guest_id = $2 
+          WHERE id = $1
+        `,
+        values: [saleId, newGuestId],
+      })
+    }
+
+    if (isInternalTransaction) await client.query("COMMIT")
+
+    if (isInternalTransaction) {
+      return await findOneByIdWithDetails(saleId)
+    }
+  } catch (error) {
+    if (isInternalTransaction) await client.query("ROLLBACK")
+    throw error
+  } finally {
+    if (isInternalTransaction) await client.end()
+  }
+}
+
+async function updateBedPreference(saleId, bedPreference) {
+  if (!["Duplo Casal", "Duplo Solteiro"].includes(bedPreference)) {
+    throw new ValidationError({
+      message: "Preferência de cama inválida.",
+      action: "Selecione 'Duplo Casal' ou 'Duplo Solteiro'.",
+    })
+  }
+
+  const client = await database.getNewClient()
+  try {
+    await client.query("BEGIN")
+
+    const saleResult = await client.query({
+      text: `SELECT * FROM sales WHERE id = $1 FOR UPDATE`,
+      values: [saleId],
+    })
+
+    const targetSale = saleResult.rows[0]
+
+    if (!targetSale) {
+      throw new NotFoundError({
+        message: "Inscrição não encontrada.",
+        action: "Verifique o ID da inscrição.",
+      })
+    }
+
+    if (targetSale.status === "cancelled") {
+      throw new ValidationError({
+        message:
+          "Não é possível alterar a acomodação de uma inscrição cancelada.",
+        action: "Inscrições canceladas não podem sofrer alterações.",
+      })
+    }
+
+    const results = await client.query({
+      text: `
+        UPDATE sales
+        SET 
+          bed_preference = $2,
+          updated_at = timezone('utc', now())
+        WHERE id = $1
+        RETURNING *
+      `,
+      values: [saleId, bedPreference],
+    })
+
+    await client.query("COMMIT")
+    return results.rows[0]
+  } catch (error) {
+    await client.query("ROLLBACK")
+    throw error
+  } finally {
+    await client.end()
+  }
+}
+
 const sale = {
   create,
   findOneById,
@@ -815,6 +1119,8 @@ const sale = {
   deleteById,
   calculateMaxInstallments,
   cancel,
+  replaceGuest,
+  updateBedPreference,
 }
 
 export default sale
