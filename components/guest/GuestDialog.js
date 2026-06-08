@@ -184,11 +184,15 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     // Validation
     if (formData.cpf_number && !validateCPF(formData.cpf_number)) {
       setError("CPF inválido.")
+      setAction("Por favor, digite um CPF válido.")
+      setIsErrorDialogOpen(true)
       return
     }
 
     if (formData.phone && !validatePhone(formData.phone)) {
       setError("Telefone inválido.")
+      setAction("Por favor, digite um telefone celular válido.")
+      setIsErrorDialogOpen(true)
       return
     }
 
