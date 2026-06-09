@@ -32,6 +32,7 @@ async function postHandler(request, response) {
   // 1. Check for duplicate guests in the same request
   const usedCPFs = new Set()
   const usedRGs = new Set()
+  const usedPassports = new Set()
 
   for (const currentGuestData of guests_data) {
     const cleanCpf = currentGuestData.cpf_number?.replace(/\D/g, "")
@@ -59,8 +60,20 @@ async function postHandler(request, response) {
           action: "Verifique os dados dos hóspedes e tente novamente.",
         })
       }
+      if (
+        currentGuestData.passport_number &&
+        usedPassports.has(currentGuestData.passport_number)
+      ) {
+        throw new ValidationError({
+          message:
+            "Os hóspedes informados não podem ser iguais (Passaporte duplicado).",
+          action: "Verifique os dados dos hóspedes e tente novamente.",
+        })
+      }
       if (currentGuestData.cpf_number) usedCPFs.add(currentGuestData.cpf_number)
       if (currentGuestData.rg_number) usedRGs.add(currentGuestData.rg_number)
+      if (currentGuestData.passport_number)
+        usedPassports.add(currentGuestData.passport_number)
     }
   }
 

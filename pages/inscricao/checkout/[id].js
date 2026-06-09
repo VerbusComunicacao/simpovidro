@@ -34,6 +34,7 @@ import { cpf } from "cpf-cnpj-validator"
 import { validateCPF, validateCNPJ, validatePhone } from "@/lib/validators"
 import { LocationSelector } from "@/components/ui/LocationSelector"
 import { getInitialLocationState } from "@/lib/location-utils"
+import { Country } from "country-state-city"
 import {
   calculateMaxInstallments as calculateInstallments,
   validateRoomCapacity,
@@ -97,8 +98,11 @@ export default function CheckoutPage({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [currentStep, setCurrentStep] = useState(1) // 1: CNPJ, 2: Company Form, 3: Guest Form
+  const [isInternational, setIsInternational] = useState(false)
   const [cnpj, setCnpj] = useState("")
   const [foundCompany, setFoundCompany] = useState(null)
+  const [suggestions, setSuggestions] = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [newCompanyData, setNewCompanyData] = useState({
     corporate_name: "",
     cnpj: "",
@@ -286,6 +290,66 @@ export default function CheckoutPage({
   }, [router.isReady, router.query])
 
   // Handlers for form changes
+  const handleSearchCompany = async (query) => {
+    if (!isInternational || !query || query.trim().length < 2) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/v1/companies?search=${encodeURIComponent(query)}`)
+      if (res.ok) {
+        const data = await res.json()
+        setSuggestions(data)
+        setShowSuggestions(data.length > 0)
+      } else {
+        setSuggestions([])
+        setShowSuggestions(false)
+      }
+    } catch (err) {
+      console.error("Erro ao buscar empresas estrangeiras:", err)
+      setSuggestions([])
+      setShowSuggestions(false)
+    }
+  }
+
+  const handleSelectCompany = (comp) => {
+    let countryCode = ""
+    if (comp.country) {
+      const allCountries = Country.getAllCountries()
+      const match = allCountries.find(
+        (c) => c.name.toLowerCase() === comp.country.toLowerCase()
+      )
+      if (match) {
+        countryCode = match.isoCode
+      }
+    }
+
+    setFoundCompany(comp)
+    setNewCompanyData({
+      corporate_name: comp.corporate_name || "",
+      badge: comp.badge || "",
+      email: comp.email || "",
+      phone: comp.phone || "",
+      responsible_person: comp.responsible_person || "",
+      zip_code: comp.zip_code || "",
+      address: comp.address || "",
+      address_number: comp.address_number || "",
+      address_complement: comp.address_complement || "",
+      neighborhood: comp.neighborhood || "",
+      city: comp.city || "",
+      state: comp.state || "",
+      stateCode: comp.state || "",
+      country: comp.country || "United States",
+      countryCode: countryCode || "",
+      cnpj: comp.cnpj || null,
+      activity_sector: comp.activity_sector || "",
+    })
+    setSuggestions([])
+    setShowSuggestions(false)
+  }
+
   const lookupGuestByCpf = async (index, cpf) => {
     setIsLoading(true)
     try {
@@ -413,6 +477,16 @@ export default function CheckoutPage({
   }
 
   const applyFieldMask = (name, value) => {
+    if (isInternational) {
+      if (name === "birth_date" && value) {
+        const parts = value.split("-")
+        if (parts[0] && parts[0].length > 4) {
+          parts[0] = parts[0].slice(0, 4)
+          return parts.join("-")
+        }
+      }
+      return value
+    }
     switch (name) {
       case "cpf_number":
         return maskCPF(value)
@@ -473,7 +547,7 @@ export default function CheckoutPage({
   // Adults list
   for (let i = 0; i < adultCount; i++) {
     checkoutItems.push({
-      label: `Adulto ${i + 1}`,
+      label: isInternational ? `Adult ${i + 1}` : `Adulto ${i + 1}`,
       price: basePrice,
     })
   }
@@ -499,7 +573,9 @@ export default function CheckoutPage({
           }
         }
         checkoutItems.push({
-          label: `Criança ${childIndex++}`,
+          label: isInternational
+            ? `Child ${childIndex++}`
+            : `Criança ${childIndex++}`,
           price: childPrice,
         })
       }
@@ -533,9 +609,15 @@ export default function CheckoutPage({
     }
 
     // 1.5. Validate Custom Hotel Question if present
-    if (room.hotel_checkout_question && !checkoutQuestionResponse.trim()) {
+    const activeCheckoutQuestion = isInternational
+      ? (room.hotel_checkout_question_en || room.hotel_checkout_question)
+      : room.hotel_checkout_question
+
+    if (activeCheckoutQuestion && !checkoutQuestionResponse.trim()) {
       setError(
-        `Por favor, responda à pergunta: "${room.hotel_checkout_question}"`,
+        isInternational
+          ? `Please answer the question: "${activeCheckoutQuestion}"`
+          : `Por favor, responda à pergunta: "${activeCheckoutQuestion}"`,
       )
       setIsLoading(false)
       window.scrollTo({ top: 0, behavior: "smooth" })
@@ -569,7 +651,11 @@ export default function CheckoutPage({
         throw err
       }
 
-      router.push("/inscricao/sucesso")
+      if (isInternational) {
+        router.push("/inscricao/sucesso?lang=en")
+      } else {
+        router.push("/inscricao/sucesso")
+      }
     } catch (err) {
       setError(err.message)
       setIsLoading(false)
@@ -585,9 +671,11 @@ export default function CheckoutPage({
       if (index === 0 && !calculateIsHolder(guest.birth_date)) {
         hasError = true
         if (!newErrors[index]) newErrors[index] = {}
-        setError("O titular da inscrição deve ser maior de 18 anos.")
-        // Highlight the birth date field for the holder
-        newErrors[index].birth_date = "Titular deve ser maior de 18 anos."
+        const errorMsg = isInternational
+          ? "The lead guest must be 18 years or older."
+          : "O titular da inscrição deve ser maior de 18 anos."
+        setError(errorMsg)
+        newErrors[index].birth_date = errorMsg
       }
 
       // Validate age matches category
@@ -599,8 +687,9 @@ export default function CheckoutPage({
         if (guest.birth_date && ageAtCheckIn < 12) {
           hasError = true
           if (!newErrors[index]) newErrors[index] = {}
-          newErrors[index].birth_date =
-            "Este hóspede deve ser adulto (12+ anos)."
+          newErrors[index].birth_date = isInternational
+            ? "This guest must be an adult (12+ years)."
+            : "Este hóspede deve ser adulto (12+ anos)."
         }
       } else if (guest._type === "child" && guest._policy_id) {
         const policy = room.price_policies?.find(
@@ -609,20 +698,32 @@ export default function CheckoutPage({
         if (policy && guest.birth_date && ageAtCheckIn > policy.max_age) {
           hasError = true
           if (!newErrors[index]) newErrors[index] = {}
-          newErrors[index].birth_date =
-            `Idade excede o limite desta categoria (${policy.max_age} anos).`
+          newErrors[index].birth_date = isInternational
+            ? `Age exceeds the limit for this category (${policy.max_age} years).`
+            : `Idade excede o limite desta categoria (${policy.max_age} anos).`
         }
       }
 
       // Validate CPF
-      if (guest.cpf_number && !validateCPF(guest.cpf_number)) {
+      if (
+        !isInternational &&
+        guest.cpf_number &&
+        !validateCPF(guest.cpf_number)
+      ) {
         if (!newErrors[index]) newErrors[index] = {}
         newErrors[index].cpf_number = "CPF inválido."
         hasError = true
       }
 
+      // Validate Passport
+      if (isInternational && !guest.passport_number) {
+        if (!newErrors[index]) newErrors[index] = {}
+        newErrors[index].passport_number = "Passport number is required."
+        hasError = true
+      }
+
       // Validate Phone/WhatsApp
-      if (guest.phone && !validatePhone(guest.phone)) {
+      if (!isInternational && guest.phone && !validatePhone(guest.phone)) {
         if (!newErrors[index]) newErrors[index] = {}
         newErrors[index].phone = "Telefone inválido."
         hasError = true
@@ -631,25 +732,33 @@ export default function CheckoutPage({
       // Basic Required Fields
       if (!guest.name) {
         if (!newErrors[index]) newErrors[index] = {}
-        newErrors[index].name = "Nome é obrigatório."
+        newErrors[index].name = isInternational
+          ? "Name is required."
+          : "Nome é obrigatório."
         hasError = true
       }
 
       if (!guest.badge_name) {
         if (!newErrors[index]) newErrors[index] = {}
-        newErrors[index].badge_name = "Nome no crachá é obrigatório."
+        newErrors[index].badge_name = isInternational
+          ? "Badge name is required."
+          : "Nome no crachá é obrigatório."
         hasError = true
       }
 
       if (!guest.gender) {
         if (!newErrors[index]) newErrors[index] = {}
-        newErrors[index].gender = "Sexo é obrigatório."
+        newErrors[index].gender = isInternational
+          ? "Gender is required."
+          : "Sexo é obrigatório."
         hasError = true
       }
 
       if (calculateIsAdult(guest.birth_date) && !guest.email) {
         if (!newErrors[index]) newErrors[index] = {}
-        newErrors[index].email = "Email é obrigatório para adultos."
+        newErrors[index].email = isInternational
+          ? "Email is required for adults."
+          : "Email é obrigatório para adultos."
         hasError = true
       }
     })
@@ -660,10 +769,13 @@ export default function CheckoutPage({
       const element = document.getElementById(`guest-card-${firstErrorIndex}`)
       if (element) element.scrollIntoView({ behavior: "smooth" })
 
-      // Pega a exata mensagem do primeiro erro encontrado
       const firstErrorGuest = newErrors[firstErrorIndex]
       const firstErrorMessage = Object.values(firstErrorGuest)[0]
-      setError(`Erro: ${firstErrorMessage}`)
+      setError(
+        isInternational
+          ? `Error: ${firstErrorMessage}`
+          : `Erro: ${firstErrorMessage}`,
+      )
       return
     }
 
@@ -763,13 +875,18 @@ export default function CheckoutPage({
     e.preventDefault() // Prevent default form submission
 
     // Validate Phone in Company Form
-    if (newCompanyData.phone && !validatePhone(newCompanyData.phone)) {
+    if (
+      !isInternational &&
+      newCompanyData.phone &&
+      !validatePhone(newCompanyData.phone)
+    ) {
       setError("Telefone da empresa inválido.")
       return
     }
 
     // Validate CEP (Basic length check)
     if (
+      !isInternational &&
       newCompanyData.zip_code &&
       newCompanyData.zip_code.replace(/\D/g, "").length !== 8
     ) {
@@ -826,9 +943,9 @@ export default function CheckoutPage({
     if (index === 0) {
       return (
         <div className="flex items-center gap-2">
-          <span>Adulto 1</span>
+          <span>{isInternational ? "Adult 1" : "Adulto 1"}</span>
           <Badge className="bg-blue-600 text-white border-none flex items-center gap-1">
-            <Lock className="h-3 w-3" /> Titular
+            <Lock className="h-3 w-3" /> {isInternational ? "Lead" : "Titular"}
           </Badge>
         </div>
       )
@@ -839,16 +956,18 @@ export default function CheckoutPage({
       const childNum = guests
         .slice(0, index + 1)
         .filter((g) => g._type === "child").length
-      return `Criança ${childNum}`
+      return isInternational ? `Child ${childNum}` : `Criança ${childNum}`
     }
 
-    return `Adulto ${index + 1}`
+    return isInternational ? `Adult ${index + 1}` : `Adulto ${index + 1}`
   }
 
   const getGuestDescription = (index) => {
     const guest = guests[index]
     if (index === 0)
-      return "Dados do titular da conta (deve ser maior de 18 anos)."
+      return isInternational
+        ? "Details of the registration holder (must be 18 years or older)."
+        : "Dados do titular da conta (deve ser maior de 18 anos)."
 
     if (guest?._type === "child") {
       const sortedPolicies = [...(room.price_policies || [])].sort(
@@ -862,15 +981,23 @@ export default function CheckoutPage({
           ? 0
           : sortedPolicies[policyIndex - 1].max_age + 1
 
-      return `Dados da criança de ${minAge} até ${guest._max_age} anos`
+      return isInternational
+        ? `Details of child from ${minAge} up to ${guest._max_age} years old.`
+        : `Dados da criança de ${minAge} até ${guest._max_age} anos`
     }
 
-    return "Dados do acompanhante adulto (a partir de 12 anos)."
+    return isInternational
+      ? "Details of the adult guest (from 12 years old)."
+      : "Dados do acompanhante adulto (a partir de 12 anos)."
   }
 
   return (
     <RegistrationLayout
-      title="Finalizar Inscrição - Simpovidro 2026"
+      title={
+        isInternational
+          ? "Finalize Registration - Simpovidro 2026"
+          : "Finalizar Inscrição - Simpovidro 2026"
+      }
       showBackButton
     >
       <div className="py-8 px-4">
@@ -879,11 +1006,17 @@ export default function CheckoutPage({
           <div className="lg:col-span-1 space-y-6">
             <Card className="sticky top-8">
               <CardHeader>
-                <CardTitle className="text-lg">Resumo da Inscrição</CardTitle>
+                <CardTitle className="text-lg">
+                  {isInternational
+                    ? "Registration Summary"
+                    : "Resumo da Inscrição"}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm text-gray-500">Quarto Selecionado</p>
+                  <p className="text-sm text-gray-500">
+                    {isInternational ? "Selected Room" : "Quarto Selecionado"}
+                  </p>
                   <p className="font-semibold text-blue-600">{room.name}</p>
                   <p className="font-semibold">{room.room_type}</p>
                   {router.query.bed_preference && (
@@ -897,13 +1030,13 @@ export default function CheckoutPage({
                   <span>
                     {room.hotel_check_in_date
                       ? new Date(room.hotel_check_in_date).toLocaleDateString(
-                          "pt-BR",
+                          isInternational ? "en-US" : "pt-BR",
                         )
                       : "--"}{" "}
                     -{" "}
                     {room.hotel_check_out_date
                       ? new Date(room.hotel_check_out_date).toLocaleDateString(
-                          "pt-BR",
+                          isInternational ? "en-US" : "pt-BR",
                         )
                       : "--"}
                   </span>
@@ -911,7 +1044,9 @@ export default function CheckoutPage({
 
                 <Separator />
                 <div className="space-y-2">
-                  <p className=" text-blue-600 font-medium">Hóspedes:</p>
+                  <p className=" text-blue-600 font-medium">
+                    {isInternational ? "Guests:" : "Hóspedes:"}
+                  </p>
                   <div className="space-y-1.5 text-sm">
                     {checkoutItems.map((item, idx) => (
                       <div
@@ -920,34 +1055,50 @@ export default function CheckoutPage({
                       >
                         <span>{item.label}</span>
                         <span className="font-medium">
-                          {new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(item.price)}
+                          {new Intl.NumberFormat(
+                            isInternational ? "en-US" : "pt-BR",
+                            {
+                              style: "currency",
+                              currency: "BRL",
+                            },
+                          ).format(item.price)}
                         </span>
                       </div>
                     ))}
                     {discountPercentage > 0 && (
                       <div className="flex justify-between items-center text-green-600 font-medium border-t pt-1.5 mt-1.5">
-                        <span>Desconto ({discountPercentage}%)</span>
+                        <span>
+                          {isInternational ? "Discount" : "Desconto"} (
+                          {discountPercentage}%)
+                        </span>
                         <span>
                           -
-                          {new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(discountAmount)}
+                          {new Intl.NumberFormat(
+                            isInternational ? "en-US" : "pt-BR",
+                            {
+                              style: "currency",
+                              currency: "BRL",
+                            },
+                          ).format(discountAmount)}
                         </span>
                       </div>
                     )}
                     {isAssociate && originalTotal > finalTotal && (
                       <div className="flex justify-between items-center text-green-600 font-medium border-t pt-1.5 mt-1.5">
-                        <span>Desconto associado Abravidro</span>
+                        <span>
+                          {isInternational
+                            ? "Abravidro member discount"
+                            : "Desconto associado Abravidro"}
+                        </span>
                         <span>
                           -
-                          {new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(originalTotal - finalTotal)}
+                          {new Intl.NumberFormat(
+                            isInternational ? "en-US" : "pt-BR",
+                            {
+                              style: "currency",
+                              currency: "BRL",
+                            },
+                          ).format(originalTotal - finalTotal)}
                         </span>
                       </div>
                     )}
@@ -958,23 +1109,29 @@ export default function CheckoutPage({
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm text-gray-500 font-medium">
-                        Valor Total
+                        {isInternational ? "Total Amount" : "Valor Total"}
                       </p>
                       <div className="flex flex-col mt-1">
                         {(discountPercentage > 0 || isAssociate) &&
                           originalTotal > finalTotal && (
                             <p className="text-xl text-gray-400 line-through">
-                              {new Intl.NumberFormat("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                              }).format(originalTotal)}
+                              {new Intl.NumberFormat(
+                                isInternational ? "en-US" : "pt-BR",
+                                {
+                                  style: "currency",
+                                  currency: "BRL",
+                                },
+                              ).format(originalTotal)}
                             </p>
                           )}
                         <p className="text-3xl font-bold text-blue-600">
-                          {new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(finalTotal)}
+                          {new Intl.NumberFormat(
+                            isInternational ? "en-US" : "pt-BR",
+                            {
+                              style: "currency",
+                              currency: "BRL",
+                            },
+                          ).format(finalTotal)}
                         </p>
                       </div>
                     </div>
@@ -1032,6 +1189,34 @@ export default function CheckoutPage({
                         "Avançar"
                       )}
                     </Button>
+
+                    <div className="relative flex py-2 items-center">
+                      <div className="flex-grow border-t border-gray-200"></div>
+                      <span className="flex-shrink mx-4 text-gray-400 text-xs font-semibold uppercase tracking-wider">
+                        Ou / Or
+                      </span>
+                      <div className="flex-grow border-t border-gray-200"></div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
+                      onClick={() => {
+                        setIsInternational(true)
+                        setPaymentMethod("cash")
+                        setInstallmentsCount(1)
+                        setNewCompanyData((prev) => ({
+                          ...prev,
+                          country: "",
+                          countryCode: "",
+                          cnpj: "",
+                        }))
+                        setCurrentStep(2)
+                      }}
+                    >
+                      International Registration / Inscrição Estrangeira
+                    </Button>
                   </CardContent>
                 </Card>
               )}
@@ -1041,22 +1226,34 @@ export default function CheckoutPage({
                 <Card>
                   <CardHeader>
                     <CardTitle>
-                      {foundCompany ? "Confirmar Empresa" : "Cadastrar Empresa"}
+                      {isInternational
+                        ? "Company Details"
+                        : foundCompany
+                          ? "Confirmar Empresa"
+                          : "Cadastrar Empresa"}
                     </CardTitle>
                     <CardDescription>
-                      {foundCompany
-                        ? "Verifique e atualize os dados da empresa se necessário."
-                        : "Não encontramos sua empresa. Por favor, preencha os dados abaixo."}
+                      {isInternational
+                        ? "Please enter your company details below."
+                        : foundCompany
+                          ? "Verifique e atualize os dados da empresa se necessário."
+                          : "Não encontramos sua empresa. Por favor, preencha os dados abaixo."}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>CNPJ</Label>
-                        <Input value={cnpj} disabled />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="corporate_name">Razão Social *</Label>
+                      {!isInternational && (
+                        <div className="space-y-2">
+                          <Label>CNPJ</Label>
+                          <Input value={cnpj} disabled />
+                        </div>
+                      )}
+                      <div className="space-y-2 relative">
+                        <Label htmlFor="corporate_name">
+                          {isInternational
+                            ? "Company Name *"
+                            : "Razão Social *"}
+                        </Label>
                         <Input
                           id="corporate_name"
                           value={newCompanyData.corporate_name}
@@ -1066,15 +1263,43 @@ export default function CheckoutPage({
                               corporate_name: e.target.value,
                             })
                             setError("")
+                            handleSearchCompany(e.target.value)
+                          }}
+                          onFocus={() => {
+                            if (isInternational && suggestions.length > 0) {
+                              setShowSuggestions(true)
+                            }
+                          }}
+                          onBlur={() => {
+                            setTimeout(() => {
+                              setShowSuggestions(false)
+                            }, 200)
                           }}
                           required
+                          autoComplete="off"
                         />
+                        {isInternational && showSuggestions && suggestions.length > 0 && (
+                          <div className="absolute left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 w-full">
+                            {suggestions.map((comp) => (
+                              <div
+                                key={comp.id}
+                                className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm transition-colors text-left flex flex-col"
+                                onMouseDown={() => handleSelectCompany(comp)}
+                              >
+                                <span className="font-bold text-gray-900">{comp.corporate_name}</span>
+                                <span className="text-xs text-gray-500">{comp.city} / {comp.state} - {comp.country}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="badge">
-                          Nome da empresa no crachá *
+                          {isInternational
+                            ? "Company name on badge *"
+                            : "Nome da empresa no crachá *"}
                         </Label>
                         <Input
                           id="badge"
@@ -1091,7 +1316,11 @@ export default function CheckoutPage({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="email">E-mail da Empresa *</Label>
+                        <Label htmlFor="email">
+                          {isInternational
+                            ? "Email adress *"
+                            : "E-mail da Empresa *"}
+                        </Label>
                         <Input
                           id="email"
                           type="email"
@@ -1110,31 +1339,20 @@ export default function CheckoutPage({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Telefone Comercial *</Label>
+                        <Label htmlFor="phone">
+                          {isInternational
+                            ? "Company Phone *"
+                            : "Telefone Comercial *"}
+                        </Label>
                         <Input
                           id="phone"
                           value={newCompanyData.phone}
                           onChange={(e) => {
                             setNewCompanyData({
                               ...newCompanyData,
-                              phone: maskPhone(e.target.value),
-                            })
-                            setError("")
-                          }}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="responsible_person">
-                          Pessoa Responsável *
-                        </Label>
-                        <Input
-                          id="responsible_person"
-                          value={newCompanyData.responsible_person}
-                          onChange={(e) => {
-                            setNewCompanyData({
-                              ...newCompanyData,
-                              responsible_person: e.target.value,
+                              phone: isInternational
+                                ? e.target.value
+                                : maskPhone(e.target.value),
                             })
                             setError("")
                           }}
@@ -1145,14 +1363,18 @@ export default function CheckoutPage({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="zip_code">CEP *</Label>
+                        <Label htmlFor="zip_code">
+                          {isInternational ? "Zip Code *" : "CEP *"}
+                        </Label>
                         <Input
                           id="zip_code"
                           value={newCompanyData.zip_code}
                           onChange={(e) => {
                             setNewCompanyData({
                               ...newCompanyData,
-                              zip_code: maskCEP(e.target.value),
+                              zip_code: isInternational
+                                ? e.target.value
+                                : maskCEP(e.target.value),
                             })
                             setError("")
                           }}
@@ -1160,7 +1382,9 @@ export default function CheckoutPage({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="address">Endereço *</Label>
+                        <Label htmlFor="address">
+                          {isInternational ? "Address *" : "Endereço *"}
+                        </Label>
                         <Input
                           id="address"
                           value={newCompanyData.address}
@@ -1178,7 +1402,9 @@ export default function CheckoutPage({
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="address_number">Número *</Label>
+                        <Label htmlFor="address_number">
+                          {isInternational ? "Number *" : "Número *"}
+                        </Label>
                         <Input
                           id="address_number"
                           value={newCompanyData.address_number}
@@ -1193,7 +1419,9 @@ export default function CheckoutPage({
                         />
                       </div>
                       <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="address_complement">Complemento</Label>
+                        <Label htmlFor="address_complement">
+                          {isInternational ? "Complement" : "Complemento"}
+                        </Label>
                         <Input
                           id="address_complement"
                           value={newCompanyData.address_complement}
@@ -1208,26 +1436,12 @@ export default function CheckoutPage({
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="neighborhood">Bairro *</Label>
-                      <Input
-                        id="neighborhood"
-                        value={newCompanyData.neighborhood}
-                        onChange={(e) => {
-                          setNewCompanyData({
-                            ...newCompanyData,
-                            neighborhood: e.target.value,
-                          })
-                          setError("")
-                        }}
-                        required
-                      />
-                    </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="activity_sector">
-                          Ramo de Atividade *
+                          {isInternational
+                            ? "Activity Sector *"
+                            : "Ramo de Atividade *"}
                         </Label>
                         <Select
                           value={selectedSector}
@@ -1250,12 +1464,22 @@ export default function CheckoutPage({
                           required
                         >
                           <SelectTrigger id="activity_sector">
-                            <SelectValue placeholder="Selecione o ramo de atividade" />
+                            <SelectValue
+                              placeholder={
+                                isInternational
+                                  ? "Select activity sector"
+                                  : "Selecione o ramo de atividade"
+                              }
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             {ACTIVITY_SECTORS.map((sector) => (
                               <SelectItem key={sector} value={sector}>
-                                {sector}
+                                {isInternational
+                                  ? sector === "OUTRO"
+                                    ? "OTHER"
+                                    : sector
+                                  : sector}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -1265,7 +1489,9 @@ export default function CheckoutPage({
                       {selectedSector === "OUTRO" && (
                         <div className="space-y-2">
                           <Label htmlFor="custom_activity_sector">
-                            Informar Ramo de Atividade *
+                            {isInternational
+                              ? "Specify Activity Sector *"
+                              : "Informar Ramo de Atividade *"}
                           </Label>
                           <Input
                             id="custom_activity_sector"
@@ -1278,7 +1504,11 @@ export default function CheckoutPage({
                               })
                               setError("")
                             }}
-                            placeholder="Digite o ramo de atividade"
+                            placeholder={
+                              isInternational
+                                ? "Enter activity sector"
+                                : "Digite o ramo de atividade"
+                            }
                             required
                           />
                         </div>
@@ -1292,20 +1522,48 @@ export default function CheckoutPage({
                         stateCode={newCompanyData.stateCode}
                         cityName={newCompanyData.city}
                         onLocationChange={handleCompanyLocationChange}
+                        labels={
+                          isInternational
+                            ? {
+                                country: "Country",
+                                state: "State/Province",
+                                city: "City",
+                              }
+                            : {
+                                country: "País",
+                                state: "Estado (UF)",
+                                city: "Cidade",
+                              }
+                        }
                         required
                       />
                     </div>
-                    <Button
-                      type="submit"
-                      className="w-full bg-blue-600"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <Loader2 className="animate-spin h-4 w-4" />
-                      ) : (
-                        "Continuar"
-                      )}
-                    </Button>
+                    <div className="flex gap-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          setIsInternational(false)
+                          setCurrentStep(1)
+                        }}
+                      >
+                        {isInternational ? "Back" : "Voltar"}
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="flex-[2] bg-blue-600"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <Loader2 className="animate-spin h-4 w-4" />
+                        ) : isInternational ? (
+                          "Continue"
+                        ) : (
+                          "Continuar"
+                        )}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -1339,50 +1597,87 @@ export default function CheckoutPage({
                         {/* Personal Data */}
                         <div className="space-y-4">
                           <h3 className="font-semibold text-gray-900 border-b pb-2 flex items-center gap-2 flex-wrap">
-                            <span>Dados Pessoais</span>
+                            <span>
+                              {isInternational
+                                ? "Personal Details"
+                                : "Dados Pessoais"}
+                            </span>
                           </h3>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor={`cpf_number-${index}`}>
-                                CPF *
-                              </Label>
-                              <Input
-                                id={`cpf_number-${index}`}
-                                name="cpf_number"
-                                value={guestData.cpf_number}
-                                onChange={(e) => handleChange(index, e)}
-                                placeholder="000.000.000-00"
-                                disabled={false}
-                                className={
-                                  guestErrors[index]?.cpf_number
-                                    ? "border-red-500"
-                                    : ""
-                                }
-                                required
-                              />
-                              {guestErrors[index]?.cpf_number && (
-                                <p className="text-red-500 text-xs mt-1">
-                                  {guestErrors[index].cpf_number}
-                                </p>
-                              )}
+                          {!isInternational && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`cpf_number-${index}`}>
+                                  CPF *
+                                </Label>
+                                <Input
+                                  id={`cpf_number-${index}`}
+                                  name="cpf_number"
+                                  value={guestData.cpf_number}
+                                  onChange={(e) => handleChange(index, e)}
+                                  placeholder="000.000.000-00"
+                                  disabled={false}
+                                  className={
+                                    guestErrors[index]?.cpf_number
+                                      ? "border-red-500"
+                                      : ""
+                                  }
+                                  required
+                                />
+                                {guestErrors[index]?.cpf_number && (
+                                  <p className="text-red-500 text-xs mt-1">
+                                    {guestErrors[index].cpf_number}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`rg_number-${index}`}>
+                                  RG *
+                                </Label>
+                                <Input
+                                  id={`rg_number-${index}`}
+                                  name="rg_number"
+                                  value={guestData.rg_number}
+                                  onChange={(e) => handleChange(index, e)}
+                                  required
+                                />
+                              </div>
                             </div>
-                            <div className="space-y-2">
-                              <Label htmlFor={`rg_number-${index}`}>RG *</Label>
-                              <Input
-                                id={`rg_number-${index}`}
-                                name="rg_number"
-                                value={guestData.rg_number}
-                                onChange={(e) => handleChange(index, e)}
-                                required
-                              />
+                          )}
+
+                          {isInternational && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`passport_number-${index}`}>
+                                  Passport Number *
+                                </Label>
+                                <Input
+                                  id={`passport_number-${index}`}
+                                  name="passport_number"
+                                  value={guestData.passport_number}
+                                  onChange={(e) => handleChange(index, e)}
+                                  className={
+                                    guestErrors[index]?.passport_number
+                                      ? "border-red-500"
+                                      : ""
+                                  }
+                                  required
+                                />
+                                {guestErrors[index]?.passport_number && (
+                                  <p className="text-red-500 text-xs mt-1">
+                                    {guestErrors[index].passport_number}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                          </div>
+                          )}
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor={`name-${index}`}>
-                                Nome Completo *
+                                {isInternational
+                                  ? "Full Name *"
+                                  : "Nome Completo *"}
                               </Label>
                               <Input
                                 id={`name-${index}`}
@@ -1404,14 +1699,20 @@ export default function CheckoutPage({
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor={`badge_name-${index}`}>
-                                Nome no Crachá *
+                                {isInternational
+                                  ? "Badge Name *"
+                                  : "Nome no Crachá *"}
                               </Label>
                               <Input
                                 id={`badge_name-${index}`}
                                 name="badge_name"
                                 value={guestData.badge_name}
                                 onChange={(e) => handleChange(index, e)}
-                                placeholder="Como aparecerá no crachá"
+                                placeholder={
+                                  isInternational
+                                    ? "Name to display on badge"
+                                    : "Como aparecerá no crachá"
+                                }
                                 maxLength={20}
                                 className={
                                   guestErrors[index]?.badge_name
@@ -1431,7 +1732,9 @@ export default function CheckoutPage({
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor={`birth_date-${index}`}>
-                                Data de Nascimento *
+                                {isInternational
+                                  ? "Date of Birth *"
+                                  : "Data de Nascimento *"}
                               </Label>
                               <Input
                                 id={`birth_date-${index}`}
@@ -1454,7 +1757,9 @@ export default function CheckoutPage({
                               )}
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor={`gender-${index}`}>Sexo *</Label>
+                              <Label htmlFor={`gender-${index}`}>
+                                {isInternational ? "Gender *" : "Sexo *"}
+                              </Label>
                               <Select
                                 value={guestData.gender}
                                 onValueChange={(val) =>
@@ -1470,11 +1775,19 @@ export default function CheckoutPage({
                                       : ""
                                   }
                                 >
-                                  <SelectValue placeholder="Selecione" />
+                                  <SelectValue
+                                    placeholder={
+                                      isInternational ? "Select" : "Selecione"
+                                    }
+                                  />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="M">Masculino</SelectItem>
-                                  <SelectItem value="F">Feminino</SelectItem>
+                                  <SelectItem value="M">
+                                    {isInternational ? "Male" : "Masculino"}
+                                  </SelectItem>
+                                  <SelectItem value="F">
+                                    {isInternational ? "Female" : "Feminino"}
+                                  </SelectItem>
                                 </SelectContent>
                               </Select>
                               {guestErrors[index]?.gender && (
@@ -1488,14 +1801,20 @@ export default function CheckoutPage({
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor={`phone-${index}`}>
-                                Celular *
+                                {isInternational
+                                  ? "Phone / Mobile *"
+                                  : "Celular *"}
                               </Label>
                               <Input
                                 id={`phone-${index}`}
                                 name="phone"
                                 value={guestData.phone}
                                 onChange={(e) => handleChange(index, e)}
-                                placeholder="(00) 90000-0000"
+                                placeholder={
+                                  isInternational
+                                    ? "Phone number"
+                                    : "(00) 90000-0000"
+                                }
                                 required
                                 className={
                                   guestErrors[index]?.phone
@@ -1535,19 +1854,21 @@ export default function CheckoutPage({
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor={`passport_number-${index}`}>
-                                Número do Passaporte (opcional)
-                              </Label>
-                              <Input
-                                id={`passport_number-${index}`}
-                                name="passport_number"
-                                value={guestData.passport_number}
-                                onChange={(e) => handleChange(index, e)}
-                              />
+                          {!isInternational && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`passport_number-${index}`}>
+                                  Número do Passaporte (opcional)
+                                </Label>
+                                <Input
+                                  id={`passport_number-${index}`}
+                                  name="passport_number"
+                                  value={guestData.passport_number}
+                                  onChange={(e) => handleChange(index, e)}
+                                />
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
 
                         {/* Address removed */}
@@ -1555,12 +1876,14 @@ export default function CheckoutPage({
                         {/* Health & Emergency */}
                         <div className="space-y-4">
                           <h3 className="font-semibold text-gray-900 border-b pb-2">
-                            Saúde
+                            {isInternational ? "Health Details" : "Saúde"}
                           </h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor={`blood_type-${index}`}>
-                                Tipo Sanguíneo
+                                {isInternational
+                                  ? "Blood Type"
+                                  : "Tipo Sanguíneo"}
                               </Label>
                               <Select
                                 value={guestData.blood_type}
@@ -1569,7 +1892,11 @@ export default function CheckoutPage({
                                 }
                               >
                                 <SelectTrigger id={`blood_type-${index}`}>
-                                  <SelectValue placeholder="Selecione" />
+                                  <SelectValue
+                                    placeholder={
+                                      isInternational ? "Select" : "Selecione"
+                                    }
+                                  />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="A">A</SelectItem>
@@ -1581,7 +1908,7 @@ export default function CheckoutPage({
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor={`blood_rh_factor-${index}`}>
-                                Fator RH
+                                {isInternational ? "RH Factor" : "Fator RH"}
                               </Label>
                               <Select
                                 value={guestData.blood_rh_factor}
@@ -1594,14 +1921,22 @@ export default function CheckoutPage({
                                 }
                               >
                                 <SelectTrigger id={`blood_rh_factor-${index}`}>
-                                  <SelectValue placeholder="Selecione" />
+                                  <SelectValue
+                                    placeholder={
+                                      isInternational ? "Select" : "Selecione"
+                                    }
+                                  />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="+">
-                                    Positivo (+)
+                                    {isInternational
+                                      ? "Positive (+)"
+                                      : "Positivo (+)"}
                                   </SelectItem>
                                   <SelectItem value="-">
-                                    Negativo (-)
+                                    {isInternational
+                                      ? "Negative (-)"
+                                      : "Negativo (-)"}
                                   </SelectItem>
                                 </SelectContent>
                               </Select>
@@ -1609,39 +1944,56 @@ export default function CheckoutPage({
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor={`medication_details-${index}`}>
-                              Medicamentos em uso
+                              {isInternational
+                                ? "Current Medications"
+                                : "Medicamentos em uso"}
                             </Label>
                             <Input
                               id={`medication_details-${index}`}
                               name="medication_details"
                               value={guestData.medication_details}
                               onChange={(e) => handleChange(index, e)}
-                              placeholder="Liste os medicamentos que utiliza"
+                              placeholder={
+                                isInternational
+                                  ? "List medications you currently take"
+                                  : "Liste os medicamentos que utiliza"
+                              }
                             />
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor={`health_observations-${index}`}>
-                              Observações de Saúde / Alergias / Restrições
-                              alimentares
+                              {isInternational
+                                ? "Health Observations / Allergies / Dietary Restrictions"
+                                : "Observações de Saúde / Alergias / Restrições alimentares"}
                             </Label>
                             <Input
                               id={`health_observations-${index}`}
                               name="health_observations"
                               value={guestData.health_observations}
                               onChange={(e) => handleChange(index, e)}
-                              placeholder="Ex: Alérgico a camarão, etc."
+                              placeholder={
+                                isInternational
+                                  ? "Ex: Allergy to shrimp, gluten-free, etc."
+                                  : "Ex: Alérgico a camarão, etc."
+                              }
                             />
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor={`special_needs_details-${index}`}>
-                              Necessidades Especiais
+                              {isInternational
+                                ? "Special Needs"
+                                : "Necessidades Especiais"}
                             </Label>
                             <Input
                               id={`special_needs_details-${index}`}
                               name="special_needs_details"
                               value={guestData.special_needs_details}
                               onChange={(e) => handleChange(index, e)}
-                              placeholder="Cadeirante, dieta especial, etc."
+                              placeholder={
+                                isInternational
+                                  ? "Wheelchair, special diet, etc."
+                                  : "Cadeirante, dieta especial, etc."
+                              }
                             />
                           </div>
 
@@ -1659,7 +2011,9 @@ export default function CheckoutPage({
                                 }
                               />
                               <Label htmlFor={`has_heart_condition-${index}`}>
-                                Problemas cardíacos
+                                {isInternational
+                                  ? "Heart conditions"
+                                  : "Problemas cardíacos"}
                               </Label>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -1675,7 +2029,7 @@ export default function CheckoutPage({
                                 }
                               />
                               <Label htmlFor={`has_diabetes-${index}`}>
-                                Diabetes
+                                {isInternational ? "Diabetes" : "Diabetes"}
                               </Label>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -1693,7 +2047,9 @@ export default function CheckoutPage({
                               <Label
                                 htmlFor={`has_high_blood_pressure-${index}`}
                               >
-                                Pressão Alta
+                                {isInternational
+                                  ? "High blood pressure"
+                                  : "Pressão Alta"}
                               </Label>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -1711,7 +2067,9 @@ export default function CheckoutPage({
                               <Label
                                 htmlFor={`has_low_blood_pressure-${index}`}
                               >
-                                Pressão Baixa
+                                {isInternational
+                                  ? "Low blood pressure"
+                                  : "Pressão Baixa"}
                               </Label>
                             </div>
                           </div>
@@ -1765,7 +2123,9 @@ export default function CheckoutPage({
                         className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-6"
                         disabled={isLoading}
                       >
-                        Avançar para o Resumo da Inscrição
+                        {isInternational
+                          ? "Proceed to Summary"
+                          : "Avançar para o Resumo da Inscrição"}
                       </Button>
                     </div>
                   </div>
@@ -1777,16 +2137,24 @@ export default function CheckoutPage({
                 <div className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Resumo da Inscrição</CardTitle>
+                      <CardTitle>
+                        {isInternational
+                          ? "Registration Summary"
+                          : "Resumo da Inscrição"}
+                      </CardTitle>
                       <CardDescription>
-                        Confira os dados antes de finalizar sua inscrição.
+                        {isInternational
+                          ? "Please review all the information before finalizing your registration."
+                          : "Confira os dados antes de finalizar sua inscrição."}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
                         <div>
                           <h4 className="text-[10px] uppercase font-bold text-gray-500 tracking-widest mb-1">
-                            Quarto Selecionado
+                            {isInternational
+                              ? "Selected Room"
+                              : "Quarto Selecionado"}
                           </h4>
                           <p className="font-semibold text-blue-900">
                             {room.name}
@@ -1796,7 +2164,9 @@ export default function CheckoutPage({
                           </p>
 
                           <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-1 py-0.5 bg-gray-50 rounded-full w-fit">
-                            Quantidade de pessoas:{" "}
+                            {isInternational
+                              ? "Number of guests: "
+                              : "Quantidade de pessoas: "}{" "}
                             {getGuestCountsString({
                               check_in_date: room.hotel_check_in_date,
                               guests: guests,
@@ -1805,13 +2175,18 @@ export default function CheckoutPage({
                           </p>
                           {router.query.bed_preference && (
                             <p className="text-[10px] font-bold text-blue-900 uppercase tracking-wider mt-1 rounded-sm w-fit">
-                              Tipo de acomodação: {router.query.bed_preference}
+                              {isInternational
+                                ? "Accommodation preference: "
+                                : "Tipo de acomodação: "}
+                              {router.query.bed_preference}
                             </p>
                           )}
                         </div>
                         <div>
                           <h4 className="text-[10px] uppercase font-bold text-gray-500 tracking-widest mb-1">
-                            Período da Reserva
+                            {isInternational
+                              ? "Reservation Period"
+                              : "Período da Reserva"}
                           </h4>
                           <p className="font-semibold text-gray-900">
                             {new Date(
@@ -1819,109 +2194,151 @@ export default function CheckoutPage({
                                 ? room.hotel_check_in_date
                                 : (room.hotel_check_in_date || "") +
                                   "T12:00:00",
-                            ).toLocaleDateString("pt-BR")}{" "}
-                            até{" "}
+                            ).toLocaleDateString(
+                              isInternational ? "en-US" : "pt-BR",
+                            )}{" "}
+                            {isInternational ? "to" : "até"}{" "}
                             {new Date(
                               (room.hotel_check_out_date || "").includes("T")
                                 ? room.hotel_check_out_date
                                 : (room.hotel_check_out_date || "") +
                                   "T12:00:00",
-                            ).toLocaleDateString("pt-BR")}
+                            ).toLocaleDateString(
+                              isInternational ? "en-US" : "pt-BR",
+                            )}
                           </p>
                         </div>
                       </div>
 
                       <div className="space-y-2">
                         <h3 className="font-semibold text-gray-900 border-b pb-1">
-                          Empresa
+                          {isInternational ? "Company" : "Empresa"}
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                          {!isInternational && (
+                            <p>
+                              <span className="text-gray-500">CNPJ:</span>{" "}
+                              {newCompanyData.cnpj || foundCompany?.cnpj || "-"}
+                            </p>
+                          )}
                           <p>
-                            <span className="text-gray-500">CNPJ:</span>{" "}
-                            {newCompanyData.cnpj || foundCompany?.cnpj || "-"}
-                          </p>
-                          <p>
-                            <span className="text-gray-500">Razão Social:</span>{" "}
+                            <span className="text-gray-500">
+                              {isInternational
+                                ? "Company Name:"
+                                : "Razão Social:"}
+                            </span>{" "}
                             {newCompanyData.corporate_name ||
                               foundCompany?.corporate_name ||
                               "-"}
                           </p>
                           <p>
                             <span className="text-gray-500">
-                              Nome da empresa no crachá:
+                              {isInternational
+                                ? "Company Name on Badge:"
+                                : "Nome da empresa no crachá:"}
                             </span>{" "}
                             {newCompanyData.badge || foundCompany?.badge || "-"}
                           </p>
                           <p>
                             <span className="text-gray-500">
-                              E-mail da empresa:
+                              {isInternational
+                                ? "Company Email:"
+                                : "E-mail da empresa:"}
                             </span>{" "}
                             {newCompanyData.email || foundCompany?.email || "-"}
                           </p>
                           <p>
                             <span className="text-gray-500">
-                              Telefone comercial:
+                              {isInternational
+                                ? "Company Phone:"
+                                : "Telefone comercial:"}
                             </span>{" "}
                             {newCompanyData.phone || foundCompany?.phone || "-"}
                           </p>
                           <p>
                             <span className="text-gray-500">
-                              Pessoa responsável:
+                              {isInternational
+                                ? "Responsible Person:"
+                                : "Pessoa responsável:"}
                             </span>{" "}
                             {newCompanyData.responsible_person ||
                               foundCompany?.responsible_person ||
                               "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">CEP:</span>{" "}
+                            <span className="text-gray-500">
+                              {isInternational ? "Zip/Postal Code:" : "CEP:"}
+                            </span>{" "}
                             {newCompanyData.zip_code ||
                               foundCompany?.zip_code ||
                               "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">Endereço:</span>{" "}
+                            <span className="text-gray-500">
+                              {isInternational ? "Address:" : "Endereço:"}
+                            </span>{" "}
                             {newCompanyData.address ||
                               foundCompany?.address ||
                               "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">Número:</span>{" "}
+                            <span className="text-gray-500">
+                              {isInternational ? "Number:" : "Número:"}
+                            </span>{" "}
                             {newCompanyData.address_number ||
                               foundCompany?.address_number ||
                               "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">Complemento:</span>{" "}
+                            <span className="text-gray-500">
+                              {isInternational ? "Complement:" : "Complemento:"}
+                            </span>{" "}
                             {newCompanyData.address_complement ||
                               foundCompany?.address_complement ||
                               "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">Bairro:</span>{" "}
+                            <span className="text-gray-500">
+                              {isInternational
+                                ? "Neighborhood/District:"
+                                : "Bairro:"}
+                            </span>{" "}
                             {newCompanyData.neighborhood ||
                               foundCompany?.neighborhood ||
                               "-"}
                           </p>
                           <p>
                             <span className="text-gray-500">
-                              Ramo de atividade:
+                              {isInternational
+                                ? "Activity Sector:"
+                                : "Ramo de atividade:"}
                             </span>{" "}
-                            {newCompanyData.activity_sector ||
-                              foundCompany?.activity_sector ||
-                              "-"}
+                            {isInternational &&
+                            (newCompanyData.activity_sector === "OUTRO" ||
+                              foundCompany?.activity_sector === "OUTRO")
+                              ? "OTHER"
+                              : newCompanyData.activity_sector ||
+                                foundCompany?.activity_sector ||
+                                "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">País:</span>{" "}
+                            <span className="text-gray-500">
+                              {isInternational ? "Country:" : "País:"}
+                            </span>{" "}
                             {newCompanyData.country ||
                               foundCompany?.country ||
                               "Brasil"}
                           </p>
                           <p>
-                            <span className="text-gray-500">Estado:</span>{" "}
+                            <span className="text-gray-500">
+                              {isInternational ? "State/Province:" : "Estado:"}
+                            </span>{" "}
                             {newCompanyData.state || foundCompany?.state || "-"}
                           </p>
                           <p>
-                            <span className="text-gray-500">Cidade:</span>{" "}
+                            <span className="text-gray-500">
+                              {isInternational ? "City:" : "Cidade:"}
+                            </span>{" "}
                             {newCompanyData.city || foundCompany?.city || "-"}
                           </p>
                         </div>
@@ -1929,7 +2346,7 @@ export default function CheckoutPage({
 
                       <div className="space-y-4">
                         <h3 className="font-semibold text-gray-900 border-b pb-1">
-                          Hóspedes
+                          {isInternational ? "Guests" : "Hóspedes"}
                         </h3>
                         {guests.map((g, idx) => (
                           <div
@@ -1943,47 +2360,67 @@ export default function CheckoutPage({
                                 </p>
                                 <p className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">
                                   {g._type === "adult"
-                                    ? "Adulto"
+                                    ? isInternational
+                                      ? "Adult"
+                                      : "Adulto"
                                     : `${g._policy_label}`}
                                 </p>
                               </div>
                               {idx === 0 && (
                                 <Badge className="bg-blue-600 text-white border-none text-[10px] h-5">
-                                  TITULAR
+                                  {isInternational ? "LEAD" : "TITULAR"}
                                 </Badge>
                               )}
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-gray-700">
                               <p>
-                                <span className="text-gray-500">Crachá:</span>{" "}
+                                <span className="text-gray-500">
+                                  {isInternational ? "Badge Name:" : "Crachá:"}
+                                </span>{" "}
                                 {g.badge_name || g.name}
                               </p>
-                              <p>
-                                <span className="text-gray-500">CPF:</span>{" "}
-                                {g.cpf_number}
-                              </p>
+                              {!isInternational && (
+                                <p>
+                                  <span className="text-gray-500">CPF:</span>{" "}
+                                  {g.cpf_number}
+                                </p>
+                              )}
+                              {isInternational && g.passport_number && (
+                                <p>
+                                  <span className="text-gray-500">
+                                    Passport:
+                                  </span>{" "}
+                                  {g.passport_number}
+                                </p>
+                              )}
                               <p>
                                 <span className="text-gray-500">E-mail:</span>{" "}
                                 {g.email}
                               </p>
                               <p>
-                                <span className="text-gray-500">Telefone:</span>{" "}
+                                <span className="text-gray-500">
+                                  {isInternational ? "Phone:" : "Telefone:"}
+                                </span>{" "}
                                 {g.phone}
                               </p>
                               <p>
                                 <span className="text-gray-500">
-                                  Nascimento:
+                                  {isInternational
+                                    ? "Date of Birth:"
+                                    : "Nascimento:"}
                                 </span>{" "}
                                 {g.birth_date
                                   ? new Date(
                                       g.birth_date.includes("T")
                                         ? g.birth_date
                                         : g.birth_date + "T12:00:00",
-                                    ).toLocaleDateString("pt-BR")
+                                    ).toLocaleDateString(
+                                      isInternational ? "en-US" : "pt-BR",
+                                    )
                                   : "-"}
                               </p>
-                              {g.rg_number && (
+                              {!isInternational && g.rg_number && (
                                 <p>
                                   <span className="text-gray-500">RG:</span>{" "}
                                   {g.rg_number}
@@ -1993,12 +2430,14 @@ export default function CheckoutPage({
 
                             <div className="mt-3 pt-2 border-t border-blue-100">
                               <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">
-                                Saúde
+                                {isInternational ? "Health" : "Saúde"}
                               </p>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[13px] text-gray-700">
                                 <p>
                                   <span className="text-gray-500">
-                                    Tipo Sanguíneo:
+                                    {isInternational
+                                      ? "Blood Type:"
+                                      : "Tipo Sanguíneo:"}
                                   </span>{" "}
                                   {g.blood_type || "-"} (RH:{" "}
                                   {g.blood_rh_factor || "-"})
@@ -2006,39 +2445,49 @@ export default function CheckoutPage({
                                 {g.has_heart_condition && (
                                   <p>
                                     <span className="text-gray-500">
-                                      Prob. Cardíacos:
+                                      {isInternational
+                                        ? "Heart Condition:"
+                                        : "Prob. Cardíacos:"}
                                     </span>{" "}
-                                    Sim
+                                    {isInternational ? "Yes" : "Sim"}
                                   </p>
                                 )}
                                 {g.has_diabetes && (
                                   <p>
                                     <span className="text-gray-500">
-                                      Diabetes:
+                                      {isInternational
+                                        ? "Diabetes:"
+                                        : "Diabetes:"}
                                     </span>{" "}
-                                    Sim
+                                    {isInternational ? "Yes" : "Sim"}
                                   </p>
                                 )}
                                 {g.has_high_blood_pressure && (
                                   <p>
                                     <span className="text-gray-500">
-                                      Pressão Alta:
+                                      {isInternational
+                                        ? "High Blood Pressure:"
+                                        : "Pressão Alta:"}
                                     </span>{" "}
-                                    Sim
+                                    {isInternational ? "Yes" : "Sim"}
                                   </p>
                                 )}
                                 {g.has_low_blood_pressure && (
                                   <p>
                                     <span className="text-gray-500">
-                                      Pressão Baixa:
+                                      {isInternational
+                                        ? "Low Blood Pressure:"
+                                        : "Pressão Baixa:"}
                                     </span>{" "}
-                                    Sim
+                                    {isInternational ? "Yes" : "Sim"}
                                   </p>
                                 )}
                                 {g.medication_details && (
                                   <p className="sm:col-span-2">
                                     <span className="text-gray-500">
-                                      Medicamentos:
+                                      {isInternational
+                                        ? "Medication:"
+                                        : "Medicamentos:"}
                                     </span>{" "}
                                     {g.medication_details}
                                   </p>
@@ -2046,8 +2495,9 @@ export default function CheckoutPage({
                                 {g.health_observations && (
                                   <p className="sm:col-span-2">
                                     <span className="text-gray-500">
-                                      Observações de Saúde/Alergias/Restrições
-                                      alimentares:
+                                      {isInternational
+                                        ? "Health Observations/Allergies/Dietary Restrictions:"
+                                        : "Observações de Saúde/Alergias/Restrições alimentares:"}
                                     </span>{" "}
                                     {g.health_observations}
                                   </p>
@@ -2062,207 +2512,279 @@ export default function CheckoutPage({
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Subtotal</span>
                           <span>
-                            {new Intl.NumberFormat("pt-BR", {
-                              style: "currency",
-                              currency: "BRL",
-                            }).format(originalTotal)}
+                            {new Intl.NumberFormat(
+                              isInternational ? "en-US" : "pt-BR",
+                              {
+                                style: "currency",
+                                currency: "BRL",
+                              },
+                            ).format(originalTotal)}
                           </span>
                         </div>
                         {discountPercentage > 0 && (
                           <div className="flex justify-between text-sm text-green-600 font-medium">
                             <span>
-                              {foundCompany?.custom_discount_percentage !== null
-                                ? "Desconto Exclusivo"
-                                : globalDiscounts.find(
-                                    (d) => d.id === foundCompany?.discount_id,
-                                  )?.name || "Desconto"}{" "}
+                              {isInternational
+                                ? "Exclusive Discount"
+                                : foundCompany?.custom_discount_percentage !==
+                                    null
+                                  ? "Desconto Exclusivo"
+                                  : globalDiscounts.find(
+                                      (d) => d.id === foundCompany?.discount_id,
+                                    )?.name || "Desconto"}{" "}
                               ({discountPercentage}%)
                             </span>
                             <span>
                               -
-                              {new Intl.NumberFormat("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                              }).format(discountAmount)}
+                              {new Intl.NumberFormat(
+                                isInternational ? "en-US" : "pt-BR",
+                                {
+                                  style: "currency",
+                                  currency: "BRL",
+                                },
+                              ).format(discountAmount)}
                             </span>
                           </div>
                         )}
 
                         {isAssociate && (
                           <div className="flex justify-between text-sm text-green-600 font-medium">
-                            <span>Preço Associado Abravidro</span>
-                            <span>Já aplicado</span>
+                            <span>
+                              {isInternational
+                                ? "Abravidro Associate Price"
+                                : "Preço Associado Abravidro"}
+                            </span>
+                            <span>
+                              {isInternational
+                                ? "Already applied"
+                                : "Já aplicado"}
+                            </span>
                           </div>
                         )}
                         <Separator />
                         <div className="flex justify-between items-center pt-2">
                           <span className="text-lg font-bold">
-                            Total a Pagar
+                            {isInternational ? "Total to Pay" : "Total a Pagar"}
                           </span>
+
                           <div className="text-right">
                             {discountPercentage > 0 && (
                               <p className="text-sm text-gray-500 line-through">
-                                {new Intl.NumberFormat("pt-BR", {
-                                  style: "currency",
-                                  currency: "BRL",
-                                }).format(originalTotal)}
+                                {new Intl.NumberFormat(
+                                  isInternational ? "en-US" : "pt-BR",
+                                  {
+                                    style: "currency",
+                                    currency: "BRL",
+                                  },
+                                ).format(originalTotal)}
                               </p>
                             )}
                             <p className="text-3xl font-bold text-blue-600">
-                              {new Intl.NumberFormat("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                              }).format(finalTotal)}
+                              {new Intl.NumberFormat(
+                                isInternational ? "en-US" : "pt-BR",
+                                {
+                                  style: "currency",
+                                  currency: "BRL",
+                                },
+                              ).format(finalTotal)}
                             </p>
                           </div>
                         </div>
+                        {isInternational && (
+                          <p className="text-sm text-gray-500 font-medium italic border-t border-blue-100 pt-2 mt-2 leading-normal">
+                            * For payments by bank remittance, 2 charges will be
+                            added: 0,38% I.O.F (Brazilian tax) + USD180,00 (Bank
+                            tax)
+                          </p>
+                        )}
                       </div>
 
-                      <div className="space-y-4 pt-4 border-t">
-                        <h3 className="font-semibold text-gray-900">
-                          Forma de Pagamento
-                        </h3>
-                        <div className="grid grid-cols-2 gap-4">
-                          <Button
-                            type="button"
-                            variant={
-                              paymentMethod === "cash" ? "default" : "outline"
-                            }
-                            className={
-                              paymentMethod === "cash" ? "bg-blue-600" : ""
-                            }
-                            onClick={() => {
-                              setPaymentMethod("cash")
-                              setInstallmentsCount(1)
-                            }}
-                          >
-                            À Vista
-                          </Button>
-                          <Button
-                            type="button"
-                            variant={
-                              paymentMethod === "installments"
-                                ? "default"
-                                : "outline"
-                            }
-                            className={
-                              paymentMethod === "installments"
-                                ? "bg-blue-600"
-                                : ""
-                            }
-                            onClick={() => {
-                              setPaymentMethod("installments")
-                              setInstallmentsCount(maxInstallments)
-                            }}
-                          >
-                            Parcelado
-                          </Button>
-                        </div>
-                        {paymentMethod === "cash" && (
-                          <div className="space-y-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100 mt-4">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-blue-900 font-bold">
-                                Pagamento Único
-                              </Label>
-                              <Badge
-                                variant="secondary"
-                                className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
+                      {!isInternational && (
+                        <div className="space-y-4 pt-4 border-t">
+                          <h3 className="font-semibold text-gray-900">
+                            {isInternational
+                              ? "Payment Method"
+                              : "Forma de Pagamento"}
+                          </h3>
+                          {!isInternational && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <Button
+                                type="button"
+                                variant={
+                                  paymentMethod === "cash"
+                                    ? "default"
+                                    : "outline"
+                                }
+                                className={
+                                  paymentMethod === "cash" ? "bg-blue-600" : ""
+                                }
+                                onClick={() => {
+                                  setPaymentMethod("cash")
+                                  setInstallmentsCount(1)
+                                }}
                               >
-                                Total à Vista
-                              </Badge>
+                                À Vista
+                              </Button>
+                              <Button
+                                type="button"
+                                variant={
+                                  paymentMethod === "installments"
+                                    ? "default"
+                                    : "outline"
+                                }
+                                className={
+                                  paymentMethod === "installments"
+                                    ? "bg-blue-600"
+                                    : ""
+                                }
+                                onClick={() => {
+                                  setPaymentMethod("installments")
+                                  setInstallmentsCount(maxInstallments)
+                                }}
+                              >
+                                Parcelado
+                              </Button>
                             </div>
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-2xl font-black text-blue-600">
-                                {new Intl.NumberFormat("pt-BR", {
-                                  style: "currency",
-                                  currency: "BRL",
-                                }).format(finalTotal)}
-                              </span>
-                            </div>
-                            <div className="pt-2 border-t border-blue-100 flex flex-col gap-2">
-                              <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">
-                                Pagamento por boleto:
-                              </p>
-                              <div>
-                                <p className="text-[11px] text-blue-600 font-black flex justify-between items-center">
-                                  <span>VENCIMENTO</span>
-                                  <span>
-                                    {new Date(
-                                      generateInstallmentDates(
-                                        1,
-                                        room.hotel_check_in_date,
-                                      )[0],
-                                    ).toLocaleDateString("pt-BR", {
-                                      timeZone: "UTC",
-                                    })}
-                                  </span>
-                                </p>
+                          )}
+                          {paymentMethod === "cash" && (
+                            <div className="space-y-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100 mt-4">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-blue-900 font-bold">
+                                  {isInternational
+                                    ? "Single Payment"
+                                    : "Pagamento Único"}
+                                </Label>
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
+                                >
+                                  {isInternational
+                                    ? "One-time Total"
+                                    : "Total à Vista"}
+                                </Badge>
                               </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {paymentMethod === "installments" && (
-                          <div className="space-y-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-blue-900 font-bold">
-                                Plano de Parcelamento
-                              </Label>
-                              <Badge
-                                variant="secondary"
-                                className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
-                              >
-                                {maxInstallments}x Parcelas
-                              </Badge>
-                            </div>
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-2xl font-black text-blue-600">
-                                {new Intl.NumberFormat("pt-BR", {
-                                  style: "currency",
-                                  currency: "BRL",
-                                }).format(finalTotal / maxInstallments)}
-                              </span>
-                              <span className="text-sm text-blue-400 font-medium">
-                                por parcela
-                              </span>
-                            </div>
-                            <div className="pt-2 border-t border-blue-100 flex flex-col gap-2">
-                              <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">
-                                Cronograma de Vencimentos:
-                              </p>
-                              <div className="space-y-1">
-                                {generateInstallmentDates(
-                                  installmentsCount,
-                                  room.hotel_check_in_date,
-                                ).map((date, idx) => (
-                                  <p
-                                    key={idx}
-                                    className="text-[11px] text-blue-600 leading-tight flex justify-between"
-                                  >
-                                    <span>Parcela {idx + 1}</span>
-                                    <span className="font-medium">
-                                      Vencimento:{" "}
-                                      {new Date(date).toLocaleDateString(
-                                        "pt-BR",
-                                        { timeZone: "UTC" },
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-2xl font-black text-blue-600">
+                                  {new Intl.NumberFormat(
+                                    isInternational ? "en-US" : "pt-BR",
+                                    {
+                                      style: "currency",
+                                      currency: "BRL",
+                                    },
+                                  ).format(finalTotal)}
+                                </span>
+                              </div>
+                              <div className="pt-2 border-t border-blue-100 flex flex-col gap-2">
+                                <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">
+                                  {isInternational
+                                    ? "Invoice Payment:"
+                                    : "Pagamento por boleto:"}
+                                </p>
+                                <div>
+                                  <p className="text-[11px] text-blue-600 font-black flex justify-between items-center">
+                                    <span>
+                                      {isInternational
+                                        ? "DUE DATE"
+                                        : "VENCIMENTO"}
+                                    </span>
+                                    <span>
+                                      {new Date(
+                                        generateInstallmentDates(
+                                          1,
+                                          room.hotel_check_in_date,
+                                        )[0],
+                                      ).toLocaleDateString(
+                                        isInternational ? "en-US" : "pt-BR",
+                                        {
+                                          timeZone: "UTC",
+                                        },
                                       )}
                                     </span>
                                   </p>
-                                ))}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
+                          )}
+
+                          {paymentMethod === "installments" && (
+                            <div className="space-y-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-blue-900 font-bold">
+                                  {isInternational
+                                    ? "Installment Plan"
+                                    : "Plano de Parcelamento"}
+                                </Label>
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
+                                >
+                                  {isInternational
+                                    ? `${maxInstallments}x Installments`
+                                    : `${maxInstallments}x Parcelas`}
+                                </Badge>
+                              </div>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-2xl font-black text-blue-600">
+                                  {new Intl.NumberFormat(
+                                    isInternational ? "en-US" : "pt-BR",
+                                    {
+                                      style: "currency",
+                                      currency: "BRL",
+                                    },
+                                  ).format(finalTotal / maxInstallments)}
+                                </span>
+                                <span className="text-sm text-blue-400 font-medium">
+                                  {isInternational
+                                    ? "per installment"
+                                    : "por parcela"}
+                                </span>
+                              </div>
+                              <div className="pt-2 border-t border-blue-100 flex flex-col gap-2">
+                                <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">
+                                  {isInternational
+                                    ? "Due Dates Schedule:"
+                                    : "Cronograma de Vencimentos:"}
+                                </p>
+                                <div className="space-y-1">
+                                  {generateInstallmentDates(
+                                    installmentsCount,
+                                    room.hotel_check_in_date,
+                                  ).map((date, idx) => (
+                                    <p
+                                      key={idx}
+                                      className="text-[11px] text-blue-600 leading-tight flex justify-between"
+                                    >
+                                      <span>
+                                        {isInternational
+                                          ? `Installment ${idx + 1}`
+                                          : `Parcela ${idx + 1}`}
+                                      </span>
+                                      <span className="font-medium">
+                                        {isInternational
+                                          ? "Due Date: "
+                                          : "Vencimento: "}
+                                        {new Date(date).toLocaleDateString(
+                                          isInternational ? "en-US" : "pt-BR",
+                                          { timeZone: "UTC" },
+                                        )}
+                                      </span>
+                                    </p>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Pergunta Personalizada do Hotel */}
-                      {room.hotel_checkout_question && (
+                      {(isInternational ? (room.hotel_checkout_question_en || room.hotel_checkout_question) : room.hotel_checkout_question) && (
                         <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-3 my-6">
                           <Label
                             htmlFor="checkout-question-response"
                             className="text-sm font-bold text-slate-800"
                           >
-                            {room.hotel_checkout_question} *
+                            {isInternational ? (room.hotel_checkout_question_en || room.hotel_checkout_question) : room.hotel_checkout_question} *
                           </Label>
                           <Input
                             id="checkout-question-response"
@@ -2270,38 +2792,73 @@ export default function CheckoutPage({
                             onChange={(e) =>
                               setCheckoutQuestionResponse(e.target.value)
                             }
-                            placeholder="Sua resposta..."
+                            placeholder={
+                              isInternational
+                                ? "Your answer..."
+                                : "Sua resposta..."
+                            }
                             required
                           />
                         </div>
                       )}
 
                       {/* Aceite de Condições Gerais */}
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-start gap-3 my-6">
-                        <Checkbox
-                          id="terms-checkbox"
-                          checked={acceptedTerms}
-                          onCheckedChange={(checked) =>
-                            setAcceptedTerms(checked)
-                          }
-                          className="mt-0.5 border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                        />
-                        <div className="space-y-1">
-                          <Label
-                            htmlFor="terms-checkbox"
-                            className="text-sm font-semibold text-slate-700 leading-snug cursor-pointer select-none"
-                          >
-                            Li e aceito as{" "}
-                            <a
-                              href="/condicoes-gerais"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-700 underline font-bold hover:no-underline transition-all"
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col gap-4 my-6">
+                        {isInternational && (
+                          <p className="text-xs text-gray-600 leading-relaxed font-medium border-b border-slate-200 pb-3">
+                            The participant gives faith and ensures the accuracy
+                            of information provided to complete the enrollment
+                            process in 16th Simpovidro. He also claims to be
+                            able to afford the payment to be chosen below. The
+                            participant acknowledges the general conditions of
+                            purchase and participation in the 17th Simpovidro
+                            and health care card and luggage.
+                          </p>
+                        )}
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            id="terms-checkbox"
+                            checked={acceptedTerms}
+                            onCheckedChange={(checked) =>
+                              setAcceptedTerms(checked)
+                            }
+                            className="mt-0.5 border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                          />
+                          <div className="space-y-1">
+                            <Label
+                              htmlFor="terms-checkbox"
+                              className="text-sm font-semibold text-slate-700 leading-snug cursor-pointer select-none"
                             >
-                              Condições Gerais
-                            </a>
-                            . *
-                          </Label>
+                              {isInternational ? (
+                                <>
+                                  I read and agree with the{" "}
+                                  <a
+                                    href="/condicoes-gerais"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-700 underline font-bold hover:no-underline transition-all"
+                                  >
+                                    General Conditions for Registration in
+                                    Simpovidro 2026
+                                  </a>
+                                  . *
+                                </>
+                              ) : (
+                                <>
+                                  Li e aceito as{" "}
+                                  <a
+                                    href="/condicoes-gerais"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-700 underline font-bold hover:no-underline transition-all"
+                                  >
+                                    Condições Gerais
+                                  </a>
+                                  . *
+                                </>
+                              )}
+                            </Label>
+                          </div>
                         </div>
                       </div>
 
@@ -2312,7 +2869,9 @@ export default function CheckoutPage({
                           className="flex-1 py-6"
                           onClick={() => setCurrentStep(3)}
                         >
-                          Voltar e Editar
+                          {isInternational
+                            ? "Back and Edit"
+                            : "Voltar e Editar"}
                         </Button>
                         <Button
                           type="submit"
@@ -2322,8 +2881,12 @@ export default function CheckoutPage({
                           {isLoading ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
-                              Processando...
+                              {isInternational
+                                ? "Processing..."
+                                : "Processando..."}
                             </>
+                          ) : isInternational ? (
+                            "Finalize Registration"
                           ) : (
                             "Finalizar Inscrição"
                           )}

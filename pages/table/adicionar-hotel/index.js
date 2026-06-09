@@ -33,6 +33,7 @@ export default function AddHotelPage() {
   const [checkInDate, setCheckInDate] = useState("")
   const [checkOutDate, setCheckOutDate] = useState("")
   const [checkoutQuestion, setCheckoutQuestion] = useState("")
+  const [checkoutQuestionEn, setCheckoutQuestionEn] = useState("")
   const [error, setError] = useState("")
   const [action, setAction] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
@@ -80,6 +81,7 @@ export default function AddHotelPage() {
         check_in_date: checkInDate,
         check_out_date: checkOutDate,
         checkout_question: checkoutQuestion,
+        checkout_question_en: checkoutQuestionEn,
         price_policies: pricePolicies,
       }),
     })
@@ -190,6 +192,17 @@ export default function AddHotelPage() {
                     value={checkoutQuestion}
                     onChange={(e) => setCheckoutQuestion(e.target.value)}
                     placeholder="Ex: Qual o tamanho da camiseta de cada participante?"
+                  />
+                </div>
+                <div className="space-y-1.5 md:col-span-2">
+                  <Label htmlFor="checkout_question_en">
+                    Pergunta no Checkout (Inglês) (Opcional)
+                  </Label>
+                  <Input
+                    id="checkout_question_en"
+                    value={checkoutQuestionEn}
+                    onChange={(e) => setCheckoutQuestionEn(e.target.value)}
+                    placeholder="Ex: What is the T-shirt size for each participant?"
                   />
                 </div>
               </div>

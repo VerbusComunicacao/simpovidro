@@ -49,7 +49,7 @@ async function generateCompleteReport(hotelId) {
     JOIN sales s ON sg.sale_id = s.id
     JOIN rooms r ON s.room_id = r.id
     JOIN hotels h ON r.hotel_id = h.id
-    LEFT JOIN companies c ON g.company_cnpj = c.cnpj
+    LEFT JOIN companies c ON s.company_id = c.id
     WHERE s.status != 'cancelled' AND h.id = $1
     ORDER BY g.name
   `
@@ -69,7 +69,7 @@ async function generateByCompany(hotelId) {
   const query = `
     SELECT 
       COALESCE(c.corporate_name, 'Sem Empresa') as company_name,
-      COALESCE(g.company_cnpj, 'N/A') as cnpj,
+      COALESCE(c.cnpj, 'N/A') as cnpj,
       COALESCE(c.state, 'N/A') as state,
       COUNT(DISTINCT g.id) as total_participants,
       json_agg(
@@ -85,9 +85,9 @@ async function generateByCompany(hotelId) {
     JOIN sales s ON sg.sale_id = s.id
     JOIN rooms r ON s.room_id = r.id
     JOIN hotels h ON r.hotel_id = h.id
-    LEFT JOIN companies c ON g.company_cnpj = c.cnpj
+    LEFT JOIN companies c ON s.company_id = c.id
     WHERE s.status != 'cancelled' AND h.id = $1
-    GROUP BY c.corporate_name, g.company_cnpj, c.state
+    GROUP BY c.id, c.corporate_name, c.cnpj, c.state
     ORDER BY total_participants DESC
   `
 

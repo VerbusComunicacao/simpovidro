@@ -28,6 +28,9 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
   const [checkoutQuestion, setCheckoutQuestion] = useState(
     hotel.checkout_question || "",
   )
+  const [checkoutQuestionEn, setCheckoutQuestionEn] = useState(
+    hotel.checkout_question_en || "",
+  )
   const [error, setError] = useState("")
   const [action, setAction] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
@@ -53,6 +56,7 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
         : "",
     )
     setCheckoutQuestion(hotel.checkout_question || "")
+    setCheckoutQuestionEn(hotel.checkout_question_en || "")
     setPricePolicies(hotel.price_policies || [])
   }, [hotel])
 
@@ -78,6 +82,7 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
         check_in_date: checkInDate,
         check_out_date: checkOutDate,
         checkout_question: checkoutQuestion,
+        checkout_question_en: checkoutQuestionEn,
         price_policies: pricePolicies,
       }),
     })
@@ -228,6 +233,21 @@ export function EditHotelDialog({ children, hotel, onHotelUpdated }) {
                     onChange={(e) => setCheckoutQuestion(e.target.value)}
                     className="col-span-3"
                     placeholder="Pergunta opcional a ser respondida no checkout"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label
+                    htmlFor="checkout-question-en-edit"
+                    className="text-right"
+                  >
+                    Pergunta Checkout (Inglês)
+                  </Label>
+                  <Input
+                    id="checkout-question-en-edit"
+                    value={checkoutQuestionEn}
+                    onChange={(e) => setCheckoutQuestionEn(e.target.value)}
+                    className="col-span-3"
+                    placeholder="Pergunta opcional a ser respondida no checkout (em inglês)"
                   />
                 </div>
               </div>
