@@ -176,6 +176,7 @@ describe("PATCH /api/v1/hotels/[id]", () => {
         check_out_date: "2026-01-10T20:43:12.021Z",
         active: false,
         checkout_question: null,
+        checkout_question_en: null,
         price_policies: [],
         user_id: createdUser.id,
         created_at: hotelCreated.created_at.toISOString(),

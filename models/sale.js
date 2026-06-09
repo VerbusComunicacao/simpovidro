@@ -424,6 +424,7 @@ async function findOneByIdWithDetails(saleId) {
         hotels.state as hotel_state,
         hotels.phone as hotel_phone,
         hotels.checkout_question as hotel_checkout_question,
+        hotels.checkout_question_en as hotel_checkout_question_en,
         rooms.name as room_name,
         rooms.description as room_description,
         rooms.price_per_night as room_price_per_night,
