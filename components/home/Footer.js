@@ -24,11 +24,6 @@ export default function Footer({ scrollToSection }) {
               Referência nacional e internacional no setor vidreiro. Excelência
               em organização pela Abravidro.
             </p>
-            <div className="flex gap-4">
-              <Facebook className="h-5 w-5 hover:text-white cursor-pointer transition-colors" />
-              <Instagram className="h-5 w-5 hover:text-white cursor-pointer transition-colors" />
-              <Linkedin className="h-5 w-5 hover:text-white cursor-pointer transition-colors" />
-            </div>
           </div>
 
           <div>
@@ -129,6 +124,17 @@ export default function Footer({ scrollToSection }) {
               <p className="flex items-center gap-2 italic">
                 <Mail className="h-3 w-3" /> simpovidro@abravidro.org.br
               </p>
+            </div>
+            <div className="flex gap-4 mt-5">
+              <a href="https://www.facebook.com/Abravidro">
+                <Facebook className="h-5 w-5 hover:text-white cursor-pointer transition-colors" />
+              </a>
+              <a href="https://www.instagram.com/abravidro/">
+                <Instagram className="h-5 w-5 hover:text-white cursor-pointer transition-colors" />
+              </a>
+              <a href="https://br.linkedin.com/company/abravidro">
+                <Linkedin className="h-5 w-5 hover:text-white cursor-pointer transition-colors" />
+              </a>
             </div>
           </div>
         </div>

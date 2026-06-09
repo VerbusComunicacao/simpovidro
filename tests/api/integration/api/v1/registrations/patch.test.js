@@ -158,6 +158,13 @@ describe("POST /api/v1/sales/[id]/replace-guest", () => {
         },
         body: JSON.stringify({
           room_id: roomId1,
+          company_cnpj: "99888777000166",
+          company_data: {
+            cnpj: "99888777000166",
+            corporate_name: "Empresa Teste Ltda",
+            trade_name: "Empresa Teste",
+            state: "SP",
+          },
           guests_data: [
             {
               name: "Carla Souza",
@@ -256,6 +263,12 @@ describe("POST /api/v1/sales/[id]/replace-guest", () => {
     expect(updatedGuests.some((g) => g.id === guestAlessandra.id)).toBe(true)
     expect(updatedGuests.some((g) => g.id === guestCarla.id)).toBe(false)
     expect(updatedGuests.some((g) => g.id === guestFernando.id)).toBe(true)
+
+    // Verify Alessandra has inherited the company CNPJ from the sale
+    const alessandraInSale = updatedGuests.find(
+      (g) => g.id === guestAlessandra.id,
+    )
+    expect(alessandraInSale.company_cnpj).toBe("99888777000166")
 
     // 4. Carla register again (in Quarto B)
     const secondRegResponse = await fetch(

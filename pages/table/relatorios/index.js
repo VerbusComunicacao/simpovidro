@@ -331,7 +331,7 @@ export default function RelatoriosPage() {
                         {value === true
                           ? "Sim"
                           : value === false
-                            ? "Não"
+                            ? "-"
                             : value || "-"}
                       </td>
                     ))}
