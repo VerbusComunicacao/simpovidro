@@ -213,7 +213,7 @@ export async function sendRegistrationEmail(
         : `Confirmação de Inscrição`
 
     const intro = isCancelled
-      ? `Sua inscrição foi cancelada com sucesso. Abaixo você encontra o resumo do pedido cancelado.`
+      ? `Sua inscrição foi cancelada. Abaixo você encontra o resumo do pedido cancelado.`
       : isAlteration
         ? `Sua inscrição foi alterada. Abaixo você encontra o resumo atualizado do seu pedido.`
         : `Sua inscrição foi finalizada com sucesso. Abaixo você encontra o resumo completo do seu pedido.`
@@ -342,10 +342,20 @@ export async function sendRegistrationEmail(
       </html>
     `
 
+    const toEmail =
+      isAlteration || isCancelled
+        ? "inscricao@abravidro.org.br"
+        : recipientEmail
+
+    const bccEmails =
+      isAlteration || isCancelled
+        ? undefined
+        : "inscricao@abravidro.org.br, rsilva@abravidro.org.br, scarvalho@abravidro.org.br"
+
     await email.send({
       from: `Simpovidro <simpovidro@abravidro.org.br>`,
-      to: recipientEmail,
-      bcc: "inscricao@abravidro.org.br, rsilva@abravidro.org.br, scarvalho@abravidro.org.br",
+      to: toEmail,
+      bcc: bccEmails,
       subject: subject,
       html: emailHtml,
       text: text,

@@ -1026,6 +1026,23 @@ async function replaceGuest(saleId, oldGuestId, newGuestId, externalClient) {
       values: [saleId, oldGuestId, newGuestId],
     })
 
+    // Get company CNPJ linked to the sale (if any) and update the new guest
+    let companyCnpj = null
+    if (targetSale.company_id) {
+      const companyResult = await client.query({
+        text: `SELECT cnpj FROM companies WHERE id = $1`,
+        values: [targetSale.company_id],
+      })
+      if (companyResult.rowCount > 0) {
+        companyCnpj = companyResult.rows[0].cnpj
+      }
+    }
+
+    await client.query({
+      text: `UPDATE guests SET company_cnpj = $2 WHERE id = $1`,
+      values: [newGuestId, companyCnpj],
+    })
+
     // 7. If lead guest is being replaced, update the lead guest ID in sales table
     if (targetSale.guest_id === oldGuestId) {
       await client.query({
