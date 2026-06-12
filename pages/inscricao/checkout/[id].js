@@ -34,7 +34,7 @@ import { cpf } from "cpf-cnpj-validator"
 import { validateCPF, validateCNPJ, validatePhone } from "@/lib/validators"
 import { LocationSelector } from "@/components/ui/LocationSelector"
 import { getInitialLocationState } from "@/lib/location-utils"
-import { Country } from "country-state-city"
+import { Country, State } from "country-state-city"
 import {
   calculateMaxInstallments as calculateInstallments,
   validateRoomCapacity,
@@ -42,6 +42,7 @@ import {
   calculateSummaryPrice,
   getChildrenCount,
   getGuestCountsString,
+  translateText,
 } from "@/lib/registration-helpers"
 
 function calculateAge(birthDate, referenceDate = new Date()) {
@@ -87,6 +88,50 @@ const ACTIVITY_SECTORS = [
   "OUTRO",
 ]
 
+const ACTIVITY_SECTORS_EN = {
+  "ACESSÓRIOS": "ACCESSORIES",
+  "ATACADISTA": "WHOLESALER",
+  "CONSULTORIA": "CONSULTING",
+  "DISTRIBUIDOR": "DISTRIBUTOR",
+  "ENTIDADE DE CLASSE": "TRADE ASSOCIATION",
+  "ESQUADRIAS": "FRAMES (WINDOWS/DOORS)",
+  "FERRAGENS": "HARDWARE",
+  "INSTALAÇÃO": "INSTALLATION",
+  "INSUMOS": "RAW MATERIALS",
+  "INTERLAY": "INTERLAYER",
+  "MAQUINÁRIO": "MACHINERY",
+  "PROCESSADOR": "GLASS PROCESSOR",
+  "RECICLAGEM": "RECYCLING",
+  "REPRESENTAÇÃO": "SALES REPRESENTATIVE",
+  "SERVIÇOS": "SERVICES",
+  "SINDICATOS": "TRADE UNIONS",
+  "SOFTWARE": "SOFTWARE",
+  "USINA DE BASE": "FLOAT GLASS PLANT",
+  "VIDRAÇARIA": "GLASS SHOP / GLAZIER",
+  "OUTRO": "OTHER",
+}
+
+const getStateDisplayName = (stateVal, countryCode = "BR") => {
+  if (!stateVal) return ""
+  try {
+    const states = State.getStatesOfCountry(countryCode)
+    const stateObj = states.find(
+      (s) =>
+        s.isoCode.toUpperCase() === stateVal.toUpperCase() ||
+        s.name.toUpperCase() === stateVal.toUpperCase()
+    )
+    if (stateObj) {
+      if (stateObj.name.toUpperCase() === stateVal.toUpperCase()) {
+        return stateObj.name
+      }
+      return `${stateObj.isoCode} - ${stateObj.name}`
+    }
+  } catch (e) {
+    console.error(e)
+  }
+  return stateVal
+}
+
 export default function CheckoutPage({
   room,
   user,
@@ -97,8 +142,18 @@ export default function CheckoutPage({
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [currentStep, setCurrentStep] = useState(1) // 1: CNPJ, 2: Company Form, 3: Guest Form
-  const [isInternational, setIsInternational] = useState(false)
+  const [isInternational, setIsInternational] = useState(
+    router.locale === "en" ||
+      (typeof window !== "undefined" &&
+        window.location.search.includes("lang=en")),
+  )
+  const [currentStep, setCurrentStep] = useState(
+    router.locale === "en" ||
+      (typeof window !== "undefined" &&
+        window.location.search.includes("lang=en"))
+      ? 2
+      : 1,
+  )
   const [cnpj, setCnpj] = useState("")
   const [foundCompany, setFoundCompany] = useState(null)
   const [suggestions, setSuggestions] = useState([])
@@ -126,6 +181,17 @@ export default function CheckoutPage({
   })
   const [selectedSector, setSelectedSector] = useState("")
   const [customSector, setCustomSector] = useState("")
+
+  useEffect(() => {
+    if (router.isReady) {
+      if (router.locale === "en" || router.query.lang === "en") {
+        setIsInternational(true)
+        if (currentStep === 1) {
+          setCurrentStep(2)
+        }
+      }
+    }
+  }, [router.isReady, router.locale, router.query])
 
   useEffect(() => {
     if (newCompanyData.activity_sector) {
@@ -298,7 +364,9 @@ export default function CheckoutPage({
     }
 
     try {
-      const res = await fetch(`/api/v1/companies?search=${encodeURIComponent(query)}`)
+      const res = await fetch(
+        `/api/v1/companies?search=${encodeURIComponent(query)}`,
+      )
       if (res.ok) {
         const data = await res.json()
         setSuggestions(data)
@@ -319,7 +387,7 @@ export default function CheckoutPage({
     if (comp.country) {
       const allCountries = Country.getAllCountries()
       const match = allCountries.find(
-        (c) => c.name.toLowerCase() === comp.country.toLowerCase()
+        (c) => c.name.toLowerCase() === comp.country.toLowerCase(),
       )
       if (match) {
         countryCode = match.isoCode
@@ -610,7 +678,7 @@ export default function CheckoutPage({
 
     // 1.5. Validate Custom Hotel Question if present
     const activeCheckoutQuestion = isInternational
-      ? (room.hotel_checkout_question_en || room.hotel_checkout_question)
+      ? room.hotel_checkout_question_en || room.hotel_checkout_question
       : room.hotel_checkout_question
 
     if (activeCheckoutQuestion && !checkoutQuestionResponse.trim()) {
@@ -1017,8 +1085,12 @@ export default function CheckoutPage({
                   <p className="text-sm text-gray-500">
                     {isInternational ? "Selected Room" : "Quarto Selecionado"}
                   </p>
-                  <p className="font-semibold text-blue-600">{room.name}</p>
-                  <p className="font-semibold">{room.room_type}</p>
+                  <p className="font-semibold text-blue-600">
+                    {translateText(room.name, isInternational)}
+                  </p>
+                  <p className="font-semibold">
+                    {translateText(room.room_type, isInternational)}
+                  </p>
                   {router.query.bed_preference && (
                     <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mt-1">
                       {router.query.bed_preference}
@@ -1189,34 +1261,6 @@ export default function CheckoutPage({
                         "Avançar"
                       )}
                     </Button>
-
-                    <div className="relative flex py-2 items-center">
-                      <div className="flex-grow border-t border-gray-200"></div>
-                      <span className="flex-shrink mx-4 text-gray-400 text-xs font-semibold uppercase tracking-wider">
-                        Ou / Or
-                      </span>
-                      <div className="flex-grow border-t border-gray-200"></div>
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
-                      onClick={() => {
-                        setIsInternational(true)
-                        setPaymentMethod("cash")
-                        setInstallmentsCount(1)
-                        setNewCompanyData((prev) => ({
-                          ...prev,
-                          country: "",
-                          countryCode: "",
-                          cnpj: "",
-                        }))
-                        setCurrentStep(2)
-                      }}
-                    >
-                      International Registration / Inscrição Estrangeira
-                    </Button>
                   </CardContent>
                 </Card>
               )}
@@ -1278,20 +1322,26 @@ export default function CheckoutPage({
                           required
                           autoComplete="off"
                         />
-                        {isInternational && showSuggestions && suggestions.length > 0 && (
-                          <div className="absolute left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 w-full">
-                            {suggestions.map((comp) => (
-                              <div
-                                key={comp.id}
-                                className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm transition-colors text-left flex flex-col"
-                                onMouseDown={() => handleSelectCompany(comp)}
-                              >
-                                <span className="font-bold text-gray-900">{comp.corporate_name}</span>
-                                <span className="text-xs text-gray-500">{comp.city} / {comp.state} - {comp.country}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        {isInternational &&
+                          showSuggestions &&
+                          suggestions.length > 0 && (
+                            <div className="absolute left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 w-full">
+                              {suggestions.map((comp) => (
+                                <div
+                                  key={comp.id}
+                                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm transition-colors text-left flex flex-col"
+                                  onMouseDown={() => handleSelectCompany(comp)}
+                                >
+                                  <span className="font-bold text-gray-900">
+                                    {comp.corporate_name}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {comp.city} / {comp.state} - {comp.country}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1476,9 +1526,7 @@ export default function CheckoutPage({
                             {ACTIVITY_SECTORS.map((sector) => (
                               <SelectItem key={sector} value={sector}>
                                 {isInternational
-                                  ? sector === "OUTRO"
-                                    ? "OTHER"
-                                    : sector
+                                  ? ACTIVITY_SECTORS_EN[sector] || sector
                                   : sector}
                               </SelectItem>
                             ))}
@@ -1544,8 +1592,11 @@ export default function CheckoutPage({
                         variant="outline"
                         className="flex-1"
                         onClick={() => {
-                          setIsInternational(false)
-                          setCurrentStep(1)
+                          if (isInternational) {
+                            router.back()
+                          } else {
+                            setCurrentStep(1)
+                          }
                         }}
                       >
                         {isInternational ? "Back" : "Voltar"}
@@ -2118,15 +2169,28 @@ export default function CheckoutPage({
                           </span>
                         </div>
                       </div>
-                      <Button
-                        type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-6"
-                        disabled={isLoading}
-                      >
-                        {isInternational
-                          ? "Proceed to Summary"
-                          : "Avançar para o Resumo da Inscrição"}
-                      </Button>
+                      <div className="flex gap-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1 text-lg py-3"
+                          onClick={() => {
+                            setCurrentStep(2)
+                            window.scrollTo({ top: 0, behavior: "smooth" })
+                          }}
+                        >
+                          {isInternational ? "Back" : "Voltar"}
+                        </Button>
+                        <Button
+                          type="submit"
+                          className="flex-[2] bg-blue-600 hover:bg-blue-700 text-lg py-3"
+                          disabled={isLoading}
+                        >
+                          {isInternational
+                            ? "Proceed to Summary"
+                            : "Avançar para o resumo da inscrição"}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </>
@@ -2157,10 +2221,10 @@ export default function CheckoutPage({
                               : "Quarto Selecionado"}
                           </h4>
                           <p className="font-semibold text-blue-900">
-                            {room.name}
+                            {translateText(room.name, isInternational)}
                           </p>
                           <p className="text-xs text-gray-600">
-                            {room.room_type}
+                            {translateText(room.room_type, isInternational)}
                           </p>
 
                           <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mt-1 py-0.5 bg-gray-50 rounded-full w-fit">
@@ -2333,7 +2397,10 @@ export default function CheckoutPage({
                             <span className="text-gray-500">
                               {isInternational ? "State/Province:" : "Estado:"}
                             </span>{" "}
-                            {newCompanyData.state || foundCompany?.state || "-"}
+                            {getStateDisplayName(
+                              newCompanyData.state || foundCompany?.state,
+                              newCompanyData.countryCode || foundCompany?.country_code
+                            ) || "-"}
                           </p>
                           <p>
                             <span className="text-gray-500">
@@ -2778,13 +2845,20 @@ export default function CheckoutPage({
                       )}
 
                       {/* Pergunta Personalizada do Hotel */}
-                      {(isInternational ? (room.hotel_checkout_question_en || room.hotel_checkout_question) : room.hotel_checkout_question) && (
+                      {(isInternational
+                        ? room.hotel_checkout_question_en ||
+                          room.hotel_checkout_question
+                        : room.hotel_checkout_question) && (
                         <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-3 my-6">
                           <Label
                             htmlFor="checkout-question-response"
                             className="text-sm font-bold text-slate-800"
                           >
-                            {isInternational ? (room.hotel_checkout_question_en || room.hotel_checkout_question) : room.hotel_checkout_question} *
+                            {isInternational
+                              ? room.hotel_checkout_question_en ||
+                                room.hotel_checkout_question
+                              : room.hotel_checkout_question}{" "}
+                            *
                           </Label>
                           <Input
                             id="checkout-question-response"
@@ -2808,7 +2882,7 @@ export default function CheckoutPage({
                           <p className="text-xs text-gray-600 leading-relaxed font-medium border-b border-slate-200 pb-3">
                             The participant gives faith and ensures the accuracy
                             of information provided to complete the enrollment
-                            process in 16th Simpovidro. He also claims to be
+                            process in 17th Simpovidro. He also claims to be
                             able to afford the payment to be chosen below. The
                             participant acknowledges the general conditions of
                             purchase and participation in the 17th Simpovidro

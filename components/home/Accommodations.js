@@ -12,6 +12,7 @@ import {
 import Image from "next/image"
 import { motion } from "framer-motion"
 import SectionTitle from "@/components/ui/SectionTitle"
+import { useRouter } from "next/router"
 
 function ItalicizeNonPortuguese({ text }) {
   if (!text) return null
@@ -72,6 +73,10 @@ function ItalicizeNonPortuguese({ text }) {
 }
 
 export default function Accommodations() {
+  const router = useRouter()
+  const isEn = router?.locale === "en"
+  const t = (pt, en) => (isEn ? en : pt)
+
   const [activeRoom, setActiveRoom] = useState("vila-luxo-1")
   const [activeImageIndex, setActiveImageIndex] = useState(0)
   const [prevActiveImageIndex, setPrevActiveImageIndex] = useState(null)
@@ -105,10 +110,16 @@ export default function Accommodations() {
   const acomodacoes = [
     {
       id: "superior",
-      name: "Superior (Standard)",
-      category: "Vilas Portuguesas",
-      comporta: "2 adultos + 1 criança (4 a 11 anos) ou 1 bebê (até 3 anos)",
-      contaCom: "um dormitório e um banheiro",
+      name: t("Superior (Standard)", "Superior (Standard)"),
+      category: t("Vilas Portuguesas", "Portuguese Villas"),
+      comporta: t(
+        "2 adultos + 1 criança (4 a 11 anos) ou 1 bebê (até 3 anos)",
+        "2 adults + 1 child (4 to 11 years old) or 1 baby (up to 3 years old)",
+      ),
+      contaCom: t(
+        "um dormitório e um banheiro",
+        "one bedroom and one bathroom",
+      ),
       tamanho: null,
       localizacao: null,
       images: [
@@ -120,28 +131,33 @@ export default function Accommodations() {
       ],
       perks: [],
       inclui: [
-        "Sabonetes, xampu e condicionador",
-        "Ar-condicionado",
-        "Tomada 220 V",
-        "Cama casal queen",
-        "Cofre",
-        "Telefone",
-        "Secador de cabelo",
-        "Frigobar",
-        "Toalhas",
-        "Kit berço",
-        "Camas extras",
+        t("Sabonetes, xampu e condicionador", "Soap, shampoo and conditioner"),
+        t("Ar-condicionado", "Air conditioning"),
+        t("Tomada 220 V", "220 V outlet"),
+        t("Cama casal queen", "Queen size double bed"),
+        t("Cofre", "Safe"),
+        t("Telefone", "Telephone"),
+        t("Secador de cabelo", "Hair dryer"),
+        t("Frigobar", "Minibar"),
+        t("Toalhas", "Towels"),
+        t("Kit berço", "Crib kit"),
+        t("Camas extras", "Extra beds"),
         "Wi-fi",
         "Concierge",
       ],
     },
     {
       id: "vila-luxo-1",
-      name: "Luxo (1 dormitório)",
-      category: "Vilas Portuguesas",
-      comporta:
+      name: t("Luxo (1 dormitório)", "Luxury (1 bedroom)"),
+      category: t("Vilas Portuguesas", "Portuguese Villas"),
+      comporta: t(
         "2 adultos + 2 crianças de 0 a 11 anos (em cama extra ou berço)",
-      contaCom: "dormitório, sala de estar, sala de jantar e cozinha",
+        "2 adults + 2 children from 0 to 11 years old (on extra bed or crib)",
+      ),
+      contaCom: t(
+        "dormitório, sala de estar, sala de jantar e cozinha",
+        "bedroom, living room, dining room and kitchen",
+      ),
       tamanho: null,
       localizacao: null,
       images: [
@@ -152,28 +168,33 @@ export default function Accommodations() {
       ],
       perks: [],
       inclui: [
-        "Sabonetes, xampu e condicionador",
-        "Ar-condicionado",
-        "Tomada 220 V",
-        "Cama casal queen",
-        "Cofre",
-        "Telefone",
-        "Secador de cabelo",
-        "Frigobar",
-        "Toalhas",
-        "Kit berço",
-        "Camas extras",
+        t("Sabonetes, xampu e condicionador", "Soap, shampoo and conditioner"),
+        t("Ar-condicionado", "Air conditioning"),
+        t("Tomada 220 V", "220 V outlet"),
+        t("Cama casal queen", "Queen size double bed"),
+        t("Cofre", "Safe"),
+        t("Telefone", "Telephone"),
+        t("Secador de cabelo", "Hair dryer"),
+        t("Frigobar", "Minibar"),
+        t("Toalhas", "Towels"),
+        t("Kit berço", "Crib kit"),
+        t("Camas extras", "Extra beds"),
         "Wi-fi",
         "Concierge",
       ],
     },
     {
       id: "vila-luxo-2",
-      name: "Luxo Família (2 dormitórios)",
-      category: "Vilas Portuguesas",
-      comporta:
+      name: t("Luxo Família (2 dormitórios)", "Family Luxury (2 bedrooms)"),
+      category: t("Vilas Portuguesas", "Portuguese Villas"),
+      comporta: t(
         "4 adultos + 2 crianças de 0 a 11 anos (em cama extra ou berço)",
-      contaCom: "dois dormitórios, sala de estar, sala de jantar e cozinha",
+        "4 adults + 2 children from 0 to 11 years old (on extra bed or crib)",
+      ),
+      contaCom: t(
+        "dois dormitórios, sala de estar, sala de jantar e cozinha",
+        "two bedrooms, living room, dining room and kitchen",
+      ),
       tamanho: null,
       localizacao: null,
       images: [
@@ -184,28 +205,33 @@ export default function Accommodations() {
       ],
       perks: [],
       inclui: [
-        "Sabonetes, xampu e condicionador",
-        "Ar-condicionado",
-        "Tomada 220 V",
-        "Cama casal queen",
-        "Cofre",
-        "Telefone",
-        "Secador de cabelo",
-        "Frigobar",
-        "Toalhas",
-        "Kit berço",
-        "Camas extras",
+        t("Sabonetes, xampu e condicionador", "Soap, shampoo and conditioner"),
+        t("Ar-condicionado", "Air conditioning"),
+        t("Tomada 220 V", "220 V outlet"),
+        t("Cama casal queen", "Queen size double bed"),
+        t("Cofre", "Safe"),
+        t("Telefone", "Telephone"),
+        t("Secador de cabelo", "Hair dryer"),
+        t("Frigobar", "Minibar"),
+        t("Toalhas", "Towels"),
+        t("Kit berço", "Crib kit"),
+        t("Camas extras", "Extra beds"),
         "Wi-fi",
         "Concierge",
       ],
     },
     {
       id: "vila-luxo-3",
-      name: "Luxo Família (3 dormitórios)",
-      category: "Vilas Portuguesas",
-      comporta:
+      name: t("Luxo Família (3 dormitórios)", "Family Luxury (3 bedrooms)"),
+      category: t("Vilas Portuguesas", "Portuguese Villas"),
+      comporta: t(
         "6 adultos + 2 crianças de 0 a 11 anos (em cama extra ou berço)",
-      contaCom: "três dormitórios, living room e cozinha completa",
+        "6 adults + 2 children from 0 to 11 years old (on extra bed or crib)",
+      ),
+      contaCom: t(
+        "três dormitórios, living room e cozinha completa",
+        "three bedrooms, living room and full kitchen",
+      ),
       tamanho: null,
       localizacao: null,
       images: [
@@ -217,17 +243,17 @@ export default function Accommodations() {
       ],
       perks: [],
       inclui: [
-        "Sabonetes, xampu e condicionador",
-        "Ar-condicionado",
-        "Tomada 220 V",
-        "Cama casal queen",
-        "Cofre",
-        "Telefone",
-        "Secador de cabelo",
-        "Frigobar",
-        "Toalhas",
-        "Kit berço",
-        "Camas extras",
+        t("Sabonetes, xampu e condicionador", "Soap, shampoo and conditioner"),
+        t("Ar-condicionado", "Air conditioning"),
+        t("Tomada 220 V", "220 V outlet"),
+        t("Cama casal queen", "Queen size double bed"),
+        t("Cofre", "Safe"),
+        t("Telefone", "Telephone"),
+        t("Secador de cabelo", "Hair dryer"),
+        t("Frigobar", "Minibar"),
+        t("Toalhas", "Towels"),
+        t("Kit berço", "Crib kit"),
+        t("Camas extras", "Extra beds"),
         "Wi-fi",
         "Concierge",
       ],
@@ -235,11 +261,20 @@ export default function Accommodations() {
 
     {
       id: "suite-prime-jr",
-      name: "Suíte Prime Júnior",
-      category: "Hotel Internacional",
-      comporta: "2 adultos + 1 criança (4 a 11 anos) + 1 bebê (até 3 anos)",
-      contaCom: "sacada, banheiro e hidromassagem",
-      tamanho: "30 m² (é uma versão compacta da Suíte Master)",
+      name: t("Suíte Prime Júnior", "Prime Junior Suite"),
+      category: t("Hotel Internacional", "International Hotel"),
+      comporta: t(
+        "2 adultos + 1 criança (4 a 11 anos) + 1 bebê (até 3 anos)",
+        "2 adults + 1 child (4 to 11 years old) + 1 baby (up to 3 years old)",
+      ),
+      contaCom: t(
+        "sacada, banheiro e hidromassagem",
+        "balcony, bathroom and hot tub",
+      ),
+      tamanho: t(
+        "30 m² (é uma versão compacta da Suíte Master)",
+        "30 m² (a compact version of the Master Suite)",
+      ),
       localizacao: null,
       images: [
         "https://www.costao.com.br/_next/image?url=https%3A%2F%2Fcms.costao.com.br%2Fassets%2F1663e122-2870-4cd6-b5c5-ac4585346723&w=3840&q=75",
@@ -250,30 +285,42 @@ export default function Accommodations() {
       ],
       perks: [],
       inclui: [
-        "Acesso exclusivo ao restaurante Rancho do Pescador (com crédito de R$ 100 disponível por pessoa por diária) – serviço não faz parte do sistema all inclusive do resort",
-        "Voucher Costão SPA Circuito das Águas",
-        "Ar-condicionado",
-        "Cama casal king",
-        "Tomada 220 V",
-        "Sabonetes, xampu e condicionador",
-        "Kit berço",
-        "Toalhas",
-        "Secador de cabelo",
-        "Frigobar",
-        "Telefone",
-        "Cofre",
+        t(
+          "Acesso exclusivo ao restaurante Rancho do Pescador (com crédito de R$ 100 disponível por pessoa por diária) – serviço não faz parte do sistema all inclusive do resort",
+          "Exclusive access to the Rancho do Pescador restaurant (with R$ 100 credit per person per day) – service is not part of the resort's all-inclusive system",
+        ),
+        t(
+          "Voucher Costão SPA Circuito das Águas",
+          "Costão SPA Water Circuit Voucher",
+        ),
+        t("Ar-condicionado", "Air conditioning"),
+        t("Cama casal king", "King size double bed"),
+        t("Tomada 220 V", "220 V outlet"),
+        t("Sabonetes, xampu e condicionador", "Soap, shampoo and conditioner"),
+        t("Kit berço", "Crib kit"),
+        t("Toalhas", "Towels"),
+        t("Secador de cabelo", "Hair dryer"),
+        t("Frigobar", "Minibar"),
+        t("Telefone", "Telephone"),
+        t("Cofre", "Safe"),
         "Wi-fi",
         "Concierge",
       ],
     },
     {
       id: "suite-master",
-      name: "Suíte Master",
-      category: "Hotel Internacional",
-      comporta: "2 adultos + 1 criança de 0 a 11 anos (em cama extra ou berço)",
-      contaCom: "dormitório, sacada, banheiro e banheira de hidromassagem",
+      name: t("Suíte Master", "Master Suite"),
+      category: t("Hotel Internacional", "International Hotel"),
+      comporta: t(
+        "2 adultos + 1 criança de 0 a 11 anos (em cama extra ou berço)",
+        "2 adults + 1 child from 0 to 11 years old (on extra bed or crib)",
+      ),
+      contaCom: t(
+        "dormitório, sacada, banheiro e banheira de hidromassagem",
+        "bedroom, balcony, bathroom and hot tub",
+      ),
       tamanho: "40 m²",
-      localizacao: "em frente à praia",
+      localizacao: t("em frente à praia", "beachfront"),
       images: [
         "https://www.costao.com.br/_next/image?url=https%3A%2F%2Fcms.costao.com.br%2Fassets%2F1663e122-2870-4cd6-b5c5-ac4585346723&w=3840&q=75",
         "https://www.costao.com.br/_next/image?url=https%3A%2F%2Fcms.costao.com.br%2Fassets%2F9bb5c18c-f056-4781-974d-d8de6f65bb14&w=3840&q=75",
@@ -283,19 +330,25 @@ export default function Accommodations() {
       ],
       perks: [],
       inclui: [
-        "Acesso exclusivo ao restaurante Rancho do Pescador (com crédito de R$ 100 disponível por pessoa por diária) – serviço não faz parte do sistema all inclusive do resort",
-        "Voucher Costão SPA Circuito das Águas",
-        "Ar-condicionado",
-        "Cama casal king",
-        "Tomada 220 V",
-        "Camas extras",
-        "Sabonetes, xampu e condicionador",
-        "Kit berço",
-        "Toalhas",
-        "Secador de cabelo",
-        "Frigobar",
-        "Telefone",
-        "Cofre",
+        t(
+          "Acesso exclusivo ao restaurante Rancho do Pescador (com crédito de R$ 100 disponível por pessoa por diária) – serviço não faz parte do sistema all inclusive do resort",
+          "Exclusive access to the Rancho do Pescador restaurant (with R$ 100 credit per person per day) – service is not part of the resort's all-inclusive system",
+        ),
+        t(
+          "Voucher Costão SPA Circuito das Águas",
+          "Costão SPA Water Circuit Voucher",
+        ),
+        t("Ar-condicionado", "Air conditioning"),
+        t("Cama casal king", "King size double bed"),
+        t("Tomada 220 V", "220 V outlet"),
+        t("Camas extras", "Extra beds"),
+        t("Sabonetes, xampu e condicionador", "Soap, shampoo and conditioner"),
+        t("Kit berço", "Crib kit"),
+        t("Toalhas", "Towels"),
+        t("Secador de cabelo", "Hair dryer"),
+        t("Frigobar", "Minibar"),
+        t("Telefone", "Telephone"),
+        t("Cofre", "Safe"),
         "Wi-fi",
         "Concierge",
       ],
@@ -320,12 +373,14 @@ export default function Accommodations() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <SectionTitle>Acomodações disponíveis</SectionTitle>
+          <SectionTitle>
+            {t("Acomodações disponíveis", "Available accommodations")}
+          </SectionTitle>
           <p className="text-slate-600 mt-4 font-medium text-base leading-relaxed">
-            Um dos focos da reforma pela qual o hotel passou é oferecer um
-            serviço ainda mais <em>premium</em> aos hóspedes. Confira abaixo as
-            acomodações disponíveis aos participantes do Simpovidro, todas elas
-            renovadas.
+            {t(
+              "Um dos focos da reforma pela qual o hotel passou é oferecer um serviço ainda mais premium aos hóspedes. Confira abaixo as acomodações disponíveis aos participantes do Simpovidro, todas elas renovadas.",
+              "One of the focuses of the renovation that the hotel underwent is to offer an even more premium service to guests. Check out below the accommodations available to Simpovidro participants, all of them renovated.",
+            )}
           </p>
         </div>
 
@@ -349,7 +404,10 @@ export default function Accommodations() {
               <span className="text-sm leading-tight font-semibold">
                 {room.name
                   .replace(`${room.category} - `, "")
-                  .replace("Hotel Internacional - ", "")}
+                  .replace(
+                    `${t("Hotel Internacional", "International Hotel")} - `,
+                    "",
+                  )}
               </span>
             </button>
           ))}
@@ -361,7 +419,7 @@ export default function Accommodations() {
           <button
             onClick={handlePrevRoom}
             className="absolute -left-6 lg:-left-10 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white hover:bg-slate-50 text-slate-700 hover:text-logo-blue rounded-full flex items-center justify-center border border-slate-200 shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 focus:outline-none hidden md:flex cursor-pointer"
-            aria-label="Acomodação anterior"
+            aria-label={t("Acomodação anterior", "Previous accommodation")}
           >
             <ChevronLeft className="h-6 w-6 stroke-[2.5]" />
           </button>
@@ -369,7 +427,7 @@ export default function Accommodations() {
           <button
             onClick={handleNextRoom}
             className="absolute -right-6 lg:-right-10 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white hover:bg-slate-50 text-slate-700 hover:text-logo-blue rounded-full flex items-center justify-center border border-slate-200 shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 focus:outline-none hidden md:flex cursor-pointer"
-            aria-label="Próxima acomodação"
+            aria-label={t("Próxima acomodação", "Next accommodation")}
           >
             <ChevronRight className="h-6 w-6 stroke-[2.5]" />
           </button>
@@ -482,9 +540,10 @@ export default function Accommodations() {
                 <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
                   <div className="space-y-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      {room.category === "Hotel Internacional" ? (
+                      {room.category ===
+                      t("Hotel Internacional", "International Hotel") ? (
                         <span className="inline-flex bg-gradient-to-r from-amber-500/10 to-yellow-600/10 text-amber-700 text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase border border-amber-500/20 shadow-xs">
-                          Hotel Internacional
+                          {t("Hotel Internacional", "International Hotel")}
                         </span>
                       ) : (
                         <span className="inline-flex bg-logo-blue/10 text-logo-blue text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase border border-logo-blue/20">
@@ -492,12 +551,15 @@ export default function Accommodations() {
                         </span>
                       )}
                       <span className="inline-flex bg-logo-green/10 text-logo-green text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase border border-logo-green/20">
-                        100% Renovado
+                        {t("100% Renovado", "100% Renovated")}
                       </span>
                     </div>
 
                     <h4 className="text-2xl md:text-3xl text-slate-900 font-title">
-                      {room.name.replace("Hotel Internacional - ", "")}
+                      {room.name.replace(
+                        `${t("Hotel Internacional", "International Hotel")} - `,
+                        "",
+                      )}
                     </h4>
 
                     {/* Metadata Grid */}
@@ -508,7 +570,7 @@ export default function Accommodations() {
                         </div>
                         <div>
                           <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                            Acomoda:
+                            {t("Acomoda:", "Accommodates:")}
                           </div>
                           <div className="text-xs font-semibold text-slate-700 leading-tight mt-0.5">
                             <ItalicizeNonPortuguese text={room.comporta} />
@@ -522,7 +584,7 @@ export default function Accommodations() {
                         </div>
                         <div>
                           <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                            Conta com:
+                            {t("Conta com:", "Features:")}
                           </div>
                           <div className="text-xs font-semibold text-slate-700 leading-tight mt-0.5">
                             <ItalicizeNonPortuguese text={room.contaCom} />
@@ -537,7 +599,7 @@ export default function Accommodations() {
                           </div>
                           <div>
                             <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                              Tamanho:
+                              {t("Tamanho:", "Size:")}
                             </div>
                             <div className="text-xs font-semibold text-slate-700 leading-tight mt-0.5">
                               <ItalicizeNonPortuguese text={room.tamanho} />
@@ -553,7 +615,7 @@ export default function Accommodations() {
                           </div>
                           <div>
                             <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                              Localização:
+                              {t("Localização:", "Location:")}
                             </div>
                             <div className="text-xs font-semibold text-slate-700 leading-tight mt-0.5">
                               <ItalicizeNonPortuguese text={room.localizacao} />
@@ -569,7 +631,7 @@ export default function Accommodations() {
                     <div className="p-4 bg-gradient-to-br from-amber-500/5 to-yellow-600/5 border border-amber-500/10 rounded-2xl space-y-2">
                       <div className="flex items-center gap-1.5 text-amber-700 text-[10px] font-black tracking-widest uppercase">
                         <Sparkles className="h-3.5 w-3.5 text-amber-500" />{" "}
-                        Benefícios Exclusivos
+                        {t("Benefícios Exclusivos", "Exclusive Benefits")}
                       </div>
                       <ul className="space-y-1.5">
                         {room.perks.map((perk, index) => (
@@ -592,7 +654,10 @@ export default function Accommodations() {
                   {/* Inclusions Grid */}
                   <div className="space-y-3">
                     <div className="text-[10px] text-slate-400 font-black tracking-widest uppercase">
-                      Itens Inclusos na Acomodação
+                      {t(
+                        "Itens Inclusos na Acomodação",
+                        "Included Items in the Accommodation",
+                      )}
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-white p-3 rounded-2xl border border-slate-100/50">
                       {room.inclui.map((item, idx) => (
@@ -615,18 +680,18 @@ export default function Accommodations() {
             <button
               onClick={handlePrevRoom}
               className="w-12 h-12 bg-white active:bg-slate-50 text-slate-700 rounded-full flex items-center justify-center border border-slate-200 shadow-md active:scale-95 cursor-pointer"
-              aria-label="Acomodação anterior"
+              aria-label={t("Acomodação anterior", "Previous accommodation")}
             >
               <ChevronLeft className="h-6 w-6 stroke-[2.5]" />
             </button>
             <span className="text-xs font-bold text-slate-500 font-eastman">
-              {acomodacoes.findIndex((r) => r.id === activeRoom) + 1} de{" "}
-              {acomodacoes.length}
+              {acomodacoes.findIndex((r) => r.id === activeRoom) + 1}{" "}
+              {t("de", "of")} {acomodacoes.length}
             </span>
             <button
               onClick={handleNextRoom}
               className="w-12 h-12 bg-white active:bg-slate-50 text-slate-700 rounded-full flex items-center justify-center border border-slate-200 shadow-md active:scale-95 cursor-pointer"
-              aria-label="Próxima acomodação"
+              aria-label={t("Próxima acomodação", "Next accommodation")}
             >
               <ChevronRight className="h-6 w-6 stroke-[2.5]" />
             </button>

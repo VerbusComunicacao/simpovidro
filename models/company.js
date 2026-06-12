@@ -7,23 +7,36 @@ import {
 
 async function create(companyInputValues, options = { isImport: false }) {
   const isImport = options.isImport
-  const isForeign = (companyInputValues.country && companyInputValues.country !== "Brasil")
+  const isForeign =
+    companyInputValues.country && companyInputValues.country !== "Brasil"
   const db = options.client || database
 
   const requiredFields = isImport
-    ? (isForeign ? ["corporate_name"] : ["corporate_name", "cnpj"])
-    : [
-        "corporate_name",
-        "badge",
-        "address",
-        "address_number",
-        "neighborhood",
-        "city",
-        "state",
-        "phone",
-        "email",
-        "zip_code",
-      ]
+    ? isForeign
+      ? ["corporate_name"]
+      : ["corporate_name", "cnpj"]
+    : isForeign
+      ? [
+          "corporate_name",
+          "badge",
+          "address",
+          "address_number",
+          "neighborhood",
+          "phone",
+          "email",
+        ]
+      : [
+          "corporate_name",
+          "badge",
+          "address",
+          "address_number",
+          "neighborhood",
+          "city",
+          "state",
+          "phone",
+          "email",
+          "zip_code",
+        ]
 
   if (!isImport && !isForeign) {
     requiredFields.push("cnpj")

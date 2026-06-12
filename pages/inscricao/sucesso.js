@@ -5,7 +5,7 @@ import RegistrationLayout from "@/components/registration/RegistrationLayout"
 
 export default function RegistrationSuccessPage() {
   const router = useRouter()
-  const isEn = router.query.lang === "en"
+  const isEn = router.locale === "en" || router.query.lang === "en"
 
   return (
     <RegistrationLayout

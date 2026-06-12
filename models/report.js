@@ -1,4 +1,5 @@
 import database from "infra/database.js"
+import { translateText } from "lib/registration-helpers.js"
 
 async function generateCompleteReport(hotelId) {
   if (!hotelId) {
@@ -58,7 +59,10 @@ async function generateCompleteReport(hotelId) {
     text: query,
     values: [hotelId],
   })
-  return result.rows
+  return result.rows.map((row) => ({
+    ...row,
+    "Nome do quarto": translateText(row["Nome do quarto"], false),
+  }))
 }
 
 async function generateByCompany(hotelId) {

@@ -75,7 +75,11 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     has_low_blood_pressure: false,
   })
 
-  const isForeign = !!(formData.passport_number || (formData.country && formData.country !== "Brasil") || (formData.nationality && formData.nationality !== "Brasileira"))
+  const isForeign = !!(
+    formData.passport_number ||
+    (formData.country && formData.country !== "Brasil") ||
+    (formData.nationality && formData.nationality !== "Brasileira")
+  )
 
   useEffect(() => {
     if (guestToEdit) {
@@ -187,7 +191,11 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     setAction("")
 
     // Validation
-    if (!isForeign && formData.cpf_number && !validateCPF(formData.cpf_number)) {
+    if (
+      !isForeign &&
+      formData.cpf_number &&
+      !validateCPF(formData.cpf_number)
+    ) {
       setError("CPF inválido.")
       setAction("Por favor, digite um CPF válido.")
       setIsErrorDialogOpen(true)
@@ -343,7 +351,9 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="passport_number">Número do Passaporte {isForeign && "*"}</Label>
+                    <Label htmlFor="passport_number">
+                      Número do Passaporte {isForeign && "*"}
+                    </Label>
                     <Input
                       id="passport_number"
                       name="passport_number"

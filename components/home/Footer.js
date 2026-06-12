@@ -1,8 +1,13 @@
 import { Facebook, Instagram, Linkedin, Phone, Mail } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/router"
 
 export default function Footer({ scrollToSection }) {
+  const router = useRouter()
+  const isEn = router?.locale === "en"
+  const t = (pt, en) => (isEn ? en : pt)
+
   return (
     <footer className="bg-slate-950 text-slate-400 py-20 border-t border-slate-900">
       <div className="max-w-7xl mx-auto px-6">
@@ -21,8 +26,10 @@ export default function Footer({ scrollToSection }) {
               </span>
             </div>
             <p className="text-sm leading-relaxed">
-              Referência nacional e internacional no setor vidreiro. Excelência
-              em organização pela Abravidro.
+              {t(
+                "Referência nacional e internacional no setor vidreiro. Excelência em organização pela Abravidro.",
+                "A national and international reference in the flat glass sector. Organized with excellence by Abravidro.",
+              )}
             </p>
           </div>
 
@@ -37,7 +44,7 @@ export default function Footer({ scrollToSection }) {
                   onClick={(e) => scrollToSection(e, "sobre")}
                   className="hover:text-white transition-colors"
                 >
-                  Sobre
+                  {t("Sobre", "About")}
                 </a>
               </li>
               <li>
@@ -46,7 +53,7 @@ export default function Footer({ scrollToSection }) {
                   onClick={(e) => scrollToSection(e, "local")}
                   className="hover:text-white transition-colors"
                 >
-                  Local
+                  {t("Local", "Location")}
                 </a>
               </li>
               <li>
@@ -55,7 +62,7 @@ export default function Footer({ scrollToSection }) {
                   onClick={(e) => scrollToSection(e, "programacao")}
                   className="hover:text-white transition-colors"
                 >
-                  Programação (em breve)
+                  {t("Programação (em breve)", "Schedule (coming soon)")}
                 </a>
               </li>
             </ul>
@@ -63,7 +70,7 @@ export default function Footer({ scrollToSection }) {
 
           <div>
             <h4 className="text-white font-bold mb-6 tracking-tight uppercase text-xs">
-              Logística
+              {t("Logística", "Logistics")}
             </h4>
             <ul className="space-y-4 text-sm">
               <li>
@@ -72,7 +79,7 @@ export default function Footer({ scrollToSection }) {
                   onClick={(e) => scrollToSection(e, "condicoes-especiais")}
                   className="hover:text-white transition-colors"
                 >
-                  Condições Especiais
+                  {t("Condições Especiais", "Special Conditions")}
                 </a>
               </li>
               <li>
@@ -81,7 +88,7 @@ export default function Footer({ scrollToSection }) {
                   onClick={(e) => scrollToSection(e, "acomodacoes")}
                   className="hover:text-white transition-colors"
                 >
-                  Acomodações
+                  {t("Acomodações", "Accommodations")}
                 </a>
               </li>
               <li>
@@ -90,7 +97,7 @@ export default function Footer({ scrollToSection }) {
                   onClick={(e) => scrollToSection(e, "logistica")}
                   className="hover:text-white transition-colors"
                 >
-                  Informe seu voo
+                  {t("Informe seu voo", "Flight Details")}
                 </a>
               </li>
               <li>
@@ -99,7 +106,7 @@ export default function Footer({ scrollToSection }) {
                   onClick={(e) => scrollToSection(e, "dicas")}
                   className="hover:text-white transition-colors"
                 >
-                  Dicas & Lembretes
+                  {t("Dicas & Lembretes", "Tips & Reminders")}
                 </a>
               </li>
             </ul>
@@ -107,7 +114,7 @@ export default function Footer({ scrollToSection }) {
 
           <div>
             <h4 className="text-white font-bold mb-6 tracking-tight uppercase text-xs">
-              Organização
+              {t("Organização", "Organization")}
             </h4>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
@@ -141,16 +148,20 @@ export default function Footer({ scrollToSection }) {
 
         <div className="pt-8 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium uppercase tracking-[0.2em]">
           <p>
-            © 2026 Associação Brasileira de Distribuidores e Processadores de
-            Vidros Planos.
+            {t(
+              "© 2026 Associação Brasileira de Distribuidores e Processadores de Vidros Planos.",
+              "© 2026 Brazilian Association of Flat Glass Distributors and Processors.",
+            )}
           </p>
           <div className="flex gap-6">
-            <span className="cursor-pointer hover:text-white">Privacidade</span>
+            <span className="cursor-pointer hover:text-white">
+              {t("Privacidade", "Privacy")}
+            </span>
             <Link
               href="/condicoes-gerais"
               className="cursor-pointer hover:text-white"
             >
-              Condições Gerais
+              {t("Condições Gerais", "General Conditions")}
             </Link>
           </div>
         </div>

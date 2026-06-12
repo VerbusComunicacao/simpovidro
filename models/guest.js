@@ -7,13 +7,13 @@ async function create(guestInputValues, userId, client, isImport = false) {
   applyPlaceholderLogic(guestInputValues)
   const isAdult = calculateIsAdult(guestInputValues.birth_date)
 
-  const isForeign = guestInputValues.passport_number || (guestInputValues.country && guestInputValues.country !== "Brasil") || (guestInputValues.nationality && guestInputValues.nationality !== "Brasileira")
+  const isForeign =
+    guestInputValues.passport_number ||
+    (guestInputValues.country && guestInputValues.country !== "Brasil") ||
+    (guestInputValues.nationality &&
+      guestInputValues.nationality !== "Brasileira")
 
-  const requiredFields = [
-    "name",
-    "badge_name",
-    "gender",
-  ]
+  const requiredFields = ["name", "badge_name", "gender"]
 
   if (isForeign) {
     requiredFields.push("birth_date", "passport_number")
@@ -196,12 +196,12 @@ async function upsert(guestData, userId = null, client, isImport = false) {
   applyPlaceholderLogic(guestData)
   const isAdult = calculateIsAdult(guestData.birth_date)
 
-  const isForeign = guestData.passport_number || (guestData.country && guestData.country !== "Brasil") || (guestData.nationality && guestData.nationality !== "Brasileira")
+  const isForeign =
+    guestData.passport_number ||
+    (guestData.country && guestData.country !== "Brasil") ||
+    (guestData.nationality && guestData.nationality !== "Brasileira")
 
-  const requiredFields = [
-    "name",
-    "gender",
-  ]
+  const requiredFields = ["name", "gender"]
 
   if (isForeign) {
     requiredFields.push("birth_date", "passport_number")
@@ -252,7 +252,12 @@ async function findOneByCpfOrRg(cpf_number, rg_number, client) {
   return results.rows[0] || null
 }
 
-async function findOneByCpfOrRgOrPassport(cpf_number, rg_number, passport_number, client) {
+async function findOneByCpfOrRgOrPassport(
+  cpf_number,
+  rg_number,
+  passport_number,
+  client,
+) {
   const db = client || database
 
   const conditions = []

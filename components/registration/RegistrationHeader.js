@@ -12,6 +12,8 @@ export default function RegistrationHeader({ showBackButton = false }) {
   const { user, logout } = useUser()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const isEn = router.locale === "en"
+  const t = (pt, en) => (isEn ? en : pt)
 
   return (
     <header className="bg-white/90 backdrop-blur-md shadow-sm border-b sticky top-0 pgm-header-shadow z-50 py-3">
@@ -36,15 +38,25 @@ export default function RegistrationHeader({ showBackButton = false }) {
 
           {/* Nav Items - Same as Home Navbar */}
           <nav className="hidden xl:flex items-center gap-6 text-sm font-bold text-slate-600">
-            {navItems.map((item) => (
-              <Link
-                key={item.id}
-                href={`/#${item.id}`}
-                className="hover:text-blue-600 transition-colors"
-              >
-                {item.name}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const name =
+                item.id === "sobre"
+                  ? t("Sobre", "About")
+                  : item.id === "local"
+                    ? t("Local", "Location")
+                    : item.id === "condicoes-especiais"
+                      ? t("Condições Especiais", "Special Conditions")
+                      : item.name
+              return (
+                <Link
+                  key={item.id}
+                  href={`/#${item.id}`}
+                  className="hover:text-blue-600 transition-colors"
+                >
+                  {name}
+                </Link>
+              )
+            })}
           </nav>
         </div>
 
@@ -56,7 +68,7 @@ export default function RegistrationHeader({ showBackButton = false }) {
               className="hidden md:flex items-center gap-2 text-slate-600 font-bold"
             >
               <ChevronLeft className="h-4 w-4" />
-              Voltar
+              {t("Voltar", "Back")}
             </Button>
           )}
 
@@ -67,7 +79,7 @@ export default function RegistrationHeader({ showBackButton = false }) {
                   {user.name || user.username}
                 </span>
                 <span className="text-[10px] text-blue-600 font-bold uppercase tracking-widest">
-                  Logado
+                  {t("Logado", "Logged In")}
                 </span>
               </div>
 
@@ -81,7 +93,7 @@ export default function RegistrationHeader({ showBackButton = false }) {
                     size="sm"
                     className="hidden sm:flex text-slate-600 font-bold hover:text-blue-600"
                   >
-                    <Link href="/table">Painel</Link>
+                    <Link href="/table">{t("Painel", "Admin Panel")}</Link>
                   </Button>
                 )}
                 <Button
@@ -90,17 +102,55 @@ export default function RegistrationHeader({ showBackButton = false }) {
                   size="sm"
                   className="hidden sm:flex text-slate-600 font-bold hover:text-blue-600"
                 >
-                  <Link href="/meus-pedidos">Meus Pedidos</Link>
+                  <Link href="/meus-pedidos">
+                    {t("Meus Pedidos", "My Orders")}
+                  </Link>
                 </Button>
+
+                {/* Language Switcher */}
+                <div className="flex items-center bg-slate-100 p-0.5 rounded-full border border-slate-200/60 mr-2 gap-0.5">
+                  <button
+                    onClick={() =>
+                      router.push(router.pathname, router.asPath, {
+                        locale: "pt-BR",
+                      })
+                    }
+                    className={`px-2 py-0.5 rounded-full transition-all cursor-pointer text-sm ${
+                      router.locale !== "en"
+                        ? "bg-white shadow-sm scale-110"
+                        : "opacity-50 hover:opacity-100"
+                    }`}
+                    title="Português"
+                  >
+                    🇧🇷
+                  </button>
+                  <button
+                    onClick={() =>
+                      router.push(router.pathname, router.asPath, {
+                        locale: "en",
+                      })
+                    }
+                    className={`px-2 py-0.5 rounded-full transition-all cursor-pointer text-sm ${
+                      router.locale === "en"
+                        ? "bg-white shadow-sm scale-110"
+                        : "opacity-50 hover:opacity-100"
+                    }`}
+                    title="English"
+                  >
+                    🇺🇸
+                  </button>
+                </div>
 
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={logout}
-                  className="gap-2 border-slate-200 text-slate-600 hover:text-red-600 hover:border-red-100 hover:bg-red-50 rounded-full px-4 shadow-sm"
+                  className="gap-2 border-slate-200 text-slate-600 hover:text-red-600 hover:border-red-100 hover:bg-red-50 rounded-full px-4 shadow-sm cursor-pointer"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline font-bold">Sair</span>
+                  <span className="hidden sm:inline font-bold">
+                    {t("Sair", "Sign Out")}
+                  </span>
                 </Button>
               </div>
             </div>
@@ -110,7 +160,7 @@ export default function RegistrationHeader({ showBackButton = false }) {
                 href="/login"
                 className="text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors"
               >
-                Entrar
+                {t("Entrar", "Sign In")}
               </Link>
               <Button
                 asChild
@@ -118,7 +168,7 @@ export default function RegistrationHeader({ showBackButton = false }) {
                 size="sm"
                 className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 font-bold shadow-md shadow-blue-200"
               >
-                <Link href="/inscricao">Inscreva-se</Link>
+                <Link href="/inscricao">{t("Inscreva-se", "Register")}</Link>
               </Button>
             </div>
           )}
@@ -137,23 +187,33 @@ export default function RegistrationHeader({ showBackButton = false }) {
       {/* Mobile Menu Panel */}
       {isOpen && (
         <div className="xl:hidden bg-white/95 backdrop-blur-md border-t border-slate-100 absolute top-full left-0 right-0 py-6 px-6 shadow-xl flex flex-col gap-4 z-40 transition-all duration-300">
-          {navItems.map((item) => (
-            <Link
-              key={item.id}
-              href={`/#${item.id}`}
-              onClick={() => setIsOpen(false)}
-              className="text-slate-700 hover:text-blue-600 font-semibold text-base py-1 transition-colors"
-            >
-              {item.name}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const name =
+              item.id === "sobre"
+                ? t("Sobre", "About")
+                : item.id === "local"
+                  ? t("Local", "Location")
+                  : item.id === "condicoes-especiais"
+                    ? t("Condições Especiais", "Special Conditions")
+                    : item.name
+            return (
+              <Link
+                key={item.id}
+                href={`/#${item.id}`}
+                onClick={() => setIsOpen(false)}
+                className="text-slate-700 hover:text-blue-600 font-semibold text-base py-1 transition-colors"
+              >
+                {name}
+              </Link>
+            )
+          })}
           {!user && (
             <Button
               asChild
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-full py-6 text-base font-bold shadow-md shadow-blue-200 mt-2"
               onClick={() => setIsOpen(false)}
             >
-              <Link href="/inscricao">Inscreva-se</Link>
+              <Link href="/inscricao">{t("Inscreva-se", "Register")}</Link>
             </Button>
           )}
         </div>

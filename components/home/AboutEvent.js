@@ -1,11 +1,19 @@
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
+import { useRouter } from "next/router"
 
 export default function AboutEvent({ scrollToSection }) {
+  const router = useRouter()
+  const isEn = router?.locale === "en"
+  const t = (pt, en) => (isEn ? en : pt)
+
   const benefits = [
-    "Networking",
-    "Centenas de profissionais e suas famílias",
-    "Programação técnica de alto nível",
+    t("Networking", "Networking"),
+    t(
+      "Centenas de profissionais e suas famílias",
+      "Hundreds of professionals and their families",
+    ),
+    t("Programação técnica de alto nível", "High-level technical programming"),
   ]
 
   return (
@@ -34,36 +42,62 @@ export default function AboutEvent({ scrollToSection }) {
           <div className="space-y-8">
             <div>
               <h2 className="text-white uppercase tracking-[0.2em] text-sm mb-4">
-                O Evento
+                {t("O Evento", "The Event")}
               </h2>
               <h3 className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-6">
-                O maior hub de relacionamento da comunidade vidreira!
+                {t(
+                  "O maior hub de relacionamento da comunidade vidreira!",
+                  "The largest relationship hub in the flat glass community!",
+                )}
               </h3>
               <div className="space-y-4 text-lg text-white leading-relaxed mb-6">
                 <p>
-                  A cada dois anos, os principais <em>players</em> vidreiros do
-                  Brasil se reúnem no Simpovidro. Em 2026, o encontro ocorrerá
-                  de{" "}
-                  <strong>
-                    5 a 8 de novembro, no Costão do Santinho Resort
-                  </strong>
-                  , em Florianópolis. Organizado pela Abravidro, o evento tem
-                  como foco o <em>networking</em> entre os diversos elos da
-                  cadeia em meio a um ambiente descontraído, reunindo{" "}
-                  <strong>
-                    oportunidades de negócio, conteúdo técnico e lazer
-                  </strong>
-                  .
+                  {t(
+                    <>
+                      A cada dois anos, os principais <em>players</em> vidreiros
+                      do Brasil se reúnem no Simpovidro. Em 2026, o encontro
+                      ocorrerá de{" "}
+                      <strong>
+                        5 a 8 de novembro, no Costão do Santinho Resort
+                      </strong>
+                      , em Florianópolis. Organizado pela Abravidro, o evento
+                      tem como foco o <em>networking</em> entre os diversos elos
+                      da cadeia em meio a um ambiente descontraído, reunindo{" "}
+                      <strong>
+                        oportunidades de negócio, conteúdo técnico e lazer
+                      </strong>
+                      .
+                    </>,
+                    <>
+                      Every two years, the main flat glass <em>players</em> in
+                      Brazil gather at Simpovidro. In 2026, the meeting will
+                      take place from{" "}
+                      <strong>
+                        November 5 to 8, at Costão do Santinho Resort
+                      </strong>
+                      , in Florianópolis. Organized by Abravidro, the event
+                      focuses on
+                      <em>networking</em> among the various links in the chain
+                      in a relaxed atmosphere, bringing together{" "}
+                      <strong>
+                        business opportunities, technical content, and leisure
+                      </strong>
+                      .
+                    </>,
+                  )}
                 </p>
                 <p>
-                  O simpósio recebe participantes não só do Brasil, mas de
-                  outras partes do mundo. É uma grande oportunidade para
-                  estreitar laços com clientes e parceiros, trocar informações
-                  sobre o mercado e fechar negócios.
+                  {t(
+                    "O simpósio recebe participantes não só do Brasil, mas de outras partes do mundo. É uma grande oportunidade para estreitar laços com clientes e parceiros, trocar informações sobre o mercado e fechar negócios.",
+                    "The symposium welcomes participants not only from Brazil, but from other parts of the world. It is a great opportunity to strengthen ties with clients and partners, exchange market information, and close deals.",
+                  )}
                 </p>
               </div>
               <p className="text-lg font-bold text-white mb-1">
-                Só no Simpovidro você encontra:
+                {t(
+                  "Só no Simpovidro você encontra:",
+                  "Only at Simpovidro you will find:",
+                )}
               </p>
             </div>
 
@@ -109,7 +143,7 @@ export default function AboutEvent({ scrollToSection }) {
                     </svg>
                   </div>
                   <span className="font-semibold text-white transition-all group-hover:opacity-100 opacity-90">
-                    {item === "Networking" ? <em>{item}</em> : item}
+                    {item}
                   </span>
                 </div>
               ))}
@@ -117,10 +151,10 @@ export default function AboutEvent({ scrollToSection }) {
 
             <Button
               size="lg"
-              className="bg-[#f4960d] hover:bg-[#e57800] text-white rounded-full h-14 px-10 text-lg shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95"
+              className="bg-[#f4960d] hover:bg-[#e57800] text-white rounded-full h-14 px-10 text-lg shadow-lg shadow-blue-600/20 transition-all hover:scale-105 active:scale-95 cursor-pointer"
               onClick={(e) => scrollToSection(e, "local")}
             >
-              Conheça o local do evento
+              {t("Conheça o local do evento", "Discover the venue")}
             </Button>
           </div>
 
@@ -128,7 +162,7 @@ export default function AboutEvent({ scrollToSection }) {
             <div className="absolute -inset-4 bg-blue-600/5 rounded-[2.5rem] blur-2xl"></div>
 
             <div className="relative aspect-square rounded-[2rem] shadow-2xl border-8 border-white">
-              <div className="absolute rounded-[2rem]  inset-0 bg-gradient-to-r from-brand-start/20 to-brand-end/20 z-10 pointer-events-none"></div>
+              <div className="absolute rounded-[2rem] inset-0 bg-gradient-to-r from-brand-start/20 to-brand-end/20 z-10 pointer-events-none"></div>
               <Image
                 src="/images/simpovidro.webp"
                 alt="Simpovidro Event Impression"
@@ -137,11 +171,13 @@ export default function AboutEvent({ scrollToSection }) {
               />
               <div className="absolute -bottom-12 left-8 right-8 p-8 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl text-white z-20">
                 <p className="font-eastman text-xl mb-1">
-                  Vanguarda & tradição
+                  {t("Vanguarda & tradição", "Avant-garde & Tradition")}
                 </p>
                 <p className="text-sm opacity-90">
-                  Conectando a cadeia vidreira há 16 edições com excelência e
-                  inovação.
+                  {t(
+                    "Conectando a cadeia vidreira há 16 edições com excelência e inovação.",
+                    "Connecting the glass supply chain for 16 editions with excellence and innovation.",
+                  )}
                 </p>
               </div>
             </div>

@@ -3,8 +3,14 @@ import { Button } from "@/components/ui/button"
 import { ChevronRight, Calendar, MapPin, Info } from "lucide-react"
 import Sponsors from "@/components/home/Sponsors"
 import { motion } from "framer-motion"
+import { useRouter } from "next/router"
 
-export default function Hero({ scrollToSection, router }) {
+export default function Hero({ scrollToSection, router: propRouter }) {
+  const localRouter = useRouter()
+  const router = propRouter || localRouter
+  const isEn = router?.locale === "en"
+  const t = (pt, en) => (isEn ? en : pt)
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -69,7 +75,8 @@ export default function Hero({ scrollToSection, router }) {
               className="bg-logo-blue hover:bg-logo-navy text-white rounded-full h-14 px-10 text-lg shadow-xl shadow-blue-500/25 transition-transform hover:scale-105 cursor-pointer"
               onClick={() => router.push("/inscricao")}
             >
-              Inscreva-se <ChevronRight className="ml-2 h-5 w-5" />
+              {t("Inscreva-se", "Register")}{" "}
+              <ChevronRight className="ml-2 h-5 w-5" />
             </Button>
             <Button
               size="lg"
@@ -77,7 +84,7 @@ export default function Hero({ scrollToSection, router }) {
               className="bg-logo-orange/20 backdrop-blur-sm border-orange-400/30 text-orange-400 hover:bg-logo-orange/35 hover:text-orange-300 rounded-full h-14 px-10 text-lg transition-all"
               onClick={(e) => scrollToSection(e, "sobre")}
             >
-              Saber mais <Info className="ml-2 h-5 w-5" />
+              {t("Saber mais", "Learn more")} <Info className="ml-2 h-5 w-5" />
             </Button>
           </div>
         </motion.div>
@@ -101,7 +108,7 @@ export default function Hero({ scrollToSection, router }) {
               </div>
               <div className="flex flex-col">
                 <span className="font-black text-slate-900 text-base md:text-lg leading-tight font-title whitespace-nowrap">
-                  5 a 8 de Novembro
+                  {t("5 a 8 de Novembro", "November 5 to 8")}
                 </span>
                 <span className="text-xs uppercase font-bold text-slate-400 tracking-wider mt-0.5 whitespace-nowrap">
                   2026

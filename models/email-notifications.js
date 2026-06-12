@@ -209,7 +209,7 @@ export async function sendRegistrationEmail(
       </table>
     `
 
-    let guestCountsString = getGuestCountsString(saleDetails)
+    let guestCountsString = getGuestCountsString(saleDetails, isInternational)
     if (isInternational) {
       guestCountsString = guestCountsString
         .replace(/adulto\(s\)/gi, "adult(s)")
@@ -421,9 +421,9 @@ export async function sendRegistrationEmail(
                           ? `
                         <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 8px 0; font-weight: bold; color: #111827;">Payment - Due date: ${saleDetails.installments?.[0]?.due_date ? formatDate(saleDetails.installments[0].due_date) : ""}</p>
                         <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 15px 0; color: #4b5563;">After confirming the veracity of the information provided, the organization will contact you to arrange payment details.</p>
-                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 25px 0; color: #4b5563;">All participants have to inform their flights to organization until October, 7th 2026, to fit all transfers.<br/>
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 25px 0; color: #4b5563;">All participants have to inform their flights to organization until October, 16th 2026, to fit all transfers.<br/>
                         Phone: (+55.11) 3873-9908.<br/>
-                        E-mail: logistica@simpovidro.com.br</p>
+                        E-mail: logistica@abravidro.org.br</p>
                         <p style="font-family: Arial, Helvetica, sans-serif; margin: 0; color: #4b5563;">
                           Best regards,<br/><br/>
                           <strong>17th Simpovidro organization</strong>

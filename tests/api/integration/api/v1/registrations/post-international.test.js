@@ -225,7 +225,9 @@ describe("POST /api/v1/registrations (International)", () => {
     // Check consolidated reports
     const completeReport = await report.generateCompleteReport(hotelId)
     expect(completeReport.length).toBeGreaterThanOrEqual(1)
-    const reportItem = completeReport.find(item => item["Nome"] === "Alice Smith")
+    const reportItem = completeReport.find(
+      (item) => item["Nome"] === "Alice Smith",
+    )
     expect(reportItem).toBeDefined()
     expect(reportItem["Passaporte"]).toBe("US987654321")
     expect(reportItem["CPF"]).toBeNull()
@@ -234,7 +236,9 @@ describe("POST /api/v1/registrations (International)", () => {
     expect(reportItem["CNPJ da empresa"]).toBeNull()
 
     const companyReport = await report.generateByCompany(hotelId)
-    const companyReportItem = companyReport.find(item => item.company_name === "Global Glass Inc.")
+    const companyReportItem = companyReport.find(
+      (item) => item.company_name === "Global Glass Inc.",
+    )
     expect(companyReportItem).toBeDefined()
     expect(companyReportItem.cnpj).toBe("N/A")
     expect(Number(companyReportItem.total_participants)).toBe(1)
@@ -374,7 +378,9 @@ describe("POST /api/v1/registrations (International)", () => {
       values: [data.saleId],
     })
     expect(saleResult.rowCount).toBe(1)
-    expect(saleResult.rows[0].checkout_question_response).toBe("Yes, I prefer medium size")
+    expect(saleResult.rows[0].checkout_question_response).toBe(
+      "Yes, I prefer medium size",
+    )
     expect(saleResult.rows[0].hotel_checkout_question_en).toBe("Question in EN")
   })
 })

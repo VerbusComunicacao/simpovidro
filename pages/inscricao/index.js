@@ -33,6 +33,7 @@ import {
   calculateSummaryPrice,
   calculateAdultDiscount,
   getChildrenCount,
+  translateText,
 } from "@/lib/registration-helpers"
 import Link from "next/link"
 import Image from "next/image"
@@ -40,6 +41,8 @@ import webserver from "infra/webserver"
 
 export default function RegistrationPage({ hotels, discounts }) {
   const router = useRouter()
+  const isInternational = router.locale === "en"
+  const t = (pt, en) => (isInternational ? en : pt)
   const activeHotel = hotels?.[0]
   const [isSearchPerformed, setIsSearchPerformed] = useState(false)
   const [searchData, setSearchData] = useState(() => {
@@ -65,8 +68,8 @@ export default function RegistrationPage({ hotels, discounts }) {
     const categories = new Set()
 
     activeHotel.rooms.forEach((room) => {
-      types.add(room.room_type)
-      categories.add(room.room_category)
+      types.add(translateText(room.room_type, isInternational))
+      categories.add(translateText(room.room_category, isInternational))
     })
 
     const filtered = activeHotel.rooms.filter((room) => {
@@ -80,7 +83,8 @@ export default function RegistrationPage({ hotels, discounts }) {
       const minAdultsMatch = minGuests <= searchData.adults
 
       const typeMatch =
-        selectedType === "all" || room.room_type === selectedType
+        selectedType === "all" ||
+        translateText(room.room_type, isInternational) === selectedType
 
       return (
         hasAvailability &&
@@ -108,20 +112,34 @@ export default function RegistrationPage({ hotels, discounts }) {
       roomTypes: Array.from(types),
       filteredRooms: roomsWithPrices,
     }
-  }, [activeHotel, selectedType, searchData, discounts, childrenCount])
+  }, [
+    activeHotel,
+    selectedType,
+    searchData,
+    discounts,
+    childrenCount,
+    isInternational,
+  ])
 
   if (!activeHotel) {
     return (
-      <RegistrationLayout title="Simpovidro 2026 - Inscrições Indisponíveis">
+      <RegistrationLayout
+        title={t(
+          "Simpovidro 2026 - Inscrições Indisponíveis",
+          "Simpovidro 2026 - Registrations Unavailable",
+        )}
+      >
         <div className="flex items-center justify-center p-4 py-20">
           <Card className="max-w-md w-full text-center p-8">
             <AlertCircle className="mx-auto h-12 w-12 text-blue-500 mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Inscrições não disponíveis
+              {t("Inscrições não disponíveis", "Registrations not available")}
             </h1>
-            <p className="text-gray-600 mb-6">Volte mais tarde.</p>
+            <p className="text-gray-600 mb-6">
+              {t("Volte mais tarde.", "Please come back later.")}
+            </p>
             <Button asChild variant="outline" className="w-full">
-              <Link href="/">Voltar para o início</Link>
+              <Link href="/">{t("Voltar para o início", "Back to home")}</Link>
             </Button>
           </Card>
         </div>
@@ -151,11 +169,22 @@ export default function RegistrationPage({ hotels, discounts }) {
               <div className="relative z-10">
                 <div className="text-center mb-12">
                   <h1 className="text-4xl font-black text-white uppercase italic tracking-tighter mb-4 drop-shadow-lg">
-                    Inicie sua <span className="text-blue-400">Inscrição</span>
+                    {t(
+                      <>
+                        Inicie sua{" "}
+                        <span className="text-blue-400">Inscrição</span>
+                      </>,
+                      <>
+                        Start your{" "}
+                        <span className="text-blue-400">Registration</span>
+                      </>,
+                    )}
                   </h1>
                   <p className="text-slate-200 font-medium max-w-lg mx-auto">
-                    Selecione a quantidade de hóspedes para ver as opções
-                    disponíveis no{" "}
+                    {t(
+                      "Selecione a quantidade de hóspedes para ver as opções disponíveis no",
+                      "Select the number of guests to see available options at",
+                    )}{" "}
                     <span className="text-blue-400 font-bold">
                       {activeHotel.name}
                     </span>
@@ -167,7 +196,10 @@ export default function RegistrationPage({ hotels, discounts }) {
                     <div className="flex items-center gap-2">
                       <Users className="h-5 w-5 text-blue-600" />
                       <h2 className="text-xl font-bold">
-                        Selecione a quantidade de pessoas
+                        {t(
+                          "Selecione a quantidade de pessoas",
+                          "Select number of guests",
+                        )}
                       </h2>
                     </div>
                   </div>
@@ -178,7 +210,7 @@ export default function RegistrationPage({ hotels, discounts }) {
                       <div className="space-y-3">
                         <div className="flex items-end md:h-10">
                           <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-                            Adultos
+                            {t("Adultos", "Adults")}
                           </h3>
                         </div>
                         <div className="flex items-center justify-between border rounded-lg p-2 bg-white">
@@ -223,7 +255,10 @@ export default function RegistrationPage({ hotels, discounts }) {
                           <div key={policy.id} className="space-y-3">
                             <div className="flex items-end gap-2 md:h-10">
                               <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-                                {policy.description}
+                                {translateText(
+                                  policy.description,
+                                  isInternational,
+                                )}
                               </h3>
                             </div>
 
@@ -268,14 +303,17 @@ export default function RegistrationPage({ hotels, discounts }) {
                     </div>
 
                     <Button
-                      className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all"
+                      className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all cursor-pointer"
                       onClick={() => {
                         setIsSearchPerformed(true)
                         window.scrollTo({ top: 0, behavior: "smooth" })
                       }}
                     >
                       <Search className="mr-2 h-4 w-4" />
-                      Procurar quartos disponíveis
+                      {t(
+                        "Procurar quartos disponíveis",
+                        "Search available rooms",
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
@@ -291,17 +329,24 @@ export default function RegistrationPage({ hotels, discounts }) {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
-                    Resultados para sua busca
+                    {t("Resultados para sua busca", "Search results")}
                   </h2>
                   <div className="flex items-center gap-3 text-gray-600 mt-1">
                     <span className="flex items-center gap-1 font-medium italic">
-                      {searchData.adults} adulto(s)
+                      {searchData.adults}{" "}
+                      {searchData.adults === 1
+                        ? t("adulto", "adult")
+                        : t("adultos", "adults")}
                     </span>
                     {Object.keys(searchData)
                       .filter((k) => k !== "adults" && searchData[k] > 0)
                       .map((k) => {
                         const policy = activeHotel.price_policies.find(
                           (p) => p.id === k,
+                        )
+                        const policyDesc = translateText(
+                          policy?.description,
+                          isInternational,
                         )
                         return (
                           <span
@@ -310,9 +355,15 @@ export default function RegistrationPage({ hotels, discounts }) {
                           >
                             <span className="text-gray-300">•</span>
                             {searchData[k]}{" "}
-                            {policy?.description
-                              ?.replace(/Crianças/g, "Criança(s)")
-                              .replace(/crianças/g, "criança(s)")}
+                            {policyDesc
+                              ?.replace(
+                                /Crianças/g,
+                                t("Criança(s)", "Child(ren)"),
+                              )
+                              .replace(
+                                /crianças/g,
+                                t("criança(s)", "child(ren)"),
+                              )}
                           </span>
                         )
                       })}
@@ -321,10 +372,10 @@ export default function RegistrationPage({ hotels, discounts }) {
               </div>
               <Button
                 variant="outline"
-                className="rounded-xl font-bold border-gray-200 px-6 h-12"
+                className="rounded-xl font-bold border-gray-200 px-6 h-12 cursor-pointer"
                 onClick={() => setIsSearchPerformed(false)}
               >
-                Alterar Busca
+                {t("Alterar Busca", "Change Search")}
               </Button>
             </div>
 
@@ -332,11 +383,21 @@ export default function RegistrationPage({ hotels, discounts }) {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
                   <h2 className="text-3xl font-black text-slate-900 uppercase">
-                    Escolha seu <span className="text-blue-600">Quarto</span>
+                    {t(
+                      <>
+                        Escolha seu{" "}
+                        <span className="text-blue-600">Quarto</span>
+                      </>,
+                      <>
+                        Choose your <span className="text-blue-600">Room</span>
+                      </>,
+                    )}
                   </h2>
                   <p className="text-slate-500 font-medium">
-                    Selecione as opções abaixo para filtrar os quartos
-                    disponíveis
+                    {t(
+                      "Selecione as opções abaixo para filtrar os quartos disponíveis",
+                      "Select options below to filter available rooms",
+                    )}
                   </p>
                 </div>
 
@@ -347,13 +408,17 @@ export default function RegistrationPage({ hotels, discounts }) {
                       onValueChange={setSelectedType}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Tipo de quarto" />
+                        <SelectValue
+                          placeholder={t("Tipo de quarto", "Room type")}
+                        />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todos os tipos</SelectItem>
+                        <SelectItem value="all">
+                          {t("Todos os tipos", "All types")}
+                        </SelectItem>
                         {roomTypes.map((type) => (
                           <SelectItem key={type} value={type}>
-                            {type}
+                            {translateText(type, isInternational)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -364,206 +429,277 @@ export default function RegistrationPage({ hotels, discounts }) {
 
               {filteredRooms.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredRooms.map((room) => (
-                    <Card
-                      key={room.id}
-                      className="overflow-hidden hover:shadow-md transition-shadow flex flex-col"
-                    >
-                      <div className="h-48 w-full relative bg-gray-100 border-b overflow-hidden">
-                        {room.photos && room.photos.length > 0 ? (
-                          <Image
-                            src={room.photos[0]}
-                            alt={room.name || room.room_type}
-                            className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
-                            fill
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-r from-brand-start to-brand-end flex items-center justify-center">
-                            <BedDouble className="h-12 w-12 text-white/50" />
-                          </div>
-                        )}
-                      </div>
-                      <CardHeader>
-                        <div className="flex justify-between items-start mb-2">
-                          {room.room_type_description ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge
-                                  variant="outline"
-                                  className="border-blue-200 text-blue-700 bg-blue-50 cursor-help"
-                                >
-                                  {room.room_type}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="w-64">
-                                <p className="leading-relaxed font-medium">
-                                  {room.room_type_description}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
+                  {filteredRooms.map((room) => {
+                    const roomName =
+                      translateText(room.name, isInternational) ||
+                      translateText(room.room_type, isInternational)
+                    const roomDesc = translateText(
+                      room.description,
+                      isInternational,
+                    )
+                    const roomTypeLabel = translateText(
+                      room.room_type,
+                      isInternational,
+                    )
+                    const roomTypeDesc = translateText(
+                      room.room_type_description,
+                      isInternational,
+                    )
+
+                    return (
+                      <Card
+                        key={room.id}
+                        className="overflow-hidden hover:shadow-md transition-shadow flex flex-col"
+                      >
+                        <div className="h-48 w-full relative bg-gray-100 border-b overflow-hidden">
+                          {room.photos && room.photos.length > 0 ? (
+                            <Image
+                              src={room.photos[0]}
+                              alt={roomName}
+                              className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
+                              fill
+                            />
                           ) : (
-                            <Badge
-                              variant="outline"
-                              className="border-blue-200 text-blue-700 bg-blue-50"
-                            >
-                              {room.room_type}
-                            </Badge>
+                            <div className="w-full h-full bg-gradient-to-r from-brand-start to-brand-end flex items-center justify-center">
+                              <BedDouble className="h-12 w-12 text-white/50" />
+                            </div>
                           )}
                         </div>
-                        <CardTitle className="text-xl">
-                          {room.name || room.room_type}
-                        </CardTitle>
-                        <CardDescription>
-                          {room.description || "Nenhuma descrição disponível"}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4" />
-                              <span> {searchData.adults} adulto(s)</span>
-                            </div>
-                            {childrenCount > 0 && (
-                              <div className="flex items-center gap-1">
-                                <span>+ {childrenCount} criança(s)</span>
-                              </div>
+                        <CardHeader>
+                          <div className="flex justify-between items-start mb-2">
+                            {roomTypeDesc ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge
+                                    variant="outline"
+                                    className="border-blue-200 text-blue-700 bg-blue-50 cursor-help"
+                                  >
+                                    {roomTypeLabel}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="w-64">
+                                  <p className="leading-relaxed font-medium">
+                                    {roomTypeDesc}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="border-blue-200 text-blue-700 bg-blue-50"
+                              >
+                                {roomTypeLabel}
+                              </Badge>
                             )}
                           </div>
-
-                          <div className="pt-4 border-t space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
-                                  Valor da Inscrição
-                                </p>
-                                <p className="text-2xl font-bold text-blue-600">
-                                  {new Intl.NumberFormat("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                  }).format(room.finalTotal)}
-                                </p>
+                          <CardTitle className="text-xl">{roomName}</CardTitle>
+                          <CardDescription>
+                            {roomDesc ||
+                              t(
+                                "Nenhuma descrição disponível",
+                                "No description available",
+                              )}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <Users className="h-4 w-4" />
+                                <span>
+                                  {" "}
+                                  {searchData.adults}{" "}
+                                  {searchData.adults === 1
+                                    ? t("adulto", "adult")
+                                    : t("adultos", "adults")}
+                                </span>
                               </div>
-                              <Button
-                                className="bg-blue-600 hover:bg-blue-700"
-                                onClick={() => {
-                                  const params = new URLSearchParams()
-                                  Object.keys(searchData).forEach((key) => {
-                                    params.append(key, searchData[key])
-                                  })
-                                  router.push(
-                                    `/inscricao/quarto/${room.id}?${params.toString()}`,
-                                  )
-                                }}
-                              >
-                                Selecionar
-                              </Button>
+                              {childrenCount > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <span>
+                                    + {childrenCount}{" "}
+                                    {childrenCount === 1
+                                      ? t("criança", "child")
+                                      : t("crianças", "children")}
+                                  </span>
+                                </div>
+                              )}
                             </div>
 
-                            <div className="w-full text-sm bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2.5">
-                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
-                                Descontos especiais:
-                              </p>
-                              {discounts.map((discount, index) => {
-                                const isMemberDiscount =
-                                  discount.name
-                                    .toLowerCase()
-                                    .includes("associada") ||
-                                  discount.name
-                                    .toLowerCase()
-                                    .includes("associado")
+                            <div className="pt-4 border-t space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                                    {t(
+                                      "Valor da Inscrição",
+                                      "Registration Fee",
+                                    )}
+                                  </p>
+                                  <p className="text-2xl font-bold text-blue-600">
+                                    {new Intl.NumberFormat(
+                                      isInternational ? "en-US" : "pt-BR",
+                                      {
+                                        style: "currency",
+                                        currency: "BRL",
+                                      },
+                                    ).format(room.finalTotal)}
+                                  </p>
+                                </div>
+                                <Button
+                                  className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                                  onClick={() => {
+                                    const params = new URLSearchParams()
+                                    Object.keys(searchData).forEach((key) => {
+                                      params.append(key, searchData[key])
+                                    })
+                                    router.push(
+                                      `/inscricao/quarto/${room.id}?${params.toString()}`,
+                                    )
+                                  }}
+                                >
+                                  {t("Selecionar", "Select")}
+                                </Button>
+                              </div>
 
-                                const displayPrice =
-                                  isMemberDiscount && room.memberTotal
-                                    ? room.memberTotal
-                                    : room.originalTotal -
-                                      calculateAdultDiscount(
-                                        room.adultOriginalTotal ??
-                                          room.originalTotal,
-                                        Number(discount.value || 0),
-                                      )
+                              <div className="w-full text-sm bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2.5">
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                  {t(
+                                    "Descontos especiais:",
+                                    "Special discounts:",
+                                  )}
+                                </p>
+                                {discounts.map((discount, index) => {
+                                  const discountName = translateText(
+                                    discount.name,
+                                    isInternational,
+                                  )
+                                  const isMemberDiscount =
+                                    discountName
+                                      .toLowerCase()
+                                      .includes("associada") ||
+                                    discountName
+                                      .toLowerCase()
+                                      .includes("associado") ||
+                                    discountName
+                                      .toLowerCase()
+                                      .includes("member")
 
-                                const discountValue = Number(
-                                  discount.value || 0,
-                                )
+                                  const displayPrice =
+                                    isMemberDiscount && room.memberTotal
+                                      ? room.memberTotal
+                                      : room.originalTotal -
+                                        calculateAdultDiscount(
+                                          room.adultOriginalTotal ??
+                                            room.originalTotal,
+                                          Number(discount.value || 0),
+                                        )
 
-                                const savedAmount =
-                                  room.originalTotal - displayPrice
+                                  const discountValue = Number(
+                                    discount.value || 0,
+                                  )
 
-                                return (
-                                  <div
-                                    key={discount.id}
-                                    className={`flex items-center justify-between py-2.5 ${
-                                      index !== discounts.length - 1
-                                        ? "border-b border-slate-100"
-                                        : ""
-                                    }`}
-                                  >
-                                    <div className="flex flex-col gap-1">
-                                      <span className="font-bold text-slate-800 text-sm md:text-base">
-                                        {discount.name.includes("Associada")
-                                          ? "Associado Abravidro"
-                                          : discount.name}
-                                      </span>
-                                      {discountValue > 0 && (
-                                        <span className="text-[10px] md:text-[11px] font-black text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2 py-0.5 rounded-full w-fit uppercase tracking-wider">
-                                          {discountValue}% OFF
+                                  const savedAmount =
+                                    room.originalTotal - displayPrice
+
+                                  return (
+                                    <div
+                                      key={discount.id}
+                                      className={`flex items-center justify-between py-2.5 ${
+                                        index !== discounts.length - 1
+                                          ? "border-b border-slate-100"
+                                          : ""
+                                      }`}
+                                    >
+                                      <div className="flex flex-col gap-1">
+                                        <span className="font-bold text-slate-800 text-sm md:text-base">
+                                          {discountName
+                                            .toLowerCase()
+                                            .includes("associada") ||
+                                          discountName
+                                            .toLowerCase()
+                                            .includes("associado")
+                                            ? t(
+                                                "Associado Abravidro",
+                                                "Abravidro Associate",
+                                              )
+                                            : discountName}
                                         </span>
-                                      )}
-                                    </div>
+                                        {discountValue > 0 && (
+                                          <span className="text-[10px] md:text-[11px] font-black text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2 py-0.5 rounded-full w-fit uppercase tracking-wider">
+                                            {discountValue}% OFF
+                                          </span>
+                                        )}
+                                      </div>
 
-                                    <div className="flex flex-col items-end">
-                                      <span className="text-xs text-slate-400 line-through">
-                                        {new Intl.NumberFormat("pt-BR", {
-                                          style: "currency",
-                                          currency: "BRL",
-                                        }).format(room.originalTotal)}
-                                      </span>
-                                      <span className="font-black text-blue-600 text-base md:text-lg lg:text-xl animate-pulse-subtle">
-                                        {new Intl.NumberFormat("pt-BR", {
-                                          style: "currency",
-                                          currency: "BRL",
-                                        }).format(displayPrice)}
-                                      </span>
-                                      {savedAmount > 0 && (
-                                        <span className="text-xs text-emerald-600 font-extrabold">
-                                          Economize{" "}
-                                          {new Intl.NumberFormat("pt-BR", {
-                                            style: "currency",
-                                            currency: "BRL",
-                                          }).format(savedAmount)}
+                                      <div className="flex flex-col items-end">
+                                        <span className="text-xs text-slate-400 line-through">
+                                          {new Intl.NumberFormat(
+                                            isInternational ? "en-US" : "pt-BR",
+                                            {
+                                              style: "currency",
+                                              currency: "BRL",
+                                            },
+                                          ).format(room.originalTotal)}
                                         </span>
-                                      )}
+                                        <span className="font-black text-blue-600 text-base md:text-lg lg:text-xl animate-pulse-subtle">
+                                          {new Intl.NumberFormat(
+                                            isInternational ? "en-US" : "pt-BR",
+                                            {
+                                              style: "currency",
+                                              currency: "BRL",
+                                            },
+                                          ).format(displayPrice)}
+                                        </span>
+                                        {savedAmount > 0 && (
+                                          <span className="text-xs text-emerald-600 font-extrabold">
+                                            {t("Economize", "Save")}{" "}
+                                            {new Intl.NumberFormat(
+                                              isInternational
+                                                ? "en-US"
+                                                : "pt-BR",
+                                              {
+                                                style: "currency",
+                                                currency: "BRL",
+                                              },
+                                            ).format(savedAmount)}
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
-                                  </div>
-                                )
-                              })}
+                                  )
+                                })}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
                 </div>
               ) : (
                 <div className="bg-white rounded-xl border p-12 flex flex-col items-center justify-center">
                   <Empty className="border-none shadow-none bg-transparent p-0 md:p-0">
                     <EmptyHeader>
                       <EmptyTitle>
-                        Sem quartos disponíveis para sua busca
+                        {t(
+                          "Sem quartos disponíveis para sua busca",
+                          "No rooms available for your search",
+                        )}
                       </EmptyTitle>
                       <EmptyDescription>
-                        Não encontramos quartos que acomodem essa quantidade de
-                        hóspedes ou que correspondam aos filtros selecionados.
+                        {t(
+                          "Não encontramos quartos que acomodem essa quantidade de hóspedes ou que correspondam aos filtros selecionados.",
+                          "We did not find rooms that accommodate this number of guests or match the selected filters.",
+                        )}
                       </EmptyDescription>
                     </EmptyHeader>
                   </Empty>
                   <Button
                     variant="link"
-                    className="mt-4 text-blue-600 font-bold"
+                    className="mt-4 text-blue-600 font-bold cursor-pointer"
                     onClick={() => setIsSearchPerformed(false)}
                   >
-                    Alterar busca
+                    {t("Alterar busca", "Change search")}
                   </Button>
                 </div>
               )}

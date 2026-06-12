@@ -1,7 +1,7 @@
 /**
  * @type {import('node-pg-migrate').ColumnDefinitions | undefined}
  */
-exports.shorthands = undefined;
+exports.shorthands = undefined
 
 /**
  * @param pgm {import('node-pg-migrate').MigrationBuilder}
@@ -15,7 +15,7 @@ exports.up = (pgm) => {
   pgm.alterColumn("guests", "rg_number", {
     notNull: false,
   })
-};
+}
 
 exports.down = (pgm) => {
   pgm.alterColumn("guests", "cpf_number", {
@@ -24,4 +24,4 @@ exports.down = (pgm) => {
   pgm.alterColumn("guests", "rg_number", {
     notNull: true,
   })
-};
+}
