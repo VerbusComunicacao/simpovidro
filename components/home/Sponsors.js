@@ -36,6 +36,11 @@ export default function Sponsors({ variant = "full" }) {
       link: "https://sfti.com.br/",
     },
     {
+      name: "Keraglass",
+      logo: "/images/apoiadores/KERAGLASS.png",
+      link: "https://www.keraglass.com/pt/home",
+    },
+    {
       name: "Vetro Maquinas",
       logo: "/images/apoiadores/vetro-maquinas.png",
       link: "https://vetromaquinas.com.br",
@@ -98,7 +103,7 @@ export default function Sponsors({ variant = "full" }) {
     },
     {
       name: "Sindividros ES",
-      logo: "/images/apoio-institucional/SINDIVIROS-ES3.png",
+      logo: "/images/apoio-institucional/SINDIVIDROS-ES-NOVO.jpeg",
       link: "https://sindividros-es.com.br",
     },
   ]
