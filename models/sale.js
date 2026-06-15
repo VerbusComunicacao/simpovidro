@@ -1127,7 +1127,10 @@ async function updateBedPreference(saleId, bedPreference) {
   }
 }
 
-async function updateCheckoutQuestionResponse(saleId, checkoutQuestionResponse) {
+async function updateCheckoutQuestionResponse(
+  saleId,
+  checkoutQuestionResponse,
+) {
   const client = await database.getNewClient()
   try {
     await client.query("BEGIN")

@@ -316,7 +316,8 @@ export default function RegistrationDetailsPage() {
         country: sale.company_country,
         permission: sale.company_permission || "A",
         discount_id: sale.company_discount_id || "none",
-        custom_discount_percentage: sale.company_custom_discount_percentage || "",
+        custom_discount_percentage:
+          sale.company_custom_discount_percentage || "",
       }
     : null
 
