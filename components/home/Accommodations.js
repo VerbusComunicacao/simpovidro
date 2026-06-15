@@ -120,7 +120,7 @@ export default function Accommodations() {
         "um dormitório e um banheiro",
         "one bedroom and one bathroom",
       ),
-      tamanho: null,
+      tamanho: "24 m²",
       localizacao: null,
       images: [
         "https://www.costao.com.br/_next/image?url=https%3A%2F%2Fcms.costao.com.br%2Fassets%2Fceab79d1-33e0-4129-a51d-67f4865c3c5b&w=3840&q=75",
@@ -158,7 +158,7 @@ export default function Accommodations() {
         "dormitório, sala de estar, sala de jantar e cozinha",
         "bedroom, living room, dining room and kitchen",
       ),
-      tamanho: null,
+      tamanho: "48 m²",
       localizacao: null,
       images: [
         "https://www.costao.com.br/_next/image?url=https%3A%2F%2Fcms.costao.com.br%2Fassets%2Fc2bbdb2d-94f1-4327-ac4a-8d9ef2300172&w=3840&q=75",
@@ -195,7 +195,7 @@ export default function Accommodations() {
         "dois dormitórios, sala de estar, sala de jantar e cozinha",
         "two bedrooms, living room, dining room and kitchen",
       ),
-      tamanho: null,
+      tamanho: "127 m²",
       localizacao: null,
       images: [
         "https://www.costao.com.br/_next/image?url=https%3A%2F%2Fcms.costao.com.br%2Fassets%2F85f868b9-acd5-4396-8e81-0ebd72a25013&w=3840&q=75",
@@ -232,7 +232,7 @@ export default function Accommodations() {
         "três dormitórios, living room e cozinha completa",
         "three bedrooms, living room and full kitchen",
       ),
-      tamanho: null,
+      tamanho: "206 m²",
       localizacao: null,
       images: [
         "https://www.costao.com.br/_next/image?url=https%3A%2F%2Fcms.costao.com.br%2Fassets%2Fac7b6210-b062-44e6-a85d-b967ef55393b&w=3840&q=75",
