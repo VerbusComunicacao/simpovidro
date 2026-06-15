@@ -13,9 +13,6 @@ describe("POST /api/v1/registrations (International)", () => {
   let userToken
   let hotelId
   let roomId
-  let regularUserId
-  let roomTypeId
-  let roomCategoryId
 
   beforeAll(async () => {
     // 1. Create and Setup Admin User
@@ -46,7 +43,6 @@ describe("POST /api/v1/registrations (International)", () => {
     ])
     const regularSession = await orchestrator.createSession(regularUser.id)
     userToken = regularSession.token
-    regularUserId = regularUser.id
 
     // 3. Create a hotel (as admin)
     const hotelResponse = await fetch(
@@ -87,7 +83,6 @@ describe("POST /api/v1/registrations (International)", () => {
     if (roomTypeResponse.status !== 201)
       throw new Error(`Room type setup failed: ${roomTypeText}`)
     const roomTypeData = JSON.parse(roomTypeText)
-    roomTypeId = roomTypeData.id
 
     // 5. Create a room category (as admin)
     const roomCategoryResponse = await fetch(
@@ -109,7 +104,6 @@ describe("POST /api/v1/registrations (International)", () => {
     if (roomCategoryResponse.status !== 201)
       throw new Error(`Room category setup failed: ${roomCategoryText}`)
     const roomCategoryData = JSON.parse(roomCategoryText)
-    roomCategoryId = roomCategoryData.id
 
     // 6. Create a room (as admin)
     const roomResponse = await fetch(

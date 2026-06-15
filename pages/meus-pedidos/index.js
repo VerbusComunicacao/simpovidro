@@ -44,7 +44,9 @@ export default function MyOrdersPage() {
     if (!dateString) return ""
     // Ensure we only take the date part to avoid any timezone/time shifts
     const cleanDate = dateString.split("T")[0]
-    return Temporal.PlainDate.from(cleanDate).toLocaleString(isInternational ? "en-US" : "pt-BR")
+    return Temporal.PlainDate.from(cleanDate).toLocaleString(
+      isInternational ? "en-US" : "pt-BR",
+    )
   }
 
   const formatCurrency = (value) => {
@@ -64,7 +66,11 @@ export default function MyOrdersPage() {
           </Badge>
         )
       case "cancelled":
-        return <Badge variant="destructive">{isInternational ? "Cancelled" : "Cancelado"}</Badge>
+        return (
+          <Badge variant="destructive">
+            {isInternational ? "Cancelled" : "Cancelado"}
+          </Badge>
+        )
       case "pending":
       default:
         return (
@@ -79,7 +85,14 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <RegistrationLayout title={isInternational ? "My Orders - Simpovidro 2026" : "Meus Pedidos - Simpovidro 2026"} showBackButton>
+    <RegistrationLayout
+      title={
+        isInternational
+          ? "My Orders - Simpovidro 2026"
+          : "Meus Pedidos - Simpovidro 2026"
+      }
+      showBackButton
+    >
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
           {isInternational ? "My Orders" : "Meus Pedidos"}
@@ -107,7 +120,11 @@ export default function MyOrdersPage() {
         {orders && orders.length === 0 && (
           <div className="bg-white rounded-xl border p-12">
             <Empty
-              title={isInternational ? "No registration found" : "Nenhuma inscrição encontrada"}
+              title={
+                isInternational
+                  ? "No registration found"
+                  : "Nenhuma inscrição encontrada"
+              }
               description={
                 isInternational
                   ? "You have not registered for the event yet."
@@ -161,10 +178,13 @@ export default function MyOrdersPage() {
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">
-                          {isInternational ? "Hotel Address" : "Endereço do Hotel"}
+                          {isInternational
+                            ? "Hotel Address"
+                            : "Endereço do Hotel"}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {translateText(order.hotel_address, isInternational)}, {translateText(order.hotel_city, isInternational)} -{" "}
+                          {translateText(order.hotel_address, isInternational)},{" "}
+                          {translateText(order.hotel_city, isInternational)} -{" "}
                           {translateText(order.hotel_state, isInternational)}
                         </p>
                         {order.hotel_phone && (
@@ -185,11 +205,17 @@ export default function MyOrdersPage() {
                           </div>
                           <div>
                             <p className="font-semibold text-gray-900 mt-1">
-                              {translateText(order.room_name || order.room_type, isInternational)}
+                              {translateText(
+                                order.room_name || order.room_type,
+                                isInternational,
+                              )}
                             </p>
                             {order.room_description && (
                               <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                                {translateText(order.room_description, isInternational)}
+                                {translateText(
+                                  order.room_description,
+                                  isInternational,
+                                )}
                               </p>
                             )}
                           </div>
@@ -219,7 +245,8 @@ export default function MyOrdersPage() {
                           </div>
                           <div className="w-full">
                             <p className="font-medium text-gray-900 mb-2">
-                              {isInternational ? "Guests" : "Hóspedes"} ({order.guests.length})
+                              {isInternational ? "Guests" : "Hóspedes"} (
+                              {order.guests.length})
                             </p>
                             <div className="bg-gray-50 rounded-lg border divide-y overflow-hidden">
                               {order.guests.map((guest, index) => (
@@ -252,7 +279,9 @@ export default function MyOrdersPage() {
                                     {guest.passport_number && (
                                       <div>
                                         <span className="font-medium text-gray-500">
-                                          {isInternational ? "Passport:" : "Passaporte:"}
+                                          {isInternational
+                                            ? "Passport:"
+                                            : "Passaporte:"}
                                         </span>{" "}
                                         {guest.passport_number}
                                       </div>
@@ -260,7 +289,9 @@ export default function MyOrdersPage() {
                                     {guest.birth_date && (
                                       <div>
                                         <span className="font-medium text-gray-500">
-                                          {isInternational ? "Birth Date:" : "Nascimento:"}
+                                          {isInternational
+                                            ? "Birth Date:"
+                                            : "Nascimento:"}
                                         </span>{" "}
                                         {formatDate(guest.birth_date)}
                                       </div>
@@ -276,7 +307,9 @@ export default function MyOrdersPage() {
                                     {guest.phone && (
                                       <div>
                                         <span className="font-medium text-gray-500">
-                                          {isInternational ? "Mobile Phone:" : "Celular:"}
+                                          {isInternational
+                                            ? "Mobile Phone:"
+                                            : "Celular:"}
                                         </span>{" "}
                                         {guest.phone}
                                       </div>
@@ -284,13 +317,28 @@ export default function MyOrdersPage() {
                                     {guest.address && (
                                       <div className="md:col-span-2">
                                         <span className="font-medium text-gray-500">
-                                          {isInternational ? "Address:" : "Endereço:"}
+                                          {isInternational
+                                            ? "Address:"
+                                            : "Endereço:"}
                                         </span>{" "}
-                                        {translateText(guest.address, isInternational)}, {guest.address_number}{" "}
+                                        {translateText(
+                                          guest.address,
+                                          isInternational,
+                                        )}
+                                        , {guest.address_number}{" "}
                                         {guest.address_complement
                                           ? `(${translateText(guest.address_complement, isInternational)})`
                                           : ""}{" "}
-                                        - {translateText(guest.city, isInternational)}/{translateText(guest.state, isInternational)}
+                                        -{" "}
+                                        {translateText(
+                                          guest.city,
+                                          isInternational,
+                                        )}
+                                        /
+                                        {translateText(
+                                          guest.state,
+                                          isInternational,
+                                        )}
                                       </div>
                                     )}
 
@@ -305,13 +353,17 @@ export default function MyOrdersPage() {
                                       guest.special_needs_details) && (
                                       <div className="md:col-span-2 mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 p-3 bg-red-50/30 rounded-lg border border-red-100/50">
                                         <p className="md:col-span-2 text-xs font-bold uppercase tracking-wider text-red-800 mb-1">
-                                          {isInternational ? "Health Information" : "Informações de Saúde"}
+                                          {isInternational
+                                            ? "Health Information"
+                                            : "Informações de Saúde"}
                                         </p>
                                         {(guest.blood_type ||
                                           guest.blood_rh_factor) && (
                                           <div>
                                             <span className="font-medium text-gray-500">
-                                              {isInternational ? "Blood Type:" : "Tipo Sanguíneo:"}
+                                              {isInternational
+                                                ? "Blood Type:"
+                                                : "Tipo Sanguíneo:"}
                                             </span>{" "}
                                             {guest.blood_type}{" "}
                                             {guest.blood_rh_factor}
@@ -320,35 +372,45 @@ export default function MyOrdersPage() {
                                         {guest.has_heart_condition && (
                                           <div>
                                             <span className="font-medium text-red-700">
-                                              {isInternational ? "Heart Condition" : "Problema Cardíaco"}
+                                              {isInternational
+                                                ? "Heart Condition"
+                                                : "Problema Cardíaco"}
                                             </span>
                                           </div>
                                         )}
                                         {guest.has_diabetes && (
                                           <div>
                                             <span className="font-medium text-red-700">
-                                              {isInternational ? "Diabetes" : "Diabetes"}
+                                              {isInternational
+                                                ? "Diabetes"
+                                                : "Diabetes"}
                                             </span>
                                           </div>
                                         )}
                                         {guest.has_high_blood_pressure && (
                                           <div>
                                             <span className="font-medium text-red-700">
-                                              {isInternational ? "High Blood Pressure" : "Pressão Alta"}
+                                              {isInternational
+                                                ? "High Blood Pressure"
+                                                : "Pressão Alta"}
                                             </span>
                                           </div>
                                         )}
                                         {guest.has_low_blood_pressure && (
                                           <div>
                                             <span className="font-medium text-red-700">
-                                              {isInternational ? "Low Blood Pressure" : "Pressão Baixa"}
+                                              {isInternational
+                                                ? "Low Blood Pressure"
+                                                : "Pressão Baixa"}
                                             </span>
                                           </div>
                                         )}
                                         {guest.medication_details && (
                                           <div className="md:col-span-2">
                                             <span className="font-medium text-gray-500">
-                                              {isInternational ? "Medications:" : "Medicamentos:"}
+                                              {isInternational
+                                                ? "Medications:"
+                                                : "Medicamentos:"}
                                             </span>{" "}
                                             {guest.medication_details}
                                           </div>
@@ -356,7 +418,9 @@ export default function MyOrdersPage() {
                                         {guest.health_observations && (
                                           <div className="md:col-span-2">
                                             <span className="font-medium text-gray-500">
-                                              {isInternational ? "Health Notes:" : "Obs. Saúde:"}
+                                              {isInternational
+                                                ? "Health Notes:"
+                                                : "Obs. Saúde:"}
                                             </span>{" "}
                                             {guest.health_observations}
                                           </div>
@@ -364,7 +428,9 @@ export default function MyOrdersPage() {
                                         {guest.special_needs_details && (
                                           <div className="md:col-span-2">
                                             <span className="font-medium text-gray-500">
-                                              {isInternational ? "Special Needs:" : "Necessidades Especiais:"}
+                                              {isInternational
+                                                ? "Special Needs:"
+                                                : "Necessidades Especiais:"}
                                             </span>{" "}
                                             {guest.special_needs_details}
                                           </div>
@@ -397,17 +463,27 @@ export default function MyOrdersPage() {
                       order.installments.length > 0 && (
                         <div className="mt-6 border-t pt-6">
                           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                            {isInternational ? "Installment Plan" : "Parcelamento"}
+                            {isInternational
+                              ? "Installment Plan"
+                              : "Parcelamento"}
                           </h3>
                           <div className="overflow-x-auto">
                             <table className="w-full text-sm text-left">
                               <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
                                 <tr>
                                   <th className="px-4 py-3 rounded-l-lg">
-                                    {isInternational ? "Installment" : "Parcela"}
+                                    {isInternational
+                                      ? "Installment"
+                                      : "Parcela"}
                                   </th>
-                                  <th className="px-4 py-3">{isInternational ? "Due Date" : "Vencimento"}</th>
-                                  <th className="px-4 py-3">{isInternational ? "Value" : "Valor"}</th>
+                                  <th className="px-4 py-3">
+                                    {isInternational
+                                      ? "Due Date"
+                                      : "Vencimento"}
+                                  </th>
+                                  <th className="px-4 py-3">
+                                    {isInternational ? "Value" : "Valor"}
+                                  </th>
                                   <th className="px-4 py-3 rounded-r-lg text-right">
                                     Status
                                   </th>
@@ -432,19 +508,25 @@ export default function MyOrdersPage() {
                                           case "paid":
                                             return (
                                               <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">
-                                                {isInternational ? "Paid" : "Pago"}
+                                                {isInternational
+                                                  ? "Paid"
+                                                  : "Pago"}
                                               </Badge>
                                             )
                                           case "overdue":
                                             return (
                                               <Badge variant="destructive">
-                                                {isInternational ? "Overdue" : "Atrasado"}
+                                                {isInternational
+                                                  ? "Overdue"
+                                                  : "Atrasado"}
                                               </Badge>
                                             )
                                           case "cancelled":
                                             return (
                                               <Badge variant="destructive">
-                                                {isInternational ? "Cancelled" : "Cancelado"}
+                                                {isInternational
+                                                  ? "Cancelled"
+                                                  : "Cancelado"}
                                               </Badge>
                                             )
                                           case "pending":
@@ -454,7 +536,9 @@ export default function MyOrdersPage() {
                                                 variant="outline"
                                                 className="text-yellow-600 border-yellow-200 bg-yellow-50"
                                               >
-                                                {isInternational ? "Pending" : "Pendente"}
+                                                {isInternational
+                                                  ? "Pending"
+                                                  : "Pendente"}
                                               </Badge>
                                             )
                                         }

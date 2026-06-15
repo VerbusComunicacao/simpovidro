@@ -89,26 +89,26 @@ const ACTIVITY_SECTORS = [
 ]
 
 const ACTIVITY_SECTORS_EN = {
-  "ACESSÓRIOS": "ACCESSORIES",
-  "ATACADISTA": "WHOLESALER",
-  "CONSULTORIA": "CONSULTING",
-  "DISTRIBUIDOR": "DISTRIBUTOR",
+  ACESSÓRIOS: "ACCESSORIES",
+  ATACADISTA: "WHOLESALER",
+  CONSULTORIA: "CONSULTING",
+  DISTRIBUIDOR: "DISTRIBUTOR",
   "ENTIDADE DE CLASSE": "TRADE ASSOCIATION",
-  "ESQUADRIAS": "FRAMES (WINDOWS/DOORS)",
-  "FERRAGENS": "HARDWARE",
-  "INSTALAÇÃO": "INSTALLATION",
-  "INSUMOS": "RAW MATERIALS",
-  "INTERLAY": "INTERLAYER",
-  "MAQUINÁRIO": "MACHINERY",
-  "PROCESSADOR": "GLASS PROCESSOR",
-  "RECICLAGEM": "RECYCLING",
-  "REPRESENTAÇÃO": "SALES REPRESENTATIVE",
-  "SERVIÇOS": "SERVICES",
-  "SINDICATOS": "TRADE UNIONS",
-  "SOFTWARE": "SOFTWARE",
+  ESQUADRIAS: "FRAMES (WINDOWS/DOORS)",
+  FERRAGENS: "HARDWARE",
+  INSTALAÇÃO: "INSTALLATION",
+  INSUMOS: "RAW MATERIALS",
+  INTERLAY: "INTERLAYER",
+  MAQUINÁRIO: "MACHINERY",
+  PROCESSADOR: "GLASS PROCESSOR",
+  RECICLAGEM: "RECYCLING",
+  REPRESENTAÇÃO: "SALES REPRESENTATIVE",
+  SERVIÇOS: "SERVICES",
+  SINDICATOS: "TRADE UNIONS",
+  SOFTWARE: "SOFTWARE",
   "USINA DE BASE": "FLOAT GLASS PLANT",
-  "VIDRAÇARIA": "GLASS SHOP / GLAZIER",
-  "OUTRO": "OTHER",
+  VIDRAÇARIA: "GLASS SHOP / GLAZIER",
+  OUTRO: "OTHER",
 }
 
 const getStateDisplayName = (stateVal, countryCode = "BR") => {
@@ -118,7 +118,7 @@ const getStateDisplayName = (stateVal, countryCode = "BR") => {
     const stateObj = states.find(
       (s) =>
         s.isoCode.toUpperCase() === stateVal.toUpperCase() ||
-        s.name.toUpperCase() === stateVal.toUpperCase()
+        s.name.toUpperCase() === stateVal.toUpperCase(),
     )
     if (stateObj) {
       if (stateObj.name.toUpperCase() === stateVal.toUpperCase()) {
@@ -191,7 +191,7 @@ export default function CheckoutPage({
         }
       }
     }
-  }, [router.isReady, router.locale, router.query])
+  }, [router.isReady, router.locale, router.query, currentStep])
 
   useEffect(() => {
     if (newCompanyData.activity_sector) {
@@ -668,6 +668,7 @@ export default function CheckoutPage({
       room,
       adultCount,
       childCount,
+      isInternational ? "en" : "pt-BR",
     )
     if (!capacityValidation.isValid) {
       setError(capacityValidation.message)
@@ -779,7 +780,9 @@ export default function CheckoutPage({
         !validateCPF(guest.cpf_number)
       ) {
         if (!newErrors[index]) newErrors[index] = {}
-        newErrors[index].cpf_number = "CPF inválido."
+        newErrors[index].cpf_number = isInternational
+          ? "Invalid CPF."
+          : "CPF inválido."
         hasError = true
       }
 
@@ -793,7 +796,9 @@ export default function CheckoutPage({
       // Validate Phone/WhatsApp
       if (!isInternational && guest.phone && !validatePhone(guest.phone)) {
         if (!newErrors[index]) newErrors[index] = {}
-        newErrors[index].phone = "Telefone inválido."
+        newErrors[index].phone = isInternational
+          ? "Invalid phone number."
+          : "Telefone inválido."
         hasError = true
       }
 
@@ -877,7 +882,7 @@ export default function CheckoutPage({
     }
 
     if (!cnpj || !validateCNPJ(cnpj)) {
-      setError("CNPJ inválido.")
+      setError(isInternational ? "Invalid CNPJ." : "CNPJ inválido.")
       return
     }
 
@@ -930,7 +935,9 @@ export default function CheckoutPage({
         })
         setCurrentStep(2) // Go to Company Form
       } else {
-        throw new Error("Erro ao verificar CNPJ.")
+        throw new Error(
+          isInternational ? "Error checking CNPJ." : "Erro ao verificar CNPJ.",
+        )
       }
     } catch (err) {
       setError(err.message)
@@ -948,7 +955,11 @@ export default function CheckoutPage({
       newCompanyData.phone &&
       !validatePhone(newCompanyData.phone)
     ) {
-      setError("Telefone da empresa inválido.")
+      setError(
+        isInternational
+          ? "Invalid company phone number."
+          : "Telefone da empresa inválido.",
+      )
       return
     }
 
@@ -958,7 +969,7 @@ export default function CheckoutPage({
       newCompanyData.zip_code &&
       newCompanyData.zip_code.replace(/\D/g, "").length !== 8
     ) {
-      setError("CEP inválido.")
+      setError(isInternational ? "Invalid ZIP Code." : "CEP inválido.")
       return
     }
 
@@ -968,7 +979,9 @@ export default function CheckoutPage({
       !newCompanyData.activity_sector.trim()
     ) {
       setError(
-        "Por favor, selecione ou informe o ramo de atividade da empresa.",
+        isInternational
+          ? "Please select or enter the company's activity sector."
+          : "Por favor, selecione ou informe o ramo de atividade da empresa.",
       )
       return
     }
@@ -2399,7 +2412,8 @@ export default function CheckoutPage({
                             </span>{" "}
                             {getStateDisplayName(
                               newCompanyData.state || foundCompany?.state,
-                              newCompanyData.countryCode || foundCompany?.country_code
+                              newCompanyData.countryCode ||
+                                foundCompany?.country_code,
                             ) || "-"}
                           </p>
                           <p>

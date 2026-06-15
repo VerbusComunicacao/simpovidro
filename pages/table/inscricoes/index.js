@@ -179,7 +179,8 @@ export default function RegistrationsTable() {
                         {sale.hotel_name}
                       </p>
                       <p className="text-sm text-gray-600 mt-1">
-                        {translateText(sale.room_name, false) || translateText(sale.room_type, false)}
+                        {translateText(sale.room_name, false) ||
+                          translateText(sale.room_type, false)}
                       </p>
                       {sale.bed_preference && (
                         <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mt-1">

@@ -362,7 +362,10 @@ export default function HotelPage() {
               {hotel.price_policies && hotel.price_policies.length > 0 ? (
                 hotel.price_policies.map((policy, index) => (
                   <li key={index} className="text-sm text-gray-600">
-                    • {translateText(policy.description, false) || `Até ${policy.max_age} anos`} (
+                    •{" "}
+                    {translateText(policy.description, false) ||
+                      `Até ${policy.max_age} anos`}{" "}
+                    (
                     {policy.use_percentage !== false
                       ? `${policy.percentage}%`
                       : "Preço Fixo"}
@@ -418,7 +421,9 @@ export default function HotelPage() {
                     {hotel.price_policies
                       ?.filter((p) => p.use_percentage === false)
                       .map((policy) => (
-                        <div key={policy.id}>{translateText(policy.description, false)}</div>
+                        <div key={policy.id}>
+                          {translateText(policy.description, false)}
+                        </div>
                       ))}
                     <div>Total</div>
                     <div>Disponível</div>
@@ -488,8 +493,9 @@ export default function HotelPage() {
                               <AlertDialogDescription>
                                 Deseja realmente criar uma cópia do quarto
                                 &ldquo;
-                                {translateText(room.name, false)}&rdquo;? A cópia será criada com as
-                                mesmas configurações de preços e limites.
+                                {translateText(room.name, false)}&rdquo;? A
+                                cópia será criada com as mesmas configurações de
+                                preços e limites.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

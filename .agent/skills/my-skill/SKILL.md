@@ -49,6 +49,52 @@ O projeto segue uma adaptação do padrão **MVP (Model-View-Presenter/Controlle
 2.  **Model (`models/...`)**: Valida campos -> Executa query no DB -> Retorna objeto ou lança erro.
 3.  **Teste (`tests/...`)**: Limpa banco -> Cria cenário via `orchestrator` -> Faz `fetch` na API -> Valida status e corpo.
 
+## 🌐 Regras de Tradução e Internacionalização
+
+Para implementar ou dar suporte a tradução/internacionalização no projeto, siga as seguintes regras:
+
+1. **Detecção do Idioma no Frontend**:
+   - Determine se a exibição deve ser internacional (Inglês) checando a rota e parâmetros:
+     ```javascript
+     const isInternational =
+       router.locale === "en" || router.query.lang === "en"
+     ```
+
+2. **Tradução Dinâmica de Conteúdo do Banco**:
+   - Textos dinâmicos cadastrados no banco (ex: nome do hotel, tipo do quarto, descrição do quarto, etc.) podem conter traduções embutidas separadas pela tag `$en$`.
+   - _Exemplo_: `Quarto Duplo $en$ Double Room`
+   - Importe e use o helper `translateText`:
+     ```javascript
+     import { translateText } from "@/lib/registration-helpers" // ou da lib correspondente
+     const textToShow = translateText(dbField, isInternational)
+     ```
+   - Ao exibir textos em relatórios de administração ou telas administrativas onde as tags `$en$` não devem aparecer na listagem padrão, execute `translateText(dbField, false)` para obter apenas a versão em Português limpa.
+
+3. **Valores Estáticos no Frontend**:
+   - Sempre utilize condições ternárias baseadas em `isInternational` para renderizar textos estáticos no JSX:
+     ```jsx
+     {
+       isInternational ? "Next" : "Avançar"
+     }
+     ```
+
+4. **Formatação de Moeda e Datas**:
+   - **Moeda**: Formate sempre usando o locale correspondente, mas mantendo BRL como padrão para o evento:
+     ```javascript
+     new Intl.NumberFormat(isInternational ? "en-US" : "pt-BR", {
+       style: "currency",
+       currency: "BRL",
+     }).format(value)
+     ```
+   - **Datas**: Formate de acordo com o idioma selecionado para garantir a melhor experiência de leitura (`toLocaleString(isInternational ? "en-US" : "pt-BR")`).
+
+5. **Formulários e Cadastros Internacionais**:
+   - Usuários/empresas estrangeiros não possuem CPF/CNPJ/RG. Portanto:
+     - O campo `passport_number` é coletado e validado como obrigatório em substituição ao `cpf_number`/`rg_number`.
+     - Validações de máscara de telefone brasileiro e CEP são ignoradas para estrangeiros.
+     - O CNPJ da empresa deixa de ser obrigatório no backend para empresas estrangeiras.
+     - O parcelamento (installments) é ocultado/desabilitado, forçando apenas o pagamento à vista.
+
 ## 💻 Ambiente do Assistente (AI Agent)
 
 Para que o Assistente de IA consiga executar comandos de terminal (`npm`, `node`, `docker`) com sucesso neste projeto, é necessário garantir que os caminhos dos binários estejam no `PATH`.

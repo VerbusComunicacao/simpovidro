@@ -398,7 +398,8 @@ export default function AdminAddRegistrationPage() {
                         {Array.isArray(rooms) &&
                           rooms.map((r) => (
                             <SelectItem key={r.id} value={r.id}>
-                              {translateText(r.name, false)} ({translateText(r.room_type, false)})
+                              {translateText(r.name, false)} (
+                              {translateText(r.room_type, false)})
                             </SelectItem>
                           ))}
                       </SelectContent>

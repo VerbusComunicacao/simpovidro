@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useRouter } from "next/router"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -25,6 +26,17 @@ export default function Register() {
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  const isEn = router.locale === "en" || router.query.lang === "en"
+  const t = (pt, en) => (isEn ? en : pt)
+
+  const handleLanguageChange = (lang) => {
+    router.push(
+      { pathname: router.pathname, query: router.query },
+      router.asPath,
+      { locale: lang },
+    )
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
@@ -32,7 +44,7 @@ export default function Register() {
     setLoading(true)
 
     if (password !== confirmPassword) {
-      setError("As senhas não coincidem.")
+      setError(t("As senhas não coincidem.", "Passwords do not match."))
       setIsErrorDialogOpen(true)
       setLoading(false)
       return
@@ -47,6 +59,7 @@ export default function Register() {
         full_name: fullName,
         email,
         password,
+        lang: isEn ? "en" : "pt-BR",
       }),
     })
 
@@ -56,7 +69,13 @@ export default function Register() {
       setSuccess(true)
     } else {
       const data = await response.json()
-      setError(data.message || "Ocorreu um erro no seu cadastro.")
+      setError(
+        data.message ||
+          t(
+            "Ocorreu um erro no seu cadastro.",
+            "An error occurred during registration.",
+          ),
+      )
       if (data.action) {
         setAction(data.action)
       }
@@ -64,122 +83,179 @@ export default function Register() {
     }
   }
 
-  if (success) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
-        <Card className="w-full max-w-md text-center py-8">
-          <CardHeader>
-            <div className="mx-auto w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4.5 12.75l6 6 9-13.5"
-                />
-              </svg>
-            </div>
-            <CardTitle>Verifique seu e-mail</CardTitle>
-            <CardDescription className="text-base pt-2">
-              Enviamos um link de ativação para <strong>{email}</strong>. Por
-              favor, acesse seu e-mail para confirmar seu cadastro.
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="flex justify-center pb-0">
-            <Button variant="outline" onClick={() => router.push("/login")}>
-              Voltar para o Login
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Crie sua conta</CardTitle>
-          <CardDescription>
-            Preencha os dados abaixo para se cadastrar.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="fullName">Nome Completo</Label>
-              <Input
-                id="fullName"
-                placeholder="Ex: João Silva"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="confirmPassword">Confirme a Senha</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button className="w-full" type="submit" disabled={loading}>
-              {loading ? "Processando..." : "Cadastrar"}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-center border-t py-4">
-          <p className="text-sm text-gray-500">
-            Já tem uma conta?{" "}
-            <Button
-              variant="link"
-              className="p-0 h-auto font-semibold"
-              onClick={() => router.push("/login")}
-            >
-              Entre aqui
-            </Button>
-          </p>
-        </CardFooter>
-      </Card>
+    <div className="relative flex justify-center items-center min-h-screen overflow-hidden p-4">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/images/simpovidro.webp"
+          alt="Background"
+          fill
+          className="object-cover brightness-[0.4]"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/20"></div>
+      </div>
+      {/* Language Selector */}
+      <div className="fixed top-4 right-4 flex items-center space-x-1 bg-white/80 backdrop-blur border border-slate-200/60 p-1 rounded-full shadow-sm z-50">
+        <button
+          type="button"
+          onClick={() => handleLanguageChange("pt-BR")}
+          className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer ${
+            !isEn
+              ? "bg-blue-600 text-white shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          PT
+        </button>
+        <button
+          type="button"
+          onClick={() => handleLanguageChange("en")}
+          className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer ${
+            isEn
+              ? "bg-blue-600 text-white shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          EN
+        </button>
+      </div>
+
+      <div className="relative z-10 w-full max-w-md px-4">
+        {success ? (
+          <Card className="w-full text-center py-8">
+            <CardHeader>
+              <div className="mx-auto w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4.5 12.75l6 6 9-13.5"
+                  />
+                </svg>
+              </div>
+              <CardTitle>
+                {t("Verifique seu e-mail", "Verify your email")}
+              </CardTitle>
+              <CardDescription className="text-base pt-2">
+                {t(
+                  <>
+                    Enviamos um link de ativação para <strong>{email}</strong>.
+                    Por favor, acesse seu e-mail para confirmar seu cadastro.
+                  </>,
+                  <>
+                    We sent an activation link to <strong>{email}</strong>.
+                    Please check your email to confirm your registration.
+                  </>,
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardFooter className="flex justify-center pb-0">
+              <Button variant="outline" onClick={() => router.push("/login")}>
+                {t("Voltar para o Login", "Back to Login")}
+              </Button>
+            </CardFooter>
+          </Card>
+        ) : (
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle>
+                {t("Crie sua conta", "Create your account")}
+              </CardTitle>
+              <CardDescription>
+                {t(
+                  "Preencha os dados abaixo para se cadastrar.",
+                  "Fill in the details below to register.",
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="fullName">
+                    {t("Nome Completo", "Full Name")}
+                  </Label>
+                  <Input
+                    id="fullName"
+                    placeholder={t("Ex: João Silva", "E.g. John Doe")}
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="email">{t("E-mail", "Email")}</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="password">{t("Senha", "Password")}</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="confirmPassword">
+                    {t("Confirme a Senha", "Confirm Password")}
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button className="w-full" type="submit" disabled={loading}>
+                  {loading
+                    ? t("Processando...", "Processing...")
+                    : t("Cadastrar", "Register")}
+                </Button>
+              </form>
+            </CardContent>
+            <CardFooter className="flex justify-center border-t py-4">
+              <p className="text-sm text-gray-500">
+                {t("Já tem uma conta? ", "Already have an account? ")}
+                <Button
+                  variant="link"
+                  className="p-0 h-auto font-semibold"
+                  onClick={() => router.push("/login")}
+                >
+                  {t("Entre aqui", "Log in here")}
+                </Button>
+              </p>
+            </CardFooter>
+          </Card>
+        )}
+      </div>
 
       <ErrorDialog
         isOpen={isErrorDialogOpen}
         onClose={() => setIsErrorDialogOpen(false)}
-        title="Erro no Cadastro"
+        title={t("Erro no Cadastro", "Registration Error")}
         message={error}
         actionMessage={action}
+        closeText={t("Fechar", "Close")}
       />
     </div>
   )

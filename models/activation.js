@@ -28,10 +28,53 @@ async function generateToken(userId) {
   }
 }
 
-async function sendEmailToUser(user, activationToken) {
-  const activationLink = `${webserver.origin}/cadastro/ativar/${activationToken}`
+async function sendEmailToUser(user, activationToken, lang) {
+  const isEnglish = lang === "en"
+  const activationLink = isEnglish
+    ? `${webserver.origin}/en/cadastro/ativar/${activationToken}`
+    : `${webserver.origin}/cadastro/ativar/${activationToken}`
 
-  const emailHtml = `
+  const emailHtml = isEnglish
+    ? `
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="width: 600px; max-width: 100%; font-family: sans-serif; color: #374151; line-height: 1.5; border-collapse: collapse; margin: 0 auto;">
+        <!-- Header Image -->
+        <tr>
+          <td style="padding: 0; line-height: 0;">
+            <img src="${webserver.origin}/images/banner-topo2.png" alt="17th Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; border: 1px solid #e5e7eb; border-bottom: none;">
+          </td>
+        </tr>
+
+        <!-- Body Content -->
+        <tr>
+          <td style="padding: 20px; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; background-color: #ffffff; text-align: left;">
+            <p>Hello, <strong>${user.full_name}</strong>!</p>
+            <p>You are one step away from completing your registration for Simpovidro 2026. Click the button below to activate your account:</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${activationLink}" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">Activate my account</a>
+            </div>
+
+            <p style="font-size: 0.85em; color: #6b7280; text-align: center; margin-bottom: 30px;">
+              If the button above does not work, copy and paste the link below into your browser:<br/>
+              <a href="${activationLink}" style="color: #2563eb; word-break: break-all;">${activationLink}</a>
+            </p>
+
+            <p style="margin-top: 30px; font-size: 0.95em; color: #4b5563;">
+              Best regards,<br/><br/>
+              <strong>Simpovidro Team</strong>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer Image -->
+        <tr>
+          <td style="padding: 0; line-height: 0;">
+            <img src="${webserver.origin}/images/banner-rodape2.png" alt="Sponsors and Organizers" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
+          </td>
+        </tr>
+      </table>
+    `
+    : `
       <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="width: 600px; max-width: 100%; font-family: sans-serif; color: #374151; line-height: 1.5; border-collapse: collapse; margin: 0 auto;">
         <!-- Header Image -->
         <tr>
@@ -74,27 +117,28 @@ async function sendEmailToUser(user, activationToken) {
   await email.send({
     from: `Simpovidro <simpovidro@abravidro.org.br>`,
     to: user.email,
-    subject: "Ative seu cadastro!",
+    subject: isEnglish ? "Activate your registration!" : "Ative seu cadastro!",
     html: emailHtml,
-    text: `${user.full_name}, clique no link abaixo para ativar o seu cadastro no Simpovidro:
-    ${activationLink}
-
-    Atenciosamente,
-    Equipe Abravidro`,
+    text: isEnglish
+      ? `${user.full_name}, click on the link below to activate your registration at Simpovidro:\n    ${activationLink}\n\n    Best regards,\n    Simpovidro Team`
+      : `${user.full_name}, clique no link abaixo para ativar o seu cadastro no Simpovidro:\n    ${activationLink}\n\n    Atenciosamente,\n    Equipe Abravidro`,
   })
 }
 
-async function activateAccount(token) {
+async function activateAccount(token, lang) {
   const client = await database.getNewClient()
 
   try {
     await client.query("BEGIN")
-    const activationToken = await findValidToken(token, client)
+    const activationToken = await findValidToken(token, client, lang)
 
     if (activationToken.alreadyUsed) {
       await client.query("ROLLBACK")
       return {
-        message: "Sua conta já havia sido ativada! Você pode fazer login.",
+        message:
+          lang === "en"
+            ? "Your account has already been activated! You can log in."
+            : "Sua conta já havia sido ativada! Você pode fazer login.",
         user_id: activationToken.user_id,
       }
     }
@@ -137,17 +181,20 @@ async function activateAccount(token) {
   }
 }
 
-async function activateAdmAccount(token) {
+async function activateAdmAccount(token, lang) {
   const client = await database.getNewClient()
 
   try {
     await client.query("BEGIN")
-    const activationToken = await findValidToken(token, client)
+    const activationToken = await findValidToken(token, client, lang)
 
     if (activationToken.alreadyUsed) {
       await client.query("ROLLBACK")
       return {
-        message: "Sua conta já havia sido ativada! Você pode fazer login.",
+        message:
+          lang === "en"
+            ? "Your account has already been activated! You can log in."
+            : "Sua conta já havia sido ativada! Você pode fazer login.",
         user_id: activationToken.user_id,
       }
     }
@@ -190,7 +237,7 @@ async function activateAdmAccount(token) {
   }
 }
 
-async function findValidToken(token, client) {
+async function findValidToken(token, client, lang) {
   const queryRunner = client || database
   const results = await queryRunner.query({
     text: `
@@ -209,8 +256,14 @@ async function findValidToken(token, client) {
 
   if (results.rowCount === 0) {
     throw new ValidationError({
-      message: "Token inválido ou expirado",
-      action: "Solicite um novo email de ativação",
+      message:
+        lang === "en"
+          ? "Invalid or expired token"
+          : "Token inválido ou expirado",
+      action:
+        lang === "en"
+          ? "Request a new activation email"
+          : "Solicite um novo email de ativação",
     })
   }
 

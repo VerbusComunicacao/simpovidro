@@ -323,6 +323,13 @@ export async function sendRegistrationEmail(
           : `Sua inscrição no Simpovidro 2026 foi confirmada! Hotel: ${saleDetails.hotel_name}. Valor: ${formatCurrency(saleDetails.final_amount)}.`
 
     const helloLabel = isInternational ? "Hello" : "Olá"
+    const translatedBedPreference = isInternational
+      ? saleDetails.bed_preference === "Duplo Casal"
+        ? "Double Couple"
+        : saleDetails.bed_preference === "Duplo Solteiro"
+          ? "Double Single"
+          : saleDetails.bed_preference
+      : saleDetails.bed_preference
 
     const emailHtml = `
       <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -364,7 +371,7 @@ export async function sendRegistrationEmail(
                           <h2 style="font-family: Arial, Helvetica, sans-serif; margin-top: 0; color: #111827; font-size: 1.25em; margin-bottom: 12px;">${isInternational ? "Order #" : "Pedido #"}${saleDetails.sale_number || saleDetails.id.slice(0, 8)}</h2>
                           <p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>Hotel:</strong> ${saleDetails.hotel_name}</p>
                           <p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Room" : "Quarto"}:</strong> ${saleDetails.room_name || saleDetails.room_type}</p>
-                          ${saleDetails.bed_preference ? `<p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Accommodation type" : "Tipo de acomodação"}:</strong> ${saleDetails.bed_preference}</p>` : ""}
+                          ${saleDetails.bed_preference ? `<p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Accommodation type" : "Tipo de acomodação"}:</strong> ${translatedBedPreference}</p>` : ""}
                           <p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Number of guests" : "Quantidade de pessoas"}:</strong> ${guestCountsString}</p>
                           <p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Period" : "Período"}:</strong> ${formatDate(saleDetails.check_in_date)} ${isInternational ? "to" : "à"} ${formatDate(saleDetails.check_out_date)}</p>
                         </td>
