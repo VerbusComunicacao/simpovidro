@@ -109,7 +109,7 @@ export default function Accommodations() {
       category: "Vilas Portuguesas",
       comporta: "2 adultos + 1 criança (4 a 11 anos) ou 1 bebê (até 3 anos)",
       contaCom: "um dormitório e um banheiro",
-      tamanho: "24 m²",
+      tamanho: "25 m²",
       localizacao: null,
       images: [
         "https://www.costao.com.br/_next/image?url=https%3A%2F%2Fcms.costao.com.br%2Fassets%2Fceab79d1-33e0-4129-a51d-67f4865c3c5b&w=3840&q=75",

@@ -295,7 +295,8 @@ describe("PATCH /api/v1/sales/[id]", () => {
           Cookie: `session_id=${adminToken}`,
         },
         body: JSON.stringify({
-          checkout_question_response: "Sim, gostaria de checkout tardio às 14h.",
+          checkout_question_response:
+            "Sim, gostaria de checkout tardio às 14h.",
           send_email: false,
         }),
       },
@@ -310,7 +311,9 @@ describe("PATCH /api/v1/sales/[id]", () => {
       },
     )
     saleDetails = await saleDetailsResponse.json()
-    expect(saleDetails.checkout_question_response).toBe("Sim, gostaria de checkout tardio às 14h.")
+    expect(saleDetails.checkout_question_response).toBe(
+      "Sim, gostaria de checkout tardio às 14h.",
+    )
   })
 
   test("should return 400 when trying to update checkout_question_response on a cancelled sale", async () => {
