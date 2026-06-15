@@ -43,15 +43,21 @@ async function deleteHandler(request, response) {
 
 async function patchHandler(request, response) {
   const saleId = request.query.id
-  const { bed_preference, send_email } = request.body
+  const { bed_preference, checkout_question_response, send_email } = request.body
 
-  if (!bed_preference) {
+  if (bed_preference === undefined && checkout_question_response === undefined) {
     return response.status(400).json({
-      message: "O campo 'bed_preference' é obrigatório.",
+      message: "O campo 'bed_preference' ou 'checkout_question_response' é obrigatório.",
     })
   }
 
-  const updatedSale = await sale.updateBedPreference(saleId, bed_preference)
+  let updatedSale
+
+  if (bed_preference !== undefined) {
+    updatedSale = await sale.updateBedPreference(saleId, bed_preference)
+  } else if (checkout_question_response !== undefined) {
+    updatedSale = await sale.updateCheckoutQuestionResponse(saleId, checkout_question_response)
+  }
 
   if (send_email) {
     await sendRegistrationEmail(saleId, {

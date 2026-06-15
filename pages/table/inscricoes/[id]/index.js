@@ -19,6 +19,7 @@ import Link from "next/link"
 import { getGuestCountsString } from "@/lib/registration-helpers"
 import { GuestDialog } from "@/components/guest/GuestDialog"
 import { ReplaceGuestDialog } from "@/components/guest/ReplaceGuestDialog"
+import { CompanyDialog } from "@/components/company/CompanyDialog"
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -64,6 +67,44 @@ export default function RegistrationDetailsPage() {
   const [showSwapEmailConfirm, setShowSwapEmailConfirm] = useState(false)
   const [isSwapping, setIsSwapping] = useState(false)
   const [pendingSwap, setPendingSwap] = useState(null)
+
+  const [showEditQuestionDialog, setShowEditQuestionDialog] = useState(false)
+  const [pendingQuestionResponse, setPendingQuestionResponse] = useState("")
+  const [isUpdatingQuestion, setIsUpdatingQuestion] = useState(false)
+
+  const handleEditQuestionClick = () => {
+    setPendingQuestionResponse(sale.checkout_question_response || "")
+    setShowEditQuestionDialog(true)
+  }
+
+  const executeChangeQuestionResponse = async () => {
+    setIsUpdatingQuestion(true)
+    try {
+      const response = await fetch(`/api/v1/sales/${sale.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          checkout_question_response: pendingQuestionResponse,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || "Falha ao alterar a resposta")
+      }
+
+      alert("Resposta alterada com sucesso!")
+      setShowEditQuestionDialog(false)
+      mutate()
+    } catch (error) {
+      console.error(error)
+      alert(error.message)
+    } finally {
+      setIsUpdatingQuestion(false)
+    }
+  }
 
   const handleToggleBedPreferenceClick = () => {
     const nextPreference =
@@ -255,6 +296,30 @@ export default function RegistrationDetailsPage() {
     )
   }
 
+  const companyObj = sale?.company_id
+    ? {
+        id: sale.company_id,
+        corporate_name: sale.company_corporate_name,
+        badge: sale.company_badge,
+        cnpj: sale.company_cnpj,
+        address: sale.company_address,
+        address_number: sale.company_address_number,
+        address_complement: sale.company_address_complement,
+        neighborhood: sale.company_neighborhood,
+        city: sale.company_city,
+        state: sale.company_state,
+        phone: sale.company_phone,
+        email: sale.company_email,
+        responsible_person: sale.company_responsible_person,
+        zip_code: sale.company_zip_code,
+        activity_sector: sale.company_activity_sector,
+        country: sale.company_country,
+        permission: sale.company_permission || "A",
+        discount_id: sale.company_discount_id || "none",
+        custom_discount_percentage: sale.company_custom_discount_percentage || "",
+      }
+    : null
+
   return (
     <TableLayout>
       <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -392,10 +457,22 @@ export default function RegistrationDetailsPage() {
                     <p className="text-base font-bold text-blue-700 uppercase">
                       {sale.hotel_checkout_question}
                     </p>
-                    <p className="text-sm mt-1 font-bold italic">
-                      Resposta:{" "}
-                      {sale.checkout_question_response || "Não respondida"}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-sm font-bold italic">
+                        Resposta:{" "}
+                        {sale.checkout_question_response || "Não respondida"}
+                      </p>
+                      {sale.status !== "cancelled" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs px-2.5"
+                          onClick={handleEditQuestionClick}
+                        >
+                          Editar
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -405,11 +482,25 @@ export default function RegistrationDetailsPage() {
           {/* Seção Empresa */}
           {sale.company_id && (
             <Card className="bg-blue-50/20 border-blue-100">
-              <CardHeader className="pb-3 border-b border-blue-100">
+              <CardHeader className="pb-3 border-b border-blue-100 flex flex-row items-center justify-between gap-2">
                 <CardTitle className="text-lg flex items-center gap-2 text-blue-800">
                   <Building2 className="h-5 w-5" />
                   Dados da Empresa
                 </CardTitle>
+                {sale.status !== "cancelled" && (
+                  <CompanyDialog
+                    companyToEdit={companyObj}
+                    onCompanySuccess={() => mutate()}
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs px-2.5 text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      Editar
+                    </Button>
+                  </CompanyDialog>
+                )}
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -895,6 +986,59 @@ export default function RegistrationDetailsPage() {
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               Sim, enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showEditQuestionDialog}
+        onOpenChange={setShowEditQuestionDialog}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-gray-900">
+              Editar Resposta
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 pt-2 font-medium">
+              Altere a resposta para a pergunta:
+              <span className="block mt-2 font-bold text-blue-700 uppercase">
+                {sale?.hotel_checkout_question}
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="checkout_question_response">Resposta</Label>
+              <Textarea
+                id="checkout_question_response"
+                name="checkout_question_response"
+                value={pendingQuestionResponse}
+                onChange={(e) => setPendingQuestionResponse(e.target.value)}
+                placeholder="Digite a resposta do hóspede..."
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter className="border-t pt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowEditQuestionDialog(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={executeChangeQuestionResponse}
+              disabled={isUpdatingQuestion}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {isUpdatingQuestion ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Salvar"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

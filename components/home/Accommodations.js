@@ -109,7 +109,7 @@ export default function Accommodations() {
       category: "Vilas Portuguesas",
       comporta: "2 adultos + 1 criança (4 a 11 anos) ou 1 bebê (até 3 anos)",
       contaCom: "um dormitório e um banheiro",
-      tamanho: null,
+      tamanho: "24 m²",
       localizacao: null,
       images: [
         "https://www.costao.com.br/_next/image?url=https%3A%2F%2Fcms.costao.com.br%2Fassets%2Fceab79d1-33e0-4129-a51d-67f4865c3c5b&w=3840&q=75",
@@ -142,7 +142,7 @@ export default function Accommodations() {
       comporta:
         "2 adultos + 2 crianças de 0 a 11 anos (em cama extra ou berço)",
       contaCom: "dormitório, sala de estar, sala de jantar e cozinha",
-      tamanho: null,
+      tamanho: "48 m²",
       localizacao: null,
       images: [
         "https://www.costao.com.br/_next/image?url=https%3A%2F%2Fcms.costao.com.br%2Fassets%2Fc2bbdb2d-94f1-4327-ac4a-8d9ef2300172&w=3840&q=75",
@@ -174,7 +174,7 @@ export default function Accommodations() {
       comporta:
         "4 adultos + 2 crianças de 0 a 11 anos (em cama extra ou berço)",
       contaCom: "dois dormitórios, sala de estar, sala de jantar e cozinha",
-      tamanho: null,
+      tamanho: "127 m²",
       localizacao: null,
       images: [
         "https://www.costao.com.br/_next/image?url=https%3A%2F%2Fcms.costao.com.br%2Fassets%2F85f868b9-acd5-4396-8e81-0ebd72a25013&w=3840&q=75",
@@ -206,7 +206,7 @@ export default function Accommodations() {
       comporta:
         "6 adultos + 2 crianças de 0 a 11 anos (em cama extra ou berço)",
       contaCom: "três dormitórios, living room e cozinha completa",
-      tamanho: null,
+      tamanho: "206 m²",
       localizacao: null,
       images: [
         "https://www.costao.com.br/_next/image?url=https%3A%2F%2Fcms.costao.com.br%2Fassets%2Fac7b6210-b062-44e6-a85d-b967ef55393b&w=3840&q=75",
