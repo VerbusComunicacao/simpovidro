@@ -445,6 +445,9 @@ async function findOneByIdWithDetails(saleId) {
         companies.email as company_email,
         companies.activity_sector as company_activity_sector,
         companies.country as company_country,
+        companies.permission as company_permission,
+        companies.discount_id as company_discount_id,
+        companies.custom_discount_percentage as company_custom_discount_percentage,
         (SELECT name FROM discounts WHERE id = companies.discount_id) as company_discount_name,
         (
           SELECT json_agg(pp.* ORDER BY pp.max_age ASC)
@@ -1124,6 +1127,58 @@ async function updateBedPreference(saleId, bedPreference) {
   }
 }
 
+async function updateCheckoutQuestionResponse(
+  saleId,
+  checkoutQuestionResponse,
+) {
+  const client = await database.getNewClient()
+  try {
+    await client.query("BEGIN")
+
+    const saleResult = await client.query({
+      text: `SELECT * FROM sales WHERE id = $1 FOR UPDATE`,
+      values: [saleId],
+    })
+
+    const targetSale = saleResult.rows[0]
+
+    if (!targetSale) {
+      throw new NotFoundError({
+        message: "Inscrição não encontrada.",
+        action: "Verifique o ID da inscrição.",
+      })
+    }
+
+    if (targetSale.status === "cancelled") {
+      throw new ValidationError({
+        message:
+          "Não é possível alterar a resposta da pergunta de uma inscrição cancelada.",
+        action: "Inscrições canceladas não podem sofrer alterações.",
+      })
+    }
+
+    const results = await client.query({
+      text: `
+        UPDATE sales
+        SET 
+          checkout_question_response = $2,
+          updated_at = timezone('utc', now())
+        WHERE id = $1
+        RETURNING *
+      `,
+      values: [saleId, checkoutQuestionResponse],
+    })
+
+    await client.query("COMMIT")
+    return results.rows[0]
+  } catch (error) {
+    await client.query("ROLLBACK")
+    throw error
+  } finally {
+    await client.end()
+  }
+}
+
 const sale = {
   create,
   findOneById,
@@ -1138,6 +1193,7 @@ const sale = {
   cancel,
   replaceGuest,
   updateBedPreference,
+  updateCheckoutQuestionResponse,
 }
 
 export default sale
