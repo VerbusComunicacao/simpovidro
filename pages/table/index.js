@@ -86,10 +86,30 @@ export default function Table() {
                     {hotel.city}, {hotel.state}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600">{hotel.address}</p>
-                  <p className="text-sm text-gray-600">{hotel.phone}</p>
-                  <p className="text-sm text-gray-600">{hotel.email}</p>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-600">{hotel.address}</p>
+                    <p className="text-sm text-gray-600">{hotel.phone}</p>
+                    <p className="text-sm text-gray-600">{hotel.email}</p>
+                  </div>
+                  <div className="flex gap-2 pt-3 border-t border-gray-100">
+                    <div className="flex items-center justify-center gap-2 bg-slate-50 p-2 rounded-lg text-center">
+                      <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
+                        Inscritos
+                      </p>
+                      <p className="font-bold text-blue-600">
+                        {hotel.guests_count ?? 0}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-center gap-2 bg-slate-50 p-2 rounded-lg text-center">
+                      <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
+                        Empresas
+                      </p>
+                      <p className="font-bold text-blue-600">
+                        {hotel.companies_count ?? 0}
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </Link>

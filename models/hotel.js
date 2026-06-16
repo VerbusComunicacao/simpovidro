@@ -250,7 +250,18 @@ async function findAll() {
             WHERE pp.hotel_id = h.id
           ),
           '[]'::json
-        ) as price_policies
+        ) as price_policies,
+        (
+          SELECT COALESCE(COUNT(sg.id), 0)::integer
+          FROM sales_guests sg
+          JOIN sales s ON sg.sale_id = s.id
+          WHERE s.hotel_id = h.id AND s.status != 'cancelled'
+        ) as guests_count,
+        (
+          SELECT COALESCE(COUNT(DISTINCT s.company_id), 0)::integer
+          FROM sales s
+          WHERE s.hotel_id = h.id AND s.status != 'cancelled' AND s.company_id IS NOT NULL
+        ) as companies_count
       FROM 
         hotels h
       ORDER BY 
