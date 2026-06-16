@@ -147,6 +147,17 @@ export default function CheckoutPage({
       (typeof window !== "undefined" &&
         window.location.search.includes("lang=en")),
   )
+  const getBedPreferenceLabel = (val) => {
+    if (!val) return "";
+    const lower = val.toLowerCase().trim();
+    if (lower === "duplo casal") {
+      return isInternational ? "Double Couple" : "Duplo Casal";
+    }
+    if (lower === "duplo solteiro") {
+      return isInternational ? "Double Single" : "Duplo Solteiro";
+    }
+    return val;
+  }
   const [currentStep, setCurrentStep] = useState(
     router.locale === "en" ||
       (typeof window !== "undefined" &&
@@ -1106,7 +1117,7 @@ export default function CheckoutPage({
                   </p>
                   {router.query.bed_preference && (
                     <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mt-1">
-                      {router.query.bed_preference}
+                      {getBedPreferenceLabel(router.query.bed_preference)}
                     </p>
                   )}
                 </div>
@@ -2248,14 +2259,14 @@ export default function CheckoutPage({
                               check_in_date: room.hotel_check_in_date,
                               guests: guests,
                               price_policies: room.price_policies,
-                            })}
+                            }, isInternational)}
                           </p>
                           {router.query.bed_preference && (
                             <p className="text-[10px] font-bold text-blue-900 uppercase tracking-wider mt-1 rounded-sm w-fit">
                               {isInternational
                                 ? "Accommodation preference: "
                                 : "Tipo de acomodação: "}
-                              {router.query.bed_preference}
+                              {getBedPreferenceLabel(router.query.bed_preference)}
                             </p>
                           )}
                         </div>
