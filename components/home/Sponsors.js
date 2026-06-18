@@ -54,9 +54,15 @@ export default function Sponsors({ variant = "full" }) {
 
   const support = [
     {
+      name: "Abividro",
+      logo: "/images/apoio-institucional/abividro.png",
+      link: "https://abividro.org.br/",
+    },
+    {
       name: "Abravid",
       logo: "/images/apoio-institucional/ABRAVID.png",
       link: "",
+      isVertical: true,
     },
     {
       name: "Adivipar",
@@ -97,11 +103,7 @@ export default function Sponsors({ variant = "full" }) {
       logo: "/images/apoio-institucional/SINCOMAVI-2.png",
       link: "https://sincomavi.org.br",
     },
-    {
-      name: "Sindi Vidros RS",
-      logo: "/images/apoio-institucional/Sindividros RS.png",
-      link: "https://sindividrosrs.com.br",
-    },
+
     {
       name: "Sindividros BA",
       logo: "/images/apoio-institucional/SINDIVIDROS BA.png",
@@ -110,6 +112,11 @@ export default function Sponsors({ variant = "full" }) {
       name: "Sindividros ES",
       logo: "/images/apoio-institucional/SINDIVIDROS-ES-NOVO.jpeg",
       link: "https://sindividros-es.com.br",
+    },
+    {
+      name: "Sindi Vidros RS",
+      logo: "/images/apoio-institucional/Sindividros RS.png",
+      link: "https://sindividrosrs.com.br",
     },
   ]
 

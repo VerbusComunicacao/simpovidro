@@ -1,8 +1,40 @@
 import * as React from "react"
-
+import { useRouter } from "next/router"
 import { cn } from "@/lib/utils"
+import { getValidationMessage } from "@/lib/validators"
 
-const Input = React.forwardRef(({ className, type, ...props }, ref) => {
+const Input = React.forwardRef(({ className, type, onInvalid, onInput, ...props }, ref) => {
+  const router = useRouter()
+
+  const handleInvalid = (e) => {
+    const currentIsEn = router
+      ? router.locale === "en" ||
+        router.query?.lang === "en" ||
+        (typeof window !== "undefined" &&
+          (window.location.search.includes("lang=en") ||
+            window.location.pathname.startsWith("/en/")))
+      : typeof window !== "undefined" &&
+        (window.location.search.includes("lang=en") ||
+          window.location.pathname.startsWith("/en/"))
+
+    const msg = getValidationMessage(e.target, currentIsEn)
+    if (msg && e.target.validationMessage !== msg) {
+      e.target.setCustomValidity(msg)
+      e.preventDefault()
+      e.target.reportValidity()
+    }
+    if (onInvalid) {
+      onInvalid(e)
+    }
+  }
+
+  const handleInput = (e) => {
+    e.target.setCustomValidity("")
+    if (onInput) {
+      onInput(e)
+    }
+  }
+
   return (
     <input
       type={type}
@@ -11,6 +43,8 @@ const Input = React.forwardRef(({ className, type, ...props }, ref) => {
         className,
       )}
       ref={ref}
+      onInvalid={handleInvalid}
+      onInput={handleInput}
       {...props}
     />
   )

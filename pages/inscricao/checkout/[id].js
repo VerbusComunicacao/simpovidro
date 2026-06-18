@@ -43,6 +43,8 @@ import {
   getChildrenCount,
   getGuestCountsString,
   translateText,
+  ACTIVITY_SECTORS,
+  ACTIVITY_SECTORS_EN,
 } from "@/lib/registration-helpers"
 
 function calculateAge(birthDate, referenceDate = new Date()) {
@@ -63,52 +65,6 @@ function calculateIsAdult(birthDate, referenceDate) {
 
 function calculateIsHolder(birthDate) {
   return calculateAge(birthDate) >= 18
-}
-
-const ACTIVITY_SECTORS = [
-  "ACESSÓRIOS",
-  "ATACADISTA",
-  "CONSULTORIA",
-  "DISTRIBUIDOR",
-  "ENTIDADE DE CLASSE",
-  "ESQUADRIAS",
-  "FERRAGENS",
-  "INSTALAÇÃO",
-  "INSUMOS",
-  "INTERLAY",
-  "MAQUINÁRIO",
-  "PROCESSADOR",
-  "RECICLAGEM",
-  "REPRESENTAÇÃO",
-  "SERVIÇOS",
-  "SINDICATOS",
-  "SOFTWARE",
-  "USINA DE BASE",
-  "VIDRAÇARIA",
-  "OUTRO",
-]
-
-const ACTIVITY_SECTORS_EN = {
-  ACESSÓRIOS: "ACCESSORIES",
-  ATACADISTA: "WHOLESALER",
-  CONSULTORIA: "CONSULTING",
-  DISTRIBUIDOR: "DISTRIBUTOR",
-  "ENTIDADE DE CLASSE": "TRADE ASSOCIATION",
-  ESQUADRIAS: "FRAMES (WINDOWS/DOORS)",
-  FERRAGENS: "HARDWARE",
-  INSTALAÇÃO: "INSTALLATION",
-  INSUMOS: "RAW MATERIALS",
-  INTERLAY: "INTERLAYER",
-  MAQUINÁRIO: "MACHINERY",
-  PROCESSADOR: "GLASS PROCESSOR",
-  RECICLAGEM: "RECYCLING",
-  REPRESENTAÇÃO: "SALES REPRESENTATIVE",
-  SERVIÇOS: "SERVICES",
-  SINDICATOS: "TRADE UNIONS",
-  SOFTWARE: "SOFTWARE",
-  "USINA DE BASE": "FLOAT GLASS PLANT",
-  VIDRAÇARIA: "GLASS SHOP / GLAZIER",
-  OUTRO: "OTHER",
 }
 
 const getStateDisplayName = (stateVal, countryCode = "BR") => {
@@ -148,15 +104,15 @@ export default function CheckoutPage({
         window.location.search.includes("lang=en")),
   )
   const getBedPreferenceLabel = (val) => {
-    if (!val) return "";
-    const lower = val.toLowerCase().trim();
+    if (!val) return ""
+    const lower = val.toLowerCase().trim()
     if (lower === "duplo casal") {
-      return isInternational ? "Double Couple" : "Duplo Casal";
+      return isInternational ? "Double Couple" : "Duplo Casal"
     }
     if (lower === "duplo solteiro") {
-      return isInternational ? "Double Single" : "Duplo Solteiro";
+      return isInternational ? "Double Single" : "Duplo Solteiro"
     }
-    return val;
+    return val
   }
   const [currentStep, setCurrentStep] = useState(
     router.locale === "en" ||
@@ -2160,11 +2116,14 @@ export default function CheckoutPage({
                       <AlertCircle className="h-5 w-5 flex-shrink-0" />
                       <div>
                         <p className="font-semibold">
-                          Ocupação mínima obrigatória
+                          {isInternational
+                            ? "Minimum required occupancy"
+                            : "Ocupação mínima obrigatória"}
                         </p>
                         <p>
-                          Este quarto exige no mínimo {minRequired} hóspedes
-                          adultos para a reserva.
+                          {isInternational
+                            ? `This room requires a minimum of ${minRequired} adult guests to book.`
+                            : `Este quarto exige no mínimo ${minRequired} hóspedes adultos para a reserva.`}
                         </p>
                       </div>
                     </div>
@@ -2174,19 +2133,21 @@ export default function CheckoutPage({
                     <div className="bg-white p-4 rounded-xl shadow-xl border">
                       <div className="flex justify-between items-center mb-4">
                         <span className="font-semibold text-gray-700">
-                          Total ({guests.length} hóspedes):
+                          {isInternational
+                            ? `Total (${guests.length} ${guests.length === 1 ? "guest" : "guests"}):`
+                            : `Total (${guests.length} hóspedes):`}
                         </span>
                         <div className="flex flex-col items-end">
                           {discountPercentage > 0 && (
                             <span className="text-xs text-gray-500 line-through">
-                              {new Intl.NumberFormat("pt-BR", {
+                              {new Intl.NumberFormat(isInternational ? "en-US" : "pt-BR", {
                                 style: "currency",
                                 currency: "BRL",
                               }).format(originalTotal)}
                             </span>
                           )}
                           <span className="text-xl font-bold text-blue-600">
-                            {new Intl.NumberFormat("pt-BR", {
+                            {new Intl.NumberFormat(isInternational ? "en-US" : "pt-BR", {
                               style: "currency",
                               currency: "BRL",
                             }).format(finalTotal)}
@@ -2255,18 +2216,23 @@ export default function CheckoutPage({
                             {isInternational
                               ? "Number of guests: "
                               : "Quantidade de pessoas: "}{" "}
-                            {getGuestCountsString({
-                              check_in_date: room.hotel_check_in_date,
-                              guests: guests,
-                              price_policies: room.price_policies,
-                            }, isInternational)}
+                            {getGuestCountsString(
+                              {
+                                check_in_date: room.hotel_check_in_date,
+                                guests: guests,
+                                price_policies: room.price_policies,
+                              },
+                              isInternational,
+                            )}
                           </p>
                           {router.query.bed_preference && (
                             <p className="text-[10px] font-bold text-blue-900 uppercase tracking-wider mt-1 rounded-sm w-fit">
                               {isInternational
                                 ? "Accommodation preference: "
                                 : "Tipo de acomodação: "}
-                              {getBedPreferenceLabel(router.query.bed_preference)}
+                              {getBedPreferenceLabel(
+                                router.query.bed_preference,
+                              )}
                             </p>
                           )}
                         </div>
@@ -2401,10 +2367,11 @@ export default function CheckoutPage({
                                 ? "Activity Sector:"
                                 : "Ramo de atividade:"}
                             </span>{" "}
-                            {isInternational &&
-                            (newCompanyData.activity_sector === "OUTRO" ||
-                              foundCompany?.activity_sector === "OUTRO")
-                              ? "OTHER"
+                            {isInternational
+                              ? ACTIVITY_SECTORS_EN[newCompanyData.activity_sector || foundCompany?.activity_sector] ||
+                                (newCompanyData.activity_sector === "OUTRO" || foundCompany?.activity_sector === "OUTRO"
+                                  ? "OTHER"
+                                  : newCompanyData.activity_sector || foundCompany?.activity_sector || "-")
                               : newCompanyData.activity_sector ||
                                 foundCompany?.activity_sector ||
                                 "-"}
@@ -3005,6 +2972,8 @@ export default function CheckoutPage({
 
 export async function getServerSideProps(context) {
   const { id } = context.params
+  const isEn = context.locale === "en"
+  const loginPath = isEn ? "/en/login" : "/login"
 
   // 1. Validate Session
   const cookies = cookie.parse(context.req.headers.cookie || "")
@@ -3013,7 +2982,7 @@ export async function getServerSideProps(context) {
   if (!sessionToken) {
     return {
       redirect: {
-        destination: `/login?redirect=${encodeURIComponent(context.resolvedUrl)}`,
+        destination: `${loginPath}?redirect=${encodeURIComponent(context.resolvedUrl)}`,
         permanent: false,
       },
     }
@@ -3050,7 +3019,7 @@ export async function getServerSideProps(context) {
     // Session invalid or other error
     return {
       redirect: {
-        destination: `/login?redirect=${encodeURIComponent(context.resolvedUrl)}`,
+        destination: `${loginPath}?redirect=${encodeURIComponent(context.resolvedUrl)}`,
         permanent: false,
       },
     }

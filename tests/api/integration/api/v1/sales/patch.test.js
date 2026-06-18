@@ -273,4 +273,120 @@ describe("PATCH /api/v1/sales/[id]", () => {
     )
     expect(patchResponse.status).toBe(403)
   })
+
+  test("should update checkout_question_response successfully", async () => {
+    // Verify initial checkout question response (should be null or empty)
+    let saleDetailsResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
+      {
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    let saleDetails = await saleDetailsResponse.json()
+    expect(saleDetails.checkout_question_response).toBeNull()
+
+    // Patch checkout_question_response
+    const patchResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          checkout_question_response:
+            "Sim, gostaria de checkout tardio às 14h.",
+          send_email: false,
+        }),
+      },
+    )
+    expect(patchResponse.status).toBe(200)
+
+    // Verify change
+    saleDetailsResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${saleId}`,
+      {
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    saleDetails = await saleDetailsResponse.json()
+    expect(saleDetails.checkout_question_response).toBe(
+      "Sim, gostaria de checkout tardio às 14h.",
+    )
+  })
+
+  test("should return 400 when trying to update checkout_question_response on a cancelled sale", async () => {
+    // Create another sale to cancel
+    const regResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/registrations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          room_id: roomId,
+          bed_preference: "Duplo Casal",
+          guests_data: [
+            {
+              name: "Maria Teste Q",
+              badge_name: "MARIAQ",
+              email: "mariaq@example.com",
+              phone: "11988888889",
+              gender: "Feminino",
+              rg_number: "223334449",
+              cpf_number: "222.333.444-99",
+              birth_date: "1995-05-15",
+            },
+            {
+              name: "João Teste Q",
+              badge_name: "JOAOQ",
+              email: "joaoq@example.com",
+              phone: "11977777779",
+              gender: "Masculino",
+              rg_number: "334445559",
+              cpf_number: "333.444.555-99",
+              birth_date: "1994-04-14",
+            },
+          ],
+        }),
+      },
+    )
+    expect(regResponse.status).toBe(201)
+    const regData = await regResponse.json()
+    const testSaleId = regData.saleId
+
+    // Cancel this sale
+    const cancelResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${testSaleId}?send_email=false`,
+      {
+        method: "DELETE",
+        headers: { Cookie: `session_id=${adminToken}` },
+      },
+    )
+    expect(cancelResponse.status).toBe(204)
+
+    // Try to update question response
+    const patchResponse = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/sales/${testSaleId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          checkout_question_response: "Não",
+          send_email: false,
+        }),
+      },
+    )
+    expect(patchResponse.status).toBe(400)
+    const patchData = await patchResponse.json()
+    expect(patchData.message).toBe(
+      "Não é possível alterar a resposta da pergunta de uma inscrição cancelada.",
+    )
+  })
 })

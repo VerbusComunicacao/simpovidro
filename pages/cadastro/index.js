@@ -13,8 +13,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import ErrorDialog from "@/components/ui/ErrorDialog"
+import { useLocale } from "@/hooks/useLocale"
 
 export default function Register() {
+  const { t, isEn } = useLocale()
   const router = useRouter()
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
@@ -25,9 +27,6 @@ export default function Register() {
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
-
-  const isEn = router.locale === "en" || router.query.lang === "en"
-  const t = (pt, en) => (isEn ? en : pt)
 
   const handleLanguageChange = (lang) => {
     router.push(
@@ -259,4 +258,10 @@ export default function Register() {
       />
     </div>
   )
+}
+
+export async function getServerSideProps(context) {
+  return {
+    props: {},
+  }
 }

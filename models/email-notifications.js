@@ -4,6 +4,7 @@ import sale from "models/sale.js"
 import {
   calculateSalePriceBreakdown,
   getGuestCountsString,
+  ACTIVITY_SECTORS_EN,
 } from "lib/registration-helpers.js"
 
 export async function sendRegistrationEmail(
@@ -17,6 +18,13 @@ export async function sendRegistrationEmail(
     const isInternational = saleDetails.guests?.some(
       (g) => g.passport_number && g.passport_number.trim() !== "",
     )
+
+    const translatedActivitySector = isInternational
+      ? ACTIVITY_SECTORS_EN[saleDetails.company_activity_sector] ||
+        (saleDetails.company_activity_sector === "OUTRO"
+          ? "OTHER"
+          : saleDetails.company_activity_sector)
+      : saleDetails.company_activity_sector
 
     const formatDate = (date) => {
       if (!date) return ""
@@ -166,7 +174,7 @@ export async function sendRegistrationEmail(
             ${saleDetails.company_address_number ? `<p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Number" : "Número"}:</strong> ${saleDetails.company_address_number}</p>` : ""}
             ${saleDetails.company_address_complement ? `<p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Complement" : "Complemento"}:</strong> ${saleDetails.company_address_complement}</p>` : ""}
             ${saleDetails.company_neighborhood ? `<p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Neighborhood" : "Bairro"}:</strong> ${saleDetails.company_neighborhood}</p>` : ""}
-            ${saleDetails.company_activity_sector ? `<p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Activity sector" : "Ramo de atividade"}:</strong> ${saleDetails.company_activity_sector}</p>` : ""}
+            ${translatedActivitySector ? `<p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Activity sector" : "Ramo de atividade"}:</strong> ${translatedActivitySector}</p>` : ""}
             ${saleDetails.company_country ? `<p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Country" : "País"}:</strong> ${saleDetails.company_country}</p>` : ""}
             ${saleDetails.company_state ? `<p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "State" : "Estado"}:</strong> ${saleDetails.company_state}</p>` : ""}
             ${saleDetails.company_city ? `<p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "City" : "Cidade"}:</strong> ${saleDetails.company_city}</p>` : ""}

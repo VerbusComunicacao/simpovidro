@@ -16,14 +16,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Image from "next/image"
+import { useLocale } from "@/hooks/useLocale"
 import Sponsors from "@/components/home/Sponsors"
 
 export default function LoginPage() {
+  const { t, isEn } = useLocale()
   const { user, isLoading } = useUser()
   const router = useRouter()
-
-  const isEn = router.locale === "en" || router.query.lang === "en"
-  const t = (pt, en) => (isEn ? en : pt)
 
   const handleLanguageChange = (lang) => {
     router.push(
@@ -223,4 +222,10 @@ function LoginForm({ isEn, t }) {
       </Button>
     </form>
   )
+}
+
+export async function getServerSideProps(context) {
+  return {
+    props: {},
+  }
 }

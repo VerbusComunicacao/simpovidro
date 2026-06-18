@@ -1,5 +1,40 @@
 import database from "infra/database.js"
-import { translateText } from "lib/registration-helpers.js"
+
+function formatCNPJ(cnpj) {
+  if (!cnpj) return ""
+  const cleaned = cnpj.replace(/\D/g, "")
+  if (cleaned.length !== 14) return cnpj
+  return cleaned.replace(
+    /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
+    "$1.$2.$3/$4-$5",
+  )
+}
+
+function formatGender(gender) {
+  if (!gender) return ""
+  const g = gender.trim().toLowerCase()
+  if (g === "f" || g === "female" || g === "feminino") return "FEMININO"
+  if (g === "m" || g === "male" || g === "masculino") return "MASCULINO"
+  return gender.toUpperCase()
+}
+
+function formatPaymentStatus(status) {
+  if (!status) return ""
+  const s = status.trim().toLowerCase()
+  switch (s) {
+    case "paid":
+    case "confirmed":
+      return "Pago"
+    case "pending":
+      return "Pendente"
+    case "partial":
+      return "Parcial"
+    case "refunded":
+      return "Reembolsado"
+    default:
+      return status
+  }
+}
 
 async function generateCompleteReport(hotelId) {
   if (!hotelId) {
@@ -8,43 +43,47 @@ async function generateCompleteReport(hotelId) {
 
   const query = `
     SELECT 
-      g.name as "Nome",
-      UPPER(g.badge_name) as "Crachá do Participante",
-      g.email as "Email",
-      g.phone as "Celular",
-      g.gender as "Sexo",
-      g.birth_date as "Data de Nascimento",
-      g.cpf_number as "CPF",
-      g.rg_number as "RG",
-      g.passport_number as "Passaporte",
-      g.nationality as "Nacionalidade",
-      c.corporate_name as "Empresa",
-      c.cnpj as "CNPJ da empresa",
-      UPPER(c.badge) as "Nome da empresa no crachá",
-      c.phone as "Telefone Comercial",
-      c.address as "Endereço da Empresa",
-      c.address_number as "Número",
-      c.neighborhood as "Bairro",
-      c.city as "Cidade",
-      c.state as "Estado",
-      c.zip_code as "CEP",
-      g.medication_details as "Medicação",
-      g.blood_type as "Tipo sanguíneo",
-      g.blood_rh_factor as "Fator RH",
-      g.health_observations as "Observações de saúde",
-      g.special_needs_details as "Detalhes de necessidades especiais",
-      g.has_heart_condition as "Condição cardíaca",
-      g.has_diabetes as "Diabetes",
-      g.has_high_blood_pressure as "Pressão alta",
-      g.has_low_blood_pressure as "Pressão baixa",
-      g.emergency_contact_name as "Contato de emergência",
-      g.emergency_contact_phone as "Telefone de emergência",
-      s.sale_number as "Número da venda",
-      s.payment_status as "Status de pagamento",
-      s.final_amount as "Valor total",
-      r.name as "Nome do quarto",
-      s.bed_preference as "Tipo de acomodação",
-      TO_CHAR(s.created_at, 'DD/MM/YYYY') as "Data de Registro"
+      TO_CHAR(s.created_at, 'DD/MM/YYYY') as data_registro,
+      r.name as nome_quarto,
+      s.bed_preference as tipo_acomodacao,
+      s.sale_number as numero_venda,
+      c.corporate_name as empresa,
+      g.name as nome,
+      g.cpf_number as cpf,
+      g.rg_number as rg,
+      g.email,
+      TO_CHAR(g.birth_date, 'DD/MM/YYYY') as data_nascimento,
+      c.phone as telefone_comercial,
+      g.gender as sexo,
+      c.address as endereco_empresa,
+      c.address_number as numero,
+      c.address_complement as complemento,
+      c.zip_code as cep,
+      c.neighborhood as bairro,
+      c.city as cidade,
+      c.country as pais,
+      g.nationality as nacionalidade,
+      s.notes as observacoes,
+      UPPER(g.badge_name) as cracha_participante,
+      g.phone as celular,
+      g.passport_number as passaporte,
+      c.cnpj as cnpj_empresa,
+      UPPER(c.badge) as nome_empresa_cracha,
+      c.state as estado,
+      g.medication_details as medicacao,
+      g.blood_type as tipo_sanguineo,
+      g.blood_rh_factor as fator_rh,
+      g.health_observations as observacoes_saude,
+      g.special_needs_details as necessidades_especiais,
+      g.has_heart_condition as condicao_cardiaca,
+      g.has_diabetes as diabetes,
+      g.has_high_blood_pressure as pressao_alta,
+      g.has_low_blood_pressure as pressao_baixa,
+      g.emergency_contact_name as contato_emergencia,
+      g.emergency_contact_phone as telefone_emergencia,
+      s.payment_status as status_pagamento,
+      s.final_amount as valor_total,
+      c.activity_sector as area_atuacao
     FROM guests g
     JOIN sales_guests sg ON g.id = sg.guest_id
     JOIN sales s ON sg.sale_id = s.id
@@ -52,17 +91,62 @@ async function generateCompleteReport(hotelId) {
     JOIN hotels h ON r.hotel_id = h.id
     LEFT JOIN companies c ON s.company_id = c.id
     WHERE s.status != 'cancelled' AND h.id = $1
-    ORDER BY g.name
+    ORDER BY s.created_at ASC, s.sale_number ASC
   `
 
   const result = await database.query({
     text: query,
     values: [hotelId],
   })
-  return result.rows.map((row) => ({
-    ...row,
-    "Nome do quarto": translateText(row["Nome do quarto"], false),
-  }))
+
+  return result.rows.map((row) => {
+    return {
+      "Data de Registro": row.data_registro || "",
+      "Nome do quarto": row.nome_quarto || "",
+      "Tipo de acomodação": row.tipo_acomodacao || "",
+      "Número da venda": row.numero_venda || "",
+      Empresa: row.empresa || "",
+      Nome: row.nome || "",
+      "CHECK-IN": "",
+      "CHECK-OUT": "",
+      Passaporte: row.passaporte || "",
+      CPF: row.cpf || "",
+      RG: row.rg || "",
+      Email: row.email || "",
+      "Data de Nascimento": row.data_nascimento || "",
+      "Telefone Comercial": row.telefone_comercial || "",
+      PROFISSÃO: "",
+      Sexo: formatGender(row.sexo),
+      "Endereço da Empresa": row.endereco_empresa || "",
+      Número: row.numero || "",
+      Complemento: row.complemento || "",
+      CEP: row.cep || "",
+      Bairro: row.bairro || "",
+      Cidade: row.cidade || "",
+      PAÍS: row.pais || "",
+      Nacionalidade: row.nacionalidade || "",
+      OBSERVAÇÕES: row.observacoes || "",
+      "Crachá do Participante": row.cracha_participante || "",
+      Celular: row.celular || "",
+      "CNPJ da empresa": formatCNPJ(row.cnpj_empresa),
+      "Nome da empresa no crachá": row.nome_empresa_cracha || "",
+      Estado: row.estado || "",
+      Medicação: row.medicacao || "",
+      "Tipo sanguíneo": row.tipo_sanguineo || "",
+      "Fator RH": row.fator_rh || "",
+      "Observações de saúde": row.observacoes_saude || "",
+      "Detalhes de necessidades especiais": row.necessidades_especiais || "",
+      "Condição cardíaca": row.condicao_cardiaca,
+      Diabetes: row.diabetes,
+      "Pressão alta": row.pressao_alta,
+      "Pressão baixa": row.pressao_baixa,
+      "Contato de emergência": row.contato_emergencia || "",
+      "Telefone de emergência": row.telefone_emergencia || "",
+      "Status de pagamento": formatPaymentStatus(row.status_pagamento),
+      "Valor total": row.valor_total ? parseFloat(row.valor_total) : "",
+      "Área de atuação": row.area_atuacao || "",
+    }
+  })
 }
 
 async function generateByCompany(hotelId) {
