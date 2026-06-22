@@ -41,6 +41,11 @@ export default function Sponsors({ variant = "full" }) {
       link: "https://www.keraglass.com/pt/home",
     },
     {
+      name: "Qilu PVP",
+      logo: "/images/apoiadores/qilu.png",
+      link: "https://www.qlupvb.com",
+    },
+    {
       name: "Vetro Maquinas",
       logo: "/images/apoiadores/vetro-maquinas.png",
       link: "https://vetromaquinas.com.br",
