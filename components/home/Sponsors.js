@@ -41,6 +41,11 @@ export default function Sponsors({ variant = "full" }) {
       link: "https://www.keraglass.com/pt/home",
     },
     {
+      name: "Lisec",
+      logo: "/images/apoiadores/lisec-1.png",
+      link: "https://www.lisec.com",
+    },
+    {
       name: "Qilu PVP",
       logo: "/images/apoiadores/qilu.png",
       link: "https://www.qlupvb.com",
@@ -294,7 +299,7 @@ export default function Sponsors({ variant = "full" }) {
           <h2 className="text-2xl text-slate-400 uppercase mb-10 font-title">
             Apoio
           </h2>
-          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 mb-10">
+          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-12 mb-10">
             {supporters.map((sponsor) => (
               <a
                 key={sponsor.name}
