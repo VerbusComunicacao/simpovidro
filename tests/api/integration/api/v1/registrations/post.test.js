@@ -1642,5 +1642,123 @@ describe("POST /api/v1/registrations", () => {
         )
       })
     })
+
+    test("should successfully register a triple room with 3 adults including dates like 22/07/1977 and 6/9/1974", async () => {
+      // 1. Create a unique user for this test
+      const uniqueEmailTriple = `triple-date-${Date.now()}@example.com`
+      const tripleUser = await orchestrator.createUser({
+        full_name: "Triple Tester",
+        email: uniqueEmailTriple,
+      })
+      await orchestrator.activateUser(tripleUser.id)
+      await orchestrator.setUserFeatures(tripleUser.id, [
+        "create:session",
+        "read:session",
+        "create:guest",
+        "read:guest",
+        "read:user",
+        "update:user",
+        "read:content",
+      ])
+      const tripleSession = await orchestrator.createSession(tripleUser.id)
+      const tripleToken = tripleSession.token
+
+      // 2. Create a specialized category 3 adults, 0 children
+      const roomCategoryData = await orchestrator.createRoomCategory(
+        regularUserId,
+        {
+          name: "Triple Room Capacity Check",
+          max_adults: 3,
+          max_children: 0,
+        },
+      )
+
+      const roomResponse = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/rooms`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${adminToken}`,
+          },
+          body: JSON.stringify({
+            hotel_id: hotelId,
+            room_type_id: roomTypeId,
+            room_category_id: roomCategoryData.id,
+            price_per_night: 200,
+            total_rooms: 5,
+            min_guests: 3,
+            name: "Quarto Triplo Dates Check",
+          }),
+        },
+      )
+      expect(roomResponse.status).toBe(201)
+      const roomData = await roomResponse.json()
+      const targetRoomId = roomData.id
+
+      // 3. Register with 3 guests, with birth dates:
+      // Guest 1 (Holder): 22/07/1977
+      // Guest 2: 6/9/1974
+      // Guest 3: 1990-01-01
+      const registrationResponse = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${tripleToken}`,
+          },
+          body: JSON.stringify({
+            room_id: targetRoomId,
+            guests_data: [
+              {
+                name: tripleUser.full_name,
+                badge_name: "Triple Lead",
+                email: tripleUser.email,
+                phone: "(11) 99999-9999",
+                gender: "Masculino",
+                rg_number: `RG-T1-${Date.now()}`,
+                cpf_number: `000.000.00${Math.floor(Math.random() * 90) + 10}-12`,
+                birth_date: "22/07/1977",
+                emergency_contact_name: "Emergency",
+                emergency_contact_phone: "(11) 99999-9999",
+              },
+              {
+                name: "Triple Guest 2",
+                badge_name: "Triple 2",
+                email: "triple-guest2@example.com",
+                phone: "(11) 99999-9999",
+                gender: "Feminino",
+                rg_number: `RG-T2-${Date.now()}`,
+                cpf_number: `000.000.00${Math.floor(Math.random() * 90) + 10}-13`,
+                birth_date: "6/9/1974",
+                emergency_contact_name: "Emergency",
+                emergency_contact_phone: "(11) 99999-9999",
+              },
+              {
+                name: "Triple Guest 3",
+                badge_name: "Triple 3",
+                email: "triple-guest3@example.com",
+                phone: "(11) 99999-9999",
+                gender: "Masculino",
+                rg_number: `RG-T3-${Date.now()}`,
+                cpf_number: `000.000.00${Math.floor(Math.random() * 90) + 10}-14`,
+                birth_date: "1990-01-01",
+                emergency_contact_name: "Emergency",
+                emergency_contact_phone: "(11) 99999-9999",
+              },
+            ],
+            payment_method: "cash",
+          }),
+        },
+      )
+
+      if (registrationResponse.status !== 201) {
+        console.log("Error Response:", await registrationResponse.json())
+      }
+      expect(registrationResponse.status).toBe(201)
+      const registrationData = await registrationResponse.json()
+      expect(registrationData.saleId).toBeDefined()
+    })
   })
 })
