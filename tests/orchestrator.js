@@ -98,7 +98,9 @@ async function createHotel(userId, hotelData) {
 async function createRoomCategory(userId, roomCategoryData) {
   return await roomCategory.create(
     {
-      name: roomCategoryData?.name || faker.commerce.productName(),
+      name:
+        roomCategoryData?.name ||
+        `${faker.commerce.productName()} ${faker.string.alphanumeric(8)}`,
       max_adults:
         roomCategoryData?.max_adults ?? faker.number.int({ min: 1, max: 4 }),
       max_children:
@@ -135,7 +137,9 @@ async function createRoom(userId, roomData) {
 async function createRoomType(userId, roomTypeData) {
   return await roomType.create(
     {
-      name: roomTypeData?.name || faker.commerce.productName(),
+      name:
+        roomTypeData?.name ||
+        `${faker.commerce.productName()} ${faker.string.alphanumeric(8)}`,
       description:
         roomTypeData?.description || faker.commerce.productDescription(),
     },
@@ -201,7 +205,9 @@ async function injectPasswordRecoveryToken(tokenObject) {
 
 async function createDiscount(discountData) {
   return await discount.create({
-    name: discountData?.name || faker.commerce.productName(),
+    name:
+      discountData?.name ||
+      `${faker.commerce.productName()} ${faker.string.alphanumeric(8)}`,
     value:
       discountData?.value ??
       faker.number.float({ min: 5, max: 50, fractionDigits: 2 }),

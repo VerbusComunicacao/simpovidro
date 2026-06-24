@@ -2,10 +2,17 @@ import database from "infra/database.js"
 import { ConflictError, ValidationError, NotFoundError } from "infra/errors.js"
 import { validateRequiredFields, validateUUID } from "infra/validator.js"
 import { cpf } from "cpf-cnpj-validator"
+import { parseDate, isLegalAdult } from "../lib/registration-helpers.js"
 
 async function create(guestInputValues, userId, client, isImport = false) {
   applyPlaceholderLogic(guestInputValues)
-  const isAdult = calculateIsAdult(guestInputValues.birth_date)
+  if (guestInputValues.birth_date) {
+    const parsed = parseDate(guestInputValues.birth_date)
+    if (!isNaN(parsed.getTime())) {
+      guestInputValues.birth_date = parsed.toISOString().split("T")[0]
+    }
+  }
+  const isAdult = isLegalAdult(guestInputValues.birth_date)
 
   const requiredFields = [
     "name",
@@ -189,7 +196,13 @@ async function findOneByUserId(userId, client) {
 
 async function upsert(guestData, userId = null, client, isImport = false) {
   applyPlaceholderLogic(guestData)
-  const isAdult = calculateIsAdult(guestData.birth_date)
+  if (guestData.birth_date) {
+    const parsed = parseDate(guestData.birth_date)
+    if (!isNaN(parsed.getTime())) {
+      guestData.birth_date = parsed.toISOString().split("T")[0]
+    }
+  }
+  const isAdult = isLegalAdult(guestData.birth_date)
 
   const requiredFields = [
     "name",
@@ -297,6 +310,12 @@ async function findAll({ search = "", page = 1, limit = 10 } = {}) {
 }
 
 async function update(guestId, guestInputNewValues, client) {
+  if (guestInputNewValues.birth_date) {
+    const parsed = parseDate(guestInputNewValues.birth_date)
+    if (!isNaN(parsed.getTime())) {
+      guestInputNewValues.birth_date = parsed.toISOString().split("T")[0]
+    }
+  }
   if (guestInputNewValues.cpf_number) {
     const cleanCpf = guestInputNewValues.cpf_number.replace(/\D/g, "")
     if (cleanCpf === "11111111111") {
@@ -510,19 +529,6 @@ async function resolveUserId(guestEmail, providedUserId, client) {
   return results.rows[0]?.id || providedUserId
 }
 
-function calculateIsAdult(birthDate) {
-  if (!birthDate) return false
-
-  const referenceDate = new Date()
-  const birth = new Date(birthDate)
-  let age = referenceDate.getUTCFullYear() - birth.getUTCFullYear()
-  const m = referenceDate.getUTCMonth() - birth.getUTCMonth()
-  if (m < 0 || (m === 0 && referenceDate.getUTCDate() < birth.getUTCDate())) {
-    age--
-  }
-  return age >= 18
-}
-
 function applyPlaceholderLogic(guestData) {
   const cleanCpf = guestData.cpf_number?.replace(/\D/g, "")
   if (cleanCpf === "11111111111" || guestData.is_pending_info === true) {
@@ -535,7 +541,7 @@ function applyPlaceholderLogic(guestData) {
       guestData.badge_name = "A DEFINIR"
       guestData.phone = "1111111111"
       guestData.is_pending_info = true
-      if (calculateIsAdult(guestData.birth_date)) {
+      if (isLegalAdult(guestData.birth_date)) {
         guestData.email = `pendente_${Date.now()}@adefinir.commm`
       }
     } else {
@@ -543,7 +549,7 @@ function applyPlaceholderLogic(guestData) {
       guestData.badge_name = guestData.badge_name || "A DEFINIR"
       guestData.phone = guestData.phone?.replace(/\D/g, "") || "1111111111"
       guestData.is_pending_info = true
-      if (calculateIsAdult(guestData.birth_date) && !guestData.email) {
+      if (isLegalAdult(guestData.birth_date) && !guestData.email) {
         guestData.email = `pendente_${Date.now()}@adefinir.commm`
       }
     }

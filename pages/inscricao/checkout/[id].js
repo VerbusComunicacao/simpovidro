@@ -41,27 +41,10 @@ import {
   calculateSummaryPrice,
   getChildrenCount,
   getGuestCountsString,
+  calculateAge,
+  isAdult,
+  isLegalAdult,
 } from "@/lib/registration-helpers"
-
-function calculateAge(birthDate, referenceDate = new Date()) {
-  if (!birthDate) return 0
-  const birth = new Date(birthDate)
-  const ref = new Date(referenceDate)
-  let age = ref.getFullYear() - birth.getFullYear()
-  const m = ref.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && ref.getDate() < birth.getDate())) {
-    age--
-  }
-  return age
-}
-
-function calculateIsAdult(birthDate, referenceDate) {
-  return calculateAge(birthDate, referenceDate) >= 12
-}
-
-function calculateIsHolder(birthDate) {
-  return calculateAge(birthDate) >= 18
-}
 
 const ACTIVITY_SECTORS = [
   "ACESSÓRIOS",
@@ -582,7 +565,7 @@ export default function CheckoutPage({
 
     guests.forEach((guest, index) => {
       // 0. Validate Holder Age (Specifically for the first guest)
-      if (index === 0 && !calculateIsHolder(guest.birth_date)) {
+      if (index === 0 && !isLegalAdult(guest.birth_date)) {
         hasError = true
         if (!newErrors[index]) newErrors[index] = {}
         setError("O titular da inscrição deve ser maior de 18 anos.")
@@ -647,7 +630,7 @@ export default function CheckoutPage({
         hasError = true
       }
 
-      if (calculateIsAdult(guest.birth_date) && !guest.email) {
+      if (isAdult(guest.birth_date) && !guest.email) {
         if (!newErrors[index]) newErrors[index] = {}
         newErrors[index].email = "Email é obrigatório para adultos."
         hasError = true
@@ -1511,8 +1494,7 @@ export default function CheckoutPage({
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor={`email-${index}`}>
-                                E-mail{" "}
-                                {calculateIsAdult(guestData.birth_date) && "*"}
+                                E-mail {isAdult(guestData.birth_date) && "*"}
                               </Label>
                               <Input
                                 id={`email-${index}`}
@@ -1523,9 +1505,7 @@ export default function CheckoutPage({
                                 className={`
                                   ${guestErrors[index]?.email ? "border-red-500" : ""}
                                 `}
-                                required={calculateIsAdult(
-                                  guestData.birth_date,
-                                )}
+                                required={isAdult(guestData.birth_date)}
                               />
                               {guestErrors[index]?.email && (
                                 <p className="text-red-500 text-xs mt-1">
