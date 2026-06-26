@@ -42,30 +42,13 @@ import {
   calculateSummaryPrice,
   getChildrenCount,
   getGuestCountsString,
+  calculateAge,
+  isAdult,
+  isLegalAdult,
   translateText,
   ACTIVITY_SECTORS,
   ACTIVITY_SECTORS_EN,
 } from "@/lib/registration-helpers"
-
-function calculateAge(birthDate, referenceDate = new Date()) {
-  if (!birthDate) return 0
-  const birth = new Date(birthDate)
-  const ref = new Date(referenceDate)
-  let age = ref.getFullYear() - birth.getFullYear()
-  const m = ref.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && ref.getDate() < birth.getDate())) {
-    age--
-  }
-  return age
-}
-
-function calculateIsAdult(birthDate, referenceDate) {
-  return calculateAge(birthDate, referenceDate) >= 12
-}
-
-function calculateIsHolder(birthDate) {
-  return calculateAge(birthDate) >= 18
-}
 
 const getStateDisplayName = (stateVal, countryCode = "BR") => {
   if (!stateVal) return ""
@@ -675,6 +658,7 @@ export default function CheckoutPage({
           installments_count: installmentsCount,
           bed_preference: router.query.bed_preference,
           checkout_question_response: checkoutQuestionResponse,
+          lang: isInternational ? "en" : "pt-BR",
         }),
       })
 
@@ -704,7 +688,7 @@ export default function CheckoutPage({
 
     guests.forEach((guest, index) => {
       // 0. Validate Holder Age (Specifically for the first guest)
-      if (index === 0 && !calculateIsHolder(guest.birth_date)) {
+      if (index === 0 && !isLegalAdult(guest.birth_date)) {
         hasError = true
         if (!newErrors[index]) newErrors[index] = {}
         const errorMsg = isInternational
@@ -794,7 +778,7 @@ export default function CheckoutPage({
         hasError = true
       }
 
-      if (calculateIsAdult(guest.birth_date) && !guest.email) {
+      if (isAdult(guest.birth_date) && !guest.email) {
         if (!newErrors[index]) newErrors[index] = {}
         newErrors[index].email = isInternational
           ? "Email is required for adults."
@@ -1861,8 +1845,7 @@ export default function CheckoutPage({
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor={`email-${index}`}>
-                                E-mail{" "}
-                                {calculateIsAdult(guestData.birth_date) && "*"}
+                                E-mail {isAdult(guestData.birth_date) && "*"}
                               </Label>
                               <Input
                                 id={`email-${index}`}
@@ -1873,9 +1856,7 @@ export default function CheckoutPage({
                                 className={`
                                   ${guestErrors[index]?.email ? "border-red-500" : ""}
                                 `}
-                                required={calculateIsAdult(
-                                  guestData.birth_date,
-                                )}
+                                required={isAdult(guestData.birth_date)}
                               />
                               {guestErrors[index]?.email && (
                                 <p className="text-red-500 text-xs mt-1">
@@ -2140,17 +2121,23 @@ export default function CheckoutPage({
                         <div className="flex flex-col items-end">
                           {discountPercentage > 0 && (
                             <span className="text-xs text-gray-500 line-through">
-                              {new Intl.NumberFormat(isInternational ? "en-US" : "pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                              }).format(originalTotal)}
+                              {new Intl.NumberFormat(
+                                isInternational ? "en-US" : "pt-BR",
+                                {
+                                  style: "currency",
+                                  currency: "BRL",
+                                },
+                              ).format(originalTotal)}
                             </span>
                           )}
                           <span className="text-xl font-bold text-blue-600">
-                            {new Intl.NumberFormat(isInternational ? "en-US" : "pt-BR", {
-                              style: "currency",
-                              currency: "BRL",
-                            }).format(finalTotal)}
+                            {new Intl.NumberFormat(
+                              isInternational ? "en-US" : "pt-BR",
+                              {
+                                style: "currency",
+                                currency: "BRL",
+                              },
+                            ).format(finalTotal)}
                           </span>
                         </div>
                       </div>
@@ -2368,10 +2355,16 @@ export default function CheckoutPage({
                                 : "Ramo de atividade:"}
                             </span>{" "}
                             {isInternational
-                              ? ACTIVITY_SECTORS_EN[newCompanyData.activity_sector || foundCompany?.activity_sector] ||
-                                (newCompanyData.activity_sector === "OUTRO" || foundCompany?.activity_sector === "OUTRO"
+                              ? ACTIVITY_SECTORS_EN[
+                                  newCompanyData.activity_sector ||
+                                    foundCompany?.activity_sector
+                                ] ||
+                                (newCompanyData.activity_sector === "OUTRO" ||
+                                foundCompany?.activity_sector === "OUTRO"
                                   ? "OTHER"
-                                  : newCompanyData.activity_sector || foundCompany?.activity_sector || "-")
+                                  : newCompanyData.activity_sector ||
+                                    foundCompany?.activity_sector ||
+                                    "-")
                               : newCompanyData.activity_sector ||
                                 foundCompany?.activity_sector ||
                                 "-"}

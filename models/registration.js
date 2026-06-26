@@ -14,6 +14,7 @@ async function create(userOrId, registrationData) {
     payment_method,
     installments_count,
     checkout_question_response,
+    lang = "pt-BR",
   } = registrationData
 
   if (!Array.isArray(guests_data) || guests_data.length === 0) {
@@ -68,6 +69,7 @@ async function create(userOrId, registrationData) {
         guestDataWithCnpj,
         guestUserId,
         client,
+        lang,
       )
       savedGuestIds.push(savedGuest.id)
     }
@@ -83,6 +85,7 @@ async function create(userOrId, registrationData) {
         bed_preference: registrationData.bed_preference,
         user_id: userId,
         checkout_question_response: checkout_question_response,
+        lang,
       },
       client,
     )

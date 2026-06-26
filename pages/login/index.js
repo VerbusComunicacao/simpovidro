@@ -224,7 +224,7 @@ function LoginForm({ isEn, t }) {
   )
 }
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps() {
   return {
     props: {},
   }

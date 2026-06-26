@@ -28,18 +28,7 @@ import {
   isTestEnvironment,
   generateRandomGuest,
 } from "@/lib/test-data-generator"
-
-function calculateIsAdult(birthDate) {
-  if (!birthDate) return false
-  const birth = new Date(birthDate)
-  const now = new Date()
-  let age = now.getFullYear() - birth.getFullYear()
-  const m = now.getMonth() - birth.getMonth()
-  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
-    age--
-  }
-  return age >= 18
-}
+import { isLegalAdult } from "@/lib/registration-helpers"
 
 export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
   const isEditMode = !!guestToEdit
@@ -299,7 +288,7 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">
-                      Email {calculateIsAdult(formData.birth_date) && "*"}
+                      Email {isLegalAdult(formData.birth_date) && "*"}
                     </Label>
                     <Input
                       id="email"
@@ -308,7 +297,7 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="hospede@email.com"
-                      required={calculateIsAdult(formData.birth_date)}
+                      required={isLegalAdult(formData.birth_date)}
                     />
                   </div>
                   <div className="space-y-2">

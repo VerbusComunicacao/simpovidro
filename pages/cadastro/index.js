@@ -260,7 +260,7 @@ export default function Register() {
   )
 }
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps() {
   return {
     props: {},
   }

@@ -1,7 +1,7 @@
 import database from "infra/database.js"
 
 function formatCNPJ(cnpj) {
-  if (!cnpj) return ""
+  if (!cnpj) return null
   const cleaned = cnpj.replace(/\D/g, "")
   if (cleaned.length !== 14) return cnpj
   return cleaned.replace(
@@ -109,9 +109,9 @@ async function generateCompleteReport(hotelId) {
       Nome: row.nome || "",
       "CHECK-IN": "",
       "CHECK-OUT": "",
-      Passaporte: row.passaporte || "",
-      CPF: row.cpf || "",
-      RG: row.rg || "",
+      Passaporte: row.passaporte || null,
+      CPF: row.cpf || null,
+      RG: row.rg || null,
       Email: row.email || "",
       "Data de Nascimento": row.data_nascimento || "",
       "Telefone Comercial": row.telefone_comercial || "",

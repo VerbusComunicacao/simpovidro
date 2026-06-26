@@ -77,7 +77,10 @@ export default function ResetPasswordPage() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
         <p className="text-red-600 font-medium">
-          {t("Token de recuperação não encontrado.", "Recovery token not found.")}
+          {t(
+            "Token de recuperação não encontrado.",
+            "Recovery token not found.",
+          )}
         </p>
       </div>
     )
@@ -110,14 +113,19 @@ export default function ResetPasswordPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password">{t("Nova Senha", "New Password")}</Label>
+                <Label htmlFor="password">
+                  {t("Nova Senha", "New Password")}
+                </Label>
                 <Input
                   id="password"
                   name="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t("Digite sua nova senha", "Enter your new password")}
+                  placeholder={t(
+                    "Digite sua nova senha",
+                    "Enter your new password",
+                  )}
                   required
                 />
               </div>
@@ -132,7 +140,10 @@ export default function ResetPasswordPage() {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder={t("Confirme sua nova senha", "Confirm your new password")}
+                  placeholder={t(
+                    "Confirme sua nova senha",
+                    "Confirm your new password",
+                  )}
                   required
                 />
               </div>
@@ -140,7 +151,9 @@ export default function ResetPasswordPage() {
               {error && <p className="text-sm text-red-600">{error}</p>}
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? t("Redefinindo...", "Resetting...") : t("Redefinir Senha", "Reset Password")}
+                {loading
+                  ? t("Redefinindo...", "Resetting...")
+                  : t("Redefinir Senha", "Reset Password")}
               </Button>
             </form>
           )}
@@ -157,7 +170,7 @@ export default function ResetPasswordPage() {
   )
 }
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps() {
   return {
     props: {},
   }

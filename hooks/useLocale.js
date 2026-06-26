@@ -15,7 +15,10 @@ export function useLocale() {
 
   const t = (pt, en, params = {}) => {
     // If 'en' is a string or defined, treat as inline translation: t(pt, en, params)
-    if (typeof en === "string" || (en !== undefined && typeof en !== "object")) {
+    if (
+      typeof en === "string" ||
+      (en !== undefined && typeof en !== "object")
+    ) {
       let text = isEn ? en : pt
       if (typeof text === "string" && params) {
         Object.entries(params).forEach(([k, v]) => {

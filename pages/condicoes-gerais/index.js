@@ -211,7 +211,9 @@ export default function CondicoesGerais({ sections }) {
           </div>
 
           <h1 className="text-4xl md:text-5xl font-title font-bold tracking-tight mb-4 leading-tight">
-            {isEn ? "General Terms and Conditions" : "Condições Gerais de Contratação"}
+            {isEn
+              ? "General Terms and Conditions"
+              : "Condições Gerais de Contratação"}
           </h1>
         </div>
       </header>
