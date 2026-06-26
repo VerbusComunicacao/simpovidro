@@ -64,11 +64,7 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     has_low_blood_pressure: false,
   })
 
-  const isForeign = !!(
-    formData.passport_number ||
-    (formData.country && formData.country !== "Brasil") ||
-    (formData.nationality && formData.nationality !== "Brasileira")
-  )
+  const isForeign = !!formData.passport_number
 
   useEffect(() => {
     if (guestToEdit) {

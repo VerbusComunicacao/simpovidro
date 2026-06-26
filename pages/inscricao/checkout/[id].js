@@ -187,7 +187,7 @@ export default function CheckoutPage({
     rg_number: "",
     cpf_number: "",
     birth_date: "",
-    nationality: "Brasileira",
+    nationality: isInternational ? "" : "Brasileira",
     address: "",
     address_number: "",
     address_complement: "",
@@ -231,6 +231,8 @@ export default function CheckoutPage({
           ? new Date(guestProfile.birth_date).toISOString().split("T")[0]
           : "",
         ...locationState,
+        nationality:
+          guestProfile?.nationality || (isInternational ? "" : "Brasileira"),
         emergency_contact_name: guestProfile?.emergency_contact_name || "",
         emergency_contact_phone: guestProfile?.emergency_contact_phone || "",
         blood_type: guestProfile?.blood_type || "",
@@ -741,6 +743,13 @@ export default function CheckoutPage({
       if (isInternational && !guest.passport_number) {
         if (!newErrors[index]) newErrors[index] = {}
         newErrors[index].passport_number = "Passport number is required."
+        hasError = true
+      }
+
+      // Validate Nationality
+      if (isInternational && !guest.nationality) {
+        if (!newErrors[index]) newErrors[index] = {}
+        newErrors[index].nationality = "Nationality is required."
         hasError = true
       }
 
@@ -1684,6 +1693,29 @@ export default function CheckoutPage({
                                   </p>
                                 )}
                               </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`nationality-${index}`}>
+                                  Nationality *
+                                </Label>
+                                <Input
+                                  id={`nationality-${index}`}
+                                  name="nationality"
+                                  value={guestData.nationality}
+                                  onChange={(e) => handleChange(index, e)}
+                                  placeholder="e.g. American, Portuguese"
+                                  className={
+                                    guestErrors[index]?.nationality
+                                      ? "border-red-500"
+                                      : ""
+                                  }
+                                  required
+                                />
+                                {guestErrors[index]?.nationality && (
+                                  <p className="text-red-500 text-xs mt-1">
+                                    {guestErrors[index].nationality}
+                                  </p>
+                                )}
+                              </div>
                             </div>
                           )}
 
@@ -1865,22 +1897,6 @@ export default function CheckoutPage({
                               )}
                             </div>
                           </div>
-
-                          {!isInternational && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor={`passport_number-${index}`}>
-                                  Número do Passaporte (opcional)
-                                </Label>
-                                <Input
-                                  id={`passport_number-${index}`}
-                                  name="passport_number"
-                                  value={guestData.passport_number}
-                                  onChange={(e) => handleChange(index, e)}
-                                />
-                              </div>
-                            </div>
-                          )}
                         </div>
 
                         {/* Address removed */}

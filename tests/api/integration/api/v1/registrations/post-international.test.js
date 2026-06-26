@@ -142,6 +142,7 @@ describe("POST /api/v1/registrations (International)", () => {
         body: JSON.stringify({
           room_id: roomId,
           payment_method: "pix",
+          lang: "en",
           company_data: {
             corporate_name: "Global Glass Inc.",
             badge: "Global Glass",
@@ -250,6 +251,7 @@ describe("POST /api/v1/registrations (International)", () => {
         body: JSON.stringify({
           room_id: roomId,
           payment_method: "pix",
+          lang: "en",
           guests_data: [
             {
               name: "Bob Jones",
@@ -285,6 +287,7 @@ describe("POST /api/v1/registrations (International)", () => {
         body: JSON.stringify({
           room_id: roomId,
           payment_method: "pix",
+          lang: "en",
           guests_data: [
             {
               name: "John Doe 1",
@@ -316,7 +319,7 @@ describe("POST /api/v1/registrations (International)", () => {
     expect(response.status).toBe(400)
     const errorData = await response.json()
     expect(errorData.name).toBe("ValidationError")
-    expect(errorData.message).toContain("Passaporte duplicado")
+    expect(errorData.message).toContain("duplicate Passport")
   })
 
   test("should successfully save checkout_question_response in registration and select hotel_checkout_question_en details", async () => {
@@ -336,6 +339,7 @@ describe("POST /api/v1/registrations (International)", () => {
         body: JSON.stringify({
           room_id: roomId,
           payment_method: "remessa_bancaria",
+          lang: "en",
           checkout_question_response: "Yes, I prefer medium size",
           guests_data: [
             {
