@@ -1,7 +1,7 @@
 import database from "infra/database.js"
 
 function formatCNPJ(cnpj) {
-  if (!cnpj) return ""
+  if (!cnpj) return null
   const cleaned = cnpj.replace(/\D/g, "")
   if (cleaned.length !== 14) return cnpj
   return cleaned.replace(
@@ -89,7 +89,7 @@ async function generateCompleteReport(hotelId) {
     JOIN sales s ON sg.sale_id = s.id
     JOIN rooms r ON s.room_id = r.id
     JOIN hotels h ON r.hotel_id = h.id
-    LEFT JOIN companies c ON g.company_cnpj = c.cnpj
+    LEFT JOIN companies c ON s.company_id = c.id
     WHERE s.status != 'cancelled' AND h.id = $1
     ORDER BY s.created_at ASC, s.sale_number ASC
   `
@@ -109,9 +109,9 @@ async function generateCompleteReport(hotelId) {
       Nome: row.nome || "",
       "CHECK-IN": "",
       "CHECK-OUT": "",
-      Passaporte: row.passaporte || "",
-      CPF: row.cpf || "",
-      RG: row.rg || "",
+      Passaporte: row.passaporte || null,
+      CPF: row.cpf || null,
+      RG: row.rg || null,
       Email: row.email || "",
       "Data de Nascimento": row.data_nascimento || "",
       "Telefone Comercial": row.telefone_comercial || "",
@@ -157,7 +157,7 @@ async function generateByCompany(hotelId) {
   const query = `
     SELECT 
       COALESCE(c.corporate_name, 'Sem Empresa') as company_name,
-      COALESCE(g.company_cnpj, 'N/A') as cnpj,
+      COALESCE(c.cnpj, 'N/A') as cnpj,
       COALESCE(c.state, 'N/A') as state,
       COUNT(DISTINCT g.id) as total_participants,
       json_agg(
@@ -173,9 +173,9 @@ async function generateByCompany(hotelId) {
     JOIN sales s ON sg.sale_id = s.id
     JOIN rooms r ON s.room_id = r.id
     JOIN hotels h ON r.hotel_id = h.id
-    LEFT JOIN companies c ON g.company_cnpj = c.cnpj
+    LEFT JOIN companies c ON s.company_id = c.id
     WHERE s.status != 'cancelled' AND h.id = $1
-    GROUP BY c.corporate_name, g.company_cnpj, c.state
+    GROUP BY c.id, c.corporate_name, c.cnpj, c.state
     ORDER BY total_participants DESC
   `
 

@@ -14,7 +14,7 @@ router.get(controller.canRequest("read:user:others"), getHandler)
 export default router.handler(controller.errorHandlers)
 
 async function postHandler(request, response) {
-  const userInputValues = request.body
+  const { lang, ...userInputValues } = request.body
 
   try {
     const existingUser = await user.findOneByEmail(userInputValues.email)
@@ -22,8 +22,14 @@ async function postHandler(request, response) {
 
     if (isActivated) {
       throw new ValidationError({
-        message: "O email informado já está sendo utilizado.",
-        action: "Utilize outro email para realizar esta operação.",
+        message:
+          lang === "en"
+            ? "The email address is already in use."
+            : "O email informado já está sendo utilizado.",
+        action:
+          lang === "en"
+            ? "Please use a different email to perform this operation."
+            : "Utilize outro email para realizar esta operação.",
       })
     }
 
@@ -33,7 +39,7 @@ async function postHandler(request, response) {
 
     if (validTokens.length === 0) {
       const activationToken = await activation.generateToken(existingUser.id)
-      await activation.sendEmailToUser(existingUser, activationToken)
+      await activation.sendEmailToUser(existingUser, activationToken, lang)
 
       const secureUser = authorization.filterOutput(
         request.context.user,
@@ -45,8 +51,14 @@ async function postHandler(request, response) {
     }
 
     throw new ValidationError({
-      message: "O email informado já está sendo utilizado.",
-      action: "Utilize outro email para realizar esta operação.",
+      message:
+        lang === "en"
+          ? "The email address is already in use."
+          : "O email informado já está sendo utilizado.",
+      action:
+        lang === "en"
+          ? "Please use a different email to perform this operation."
+          : "Utilize outro email para realizar esta operação.",
     })
   } catch (error) {
     if (error.name !== "NotFoundError") {
@@ -54,10 +66,10 @@ async function postHandler(request, response) {
     }
   }
 
-  const newUser = await user.create(userInputValues)
+  const newUser = await user.create({ ...userInputValues, lang })
   const activationToken = await activation.generateToken(newUser.id)
 
-  await activation.sendEmailToUser(newUser, activationToken)
+  await activation.sendEmailToUser(newUser, activationToken, lang)
 
   const secureUser = authorization.filterOutput(
     request.context.user,

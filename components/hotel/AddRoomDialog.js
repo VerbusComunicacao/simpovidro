@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select"
 import { Plus, Trash2, Bold, Italic, Superscript } from "lucide-react"
 import ErrorDialog from "@/components/ui/ErrorDialog"
+import { translateText } from "@/lib/registration-helpers"
 
 export function AddRoomDialog({
   children,
@@ -414,7 +415,7 @@ export function AddRoomDialog({
                             className="grid grid-cols-4 items-center gap-4"
                           >
                             <Label className="text-right text-xs">
-                              {policy.description}
+                              {translateText(policy.description, false)}
                             </Label>
                             <Input
                               type="number"

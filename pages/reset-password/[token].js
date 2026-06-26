@@ -14,8 +14,10 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useLocale } from "@/hooks/useLocale"
 
 export default function ResetPasswordPage() {
+  const { t } = useLocale()
   const router = useRouter()
   const { token } = router.query
 
@@ -32,7 +34,7 @@ export default function ResetPasswordPage() {
     setMessage(null)
 
     if (password !== confirmPassword) {
-      setError("As senhas não coincidem.")
+      setError(t("As senhas não coincidem.", "Passwords do not match."))
       setLoading(false)
       return
     }
@@ -53,11 +55,19 @@ export default function ResetPasswordPage() {
       } else {
         setError(
           responseBody.message ||
-            "Ocorreu um erro ao tentar redefinir a senha.",
+            t(
+              "Ocorreu um erro ao tentar redefinir a senha.",
+              "An error occurred while resetting the password.",
+            ),
         )
       }
     } catch (err) {
-      setError("Ocorreu um erro ao tentar redefinir a senha.")
+      setError(
+        t(
+          "Ocorreu um erro ao tentar redefinir a senha.",
+          "An error occurred while resetting the password.",
+        ),
+      )
     } finally {
       setLoading(false)
     }
@@ -67,7 +77,10 @@ export default function ResetPasswordPage() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
         <p className="text-red-600 font-medium">
-          Token de recuperação não encontrado.
+          {t(
+            "Token de recuperação não encontrado.",
+            "Recovery token not found.",
+          )}
         </p>
       </div>
     )
@@ -77,9 +90,14 @@ export default function ResetPasswordPage() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Nova Senha</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            {t("Nova Senha", "New Password")}
+          </CardTitle>
           <CardDescription>
-            Digite sua nova senha abaixo para redefinir o acesso.
+            {t(
+              "Digite sua nova senha abaixo para redefinir o acesso.",
+              "Enter your new password below to reset access.",
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -87,33 +105,45 @@ export default function ResetPasswordPage() {
             <div className="text-center space-y-4">
               <p className="text-green-600 font-medium">{message}</p>
               <Link href="/login" passHref>
-                <Button className="w-full">Fazer login agora</Button>
+                <Button className="w-full">
+                  {t("Fazer login agora", "Log in now")}
+                </Button>
               </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password">Nova Senha</Label>
+                <Label htmlFor="password">
+                  {t("Nova Senha", "New Password")}
+                </Label>
                 <Input
                   id="password"
                   name="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Digite sua nova senha"
+                  placeholder={t(
+                    "Digite sua nova senha",
+                    "Enter your new password",
+                  )}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+                <Label htmlFor="confirmPassword">
+                  {t("Confirmar Nova Senha", "Confirm New Password")}
+                </Label>
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirme sua nova senha"
+                  placeholder={t(
+                    "Confirme sua nova senha",
+                    "Confirm your new password",
+                  )}
                   required
                 />
               </div>
@@ -121,7 +151,9 @@ export default function ResetPasswordPage() {
               {error && <p className="text-sm text-red-600">{error}</p>}
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Redefinindo..." : "Redefinir Senha"}
+                {loading
+                  ? t("Redefinindo...", "Resetting...")
+                  : t("Redefinir Senha", "Reset Password")}
               </Button>
             </form>
           )}
@@ -129,11 +161,17 @@ export default function ResetPasswordPage() {
         <CardFooter className="justify-center">
           <Link href="/login" passHref>
             <span className="text-sm text-blue-600 hover:underline">
-              Voltar para o login
+              {t("Voltar para o login", "Back to login")}
             </span>
           </Link>
         </CardFooter>
       </Card>
     </div>
   )
+}
+
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
 }

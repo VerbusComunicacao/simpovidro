@@ -2,8 +2,23 @@ import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Camera, X } from "lucide-react"
 import { useState, useMemo, useRef } from "react"
+import { useRouter } from "next/router"
 
 export default function History() {
+  const router = useRouter()
+  const isEn = router?.locale === "en"
+  const t = (pt, en) => (isEn ? en : pt)
+
+  const getOrdinalEn = (numStr) => {
+    if (!numStr) return ""
+    const n = parseInt(numStr.replace("ª", ""), 10)
+    if (isNaN(n)) return numStr
+    if (n === 1) return "1st"
+    if (n === 2) return "2nd"
+    if (n === 3) return "3rd"
+    return `${n}th`
+  }
+
   const [activeYear, setActiveYear] = useState(null)
   const [selectedYear, setSelectedYear] = useState(null)
   const [previewImage, setPreviewImage] = useState(null)
@@ -244,13 +259,22 @@ export default function History() {
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 ">
           <div className="relative z-10 lg:sticky lg:top-24 min-w-0">
             <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 leading-none font-title">
-              Uma tradição <br />
-              <span className="text-blue-600">de sucesso</span>
+              {t(
+                <>
+                  Uma tradição <br />
+                  <span className="text-blue-600">de sucesso</span>
+                </>,
+                <>
+                  A tradition <br />
+                  <span className="text-blue-600">of success</span>
+                </>,
+              )}
             </h2>
             <p className="text-lg md:text-xl text-slate-600 mb-8 md:mb-10 leading-relaxed font-medium max-w-xl">
-              Há mais de 30 anos, o Simpovidro une o mercado para gerar bilhões
-              em parcerias e conexões. Explore os momentos que definiram a
-              história do nosso setor.
+              {t(
+                "Há mais de 30 anos, o Simpovidro une o mercado para gerar bilhões em parcerias e conexões. Explore os momentos que definiram a história do nosso setor.",
+                "For over 30 years, Simpovidro has united the market to generate billions in partnerships and connections. Explore the moments that defined the history of our industry.",
+              )}
             </p>
 
             <div className="relative">
@@ -274,7 +298,9 @@ export default function History() {
                           : "bg-white border-slate-200 text-slate-500 hover:border-blue-400 hover:text-blue-600"
                     }`}
                   >
-                    <span className="opacity-70">{ed.num} Edição</span>
+                    <span className="opacity-70">
+                      {t(`${ed.num} Edição`, `${getOrdinalEn(ed.num)} Edition`)}
+                    </span>
                     <span className="text-sm font-black tracking-tight">
                       {ed.year}
                     </span>
@@ -289,11 +315,14 @@ export default function History() {
             {selectedYear && (
               <div className="mb-6 animate-in fade-in slide-in-from-left duration-500">
                 <h4 className="text-2xl font-black text-slate-900">
-                  Galeria <span className="text-blue-600">{selectedYear}</span>
+                  {t("Galeria", "Gallery")}{" "}
+                  <span className="text-blue-600">{selectedYear}</span>
                 </h4>
                 <p className="text-slate-500 text-sm font-medium">
-                  Fotos exclusivas da{" "}
-                  {editions.find((e) => e.year === selectedYear)?.num} edição
+                  {t(
+                    `Fotos exclusivas da ${editions.find((e) => e.year === selectedYear)?.num} edição`,
+                    `Exclusive photos of the ${getOrdinalEn(editions.find((e) => e.year === selectedYear)?.num)} edition`,
+                  )}
                 </p>
               </div>
             )}
@@ -329,7 +358,9 @@ export default function History() {
                     />
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent p-6 flex items-end justify-between">
                       <span className="text-white font-bold text-sm">
-                        {selectedYear ? `Foto ${i + 1}` : `${img.year}`}
+                        {selectedYear
+                          ? `${t("Foto", "Photo")} ${i + 1}`
+                          : `${img.year}`}
                       </span>
                       <Badge className="bg-blue-600 text-white border-none text-[10px] font-black px-2 py-0.5">
                         {img.year}
@@ -343,7 +374,10 @@ export default function History() {
                   <div className="flex-shrink-0 w-[80vw] sm:w-[350px] snap-center flex flex-col items-center justify-center bg-slate-100 rounded-[2rem] border-2 border-dashed border-slate-200">
                     <Camera className="w-12 h-12 text-slate-300 mb-3" />
                     <p className="text-slate-500 font-bold italic text-sm text-center px-4">
-                      Imagens desta edição em breve
+                      {t(
+                        "Imagens desta edição em breve",
+                        "Images of this edition coming soon",
+                      )}
                     </p>
                   </div>
                 )}
@@ -381,7 +415,10 @@ export default function History() {
                 <div className="col-span-3 row-span-3 flex flex-col items-center justify-center bg-slate-100 rounded-[2rem] border-2 border-dashed border-slate-200">
                   <Camera className="w-16 h-16 text-slate-300 mb-4" />
                   <p className="text-slate-500 font-bold italic">
-                    Imagens desta edição em breve
+                    {t(
+                      "Imagens desta edição em breve",
+                      "Images of this edition coming soon",
+                    )}
                   </p>
                 </div>
               )}

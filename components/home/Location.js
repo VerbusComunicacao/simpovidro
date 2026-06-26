@@ -13,8 +13,13 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
+import { useRouter } from "next/router"
 
 export default function Location() {
+  const router = useRouter()
+  const isEn = router?.locale === "en"
+  const t = (pt, en) => (isEn ? en : pt)
+
   const [activeImageIndex, setActiveImageIndex] = useState(0)
   const [prevActiveImageIndex, setPrevActiveImageIndex] = useState(null)
 
@@ -82,7 +87,9 @@ export default function Location() {
                     <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
                     <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
                     <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-                    <span className="ml-2 text-sm font-bold">5 Estrelas</span>
+                    <span className="ml-2 text-sm font-bold">
+                      {t("5 Estrelas", "5 Stars")}
+                    </span>
                   </div>
                   <h4 className="text-2xl font-black text-white">
                     Costão do Santinho Resort
@@ -98,10 +105,13 @@ export default function Location() {
             <div className="space-y-4 pt-2">
               <div className="flex items-center justify-between px-1">
                 <span className="text-[11px] font-black text-logo-blue tracking-wider uppercase font-eastman">
-                  Galeria do Resort
+                  {t("Galeria do Resort", "Resort Gallery")}
                 </span>
                 <span className="text-[10px] bg-slate-200 text-slate-600 px-2.5 py-1 rounded-full font-bold">
-                  Clique na foto para passar
+                  {t(
+                    "Clique na foto para passar",
+                    "Click on the photo to cycle",
+                  )}
                 </span>
               </div>
 
@@ -204,7 +214,7 @@ export default function Location() {
             <div className="space-y-6">
               <div className="font-eastman flex items-center gap-2 text-logo-blue uppercase">
                 <MapPin className="h-4 w-4 text-logo-red animate-pulse" />
-                Local
+                {t("Local", "Location")}
               </div>
               <h3 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight font-title">
                 Costão do <span className="text-logo-red">Santinho</span>
@@ -212,25 +222,58 @@ export default function Location() {
 
               <div className="space-y-4 text-slate-600 leading-relaxed text-base">
                 <p>
-                  Este ano, o Simpovidro, em sua <strong>17ª edição</strong>,
-                  desembarca em um dos destinos mais desejados do Brasil, o{" "}
-                  <strong>
-                    Costão do Santinho <em>Resort</em>
-                  </strong>
-                  , local que combina a exuberância da natureza catarinense com
-                  uma infraestrutura de ponta para eventos.
+                  {t(
+                    <>
+                      Este ano, o Simpovidro, em sua <strong>17ª edição</strong>
+                      , desembarca em um dos destinos mais desejados do Brasil,
+                      o{" "}
+                      <strong>
+                        Costão do Santinho <em>Resort</em>
+                      </strong>
+                      , local que combina a exuberância da natureza catarinense
+                      com uma infraestrutura de ponta para eventos.
+                    </>,
+                    <>
+                      This year, Simpovidro, in its{" "}
+                      <strong>17th edition</strong>, lands in one of the most
+                      desired destinations in Brazil, the{" "}
+                      <strong>
+                        Costão do Santinho <em>Resort</em>
+                      </strong>
+                      , a venue that combines the exuberance of Santa
+                      Catarina&apos;s nature with a state-of-the-art
+                      infrastructure for events.
+                    </>,
+                  )}
                 </p>
                 <p>
-                  Eleito o melhor <em>resort</em> de praia do Brasil no{" "}
-                  <strong>Prêmio Caio 2025</strong>, a mais importante premiação
-                  da indústria de eventos e turismo do Brasil, o Costão está
-                  cheio de novidades: ao longo dos últimos anos,{" "}
-                  <strong>
-                    passou por um extenso <em>retrofit</em> para atualizar
-                    instalações e acomodações
-                  </strong>
-                  . Portanto, os participantes do Simpovidro encontrarão um
-                  espaço renovado, oferecendo ainda mais conforto aos hóspedes.
+                  {t(
+                    <>
+                      Eleito o melhor <em>resort</em> de praia do Brasil no{" "}
+                      <strong>Prêmio Caio 2025</strong>, a mais importante
+                      premiação da indústria de eventos e turismo do Brasil, o
+                      Costão está cheio de novidades: ao longo dos últimos anos,{" "}
+                      <strong>
+                        passou por um extenso <em>retrofit</em> para atualizar
+                        instalações e acomodações
+                      </strong>
+                      . Portanto, os participantes do Simpovidro encontrarão um
+                      espaço renovado, oferecendo ainda mais conforto aos
+                      hóspedes.
+                    </>,
+                    <>
+                      Voted the best beach <em>resort</em> in Brazil at the{" "}
+                      <strong>Prêmio Caio 2025</strong>, the most important
+                      awards for the events and tourism industry in Brazil,
+                      Costão is full of updates: over the last few years,{" "}
+                      <strong>
+                        it underwent an extensive <em>retrofit</em> to upgrade
+                        facilities and accommodations
+                      </strong>
+                      . Therefore, Simpovidro participants will find a renovated
+                      space, offering even more comfort to guests.
+                    </>,
+                  )}
                 </p>
               </div>
             </div>
@@ -243,20 +286,39 @@ export default function Location() {
               </div>
               <div>
                 <h4 className="font-bold text-slate-900 text-lg">
-                  Melhor Resort de Praia do Brasil
+                  {t(
+                    "Melhor Resort de Praia do Brasil",
+                    "Best Beach Resort in Brazil",
+                  )}
                 </h4>
-                <p className="text-sm text-slate-600 leading-relaxed mt-1">
-                  Reconhecimento máximo da indústria de eventos e turismo
-                  nacional no{" "}
-                  <a
-                    className="underline cursor-pointer hover:text-logo-blue"
-                    href="https://www.premiocaio.com.br/noticias/premio-caio-2025-dobra-de-tamanho,-consagra--240-empresas-e-marca-edicao-historica"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Prêmio Caio 2025.
-                  </a>
-                </p>
+                <div className="text-sm text-slate-600 leading-relaxed mt-1">
+                  {t(
+                    <>
+                      Reconhecimento máximo da indústria de eventos e turismo
+                      nacional no{" "}
+                      <a
+                        className="underline cursor-pointer hover:text-logo-blue"
+                        href="https://www.premiocaio.com.br/noticias/premio-caio-2025-dobra-de-tamanho,-consagra--240-empresas-e-marca-edicao-historica"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Prêmio Caio 2025.
+                      </a>
+                    </>,
+                    <>
+                      Maximum recognition from the national events and tourism
+                      industry at the{" "}
+                      <a
+                        className="underline cursor-pointer hover:text-logo-blue"
+                        href="https://www.premiocaio.com.br/noticias/premio-caio-2025-dobra-de-tamanho,-consagra--240-empresas-e-marca-edicao-historica"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Prêmio Caio 2025.
+                      </a>
+                    </>,
+                  )}
+                </div>
               </div>
             </div>
 
@@ -264,20 +326,43 @@ export default function Location() {
             <div className="space-y-4 mt-[20px]">
               <h4 className="text-base uppercase text-logo-blue flex items-center gap-2 font-eastman">
                 <Compass className="h-5 w-5 text-logo-blue" />
-                Atrativos do Resort
+                {t("Atrativos do Resort", "Resort Attractions")}
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   {
-                    text: "8 piscinas, sendo 6 climatizadas",
+                    text: t(
+                      "8 piscinas, sendo 6 climatizadas",
+                      "8 swimming pools, with 6 heated",
+                    ),
                     isNew: true,
                     icon: Waves,
                   },
-                  { text: "Parque Aqua Kids", isNew: true, icon: Smile },
-                  { text: "Vila Kids", isNew: true, icon: Smile },
-                  { text: "Restaurante Sambaqui", isNew: true, icon: Utensils },
-                  { text: "Sport Bar", isNew: true, icon: GlassWater },
-                  { text: "Parque ecológico", isNew: false, icon: Trees },
+                  {
+                    text: t("Parque Aqua Kids", "Aqua Kids Park"),
+                    isNew: true,
+                    icon: Smile,
+                  },
+                  {
+                    text: t("Vila Kids", "Kids Village"),
+                    isNew: true,
+                    icon: Smile,
+                  },
+                  {
+                    text: t("Restaurante Sambaqui", "Sambaqui Restaurant"),
+                    isNew: true,
+                    icon: Utensils,
+                  },
+                  {
+                    text: t("Sport Bar", "Sports Bar"),
+                    isNew: true,
+                    icon: GlassWater,
+                  },
+                  {
+                    text: t("Parque ecológico", "Ecological park"),
+                    isNew: false,
+                    icon: Trees,
+                  },
                 ].map((atrativo, index) => {
                   const Icon = atrativo.icon
                   return (
@@ -293,7 +378,7 @@ export default function Location() {
                           {atrativo.text}
                           {atrativo.isNew && (
                             <span className="bg-red-500/10 text-red-600 text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full uppercase border border-red-500/20">
-                              Novo
+                              {t("Novo", "New")}
                             </span>
                           )}
                         </span>
@@ -310,25 +395,34 @@ export default function Location() {
               <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6 justify-between">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-logo-orange text-xs tracking-widest uppercase font-eastman">
-                    <MapPin className="h-4 w-4 text-logo-orange" /> Localização
+                    <MapPin className="h-4 w-4 text-logo-orange" />{" "}
+                    {t("Localização", "Location")}
                   </div>
                   <h4 className="text-xl font-medium text-white font-eastman">
                     Florianópolis - SC
                   </h4>
                   <p className="text-xs text-slate-300 max-w-md font-medium leading-relaxed">
-                    O <em>resort</em> está a pouco mais de{" "}
-                    <strong>40 km</strong> do Aeroporto Internacional de
-                    Florianópolis – Hercílio Luz.
+                    {t(
+                      <>
+                        O <em>resort</em> está a pouco mais de{" "}
+                        <strong>40 km</strong> do Aeroporto Internacional de
+                        Florianópolis – Hercílio Luz.
+                      </>,
+                      <>
+                        The <em>resort</em> is just over <strong>40 km</strong>{" "}
+                        from Florianópolis International Airport – Hercílio Luz.
+                      </>,
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-5 py-4 rounded-2xl border border-white/10 shrink-0">
                   <Car className="h-6 w-6 text-logo-blue" />
                   <div>
                     <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-eastman">
-                      De carro
+                      {t("De carro", "By car")}
                     </div>
                     <div className="text-xs font-black text-white">
-                      ~1 hora de trajeto
+                      {t("~1 hora de trajeto", "~1 hour drive")}
                     </div>
                   </div>
                 </div>

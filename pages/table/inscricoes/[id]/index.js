@@ -16,7 +16,7 @@ import {
 import TableLayout from "@/components/layout/TableLayout"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { getGuestCountsString } from "@/lib/registration-helpers"
+import { getGuestCountsString, translateText } from "@/lib/registration-helpers"
 import { GuestDialog } from "@/components/guest/GuestDialog"
 import { ReplaceGuestDialog } from "@/components/guest/ReplaceGuestDialog"
 import { CompanyDialog } from "@/components/company/CompanyDialog"
@@ -403,7 +403,8 @@ export default function RegistrationDetailsPage() {
                     Acomodação
                   </p>
                   <p className="text-lg font-bold text-gray-900 mt-1">
-                    {sale.room_name || sale.room_type}
+                    {translateText(sale.room_name, false) ||
+                      translateText(sale.room_type, false)}
                   </p>
                   {sale.bed_preference && (
                     <div className="mt-3">

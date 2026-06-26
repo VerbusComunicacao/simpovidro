@@ -41,6 +41,7 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     gender: "",
     rg_number: "",
     cpf_number: "",
+    passport_number: "",
     birth_date: "",
     nationality: "Brasileira",
     address: "",
@@ -63,6 +64,12 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     has_low_blood_pressure: false,
   })
 
+  const isForeign = !!(
+    formData.passport_number ||
+    (formData.country && formData.country !== "Brasil") ||
+    (formData.nationality && formData.nationality !== "Brasileira")
+  )
+
   useEffect(() => {
     if (guestToEdit) {
       const locationState = getInitialLocationState(guestToEdit)
@@ -74,6 +81,7 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
         gender: guestToEdit.gender || "",
         rg_number: guestToEdit.rg_number || "",
         cpf_number: guestToEdit.cpf_number || "",
+        passport_number: guestToEdit.passport_number || "",
         birth_date: guestToEdit.birth_date
           ? new Date(guestToEdit.birth_date).toISOString().split("T")[0]
           : "",
@@ -102,6 +110,7 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
         gender: "",
         rg_number: "",
         cpf_number: "",
+        passport_number: "",
         birth_date: "",
         nationality: "Brasileira",
         address: "",
@@ -171,16 +180,27 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
     setAction("")
 
     // Validation
-    if (formData.cpf_number && !validateCPF(formData.cpf_number)) {
+    if (
+      !isForeign &&
+      formData.cpf_number &&
+      !validateCPF(formData.cpf_number)
+    ) {
       setError("CPF inválido.")
       setAction("Por favor, digite um CPF válido.")
       setIsErrorDialogOpen(true)
       return
     }
 
-    if (formData.phone && !validatePhone(formData.phone)) {
+    if (!isForeign && formData.phone && !validatePhone(formData.phone)) {
       setError("Telefone inválido.")
       setAction("Por favor, digite um telefone celular válido.")
+      setIsErrorDialogOpen(true)
+      return
+    }
+
+    if (isForeign && !formData.passport_number) {
+      setError("Passaporte é obrigatório.")
+      setAction("Por favor, digite o número do passaporte.")
       setIsErrorDialogOpen(true)
       return
     }
@@ -295,25 +315,41 @@ export function GuestDialog({ children, onGuestSuccess, guestToEdit = null }) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="cpf_number">CPF *</Label>
+                    <Label htmlFor="cpf_number">CPF {!isForeign && "*"}</Label>
                     <Input
                       id="cpf_number"
                       name="cpf_number"
                       value={formData.cpf_number}
                       onChange={handleChange}
                       placeholder="000.000.000-00"
-                      required
+                      required={!isForeign}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="rg_number">RG *</Label>
+                    <Label htmlFor="rg_number">RG {!isForeign && "*"}</Label>
                     <Input
                       id="rg_number"
                       name="rg_number"
                       value={formData.rg_number}
                       onChange={handleChange}
                       placeholder="00.000.000-0"
-                      required
+                      required={!isForeign}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="passport_number">
+                      Número do Passaporte {isForeign && "*"}
+                    </Label>
+                    <Input
+                      id="passport_number"
+                      name="passport_number"
+                      value={formData.passport_number}
+                      onChange={handleChange}
+                      placeholder="Passaporte (para estrangeiros)"
+                      required={isForeign}
                     />
                   </div>
                 </div>

@@ -1,6 +1,7 @@
 import { useRouter } from "next/router"
 import useSWR from "swr"
 import TableLayout from "@/components/layout/TableLayout"
+import { translateText } from "@/lib/registration-helpers"
 import {
   Card,
   CardContent,
@@ -361,7 +362,10 @@ export default function HotelPage() {
               {hotel.price_policies && hotel.price_policies.length > 0 ? (
                 hotel.price_policies.map((policy, index) => (
                   <li key={index} className="text-sm text-gray-600">
-                    • {policy.description || `Até ${policy.max_age} anos`} (
+                    •{" "}
+                    {translateText(policy.description, false) ||
+                      `Até ${policy.max_age} anos`}{" "}
+                    (
                     {policy.use_percentage !== false
                       ? `${policy.percentage}%`
                       : "Preço Fixo"}
@@ -417,7 +421,9 @@ export default function HotelPage() {
                     {hotel.price_policies
                       ?.filter((p) => p.use_percentage === false)
                       .map((policy) => (
-                        <div key={policy.id}>{policy.description}</div>
+                        <div key={policy.id}>
+                          {translateText(policy.description, false)}
+                        </div>
                       ))}
                     <div>Total</div>
                     <div>Disponível</div>
@@ -433,10 +439,10 @@ export default function HotelPage() {
                       }}
                     >
                       <div className="font-medium text-blue-600">
-                        {room.name || "-"}
+                        {translateText(room.name, false) || "-"}
                       </div>
-                      <div>{room.room_type}</div>
-                      <div>{room.room_category}</div>
+                      <div>{translateText(room.room_type, false)}</div>
+                      <div>{translateText(room.room_category, false)}</div>
                       <div>R$ {room.price_per_night}</div>
                       <div>R$ {room.member_price_per_night}</div>
                       {hotel.price_policies
@@ -487,8 +493,9 @@ export default function HotelPage() {
                               <AlertDialogDescription>
                                 Deseja realmente criar uma cópia do quarto
                                 &ldquo;
-                                {room.name}&rdquo;? A cópia será criada com as
-                                mesmas configurações de preços e limites.
+                                {translateText(room.name, false)}&rdquo;? A
+                                cópia será criada com as mesmas configurações de
+                                preços e limites.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

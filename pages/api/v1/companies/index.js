@@ -26,7 +26,12 @@ async function getHandler(request, response) {
     }
   }
 
-  // Se não for busca por CNPJ, exige permissão de leitura admin
+  if (request.query.search) {
+    const results = await company.searchForeignCompanies(request.query.search)
+    return response.status(200).json(results)
+  }
+
+  // Se não for busca por CNPJ nem por nome (search), exige permissão de leitura admin
   await controller.canRequest("read:company")(request, response, async () => {
     const companies = await company.findAll()
     return response.status(200).json(companies)

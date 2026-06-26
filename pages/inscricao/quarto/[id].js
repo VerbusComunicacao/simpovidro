@@ -20,10 +20,15 @@ import { useState, useRef, useEffect } from "react"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 import Image from "next/image"
 import webserver from "infra/webserver"
-import { calculateSummaryPrice } from "@/lib/registration-helpers"
+import {
+  calculateSummaryPrice,
+  translateText,
+} from "@/lib/registration-helpers"
 
 export default function RoomDetailsPage({ room }) {
   const router = useRouter()
+  const isInternational = router.locale === "en"
+  const t = (pt, en) => (isInternational ? en : pt)
   const { query, isReady } = router
   const [activePhoto, setActivePhoto] = useState(room?.photos?.[0] || null)
   const thumbnailsRef = useRef(null)
@@ -90,21 +95,38 @@ export default function RoomDetailsPage({ room }) {
   if (!room) {
     return (
       <RegistrationLayout
-        title="Quarto não encontrado - Simpovidro 2026"
+        title={t(
+          "Quarto não encontrado - Simpovidro 2026",
+          "Room not found - Simpovidro 2026",
+        )}
         showBackButton
       >
         <div className="flex items-center justify-center p-20">
-          <p className="text-xl text-gray-600">Quarto não encontrado.</p>
+          <p className="text-xl text-gray-600">
+            {t("Quarto não encontrado.", "Room not found.")}
+          </p>
         </div>
       </RegistrationLayout>
     )
   }
 
+  const roomName =
+    translateText(room.name, isInternational) ||
+    translateText(room.room_type, isInternational)
+  const roomDesc =
+    translateText(room.description, isInternational) ||
+    t(
+      "Nenhuma descrição disponível para este quarto.",
+      "No description available for this room.",
+    )
+  const roomTypeLabel = translateText(room.room_type, isInternational)
+  const roomTypeDesc = translateText(
+    room.room_type_description,
+    isInternational,
+  )
+
   return (
-    <RegistrationLayout
-      title={`${room.name || room.room_type} - Simpovidro 2026`}
-      showBackButton
-    >
+    <RegistrationLayout title={`${roomName} - Simpovidro 2026`} showBackButton>
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Photo Gallery */}
@@ -114,7 +136,7 @@ export default function RoomDetailsPage({ room }) {
                 <>
                   <Image
                     src={activePhoto}
-                    alt={room.name || room.room_type}
+                    alt={roomName}
                     className="w-full h-full object-cover"
                     fill
                   />
@@ -196,19 +218,19 @@ export default function RoomDetailsPage({ room }) {
           <section className="space-y-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                {room.room_type_description ? (
+                {roomTypeDesc ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Badge
                         variant="secondary"
                         className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none cursor-help"
                       >
-                        {room.room_type}
+                        {roomTypeLabel}
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="w-64">
                       <p className="leading-relaxed font-medium">
-                        {room.room_type_description}
+                        {roomTypeDesc}
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -217,35 +239,42 @@ export default function RoomDetailsPage({ room }) {
                     variant="secondary"
                     className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
                   >
-                    {room.room_type}
+                    {roomTypeLabel}
                   </Badge>
                 )}
               </div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                {room.name || room.room_type}
+                {roomName}
               </h1>
               <div className="flex items-center gap-6 text-gray-600">
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  <span>Acomoda {room.max_adults} adultos</span>
+                  <span>
+                    {t(
+                      `Acomoda ${room.max_adults} adultos`,
+                      `Accommodates ${room.max_adults} adults`,
+                    )}
+                  </span>
                 </div>
                 {room.max_children > 0 && (
                   <div className="flex items-center gap-2">
-                    <span>+ {room.max_children} crianças</span>
+                    <span>
+                      {t(
+                        `+ ${room.max_children} crianças`,
+                        `+ ${room.max_children} children`,
+                      )}
+                    </span>
                   </div>
                 )}
               </div>
             </div>
 
             <div className="prose prose-blue max-w-none">
-              <h3 className="text-lg font-semibold text-gray-900">Descrição</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {t("Descrição", "Description")}
+              </h3>
               <div className="text-gray-600 leading-relaxed">
-                <FormattedText
-                  text={
-                    room.description ||
-                    "Nenhuma descrição disponível para este quarto."
-                  }
-                />
+                <FormattedText text={roomDesc} />
               </div>
             </div>
 
@@ -254,23 +283,28 @@ export default function RoomDetailsPage({ room }) {
                 <CardContent className="p-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <BedDouble className="h-5 w-5 text-blue-600" />
-                    Escolha o Tipo de acomodação
+                    {t(
+                      "Escolha o Tipo de acomodação",
+                      "Choose Accommodation Type",
+                    )}
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <button
                       onClick={() => setBeddingPreference("Duplo Casal")}
-                      className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all cursor-pointer ${
                         beddingPreference === "Duplo Casal"
                           ? "border-blue-600 bg-blue-50 text-blue-700 shadow-md"
                           : "border-gray-100 bg-gray-50 text-gray-500 hover:border-blue-200"
                       }`}
                     >
                       <BedDouble className="h-8 w-8 mb-2" />
-                      <span className="font-bold">Duplo Casal</span>
+                      <span className="font-bold">
+                        {t("Duplo Casal", "Double Couple")}
+                      </span>
                     </button>
                     <button
                       onClick={() => setBeddingPreference("Duplo Solteiro")}
-                      className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all cursor-pointer ${
                         beddingPreference === "Duplo Solteiro"
                           ? "border-blue-600 bg-blue-50 text-blue-700 shadow-md"
                           : "border-gray-100 bg-gray-50 text-gray-500 hover:border-blue-200"
@@ -280,7 +314,9 @@ export default function RoomDetailsPage({ room }) {
                         <User className="h-6 w-6" />
                         <User className="h-6 w-6" />
                       </div>
-                      <span className="font-bold">Duplo Solteiro</span>
+                      <span className="font-bold">
+                        {t("Duplo Solteiro", "Double Single")}
+                      </span>
                     </button>
                   </div>
                 </CardContent>
@@ -293,16 +329,22 @@ export default function RoomDetailsPage({ room }) {
                   <div>
                     <span className="text-sm text-gray-500 uppercase font-semibold">
                       {priceDetails
-                        ? "Valor Total da Inscrição"
-                        : "Valor por pessoa"}
+                        ? t(
+                            "Valor Total da Inscrição",
+                            "Total Registration Fee",
+                          )
+                        : t("Valor por pessoa", "Price per person")}
                     </span>
                     <div className="flex flex-col">
                       <div className="flex items-baseline gap-1">
                         <span className="text-3xl font-bold text-gray-900">
-                          {new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(
+                          {new Intl.NumberFormat(
+                            isInternational ? "en-US" : "pt-BR",
+                            {
+                              style: "currency",
+                              currency: "BRL",
+                            },
+                          ).format(
                             priceDetails
                               ? priceDetails.finalTotal
                               : room.price_per_night,
@@ -314,16 +356,19 @@ export default function RoomDetailsPage({ room }) {
                           room.price_per_night && (
                           <div className="flex items-baseline gap-1 mt-1">
                             <span className="text-sm font-semibold text-green-600">
-                              Só{" "}
-                              {new Intl.NumberFormat("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                              }).format(
+                              {t("Só", "Only")}{" "}
+                              {new Intl.NumberFormat(
+                                isInternational ? "en-US" : "pt-BR",
+                                {
+                                  style: "currency",
+                                  currency: "BRL",
+                                },
+                              ).format(
                                 priceDetails
                                   ? priceDetails.memberTotal
                                   : room.member_price_per_night,
                               )}{" "}
-                              para associados
+                              {t("para associados", "for associates")}
                             </span>
                           </div>
                         )}
@@ -333,7 +378,7 @@ export default function RoomDetailsPage({ room }) {
                     <Button
                       size="lg"
                       disabled={searchData.adults === 2 && !beddingPreference}
-                      className="bg-blue-600 hover:bg-blue-700 px-8 text-lg font-semibold shadow-md active:scale-95 transition-all disabled:opacity-50"
+                      className="bg-blue-600 hover:bg-blue-700 px-8 text-lg font-semibold shadow-md active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                       onClick={() => {
                         const params = new URLSearchParams()
                         Object.keys(searchData).forEach((key) => {
@@ -342,16 +387,23 @@ export default function RoomDetailsPage({ room }) {
                         if (searchData.adults === 2) {
                           params.append("bed_preference", beddingPreference)
                         }
+                        // preserve locale parameter or pass lang=en
+                        if (isInternational) {
+                          params.append("lang", "en")
+                        }
                         router.push(
                           `/inscricao/checkout/${room.id}?${params.toString()}`,
                         )
                       }}
                     >
-                      Fazer minha inscrição
+                      {t("Fazer minha inscrição", "Register now")}
                     </Button>
                     {searchData.adults === 2 && !beddingPreference && (
                       <p className="text-sm text-red-500 mt-2">
-                        *Escolha o tipo de acomodação para continuar
+                        {t(
+                          "*Escolha o tipo de acomodação para continuar",
+                          "*Choose accommodation type to continue",
+                        )}
                       </p>
                     )}
                   </div>
@@ -366,10 +418,13 @@ export default function RoomDetailsPage({ room }) {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">
-                    Confirmação Imediata
+                    {t("Confirmação Imediata", "Immediate Confirmation")}
                   </p>
                   <p className="text-sm text-gray-500">
-                    Sua vaga é garantida após o pagamento.
+                    {t(
+                      "Sua vaga é garantida após o pagamento.",
+                      "Your spot is guaranteed after payment.",
+                    )}
                   </p>
                 </div>
               </div>
@@ -380,10 +435,13 @@ export default function RoomDetailsPage({ room }) {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">
-                    Desconto associado
+                    {t("Desconto associado", "Associate discount")}
                   </p>
                   <p className="text-sm text-gray-500">
-                    Desconto de 20% para empresas associadas da Abravidro
+                    {t(
+                      "Desconto de 20% para empresas associadas da Abravidro",
+                      "20% discount for Abravidro associated companies",
+                    )}
                   </p>
                 </div>
               </div>

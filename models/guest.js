@@ -4,7 +4,13 @@ import { validateRequiredFields, validateUUID } from "infra/validator.js"
 import { cpf } from "cpf-cnpj-validator"
 import { parseDate, isLegalAdult } from "../lib/registration-helpers.js"
 
-async function create(guestInputValues, userId, client, isImport = false) {
+async function create(
+  guestInputValues,
+  userId,
+  client,
+  isImport = false,
+  lang = "pt-BR",
+) {
   applyPlaceholderLogic(guestInputValues)
   if (guestInputValues.birth_date) {
     const parsed = parseDate(guestInputValues.birth_date)
@@ -14,14 +20,19 @@ async function create(guestInputValues, userId, client, isImport = false) {
   }
   const isAdult = isLegalAdult(guestInputValues.birth_date)
 
-  const requiredFields = [
-    "name",
-    "badge_name",
-    "gender",
-    "rg_number",
-    "cpf_number",
-    "birth_date",
-  ]
+  const isForeign =
+    guestInputValues.passport_number ||
+    (guestInputValues.country && guestInputValues.country !== "Brasil") ||
+    (guestInputValues.nationality &&
+      guestInputValues.nationality !== "Brasileira")
+
+  const requiredFields = ["name", "badge_name", "gender"]
+
+  if (isForeign) {
+    requiredFields.push("birth_date", "passport_number")
+  } else {
+    requiredFields.push("rg_number", "cpf_number", "birth_date")
+  }
 
   if (!isImport) {
     requiredFields.push("phone")
@@ -33,7 +44,7 @@ async function create(guestInputValues, userId, client, isImport = false) {
 
   validateRequiredFields(guestInputValues, requiredFields)
 
-  await checkUniqueFields(guestInputValues, null, client)
+  await checkUniqueFields(guestInputValues, null, client, lang)
 
   const resolvedUserId = await resolveUserId(
     guestInputValues.email,
@@ -194,7 +205,13 @@ async function findOneByUserId(userId, client) {
   }
 }
 
-async function upsert(guestData, userId = null, client, isImport = false) {
+async function upsert(
+  guestData,
+  userId = null,
+  client,
+  isImport = false,
+  lang = "pt-BR",
+) {
   applyPlaceholderLogic(guestData)
   if (guestData.birth_date) {
     const parsed = parseDate(guestData.birth_date)
@@ -204,13 +221,18 @@ async function upsert(guestData, userId = null, client, isImport = false) {
   }
   const isAdult = isLegalAdult(guestData.birth_date)
 
-  const requiredFields = [
-    "name",
-    "gender",
-    "rg_number",
-    "cpf_number",
-    "birth_date",
-  ]
+  const isForeign =
+    guestData.passport_number ||
+    (guestData.country && guestData.country !== "Brasil") ||
+    (guestData.nationality && guestData.nationality !== "Brasileira")
+
+  const requiredFields = ["name", "gender"]
+
+  if (isForeign) {
+    requiredFields.push("birth_date", "passport_number")
+  } else {
+    requiredFields.push("rg_number", "cpf_number", "birth_date")
+  }
 
   if (!isImport) {
     requiredFields.push("phone")
@@ -222,17 +244,18 @@ async function upsert(guestData, userId = null, client, isImport = false) {
 
   validateRequiredFields(guestData, requiredFields)
 
-  const existingGuest = await findOneByCpfOrRg(
+  const existingGuest = await findOneByCpfOrRgOrPassport(
     guestData.cpf_number,
     guestData.rg_number,
+    guestData.passport_number,
     client,
   )
 
   if (existingGuest) {
-    return await update(existingGuest.id, guestData, client)
+    return await update(existingGuest.id, guestData, client, lang)
   }
 
-  return await create(guestData, userId, client, isImport)
+  return await create(guestData, userId, client, isImport, lang)
 }
 
 async function findOneByCpfOrRg(cpf_number, rg_number, client) {
@@ -244,11 +267,54 @@ async function findOneByCpfOrRg(cpf_number, rg_number, client) {
       FROM
         guests
       WHERE
-        cpf_number = $1 OR rg_number = $2
+        (cpf_number IS NOT NULL AND cpf_number = $1) OR (rg_number IS NOT NULL AND rg_number = $2)
       LIMIT
         1
       ;`,
-    values: [cpf_number, rg_number],
+    values: [cpf_number || null, rg_number || null],
+  })
+
+  return results.rows[0] || null
+}
+
+async function findOneByCpfOrRgOrPassport(
+  cpf_number,
+  rg_number,
+  passport_number,
+  client,
+) {
+  const db = client || database
+
+  const conditions = []
+  const values = []
+
+  if (cpf_number) {
+    values.push(cpf_number)
+    conditions.push(`cpf_number = $${values.length}`)
+  }
+  if (rg_number) {
+    values.push(rg_number)
+    conditions.push(`rg_number = $${values.length}`)
+  }
+  if (passport_number) {
+    values.push(passport_number)
+    conditions.push(`passport_number = $${values.length}`)
+  }
+
+  if (conditions.length === 0) return null
+
+  const results = await db.query({
+    text: `
+      SELECT
+        *
+      FROM
+        guests
+      WHERE
+        ${conditions.join(" OR ")}
+      LIMIT
+        1
+      ;`,
+    values,
   })
 
   return results.rows[0] || null
@@ -309,7 +375,7 @@ async function findAll({ search = "", page = 1, limit = 10 } = {}) {
   }
 }
 
-async function update(guestId, guestInputNewValues, client) {
+async function update(guestId, guestInputNewValues, client, lang = "pt-BR") {
   if (guestInputNewValues.birth_date) {
     const parsed = parseDate(guestInputNewValues.birth_date)
     if (!isNaN(parsed.getTime())) {
@@ -336,7 +402,7 @@ async function update(guestId, guestInputNewValues, client) {
 
   const guestWithNewValues = { ...currentGuest, ...guestInputNewValues }
 
-  await checkUniqueFields(guestWithNewValues, guestId, client)
+  await checkUniqueFields(guestWithNewValues, guestId, client, lang)
 
   if (guestInputNewValues.email) {
     guestWithNewValues.user_id = await resolveUserId(
@@ -470,37 +536,83 @@ async function update(guestId, guestInputNewValues, client) {
   }
 }
 
-async function checkUniqueFields(guestData, currentGuestId = null, client) {
-  const { rg_number, cpf_number } = guestData
-  const query = {
-    text: `
-      SELECT rg_number, cpf_number
-      FROM guests
-      WHERE (rg_number = $1 OR cpf_number = $2)
-    `,
-    values: [rg_number, cpf_number],
+async function checkUniqueFields(
+  guestData,
+  currentGuestId = null,
+  client,
+  lang = "pt-BR",
+) {
+  const { rg_number, cpf_number, passport_number } = guestData
+
+  const conditions = []
+  const values = []
+
+  if (rg_number) {
+    values.push(rg_number)
+    conditions.push(`rg_number = $${values.length}`)
+  }
+  if (cpf_number) {
+    values.push(cpf_number)
+    conditions.push(`cpf_number = $${values.length}`)
+  }
+  if (passport_number) {
+    values.push(passport_number)
+    conditions.push(`passport_number = $${values.length}`)
   }
 
+  if (conditions.length === 0) return
+
+  let queryText = `
+    SELECT rg_number, cpf_number, passport_number
+    FROM guests
+    WHERE (${conditions.join(" OR ")})
+  `
+
   if (currentGuestId) {
-    query.text += ` AND id != $3`
-    query.values.push(currentGuestId)
+    values.push(currentGuestId)
+    queryText += ` AND id != $${values.length}`
   }
 
   const db = client || database
-  const results = await db.query(query)
+  const results = await db.query({
+    text: queryText,
+    values,
+  })
 
   if (results.rowCount > 0) {
     for (const row of results.rows) {
-      if (row.rg_number === rg_number) {
+      if (rg_number && row.rg_number === rg_number) {
         throw new ConflictError({
-          message: "Já existe um hóspede cadastrado com este RG.",
-          action: "Utilize um RG diferente.",
+          message:
+            lang === "en"
+              ? "A guest is already registered with this RG."
+              : "Já existe um hóspede cadastrado com este RG.",
+          action:
+            lang === "en" ? "Use a different RG." : "Utilize um RG diferente.",
         })
       }
-      if (row.cpf_number === cpf_number) {
+      if (cpf_number && row.cpf_number === cpf_number) {
         throw new ConflictError({
-          message: "Já existe um hóspede cadastrado com este CPF.",
-          action: "Utilize um CPF diferente.",
+          message:
+            lang === "en"
+              ? "A guest is already registered with this CPF."
+              : "Já existe um hóspede cadastrado com este CPF.",
+          action:
+            lang === "en"
+              ? "Use a different CPF."
+              : "Utilize um CPF diferente.",
+        })
+      }
+      if (passport_number && row.passport_number === passport_number) {
+        throw new ConflictError({
+          message:
+            lang === "en"
+              ? "A guest is already registered with this passport."
+              : "Já existe um hóspede cadastrado com este passaporte.",
+          action:
+            lang === "en"
+              ? "Use a different passport."
+              : "Utilize um passaporte diferente.",
         })
       }
     }
@@ -530,6 +642,10 @@ async function resolveUserId(guestEmail, providedUserId, client) {
 }
 
 function applyPlaceholderLogic(guestData) {
+  if (guestData.cpf_number === "") guestData.cpf_number = null
+  if (guestData.rg_number === "") guestData.rg_number = null
+  if (guestData.passport_number === "") guestData.passport_number = null
+
   const cleanCpf = guestData.cpf_number?.replace(/\D/g, "")
   if (cleanCpf === "11111111111" || guestData.is_pending_info === true) {
     if (cleanCpf === "11111111111") {

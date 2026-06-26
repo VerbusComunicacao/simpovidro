@@ -83,6 +83,10 @@ export function LocationSelector({
     })
   }
 
+  const isEn = labels.country === "Country"
+  const isStateRequired = required && states.length > 0
+  const isCityRequired = required && cities.length > 0
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="space-y-2">
@@ -96,7 +100,7 @@ export function LocationSelector({
           required={required}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecione" />
+            <SelectValue placeholder={isEn ? "Select" : "Selecione"} />
           </SelectTrigger>
           <SelectContent>
             {countries.map((c) => (
@@ -110,16 +114,26 @@ export function LocationSelector({
 
       <div className="space-y-2">
         <Label>
-          {labels.state} {required && "*"}
+          {labels.state} {isStateRequired && "*"}
         </Label>
         <Select
           value={normalizedStateCode}
           onValueChange={handleStateChange}
-          disabled={disabled || !countryCode}
-          required={required}
+          disabled={disabled || !countryCode || states.length === 0}
+          required={isStateRequired}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecione" />
+            <SelectValue
+              placeholder={
+                states.length === 0
+                  ? isEn
+                    ? "N/A"
+                    : "Não aplicável"
+                  : isEn
+                    ? "Select"
+                    : "Selecione"
+              }
+            />
           </SelectTrigger>
           <SelectContent>
             {states.map((s) => (
@@ -133,16 +147,26 @@ export function LocationSelector({
 
       <div className="space-y-2">
         <Label>
-          {labels.city} {required && "*"}
+          {labels.city} {isCityRequired && "*"}
         </Label>
         <Select
           value={normalizedCityName}
           onValueChange={handleCityChange}
-          disabled={disabled || !stateCode}
-          required={required}
+          disabled={disabled || !stateCode || cities.length === 0}
+          required={isCityRequired}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecione" />
+            <SelectValue
+              placeholder={
+                cities.length === 0
+                  ? isEn
+                    ? "N/A"
+                    : "Não aplicável"
+                  : isEn
+                    ? "Select"
+                    : "Selecione"
+              }
+            />
           </SelectTrigger>
           <SelectContent>
             {cities.map((c) => (

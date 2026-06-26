@@ -18,7 +18,8 @@ import {
 
 import Navbar from "@/components/home/Navbar"
 import Footer from "@/components/home/Footer"
-import condicoesMarkdown from "@/condicoes-gerais.md"
+import condicoesMarkdownPt from "@/condicoes-gerais.md"
+import condicoesMarkdownEn from "@/condicoes-gerais-en.md"
 
 // Dynamic icon mapping based on section index
 const getSectionIcon = (idNum) => {
@@ -124,6 +125,7 @@ const MarkdownComponents = {
 
 export default function CondicoesGerais({ sections }) {
   const router = useRouter()
+  const isEn = router.locale === "en"
   const [activeSection, setActiveSection] = useState(sections[0]?.id || "")
 
   // Custom scroll navigation back to homepage section anchors
@@ -177,10 +179,18 @@ export default function CondicoesGerais({ sections }) {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col">
       <Head>
-        <title>Regulamento e Condições Gerais | 17º Simpovidro</title>
+        <title>
+          {isEn
+            ? "Rules and General Conditions | 17th Simpovidro"
+            : "Regulamento e Condições Gerais | 17º Simpovidro"}
+        </title>
         <meta
           name="description"
-          content="Confira as condições gerais, regras de cancelamento, hospedagem, inclusões e o regulamento completo do 17º Simpovidro, organizado pela Abravidro."
+          content={
+            isEn
+              ? "Check the general terms, cancellation policy, accommodation, inclusions, and the official regulations of the 17th Simpovidro, organized by Abravidro."
+              : "Confira as condições gerais, regras de cancelamento, hospedagem, inclusões e o regulamento completo do 17º Simpovidro, organizado pela Abravidro."
+          }
         />
         <meta name="robots" content="index, follow" />
       </Head>
@@ -197,11 +207,13 @@ export default function CondicoesGerais({ sections }) {
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs font-semibold uppercase tracking-wider mb-4">
             <BookOpen className="w-3.5 h-3.5" />
-            Regulamento Oficial
+            {isEn ? "Official Rules" : "Regulamento Oficial"}
           </div>
 
           <h1 className="text-4xl md:text-5xl font-title font-bold tracking-tight mb-4 leading-tight">
-            Condições Gerais de Contratação
+            {isEn
+              ? "General Terms and Conditions"
+              : "Condições Gerais de Contratação"}
           </h1>
         </div>
       </header>
@@ -211,7 +223,7 @@ export default function CondicoesGerais({ sections }) {
         <div className="lg:w-1/4 lg:sticky lg:top-24 h-fit space-y-6">
           <div className="hidden lg:block bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm max-h-[calc(100vh-140px)] overflow-y-auto scrollbar-none">
             <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 border-b pb-3">
-              Seções
+              {isEn ? "Sections" : "Seções"}
             </h3>
             <nav className="space-y-1">
               {sections.map((section) => {
@@ -239,7 +251,7 @@ export default function CondicoesGerais({ sections }) {
               htmlFor="section-select"
               className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2"
             >
-              Ir para a seção
+              {isEn ? "Go to section" : "Ir para a seção"}
             </label>
             <select
               id="section-select"
@@ -313,8 +325,9 @@ export default function CondicoesGerais({ sections }) {
   )
 }
 
-export async function getStaticProps() {
-  const text = condicoesMarkdown
+export async function getStaticProps(context) {
+  const isEn = context.locale === "en"
+  const text = isEn ? condicoesMarkdownEn : condicoesMarkdownPt
 
   const sections = []
 

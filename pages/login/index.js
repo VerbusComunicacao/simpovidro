@@ -16,11 +16,23 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Image from "next/image"
+import { useLocale } from "@/hooks/useLocale"
 import Sponsors from "@/components/home/Sponsors"
 
 export default function LoginPage() {
+  const { t, isEn } = useLocale()
   const { user, isLoading } = useUser()
   const router = useRouter()
+
+  /*
+  const handleLanguageChange = (lang) => {
+    router.push(
+      { pathname: router.pathname, query: router.query },
+      router.asPath,
+      { locale: lang },
+    )
+  }
+  */
 
   useEffect(() => {
     if (!router.isReady || isLoading) return
@@ -31,7 +43,7 @@ export default function LoginPage() {
   }, [user, isLoading, router])
 
   if (isLoading || user) {
-    return <div>Carregando...</div>
+    return <div>{t("Carregando...", "Loading...")}</div>
   }
 
   return (
@@ -48,32 +60,63 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-black/20"></div>
       </div>
 
+      {/* Language Selector */}
+      {/*
+      <div className="fixed top-4 right-4 flex items-center space-x-1 bg-white/80 backdrop-blur border border-slate-200/60 p-1 rounded-full shadow-sm z-50">
+        <button
+          type="button"
+          onClick={() => handleLanguageChange("pt-BR")}
+          className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer ${
+            !isEn
+              ? "bg-blue-600 text-white shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          PT
+        </button>
+        <button
+          type="button"
+          onClick={() => handleLanguageChange("en")}
+          className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer ${
+            isEn
+              ? "bg-blue-600 text-white shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          EN
+        </button>
+      </div>
+      */}
+
       <div className="relative z-10 w-full max-w-md px-4">
         <Card className="w-full">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold">
-              Acesse sua Conta
+              {t("Acesse sua Conta", "Access your Account")}
             </CardTitle>
             <CardDescription>
-              Entre com seu email e senha para continuar.
+              {t(
+                "Entre com seu email e senha para continuar.",
+                "Sign in with your email and password to continue.",
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <LoginForm />
+            <LoginForm isEn={isEn} t={t} />
           </CardContent>
           <CardFooter className="flex-col items-center">
             <div className="mt-4 text-sm">
               <Link href="/forgot-password" passHref>
                 <span className="text-blue-600 hover:underline">
-                  Esqueceu a senha?
+                  {t("Esqueceu a senha?", "Forgot password?")}
                 </span>
               </Link>
             </div>
             <div className="mt-2 text-sm">
-              Não tem uma conta?{" "}
+              {t("Não tem uma conta? ", "Don't have an account? ")}
               <Link href="/cadastro" passHref>
                 <span className="text-blue-600 hover:underline">
-                  Cadastre-se
+                  {t("Cadastre-se", "Sign up")}
                 </span>
               </Link>
             </div>
@@ -85,7 +128,7 @@ export default function LoginPage() {
   )
 }
 
-function LoginForm() {
+function LoginForm({ isEn, t }) {
   const { fetchUser } = useUser()
   const [formState, setFormState] = useState({ email: "", password: "" })
   const [loading, setLoading] = useState(false)
@@ -102,7 +145,9 @@ function LoginForm() {
     setError(null)
 
     if (!formState.email || !formState.password) {
-      setError("Por favor, preencha todos os campos.")
+      setError(
+        t("Por favor, preencha todos os campos.", "Please fill in all fields."),
+      )
       setLoading(false)
       return
     }
@@ -113,7 +158,10 @@ function LoginForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formState),
+        body: JSON.stringify({
+          ...formState,
+          lang: isEn ? "en" : "pt-BR",
+        }),
       })
 
       const responseBody = await response.json()
@@ -124,9 +172,20 @@ function LoginForm() {
         return
       }
 
-      setError(responseBody.message || "Ocorreu um erro ao tentar fazer login.")
+      setError(
+        responseBody.message ||
+          t(
+            "Ocorreu um erro ao tentar fazer login.",
+            "An error occurred while trying to log in.",
+          ),
+      )
     } catch (err) {
-      setError("Ocorreu um erro ao tentar fazer login.")
+      setError(
+        t(
+          "Ocorreu um erro ao tentar fazer login.",
+          "An error occurred while trying to log in.",
+        ),
+      )
     } finally {
       setLoading(false)
     }
@@ -135,27 +194,27 @@ function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t("Email", "Email")}</Label>
         <Input
           id="email"
           name="email"
           type="email"
           value={formState.email}
           onChange={handleChange}
-          placeholder="seu.email@exemplo.com"
+          placeholder="your.email@example.com"
           required
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Senha</Label>
+        <Label htmlFor="password">{t("Senha", "Password")}</Label>
         <Input
           id="password"
           name="password"
           type="password"
           value={formState.password}
           onChange={handleChange}
-          placeholder="Digite sua senha"
+          placeholder={t("Digite sua senha", "Enter your password")}
           required
         />
       </div>
@@ -163,8 +222,14 @@ function LoginForm() {
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Entrando..." : "Entrar"}
+        {loading ? t("Entrando...", "Signing in...") : t("Entrar", "Sign In")}
       </Button>
     </form>
   )
+}
+
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
 }

@@ -16,6 +16,7 @@ import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { translateText } from "@/lib/registration-helpers"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -178,7 +179,8 @@ export default function RegistrationsTable() {
                         {sale.hotel_name}
                       </p>
                       <p className="text-sm text-gray-600 mt-1">
-                        {sale.room_name || sale.room_type}
+                        {translateText(sale.room_name, false) ||
+                          translateText(sale.room_type, false)}
                       </p>
                       {sale.bed_preference && (
                         <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mt-1">

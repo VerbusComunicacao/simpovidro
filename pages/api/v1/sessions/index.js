@@ -13,17 +13,24 @@ router.delete(deleteHandler)
 export default router.handler(controller.errorHandlers)
 
 async function postHandler(request, response) {
-  const userInputValues = request.body
+  const { lang, ...userInputValues } = request.body
 
   const authenticatedUser = await authentication.getAuthenticatedUser(
     userInputValues.email,
     userInputValues.password,
+    lang,
   )
 
   if (!authorization.can(authenticatedUser, "create:session")) {
     throw new ForbiddenError({
-      message: "Você não possui permissão para fazer login.",
-      action: "Contate o suporte caso você acredite que isso seja um erro.",
+      message:
+        lang === "en"
+          ? "You do not have permission to log in."
+          : "Você não possui permissão para fazer login.",
+      action:
+        lang === "en"
+          ? "Please contact support if you believe this is an error."
+          : "Contate o suporte caso você acredite que isso seja um erro.",
     })
   }
 

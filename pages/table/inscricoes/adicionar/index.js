@@ -36,6 +36,7 @@ import {
   calculateMaxInstallments as calculateInstallments,
   validateRoomCapacity,
   generateInstallmentDates,
+  translateText,
 } from "@/lib/registration-helpers"
 import { Separator } from "@/components/ui/separator"
 
@@ -397,7 +398,8 @@ export default function AdminAddRegistrationPage() {
                         {Array.isArray(rooms) &&
                           rooms.map((r) => (
                             <SelectItem key={r.id} value={r.id}>
-                              {r.name} ({r.room_type})
+                              {translateText(r.name, false)} (
+                              {translateText(r.room_type, false)})
                             </SelectItem>
                           ))}
                       </SelectContent>

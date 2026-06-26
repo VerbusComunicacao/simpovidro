@@ -3,7 +3,7 @@ import { ValidationError, NotFoundError } from "infra/errors.js"
 import password from "models/password.js"
 
 async function create(userInputValues) {
-  await validateUniqueEmail(userInputValues.email)
+  await validateUniqueEmail(userInputValues.email, userInputValues.lang)
   await hashPasswordInObject(userInputValues)
   injectDefaultFeatureInObject(userInputValues)
 
@@ -181,7 +181,7 @@ async function addFeatures(userId, features) {
   }
 }
 
-async function validateUniqueEmail(email) {
+async function validateUniqueEmail(email, lang) {
   const results = await database.query({
     text: `
     SELECT 
@@ -196,8 +196,14 @@ async function validateUniqueEmail(email) {
 
   if (results.rowCount > 0) {
     throw new ValidationError({
-      message: "O email informado já está sendo utilizado.",
-      action: "Utilize outro email para realizar esta operação.",
+      message:
+        lang === "en"
+          ? "The email address is already in use."
+          : "O email informado já está sendo utilizado.",
+      action:
+        lang === "en"
+          ? "Please use a different email to perform this operation."
+          : "Utilize outro email para realizar esta operação.",
     })
   }
 }

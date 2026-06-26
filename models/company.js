@@ -7,36 +7,54 @@ import {
 
 async function create(companyInputValues, options = { isImport: false }) {
   const isImport = options.isImport
+  const isForeign =
+    companyInputValues.country && companyInputValues.country !== "Brasil"
+  const db = options.client || database
 
   const requiredFields = isImport
-    ? ["corporate_name", "cnpj"]
-    : [
-        "corporate_name",
-        "badge",
-        "cnpj",
-        "address",
-        "address_number",
-        "neighborhood",
-        "city",
-        "state",
-        "phone",
-        "email",
-        "zip_code",
-      ]
+    ? isForeign
+      ? ["corporate_name"]
+      : ["corporate_name", "cnpj"]
+    : isForeign
+      ? [
+          "corporate_name",
+          "badge",
+          "address",
+          "address_number",
+          "neighborhood",
+          "phone",
+          "email",
+        ]
+      : [
+          "corporate_name",
+          "badge",
+          "address",
+          "address_number",
+          "neighborhood",
+          "city",
+          "state",
+          "phone",
+          "email",
+          "zip_code",
+        ]
+
+  if (!isImport && !isForeign) {
+    requiredFields.push("cnpj")
+  }
 
   validateRequired(companyInputValues, requiredFields)
 
   const cleanCnpj = companyInputValues.cnpj?.replace(/\D/g, "")
-  const valuesWithCleanCnpj = { ...companyInputValues, cnpj: cleanCnpj }
+  const valuesWithCleanCnpj = { ...companyInputValues, cnpj: cleanCnpj || null }
 
   if (cleanCnpj) {
-    await verifyIfCompanyAlreadyExists(cleanCnpj)
+    await verifyIfCompanyAlreadyExists(cleanCnpj, db)
   }
 
-  const newCompany = await runInsertQuery(valuesWithCleanCnpj)
+  const newCompany = await runInsertQuery(valuesWithCleanCnpj, db)
   return newCompany
 
-  async function runInsertQuery(values) {
+  async function runInsertQuery(values, dbClient) {
     const {
       corporate_name,
       badge = null,
@@ -59,7 +77,7 @@ async function create(companyInputValues, options = { isImport: false }) {
       activity_sector = null,
     } = values
 
-    const results = await database.query({
+    const results = await dbClient.query({
       text: `
         INSERT INTO
           companies (
@@ -100,9 +118,10 @@ async function create(companyInputValues, options = { isImport: false }) {
   }
 }
 
-async function findOneById(companyId) {
+async function findOneById(companyId, client) {
   validateUUID(companyId)
-  const results = await database.query({
+  const db = client || database
+  const results = await db.query({
     text: `SELECT * FROM companies WHERE id = $1 LIMIT 1;`,
     values: [companyId],
   })
@@ -136,7 +155,7 @@ async function findAll() {
   return results.rows
 }
 
-async function update(companyId, companyInputNewValues) {
+async function update(companyId, companyInputNewValues, client) {
   if (Object.keys(companyInputNewValues).length === 0) {
     throw new ValidationError({
       message: `Nenhum campo enviado para atualização.`,
@@ -144,12 +163,13 @@ async function update(companyId, companyInputNewValues) {
     })
   }
 
-  const currentCompany = await findOneById(companyId)
+  const db = client || database
+  const currentCompany = await findOneById(companyId, db)
 
   const cleanCnpj = companyInputNewValues.cnpj?.replace(/\D/g, "")
 
   if (cleanCnpj && cleanCnpj !== currentCompany.cnpj) {
-    await verifyIfCompanyAlreadyExists(cleanCnpj)
+    await verifyIfCompanyAlreadyExists(cleanCnpj, db)
   }
 
   const companyWithNewValues = {
@@ -158,10 +178,10 @@ async function update(companyId, companyInputNewValues) {
     cnpj: cleanCnpj || currentCompany.cnpj,
   }
 
-  const updatedCompany = await runUpdateQuery(companyWithNewValues)
+  const updatedCompany = await runUpdateQuery(companyWithNewValues, db)
   return updatedCompany
 
-  async function runUpdateQuery(values) {
+  async function runUpdateQuery(values, dbClient) {
     const {
       id,
       corporate_name,
@@ -185,7 +205,7 @@ async function update(companyId, companyInputNewValues) {
       activity_sector,
     } = values
 
-    const results = await database.query({
+    const results = await dbClient.query({
       text: `
         UPDATE
           companies
@@ -252,9 +272,10 @@ async function deleteById(companyId) {
   })
 }
 
-async function verifyIfCompanyAlreadyExists(cnpj) {
+async function verifyIfCompanyAlreadyExists(cnpj, client) {
   const cleanCnpj = cnpj.replace(/\D/g, "")
-  const results = await database.query({
+  const db = client || database
+  const results = await db.query({
     text: `
       SELECT id
       FROM companies
@@ -298,6 +319,22 @@ async function findOneByCnpj(cnpj, client) {
   return results.rows[0]
 }
 
+async function searchForeignCompanies(searchTerm) {
+  if (!searchTerm || searchTerm.trim() === "") return []
+  const results = await database.query({
+    text: `
+      SELECT *
+      FROM companies
+      WHERE cnpj IS NULL
+        AND corporate_name ILIKE $1
+      ORDER BY corporate_name ASC
+      LIMIT 10;
+    `,
+    values: [`%${searchTerm.trim()}%`],
+  })
+  return results.rows
+}
+
 async function deleteAll() {
   await database.query({
     text: `DELETE FROM companies`,
@@ -306,23 +343,32 @@ async function deleteAll() {
 
 async function upsert(companyData, client) {
   const cleanCnpj = companyData.cnpj?.replace(/\D/g, "")
-  if (!cleanCnpj) {
-    return null
-  }
-
   const db = client || database
 
-  try {
-    const existingCompany = await findOneByCnpj(cleanCnpj, db)
-    // Avoid double cleaning or verification in update
-    return await update(existingCompany.id, companyData, db)
-  } catch (error) {
-    if (error.name === "NotFoundError") {
-      // Create without checking if already exists again
-      return await runInsertQuery(companyData, db)
+  let existingCompany = null
+  if (cleanCnpj) {
+    try {
+      existingCompany = await findOneByCnpj(cleanCnpj, db)
+    } catch (error) {
+      if (error.name !== "NotFoundError") {
+        throw error
+      }
     }
-    throw error
+  } else if (companyData.corporate_name) {
+    const findResult = await db.query({
+      text: `SELECT * FROM companies WHERE LOWER(corporate_name) = LOWER($1) AND cnpj IS NULL LIMIT 1;`,
+      values: [companyData.corporate_name.trim()],
+    })
+    if (findResult.rowCount > 0) {
+      existingCompany = findResult.rows[0]
+    }
   }
+
+  if (existingCompany) {
+    return await update(existingCompany.id, companyData, db)
+  }
+
+  return await runInsertQuery(companyData, db)
 
   async function runInsertQuery(values, dbClient) {
     const {
@@ -364,7 +410,7 @@ async function upsert(companyData, client) {
       values: [
         corporate_name,
         badge?.toUpperCase(),
-        cnpj.replace(/\D/g, ""),
+        cnpj ? cnpj.replace(/\D/g, "") : null,
         address,
         address_number,
         address_complement,
@@ -397,6 +443,7 @@ const company = {
   deleteAll,
   findOneByCnpj,
   upsert,
+  searchForeignCompanies,
 }
 
 export default company

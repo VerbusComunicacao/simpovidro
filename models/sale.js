@@ -14,12 +14,18 @@ import {
 async function create(saleInputValues, externalClient) {
   validateRequiredFields(saleInputValues, ["guest_ids", "room_id"])
 
-  const { guest_ids, room_id } = saleInputValues
+  const { guest_ids, room_id, lang } = saleInputValues
 
   if (!Array.isArray(guest_ids) || guest_ids.length === 0) {
     throw new ValidationError({
-      message: "A lista de hóspedes não pode estar vazia.",
-      action: "Adicione pelo menos um hóspede.",
+      message:
+        lang === "en"
+          ? "The guest list cannot be empty."
+          : "A lista de hóspedes não pode estar vazia.",
+      action:
+        lang === "en"
+          ? "Add at least one guest."
+          : "Adicione pelo menos um hóspede.",
     })
   }
 
@@ -102,8 +108,12 @@ async function create(saleInputValues, externalClient) {
     // 2. Check room availability
     if (targetRoom.latest_available_rooms <= 0) {
       throw new ValidationError({
-        message: "Este quarto não está mais disponível.",
-        action: "Selecione outro quarto.",
+        message:
+          lang === "en"
+            ? "This room is no longer available."
+            : "Este quarto não está mais disponível.",
+        action:
+          lang === "en" ? "Select another room." : "Selecione outro quarto.",
       })
     }
 
@@ -144,9 +154,14 @@ async function create(saleInputValues, externalClient) {
 
     if (overlapResults.rowCount > 0) {
       throw new ValidationError({
-        message: `O hóspede ${overlapResults.rows[0].name} já possui uma inscrição para este hotel neste período.`,
+        message:
+          lang === "en"
+            ? `The guest ${overlapResults.rows[0].name} already has a registration for this hotel in this period.`
+            : `O hóspede ${overlapResults.rows[0].name} já possui uma inscrição para este hotel neste período.`,
         action:
-          "Verifique os dados da inscrição ou entre em contato com o suporte.",
+          lang === "en"
+            ? "Verify the registration details or contact support."
+            : "Verifique os dados da inscrição ou entre em contato com o suporte.",
       })
     }
 
@@ -170,36 +185,66 @@ async function create(saleInputValues, externalClient) {
     const leadGuest = guestsRows[0]
     if (leadGuest && !isLegalAdult(leadGuest.birth_date, referenceDate)) {
       throw new ValidationError({
-        message: "O titular da inscrição deve ser maior de 18 anos.",
-        action: "Altere o titular da inscrição para um adulto maior de 18.",
+        message:
+          lang === "en"
+            ? "The lead guest must be 18 years or older."
+            : "O titular da inscrição deve ser maior de 18 anos.",
+        action:
+          lang === "en"
+            ? "Change the lead guest to an adult over 18."
+            : "Altere o titular da inscrição para um adulto maior de 18.",
       })
     }
 
     if (adultCount === 0) {
       throw new ValidationError({
-        message: "Deve haver pelo menos um hóspede adulto por quarto.",
-        action: "Adicione um hóspede adulto à inscrição.",
+        message:
+          lang === "en"
+            ? "There must be at least one adult guest per room."
+            : "Deve haver pelo menos um hóspede adulto por quarto.",
+        action:
+          lang === "en"
+            ? "Add an adult guest to the registration."
+            : "Adicione um hóspede adulto à inscrição.",
       })
     }
 
     if (adultCount > (targetRoom.max_adults || 0)) {
       throw new ValidationError({
-        message: `O número de adultos (${adultCount}) excede a capacidade máxima do quarto (${targetRoom.max_adults}).`,
-        action: "Selecione um quarto com maior capacidade para adultos.",
+        message:
+          lang === "en"
+            ? `The number of adults (${adultCount}) exceeds the maximum room capacity (${targetRoom.max_adults}).`
+            : `O número de adultos (${adultCount}) excede a capacidade máxima do quarto (${targetRoom.max_adults}).`,
+        action:
+          lang === "en"
+            ? "Select a room with greater capacity for adults."
+            : "Selecione um quarto com maior capacidade para adultos.",
       })
     }
 
     if (childCount > (targetRoom.max_children || 0)) {
       throw new ValidationError({
-        message: `O número de crianças (${childCount}) excede a capacidade máxima do quarto (${targetRoom.max_children}).`,
-        action: "Selecione um quarto com maior capacidade para crianças.",
+        message:
+          lang === "en"
+            ? `The number of children (${childCount}) exceeds the maximum room capacity (${targetRoom.max_children}).`
+            : `O número de crianças (${childCount}) excede a capacidade máxima do quarto (${targetRoom.max_children}).`,
+        action:
+          lang === "en"
+            ? "Select a room with greater capacity for children."
+            : "Selecione um quarto com maior capacidade para crianças.",
       })
     }
 
     if (adultCount < (targetRoom.min_guests || 1)) {
       throw new ValidationError({
-        message: `Este quarto exige no mínimo ${targetRoom.min_guests} hóspedes adultos.`,
-        action: "Adicione mais hóspedes adultos para continuar.",
+        message:
+          lang === "en"
+            ? `This room requires at least ${targetRoom.min_guests} adult guests.`
+            : `Este quarto exige no mínimo ${targetRoom.min_guests} hóspedes adultos.`,
+        action:
+          lang === "en"
+            ? "Add more adult guests to continue."
+            : "Adicione mais hóspedes adultos para continuar.",
       })
     }
 
@@ -419,6 +464,7 @@ async function findOneByIdWithDetails(saleId) {
         hotels.state as hotel_state,
         hotels.phone as hotel_phone,
         hotels.checkout_question as hotel_checkout_question,
+        hotels.checkout_question_en as hotel_checkout_question_en,
         rooms.name as room_name,
         rooms.description as room_description,
         rooms.price_per_night as room_price_per_night,

@@ -1,6 +1,11 @@
 import Image from "next/image"
+import { useRouter } from "next/router"
 
 export default function Sponsors({ variant = "full" }) {
+  const router = useRouter()
+  const isEn = router?.locale === "en"
+  const t = (pt, en) => (isEn ? en : pt)
+
   const sponsors = [
     {
       name: "AGC",
@@ -130,7 +135,7 @@ export default function Sponsors({ variant = "full" }) {
       <div className="max-w-7xl mx-auto px-4 py-2 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 md:gap-12">
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 md:gap-12">
           <span className="font-title text-[9px] sm:text-sm font-black text-blue-900/40 uppercase tracking-[0.2em]">
-            Realização
+            {t("Realização", "Organization")}
           </span>
           <a
             href="https://abravidro.org.br/"
@@ -148,7 +153,7 @@ export default function Sponsors({ variant = "full" }) {
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 md:gap-12">
           <span className="font-title text-[9px] sm:text-sm font-black text-blue-900/40 uppercase tracking-[0.2em]">
-            Patrocínio
+            {t("Patrocínio", "Sponsors")}
           </span>
           <div className="flex items-center justify-center gap-4 sm:gap-6 md:gap-12">
             {sponsors.map((sponsor) => (
@@ -178,7 +183,7 @@ export default function Sponsors({ variant = "full" }) {
       <div className="max-w-7xl mx-auto px-4 py-2 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 md:gap-12">
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 md:gap-12">
           <span className="font-title text-[9px] sm:text-sm font-black text-blue-900/40 uppercase tracking-[0.2em]">
-            Realização
+            {t("Realização", "Organization")}
           </span>
           <a
             href="https://abravidro.org.br/"
@@ -196,7 +201,7 @@ export default function Sponsors({ variant = "full" }) {
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 md:gap-12">
           <span className="font-title text-[9px] sm:text-sm font-black text-blue-900/40 uppercase tracking-[0.2em]">
-            Patrocínio
+            {t("Patrocínio", "Sponsors")}
           </span>
           <div className="flex items-center justify-center gap-4 sm:gap-6 md:gap-12">
             {sponsors.map((sponsor) => (
@@ -251,7 +256,7 @@ export default function Sponsors({ variant = "full" }) {
       <div className="max-w-7xl mx-auto px-6 text-center">
         <div className="mb-16">
           <h2 className="text-3xl font-title text-slate-900 uppercase mb-12">
-            Realização
+            {t("Realização", "Organization")}
           </h2>
           <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 mb-12">
             <a
@@ -271,7 +276,7 @@ export default function Sponsors({ variant = "full" }) {
             </a>
           </div>
           <h2 className="text-3xl font-title text-slate-900 uppercase mb-12">
-            Patrocínio
+            {t("Patrocínio", "Sponsors")}
           </h2>
           <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
             {sponsors.map((sponsor) => (
@@ -297,7 +302,7 @@ export default function Sponsors({ variant = "full" }) {
 
         <div>
           <h2 className="text-2xl text-slate-400 uppercase mb-10 font-title">
-            Apoio
+            {t("Apoio", "Support")}
           </h2>
           <div className="flex flex-wrap justify-center items-center gap-12 md:gap-12 mb-10">
             {supporters.map((sponsor) => (
@@ -323,7 +328,7 @@ export default function Sponsors({ variant = "full" }) {
 
         <div>
           <h2 className="text-xl text-slate-400 uppercase mb-10 font-title">
-            Apoio Institucional
+            {t("Apoio Institucional", "Institutional Support")}
           </h2>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 transition-all duration-700">
             {support.map((partner) => {

@@ -5,9 +5,16 @@ import RegistrationLayout from "@/components/registration/RegistrationLayout"
 
 export default function RegistrationSuccessPage() {
   const router = useRouter()
+  const isEn = router.locale === "en" || router.query.lang === "en"
 
   return (
-    <RegistrationLayout title="Inscrição Confirmada - Simpovidro 2026">
+    <RegistrationLayout
+      title={
+        isEn
+          ? "Registration Confirmed - Simpovidro 2026"
+          : "Inscrição Confirmada - Simpovidro 2026"
+      }
+    >
       <div className="flex items-center justify-center p-4 py-20">
         <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center space-y-6">
           <div className="mx-auto h-20 w-20 bg-green-100 rounded-full flex items-center justify-center">
@@ -15,12 +22,13 @@ export default function RegistrationSuccessPage() {
           </div>
 
           <h1 className="text-2xl font-bold text-gray-900">
-            Inscrição Confirmada!
+            {isEn ? "Registration Confirmed!" : "Inscrição Confirmada!"}
           </h1>
 
           <p className="text-gray-600">
-            Sua pré-inscrição foi realizada com sucesso. Você receberá em breve
-            um email com os detalhes do pagamento e confirmação da reserva.
+            {isEn
+              ? "Your pre-registration has been completed successfully. You will shortly receive an email with payment details and booking confirmation."
+              : "Sua pré-inscrição foi realizada com sucesso. Você receberá em breve um email com os detalhes do pagamento e confirmação da reserva."}
           </p>
 
           <div className="pt-4 space-y-3">
@@ -28,14 +36,14 @@ export default function RegistrationSuccessPage() {
               className="w-full bg-blue-600 hover:bg-blue-700"
               onClick={() => router.push("/inscricao")}
             >
-              Voltar para Inscrições
+              {isEn ? "Back to Registrations" : "Voltar para Inscrições"}
             </Button>
             <Button
               variant="outline"
               className="w-full"
               onClick={() => router.push("/meus-pedidos")}
             >
-              Ir para Meus Pedidos
+              {isEn ? "Go to My Orders" : "Ir para Meus Pedidos"}
             </Button>
           </div>
         </div>

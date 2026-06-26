@@ -104,6 +104,7 @@ describe("POST /api/v1/hotels", () => {
         email: "hotel@paradise.com",
         active: false,
         checkout_question: null,
+        checkout_question_en: null,
         price_policies: [],
         user_id: createdUser.id,
         created_at: expect.any(String),
