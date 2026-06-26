@@ -69,6 +69,7 @@ async function create(userOrId, registrationData) {
         guestDataWithCnpj,
         guestUserId,
         client,
+        false,
         lang,
       )
       savedGuestIds.push(savedGuest.id)

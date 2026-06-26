@@ -20,16 +20,17 @@ async function create(
   }
   const isAdult = isLegalAdult(guestInputValues.birth_date)
 
-  const isForeign =
-    guestInputValues.passport_number ||
-    (guestInputValues.country && guestInputValues.country !== "Brasil") ||
-    (guestInputValues.nationality &&
-      guestInputValues.nationality !== "Brasileira")
+  const isEn = lang === "en" || lang === "en-US"
+
+  const isForeign = isEn || !!guestInputValues.passport_number
 
   const requiredFields = ["name", "badge_name", "gender"]
 
   if (isForeign) {
-    requiredFields.push("birth_date", "passport_number")
+    requiredFields.push("birth_date")
+    if (isEn || guestInputValues.passport_number) {
+      requiredFields.push("passport_number")
+    }
   } else {
     requiredFields.push("rg_number", "cpf_number", "birth_date")
   }
@@ -221,15 +222,17 @@ async function upsert(
   }
   const isAdult = isLegalAdult(guestData.birth_date)
 
-  const isForeign =
-    guestData.passport_number ||
-    (guestData.country && guestData.country !== "Brasil") ||
-    (guestData.nationality && guestData.nationality !== "Brasileira")
+  const isEn = lang === "en" || lang === "en-US"
+
+  const isForeign = isEn || !!guestData.passport_number
 
   const requiredFields = ["name", "gender"]
 
   if (isForeign) {
-    requiredFields.push("birth_date", "passport_number")
+    requiredFields.push("birth_date")
+    if (isEn || guestData.passport_number) {
+      requiredFields.push("passport_number")
+    }
   } else {
     requiredFields.push("rg_number", "cpf_number", "birth_date")
   }
