@@ -23,6 +23,7 @@ export default function Activate() {
   const [actionMessage, setActionMessage] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
 
+  /*
   const handleLanguageChange = (lang) => {
     router.push(
       { pathname: router.pathname, query: router.query },
@@ -30,6 +31,7 @@ export default function Activate() {
       { locale: lang },
     )
   }
+  */
 
   const displayMessage =
     message || t("Ativando sua conta...", "Activating your account...")
@@ -97,6 +99,7 @@ export default function Activate() {
         <div className="absolute inset-0 bg-black/20"></div>
       </div>
       {/* Language Selector */}
+      {/*
       <div className="fixed top-4 right-4 flex items-center space-x-1 bg-white/80 backdrop-blur border border-slate-200/60 p-1 rounded-full shadow-sm z-50">
         <button
           type="button"
@@ -121,6 +124,7 @@ export default function Activate() {
           EN
         </button>
       </div>
+      */}
 
       <div className="relative z-10 w-full max-w-md px-4">
         <Card className="w-full">

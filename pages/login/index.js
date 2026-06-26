@@ -24,6 +24,7 @@ export default function LoginPage() {
   const { user, isLoading } = useUser()
   const router = useRouter()
 
+  /*
   const handleLanguageChange = (lang) => {
     router.push(
       { pathname: router.pathname, query: router.query },
@@ -31,6 +32,7 @@ export default function LoginPage() {
       { locale: lang },
     )
   }
+  */
 
   useEffect(() => {
     if (!router.isReady || isLoading) return
@@ -59,6 +61,7 @@ export default function LoginPage() {
       </div>
 
       {/* Language Selector */}
+      {/*
       <div className="fixed top-4 right-4 flex items-center space-x-1 bg-white/80 backdrop-blur border border-slate-200/60 p-1 rounded-full shadow-sm z-50">
         <button
           type="button"
@@ -83,6 +86,7 @@ export default function LoginPage() {
           EN
         </button>
       </div>
+      */}
 
       <div className="relative z-10 w-full max-w-md px-4">
         <Card className="w-full">

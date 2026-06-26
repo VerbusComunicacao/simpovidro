@@ -28,6 +28,7 @@ export default function Register() {
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  /*
   const handleLanguageChange = (lang) => {
     router.push(
       { pathname: router.pathname, query: router.query },
@@ -35,6 +36,7 @@ export default function Register() {
       { locale: lang },
     )
   }
+  */
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -96,6 +98,7 @@ export default function Register() {
         <div className="absolute inset-0 bg-black/20"></div>
       </div>
       {/* Language Selector */}
+      {/*
       <div className="fixed top-4 right-4 flex items-center space-x-1 bg-white/80 backdrop-blur border border-slate-200/60 p-1 rounded-full shadow-sm z-50">
         <button
           type="button"
@@ -120,6 +123,7 @@ export default function Register() {
           EN
         </button>
       </div>
+      */}
 
       <div className="relative z-10 w-full max-w-md px-4">
         {success ? (

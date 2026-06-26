@@ -61,6 +61,7 @@ export default function Navbar({ scrollToSection, router: propRouter }) {
           })}
 
           {/* Language Switcher */}
+          {/*
           <div className="flex items-center bg-slate-100 p-0.5 rounded-full border border-slate-200/60 mr-2 gap-0.5">
             <button
               onClick={() =>
@@ -89,6 +90,7 @@ export default function Navbar({ scrollToSection, router: propRouter }) {
               🇺🇸
             </button>
           </div>
+          */}
 
           <Button
             className="bg-logo-navy hover:bg-blue-700 text-white rounded-full px-6 cursor-pointer"
@@ -135,6 +137,7 @@ export default function Navbar({ scrollToSection, router: propRouter }) {
           })}
 
           {/* Mobile Language Switcher */}
+          {/*
           <div className="flex items-center bg-slate-100 p-0.5 rounded-full border border-slate-200/60 mr-auto gap-0.5 mt-2">
             <button
               onClick={() => {
@@ -163,6 +166,7 @@ export default function Navbar({ scrollToSection, router: propRouter }) {
               🇺🇸 English
             </button>
           </div>
+          */}
 
           <Button
             className="bg-logo-navy hover:bg-blue-700 text-white rounded-full w-full py-6 text-base font-bold shadow-md shadow-blue-200 mt-2 cursor-pointer"
