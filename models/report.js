@@ -104,6 +104,12 @@ async function generateCompleteReport(hotelId) {
       "Data de Registro": row.data_registro || "",
       "Nome do quarto": row.nome_quarto || "",
       "Tipo de acomodação": row.tipo_acomodacao || "",
+      "AÉREO CARRO": "",
+      Diretoria: "",
+      Associado: "",
+      "Entidade Regional": "",
+      Apoiador: "",
+      Usinas: "",
       "Número da venda": row.numero_venda || "",
       Empresa: row.empresa || "",
       Nome: row.nome || "",
@@ -346,6 +352,37 @@ async function generateCheckoutQuestionsReport(hotelId) {
   return result.rows
 }
 
+async function generateCompaniesDiscountReport(hotelId) {
+  if (!hotelId) {
+    throw new Error("Hotel ID é obrigatório para gerar relatórios.")
+  }
+
+  const query = `
+    SELECT
+      c.cnpj,
+      c.corporate_name,
+      COALESCE(c.custom_discount_percentage, d.value, 0) as discount_percentage
+    FROM companies c
+    LEFT JOIN discounts d ON c.discount_id = d.id
+    WHERE COALESCE(c.custom_discount_percentage, d.value, 0) > 0
+    ORDER BY c.corporate_name ASC
+  `
+
+  const result = await database.query({
+    text: query,
+  })
+
+  return result.rows.map((row) => {
+    return {
+      CNPJ: formatCNPJ(row.cnpj),
+      "Razão Social": row.corporate_name,
+      Desconto: row.discount_percentage
+        ? parseFloat(row.discount_percentage)
+        : 0,
+    }
+  })
+}
+
 const report = {
   generateCompleteReport,
   generateByCompany,
@@ -353,6 +390,7 @@ const report = {
   generateByCountry,
   generateByUF,
   generateCheckoutQuestionsReport,
+  generateCompaniesDiscountReport,
 }
 
 export default report

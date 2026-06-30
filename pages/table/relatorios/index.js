@@ -37,7 +37,7 @@ const reportTypes = [
   },
   {
     value: "checkout-questions",
-    label: "Respostas do Checkout",
+    label: "Questionário da inscrição",
     description: "Apenas as respostas dos participantes à pergunta.",
   },
   {
@@ -59,6 +59,11 @@ const reportTypes = [
     value: "by-uf",
     label: "Participantes por Estado (UF)",
     description: "Distribuição geográfica por estado brasileiro",
+  },
+  {
+    value: "companies-discount",
+    label: "Empresas com Desconto",
+    description: "Lista empresas (inscritas ou não) com desconto",
   },
 ]
 
