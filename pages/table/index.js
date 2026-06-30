@@ -86,29 +86,17 @@ export default function Table() {
                     {hotel.city}, {hotel.state}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-600">{hotel.address}</p>
-                    <p className="text-sm text-gray-600">{hotel.phone}</p>
-                    <p className="text-sm text-gray-600">{hotel.email}</p>
-                  </div>
-                  <div className="flex gap-2 pt-3 border-t border-gray-100">
-                    <div className="flex items-center justify-center gap-2 bg-slate-50 p-2 rounded-lg text-center">
-                      <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-                        Inscritos
-                      </p>
-                      <p className="font-bold text-blue-600">
-                        {hotel.guests_count ?? 0}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-center gap-2 bg-slate-50 p-2 rounded-lg text-center">
-                      <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-                        Empresas
-                      </p>
-                      <p className="font-bold text-blue-600">
-                        {hotel.companies_count ?? 0}
-                      </p>
-                    </div>
+                <CardContent>
+                  <p className="text-sm text-gray-600">{hotel.address}</p>
+                  <p className="text-sm text-gray-600">{hotel.phone}</p>
+                  <p className="text-sm text-gray-600">{hotel.email}</p>
+                  <div className="flex gap-4 pt-3 border-t border-gray-100 mt-3 text-sm text-gray-500">
+                    <span>
+                      <strong>Inscritos:</strong> {hotel.guests_count ?? 0}
+                    </span>
+                    <span>
+                      <strong>Empresas:</strong> {hotel.companies_count ?? 0}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
