@@ -63,7 +63,7 @@ const reportTypes = [
   {
     value: "companies-discount",
     label: "Empresas com Desconto",
-    description: "Lista de empresas com desconto",
+    description: "Lista empresas (inscritas ou não) com desconto",
   },
 ]
 

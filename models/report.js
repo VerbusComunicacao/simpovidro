@@ -358,24 +358,18 @@ async function generateCompaniesDiscountReport(hotelId) {
   }
 
   const query = `
-    SELECT DISTINCT
+    SELECT
       c.cnpj,
       c.corporate_name,
       COALESCE(c.custom_discount_percentage, d.value, 0) as discount_percentage
-    FROM sales s
-    JOIN rooms r ON s.room_id = r.id
-    JOIN hotels h ON r.hotel_id = h.id
-    JOIN companies c ON s.company_id = c.id
+    FROM companies c
     LEFT JOIN discounts d ON c.discount_id = d.id
-    WHERE s.status != 'cancelled' 
-      AND h.id = $1 
-      AND COALESCE(c.custom_discount_percentage, d.value, 0) > 0
+    WHERE COALESCE(c.custom_discount_percentage, d.value, 0) > 0
     ORDER BY c.corporate_name ASC
   `
 
   const result = await database.query({
     text: query,
-    values: [hotelId],
   })
 
   return result.rows.map((row) => {
