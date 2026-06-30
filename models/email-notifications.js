@@ -5,6 +5,7 @@ import {
   calculateSalePriceBreakdown,
   getGuestCountsString,
   ACTIVITY_SECTORS_EN,
+  translateText,
 } from "lib/registration-helpers.js"
 
 export async function sendRegistrationEmail(
@@ -378,7 +379,7 @@ export async function sendRegistrationEmail(
                         <td bgcolor="#f9fafb" style="background-color: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #f3f4f6; font-family: Arial, Helvetica, sans-serif;">
                           <h2 style="font-family: Arial, Helvetica, sans-serif; margin-top: 0; color: #111827; font-size: 1.25em; margin-bottom: 12px;">${isInternational ? "Order #" : "Pedido #"}${saleDetails.sale_number || saleDetails.id.slice(0, 8)}</h2>
                           <p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>Hotel:</strong> ${saleDetails.hotel_name}</p>
-                          <p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Room" : "Quarto"}:</strong> ${saleDetails.room_name || saleDetails.room_type}</p>
+                          <p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Room" : "Quarto"}:</strong> ${translateText(saleDetails.room_name || saleDetails.room_type, isInternational)}</p>
                           ${saleDetails.bed_preference ? `<p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Accommodation type" : "Tipo de acomodação"}:</strong> ${translatedBedPreference}</p>` : ""}
                           <p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Number of guests" : "Quantidade de pessoas"}:</strong> ${guestCountsString}</p>
                           <p style="font-family: Arial, Helvetica, sans-serif; margin: 5px 0; font-size: 14px;"><strong>${isInternational ? "Period" : "Período"}:</strong> ${formatDate(saleDetails.check_in_date)} ${isInternational ? "to" : "à"} ${formatDate(saleDetails.check_out_date)}</p>
