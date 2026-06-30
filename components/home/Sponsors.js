@@ -31,6 +31,11 @@ export default function Sponsors({ variant = "full" }) {
 
   const supporters = [
     {
+      name: "Bottero",
+      logo: "/images/apoiadores/bottero.png",
+      link: "https://www.bottero.com/",
+    },
+    {
       name: "Diamanfer",
       logo: "/images/apoiadores/diamanfer.jpeg",
       link: "https://diamanfer.com.br/",
