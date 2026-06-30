@@ -56,6 +56,9 @@ async function getHandler(request, response) {
     case "checkout-questions":
       reportData = await report.generateCheckoutQuestionsReport(hotel_id)
       break
+    case "companies-discount":
+      reportData = await report.generateCompaniesDiscountReport(hotel_id)
+      break
     default:
       throw new ValidationError({
         message: "Tipo de relatório inválido.",
