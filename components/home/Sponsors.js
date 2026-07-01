@@ -46,6 +46,11 @@ export default function Sponsors({ variant = "full" }) {
       link: "https://sfti.com.br/",
     },
     {
+      name: "Gusmao",
+      logo: "/images/apoiadores/gusmao.png",
+      link: "https://www.gusmao.com.br/",
+    },
+    {
       name: "Keraglass",
       logo: "/images/apoiadores/KERAGLASS.png",
       link: "https://www.keraglass.com/pt/home",
@@ -309,7 +314,7 @@ export default function Sponsors({ variant = "full" }) {
           <h2 className="text-2xl text-slate-400 uppercase mb-10 font-title">
             {t("Apoio", "Support")}
           </h2>
-          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-12 mb-10">
+          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-12 md:max-w-[900px] md:mx-auto mb-10">
             {supporters.map((sponsor) => (
               <a
                 key={sponsor.name}
