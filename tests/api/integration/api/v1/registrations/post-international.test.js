@@ -232,11 +232,11 @@ describe("POST /api/v1/registrations (International)", () => {
 
     const companyReport = await report.generateByCompany(hotelId)
     const companyReportItem = companyReport.find(
-      (item) => item.company_name === "Global Glass Inc.",
+      (item) => item["Nome da empresa"] === "Global Glass Inc.",
     )
     expect(companyReportItem).toBeDefined()
-    expect(companyReportItem.cnpj).toBe("N/A")
-    expect(Number(companyReportItem.total_participants)).toBe(1)
+    expect(companyReportItem["CNPJ"]).toBe("N/A")
+    expect(Number(companyReportItem["Total de participantes"])).toBe(1)
   })
 
   test("should fail validation if passport number is missing for a foreign guest", async () => {

@@ -165,7 +165,9 @@ export default function RelatoriosPage() {
     const filename = `${reportLabel.toLowerCase().replace(/\s+/g, "_")}_${timestamp}`
 
     // Flatten data for export
-    const flattenedData = flattenDataForExport(reportData)
+    const dataToExport =
+      selectedReport === "by-age" ? reportData.ranges : reportData
+    const flattenedData = flattenDataForExport(dataToExport)
     exportToExcel(flattenedData, filename)
   }
 
@@ -173,8 +175,11 @@ export default function RelatoriosPage() {
     if (!reportData) return null
 
     if (selectedReport === "by-age") {
+      const ranges = reportData.ranges || []
+      const summary = reportData.summary || []
+
       // Prepare data for charts
-      const data = reportData.map((item) => ({
+      const data = ranges.map((item) => ({
         name: item.age_range,
         Total: parseInt(item.total),
         Masculino: parseInt(item.male_count),
@@ -193,15 +198,44 @@ export default function RelatoriosPage() {
       ].filter((item) => item.value > 0)
 
       const COLORS = ["#0088FE", "#FF8042"]
+      const CATEGORY_COLORS = [
+        "#10B981",
+        "#3B82F6",
+        "#F59E0B",
+        "#EF4444",
+        "#8B5CF6",
+      ]
+
+      const categoryData = [
+        {
+          name: "Adultos",
+          value: parseInt(
+            summary.find((item) => item.Descrição === "Adultos")?.Quantidade ||
+              0,
+          ),
+        },
+        ...summary
+          .filter(
+            (item) =>
+              item.Descrição !== "Homens" &&
+              item.Descrição !== "Mulheres" &&
+              item.Descrição !== "Total" &&
+              item.Descrição !== "Adultos",
+          )
+          .map((item) => ({
+            name: item.Descrição,
+            value: parseInt(item.Quantidade || 0),
+          })),
+      ].filter((item) => item.value > 0)
 
       return (
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="h-80 border rounded p-4">
+            <div className="h-96 border rounded p-4">
               <h3 className="text-lg font-semibold mb-4 text-center">
                 Distribuição por Idade e Sexo
               </h3>
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={280}>
                 <BarChart
                   data={data}
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -217,21 +251,19 @@ export default function RelatoriosPage() {
               </ResponsiveContainer>
             </div>
 
-            <div className="h-80 border rounded p-4">
+            <div className="h-96 border rounded p-4">
               <h3 className="text-lg font-semibold mb-4 text-center">
                 Distribuição por Sexo
               </h3>
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={280}>
                 <RechartsPieChart>
                   <Pie
                     data={genderData}
                     cx="50%"
-                    cy="50%"
+                    cy="45%"
                     labelLine={false}
-                    label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
-                    }
-                    outerRadius={80}
+                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                    outerRadius={70}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -243,45 +275,185 @@ export default function RelatoriosPage() {
                     ))}
                   </Pie>
                   <Tooltip />
+                  <Legend
+                    verticalAlign="bottom"
+                    align="center"
+                    iconType="circle"
+                  />
                 </RechartsPieChart>
               </ResponsiveContainer>
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="h-96 border rounded p-4">
+              <h3 className="text-lg font-semibold mb-4 text-center">
+                Total de adultos e crianças
+              </h3>
+              <ResponsiveContainer width="100%" height={280}>
+                <RechartsPieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="45%"
+                    labelLine={false}
+                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                    outerRadius={70}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend
+                    verticalAlign="bottom"
+                    align="center"
+                    iconType="circle"
+                  />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="hidden md:block"></div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="overflow-x-auto">
+              <h3 className="text-lg font-semibold mb-4">
+                Quantidade de participantes por sexo e idade
+              </h3>
+              <div className="max-h-96 overflow-y-auto border rounded">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-100 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
+                        Descrição
+                      </th>
+                      <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
+                        Quantidade
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summary.map((row, index) => (
+                      <tr key={index} className="border-t hover:bg-gray-50">
+                        <td className="px-4 py-2 whitespace-nowrap font-medium">
+                          {row.Descrição}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap font-bold">
+                          {row.Quantidade}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <h3 className="text-lg font-semibold mb-4">
+                Detalhamento por Faixa Etária
+              </h3>
+              <div className="max-h-96 overflow-y-auto border rounded">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-100 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
+                        Faixa Etária
+                      </th>
+                      <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
+                        Total
+                      </th>
+                      <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
+                        Masculino
+                      </th>
+                      <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
+                        Feminino
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ranges.map((row, index) => (
+                      <tr key={index} className="border-t hover:bg-gray-50">
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          {row.age_range}
+                        </td>
+                        <td className="px-4 py-2 font-bold whitespace-nowrap">
+                          {row.total}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          {row.male_count}
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          {row.female_count}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (selectedReport === "by-uf" && Array.isArray(reportData)) {
+      const data = reportData.map((item) => ({
+        state: item.state,
+        Participantes: parseInt(item.total_participants),
+      }))
+
+      return (
+        <div className="space-y-8">
+          <div className="h-96 border rounded p-4">
+            <h3 className="text-lg font-semibold mb-4 text-center">
+              Distribuição de Participantes por Estado (UF)
+            </h3>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart
+                layout="vertical"
+                data={data}
+                margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis dataKey="state" type="category" />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="Participantes" fill="#3B82F6" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
           <div className="overflow-x-auto">
-            <h3 className="text-lg font-semibold mb-4">Detalhamento</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Detalhamento por Estado
+            </h3>
             <div className="max-h-96 overflow-y-auto border rounded">
               <table className="w-full text-sm">
                 <thead className="bg-gray-100 sticky top-0">
                   <tr>
                     <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                      Faixa Etária
+                      Estado
                     </th>
                     <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                      Total
-                    </th>
-                    <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                      Masculino
-                    </th>
-                    <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                      Feminino
+                      Total de Participantes
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {reportData.map((row, index) => (
                     <tr key={index} className="border-t hover:bg-gray-50">
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        {row.age_range}
+                      <td className="px-4 py-2 whitespace-nowrap font-medium">
+                        {row.state}
                       </td>
-                      <td className="px-4 py-2 font-bold whitespace-nowrap">
-                        {row.total}
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        {row.male_count}
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        {row.female_count}
+                      <td className="px-4 py-2 whitespace-nowrap font-bold">
+                        {row.total_participants}
                       </td>
                     </tr>
                   ))}
@@ -293,7 +465,11 @@ export default function RelatoriosPage() {
       )
     }
 
-    if (Array.isArray(reportData) && reportData.length === 0) {
+    if (!Array.isArray(reportData)) {
+      return null
+    }
+
+    if (reportData.length === 0) {
       return <p className="text-gray-500">Nenhum dado encontrado</p>
     }
 
@@ -371,7 +547,14 @@ export default function RelatoriosPage() {
             <div className="flex flex-wrap gap-4">
               <div className="space-y-2 w-full md:w-72">
                 <Label htmlFor="hotel-filter">Selecione um hotel</Label>
-                <Select value={selectedHotel} onValueChange={setSelectedHotel}>
+                <Select
+                  value={selectedHotel}
+                  onValueChange={(val) => {
+                    setSelectedHotel(val)
+                    setReportData(null)
+                    setError("")
+                  }}
+                >
                   <SelectTrigger id="hotel-filter">
                     <SelectValue placeholder="Selecione um hotel" />
                   </SelectTrigger>
@@ -389,7 +572,11 @@ export default function RelatoriosPage() {
                 <Label htmlFor="report-type">Tipo de Relatório</Label>
                 <Select
                   value={selectedReport}
-                  onValueChange={setSelectedReport}
+                  onValueChange={(val) => {
+                    setSelectedReport(val)
+                    setReportData(null)
+                    setError("")
+                  }}
                 >
                   <SelectTrigger id="report-type">
                     <SelectValue placeholder="Selecione um relatório" />
