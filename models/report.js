@@ -512,6 +512,49 @@ async function generateByUF(hotelId) {
   )
 }
 
+async function generateCompaniesByActivityReport(hotelId) {
+  if (!hotelId) {
+    throw new Error("Hotel ID é obrigatório para gerar relatórios.")
+  }
+
+  const query = `
+    WITH unique_companies AS (
+      SELECT DISTINCT ON (c.id)
+        c.id,
+        COALESCE(NULLIF(TRIM(c.activity_sector), ''), 'Não Informado') as activity_sector,
+        c.corporate_name as name,
+        COALESCE(c.cnpj, 'N/A') as cnpj,
+        COALESCE(c.state, 'N/A') as state,
+        COALESCE(c.city, 'N/A') as city
+      FROM sales s
+      JOIN rooms r ON s.room_id = r.id
+      JOIN hotels h ON r.hotel_id = h.id
+      JOIN companies c ON s.company_id = c.id
+      WHERE s.status != 'cancelled' AND h.id = $1
+    )
+    SELECT 
+      activity_sector,
+      COUNT(id)::int as total_companies,
+      json_agg(
+        json_build_object(
+          'name', name,
+          'cnpj', cnpj,
+          'state', state,
+          'city', city
+        ) ORDER BY name
+      ) as companies
+    FROM unique_companies
+    GROUP BY activity_sector
+    ORDER BY total_companies DESC
+  `
+
+  const result = await database.query({
+    text: query,
+    values: [hotelId],
+  })
+  return result.rows
+}
+
 async function generateCheckoutQuestionsReport(hotelId) {
   if (!hotelId) {
     throw new Error("Hotel ID é obrigatório para gerar relatórios.")
@@ -577,6 +620,7 @@ const report = {
   generateByAge,
   generateByCountry,
   generateByUF,
+  generateCompaniesByActivityReport,
   generateCheckoutQuestionsReport,
   generateCompaniesDiscountReport,
 }

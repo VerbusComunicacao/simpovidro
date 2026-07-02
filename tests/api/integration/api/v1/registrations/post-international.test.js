@@ -157,6 +157,7 @@ describe("POST /api/v1/registrations (International)", () => {
             country: "United States",
             zip_code: "10001",
             permission: "A",
+            activity_sector: "Glass Manufacturing",
           },
           guests_data: [
             {
@@ -237,6 +238,16 @@ describe("POST /api/v1/registrations (International)", () => {
     expect(companyReportItem).toBeDefined()
     expect(companyReportItem["CNPJ"]).toBe("N/A")
     expect(Number(companyReportItem["Total de participantes"])).toBe(1)
+
+    const activityReport =
+      await report.generateCompaniesByActivityReport(hotelId)
+    expect(activityReport.length).toBeGreaterThanOrEqual(1)
+    const activityReportItem = activityReport.find(
+      (item) => item.activity_sector === "Glass Manufacturing",
+    )
+    expect(activityReportItem).toBeDefined()
+    expect(activityReportItem.total_companies).toBe(1)
+    expect(activityReportItem.companies[0].name).toBe("Global Glass Inc.")
   })
 
   test("should fail validation if passport number is missing for a foreign guest", async () => {

@@ -61,6 +61,11 @@ const reportTypes = [
     description: "Distribuição geográfica por estado brasileiro",
   },
   {
+    value: "companies-by-activity",
+    label: "Empresas por área de atuação",
+    description: "Distribuição de empresas por área de atuação",
+  },
+  {
     value: "companies-discount",
     label: "Empresas com Desconto",
     description: "Lista empresas (inscritas ou não) com desconto",
@@ -454,6 +459,72 @@ export default function RelatoriosPage() {
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap font-bold">
                         {row.total_participants}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (
+      selectedReport === "companies-by-activity" &&
+      Array.isArray(reportData)
+    ) {
+      const data = reportData.map((item) => ({
+        activity_sector: item.activity_sector,
+        Empresas: parseInt(item.total_companies),
+      }))
+
+      return (
+        <div className="space-y-8">
+          <div className="h-96 border rounded p-4">
+            <h3 className="text-lg font-semibold mb-4 text-center">
+              Empresas por Área de Atuação
+            </h3>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart
+                layout="vertical"
+                data={data}
+                margin={{ top: 20, right: 30, left: 60, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis dataKey="activity_sector" type="category" width={120} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="Empresas" fill="#10B981" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="overflow-x-auto">
+            <h3 className="text-lg font-semibold mb-4">
+              Detalhamento por Área de Atuação
+            </h3>
+            <div className="max-h-96 overflow-y-auto border rounded">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-100 sticky top-0">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
+                      Área de Atuação
+                    </th>
+                    <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
+                      Total de Empresas
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reportData.map((row, index) => (
+                    <tr key={index} className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-2 whitespace-nowrap font-medium">
+                        {row.activity_sector}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap font-bold">
+                        {row.total_companies}
                       </td>
                     </tr>
                   ))}
