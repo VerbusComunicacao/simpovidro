@@ -1,4 +1,5 @@
 import database from "infra/database.js"
+import { translateText } from "lib/registration-helpers.js"
 
 function formatCNPJ(cnpj) {
   if (!cnpj) return null
@@ -162,10 +163,16 @@ async function generateByCompany(hotelId) {
 
   const query = `
     SELECT 
-      COALESCE(c.corporate_name, 'Sem Empresa') as company_name,
-      COALESCE(c.cnpj, 'N/A') as cnpj,
-      COALESCE(c.state, 'N/A') as state,
-      COUNT(DISTINCT g.id) as total_participants,
+      COALESCE(c.corporate_name, 'Sem Empresa') as "Nome da empresa",
+      COALESCE(c.cnpj, 'N/A') as "CNPJ",
+      COALESCE(c.state, 'N/A') as "Estado",
+      CASE 
+        WHEN c.id IS NULL THEN 'Não associada'
+        WHEN d.name ILIKE 'Associada' OR d.name ILIKE 'Associado' OR d.name ILIKE '%abravidro%' OR COALESCE(c.custom_discount_percentage, d.value, 0) = 20.00 THEN 'Associada Abravidro (20% desconto)'
+        WHEN d.name ILIKE '%regional%' OR COALESCE(c.custom_discount_percentage, d.value, 0) = 15.00 THEN 'Associada Regional (15% de desconto)'
+        ELSE 'Não associada'
+      END as "Tipo de Associação",
+      COUNT(DISTINCT g.id) as "Total de participantes",
       json_agg(
         json_build_object(
           'name', g.name,
@@ -180,9 +187,10 @@ async function generateByCompany(hotelId) {
     JOIN rooms r ON s.room_id = r.id
     JOIN hotels h ON r.hotel_id = h.id
     LEFT JOIN companies c ON s.company_id = c.id
+    LEFT JOIN discounts d ON c.discount_id = d.id
     WHERE s.status != 'cancelled' AND h.id = $1
-    GROUP BY c.id, c.corporate_name, c.cnpj, c.state
-    ORDER BY total_participants DESC
+    GROUP BY c.id, c.corporate_name, c.cnpj, c.state, c.custom_discount_percentage, d.id, d.name, d.value
+    ORDER BY "Total de participantes" DESC
   `
 
   const result = await database.query({
@@ -205,13 +213,13 @@ async function generateByAge(hotelId) {
         g.phone,
         g.gender,
         g.birth_date,
-        EXTRACT(YEAR FROM AGE(g.birth_date)) as age,
+        EXTRACT(YEAR FROM AGE(COALESCE(h.check_in_date, NOW()), g.birth_date)) as age,
         CASE 
-          WHEN EXTRACT(YEAR FROM AGE(g.birth_date)) < 18 THEN 'Menor de 18'
-          WHEN EXTRACT(YEAR FROM AGE(g.birth_date)) BETWEEN 18 AND 25 THEN '18-25'
-          WHEN EXTRACT(YEAR FROM AGE(g.birth_date)) BETWEEN 26 AND 35 THEN '26-35'
-          WHEN EXTRACT(YEAR FROM AGE(g.birth_date)) BETWEEN 36 AND 50 THEN '36-50'
-          WHEN EXTRACT(YEAR FROM AGE(g.birth_date)) > 50 THEN '51+'
+          WHEN EXTRACT(YEAR FROM AGE(COALESCE(h.check_in_date, NOW()), g.birth_date)) < 18 THEN 'Menor de 18'
+          WHEN EXTRACT(YEAR FROM AGE(COALESCE(h.check_in_date, NOW()), g.birth_date)) BETWEEN 18 AND 25 THEN '18-25'
+          WHEN EXTRACT(YEAR FROM AGE(COALESCE(h.check_in_date, NOW()), g.birth_date)) BETWEEN 26 AND 35 THEN '26-35'
+          WHEN EXTRACT(YEAR FROM AGE(COALESCE(h.check_in_date, NOW()), g.birth_date)) BETWEEN 36 AND 50 THEN '36-50'
+          WHEN EXTRACT(YEAR FROM AGE(COALESCE(h.check_in_date, NOW()), g.birth_date)) > 50 THEN '51+'
           ELSE 'Idade não informada'
         END as age_range
       FROM guests g
@@ -252,7 +260,104 @@ async function generateByAge(hotelId) {
     text: query,
     values: [hotelId],
   })
-  return result.rows
+
+  // Calculate the custom summary
+  const policiesResult = await database.query({
+    text: `
+      SELECT max_age, description 
+      FROM price_policies 
+      WHERE hotel_id = $1 
+      ORDER BY max_age ASC
+    `,
+    values: [hotelId],
+  })
+  const policies = policiesResult.rows
+
+  const guestsResult = await database.query({
+    text: `
+      SELECT 
+        g.gender,
+        g.birth_date,
+        CASE 
+          WHEN g.birth_date IS NULL THEN NULL
+          ELSE EXTRACT(YEAR FROM AGE(COALESCE(h.check_in_date, NOW()), g.birth_date))
+        END as age
+      FROM guests g
+      JOIN sales_guests sg ON g.id = sg.guest_id
+      JOIN sales s ON sg.sale_id = s.id
+      JOIN rooms r ON s.room_id = r.id
+      JOIN hotels h ON r.hotel_id = h.id
+      WHERE s.status != 'cancelled' AND h.id = $1
+    `,
+    values: [hotelId],
+  })
+  const guests = guestsResult.rows
+
+  let menCount = 0
+  let womenCount = 0
+  let totalCount = 0
+  let adultCount = 0
+
+  const childCounts = {}
+  policies.forEach((p) => {
+    const desc = translateText(p.description, false)
+    childCounts[desc] = 0
+  })
+
+  guests.forEach((g) => {
+    totalCount++
+
+    // Gender
+    const gender = g.gender ? g.gender.trim().toLowerCase() : ""
+    if (gender === "masculino" || gender === "m" || gender === "male") {
+      menCount++
+    } else if (gender === "feminino" || gender === "f" || gender === "female") {
+      womenCount++
+    }
+
+    // Age / Adult vs Child
+    if (g.birth_date === null) {
+      adultCount++
+    } else {
+      const age = parseInt(g.age)
+      if (age >= 12) {
+        adultCount++
+      } else {
+        const matchingPolicy = policies.find((p) => age <= p.max_age)
+        if (matchingPolicy) {
+          const desc = translateText(matchingPolicy.description, false)
+          childCounts[desc] = (childCounts[desc] || 0) + 1
+        } else {
+          if (policies.length > 0) {
+            const lastPolicy = policies[policies.length - 1]
+            const desc = translateText(lastPolicy.description, false)
+            childCounts[desc] = (childCounts[desc] || 0) + 1
+          } else {
+            childCounts["Crianças"] = (childCounts["Crianças"] || 0) + 1
+          }
+        }
+      }
+    }
+  })
+
+  const summary = [
+    { Descrição: "Homens", Quantidade: menCount },
+    { Descrição: "Mulheres", Quantidade: womenCount },
+    { Descrição: "Total", Quantidade: totalCount },
+    { Descrição: "Adultos", Quantidade: adultCount },
+  ]
+
+  Object.entries(childCounts).forEach(([desc, count]) => {
+    summary.push({
+      Descrição: desc,
+      Quantidade: count,
+    })
+  })
+
+  return {
+    ranges: result.rows,
+    summary,
+  }
 }
 
 async function generateByCountry(hotelId) {
@@ -262,8 +367,8 @@ async function generateByCountry(hotelId) {
 
   const query = `
     SELECT 
-      COALESCE(g.country, 'Não Informado') as country,
-      COUNT(DISTINCT g.id) as total_participants,
+      COALESCE(g.country, 'Não Informado') as "País",
+      COUNT(DISTINCT g.id) as "Total de participantes",
       json_agg(
         json_build_object(
           'name', g.name,
@@ -280,7 +385,7 @@ async function generateByCountry(hotelId) {
     JOIN hotels h ON r.hotel_id = h.id
     WHERE s.status != 'cancelled' AND h.id = $1
     GROUP BY g.country
-    ORDER BY total_participants DESC
+    ORDER BY "Total de participantes" DESC
   `
 
   const result = await database.query({
@@ -290,6 +395,65 @@ async function generateByCountry(hotelId) {
   return result.rows
 }
 
+const stateMap = {
+  AC: "Acre",
+  AL: "Alagoas",
+  AP: "Amapá",
+  AM: "Amazonas",
+  BA: "Bahia",
+  CE: "Ceará",
+  DF: "Distrito Federal",
+  ES: "Espírito Santo",
+  GO: "Goiás",
+  MA: "Maranhão",
+  MT: "Mato Grosso",
+  MS: "Mato Grosso do Sul",
+  MG: "Minas Gerais",
+  PA: "Pará",
+  PB: "Paraíba",
+  PR: "Paraná",
+  PE: "Pernambuco",
+  PI: "Piauí",
+  RJ: "Rio de Janeiro",
+  RN: "Rio Grande do Norte",
+  RS: "Rio Grande do Sul",
+  RO: "Rondônia",
+  RR: "Roraima",
+  SC: "Santa Catarina",
+  SP: "São Paulo",
+  SE: "Sergipe",
+  TO: "Tocantins",
+}
+
+function getFullStateName(stateStr) {
+  if (!stateStr || stateStr.trim() === "") {
+    return "Não Informado"
+  }
+  const clean = stateStr
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+
+  if (stateMap[clean]) {
+    return stateMap[clean]
+  }
+
+  const foundEntry = Object.entries(stateMap).find(([key, val]) => {
+    const normVal = val
+      .toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+    return normVal === clean
+  })
+
+  if (foundEntry) {
+    return foundEntry[1]
+  }
+
+  return "Não Informado"
+}
+
 async function generateByUF(hotelId) {
   if (!hotelId) {
     throw new Error("Hotel ID é obrigatório para gerar relatórios.")
@@ -297,31 +461,55 @@ async function generateByUF(hotelId) {
 
   const query = `
     SELECT 
-      COALESCE(g.state, 'N/A') as state,
-      COUNT(DISTINCT g.id) as total_participants,
-      json_agg(
-        json_build_object(
-          'name', g.name,
-          'email', g.email,
-          'phone', g.phone,
-          'city', g.city
-        ) ORDER BY g.name
-      ) as participants
+      COALESCE(c.state, '') as raw_state,
+      g.name,
+      g.email,
+      g.phone,
+      COALESCE(c.city, g.city, '') as city
     FROM guests g
     JOIN sales_guests sg ON g.id = sg.guest_id
     JOIN sales s ON sg.sale_id = s.id
     JOIN rooms r ON s.room_id = r.id
     JOIN hotels h ON r.hotel_id = h.id
+    LEFT JOIN companies c ON s.company_id = c.id
     WHERE s.status != 'cancelled' AND h.id = $1
-    GROUP BY g.state
-    ORDER BY total_participants DESC
   `
 
   const result = await database.query({
     text: query,
     values: [hotelId],
   })
-  return result.rows
+
+  const stateGroups = {}
+
+  result.rows.forEach((row) => {
+    const fullState = getFullStateName(row.raw_state)
+    if (!stateGroups[fullState]) {
+      stateGroups[fullState] = {
+        state: fullState,
+        total_participants: 0,
+        participants: [],
+      }
+    }
+
+    stateGroups[fullState].total_participants++
+    stateGroups[fullState].participants.push({
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+      city: row.city,
+    })
+  })
+
+  // Sort participants inside each state
+  Object.values(stateGroups).forEach((group) => {
+    group.participants.sort((a, b) => a.name.localeCompare(b.name))
+  })
+
+  // Return sorted states by total_participants DESC
+  return Object.values(stateGroups).sort(
+    (a, b) => b.total_participants - a.total_participants,
+  )
 }
 
 async function generateCheckoutQuestionsReport(hotelId) {
