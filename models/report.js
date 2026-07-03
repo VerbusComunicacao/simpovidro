@@ -679,7 +679,11 @@ async function generateCheckoutQuestionsReport(hotelId) {
     text: query,
     values: [hotelId],
   })
-  return result.rows
+
+  return result.rows.map((row) => ({
+    ...row,
+    Pergunta: translateText(row.Pergunta, false),
+  }))
 }
 
 async function generateCompaniesDiscountReport(hotelId) {
