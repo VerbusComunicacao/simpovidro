@@ -560,35 +560,27 @@ async function generateByAccommodationReport(hotelId) {
     throw new Error("Hotel ID é obrigatório para gerar relatórios.")
   }
 
-  const query = `
+  // 1. Fetch available rooms count per name and category
+  const roomsQuery = `
     SELECT 
-      s.id as sale_id,
-      s.final_amount,
-      rt.name as room_type_name,
+      r.id as room_id,
+      r.name as room_name,
       rc.name as room_category_name,
-      json_agg(g.id) as guest_ids
-    FROM sales s
-    JOIN rooms r ON s.room_id = r.id
+      r.available_rooms
+    FROM rooms r
     JOIN "room-categories" rc ON r.room_category_id = rc.id
-    JOIN "room-types" rt ON r.room_type_id = rt.id
-    JOIN hotels h ON r.hotel_id = h.id
-    JOIN sales_guests sg ON s.id = sg.sale_id
-    JOIN guests g ON sg.guest_id = g.id
-    WHERE s.status != 'cancelled' AND h.id = $1
-    GROUP BY s.id, s.final_amount, rt.name, rc.name
+    WHERE r.hotel_id = $1
   `
-
-  const result = await database.query({
-    text: query,
+  const roomsResult = await database.query({
+    text: roomsQuery,
     values: [hotelId],
   })
 
   const groups = {}
 
-  result.rows.forEach((row) => {
-    const accommodationLabel = row.room_type_name ? row.room_type_name.trim().toUpperCase() : "INDIVIDUAL"
-    const categoryLabel = row.room_category_name ? row.room_category_name.trim().toUpperCase() : "STANDARD"
-
+  roomsResult.rows.forEach((room) => {
+    const accommodationLabel = room.room_name ? room.room_name.trim().toUpperCase() : "INDIVIDUAL"
+    const categoryLabel = room.room_category_name ? room.room_category_name.trim().toUpperCase() : "STANDARD"
     const groupKey = `${accommodationLabel}||${categoryLabel}`
 
     if (!groups[groupKey]) {
@@ -596,6 +588,47 @@ async function generateByAccommodationReport(hotelId) {
         accommodation: accommodationLabel,
         category: categoryLabel,
         apartment_count: 0,
+        available_rooms: 0,
+        pax_count: 0,
+        total_value: 0,
+      }
+    }
+    groups[groupKey].available_rooms += parseInt(room.available_rooms || 0)
+  })
+
+  // 2. Fetch bookings/sales for active rooms
+  const salesQuery = `
+    SELECT 
+      s.id as sale_id,
+      s.final_amount,
+      r.name as room_name,
+      rc.name as room_category_name,
+      json_agg(g.id) as guest_ids
+    FROM sales s
+    JOIN rooms r ON s.room_id = r.id
+    JOIN "room-categories" rc ON r.room_category_id = rc.id
+    JOIN hotels h ON r.hotel_id = h.id
+    JOIN sales_guests sg ON s.id = sg.sale_id
+    JOIN guests g ON sg.guest_id = g.id
+    WHERE s.status != 'cancelled' AND h.id = $1
+    GROUP BY s.id, s.final_amount, r.name, rc.name
+  `
+  const salesResult = await database.query({
+    text: salesQuery,
+    values: [hotelId],
+  })
+
+  salesResult.rows.forEach((row) => {
+    const accommodationLabel = row.room_name ? row.room_name.trim().toUpperCase() : "INDIVIDUAL"
+    const categoryLabel = row.room_category_name ? row.room_category_name.trim().toUpperCase() : "STANDARD"
+    const groupKey = `${accommodationLabel}||${categoryLabel}`
+
+    if (!groups[groupKey]) {
+      groups[groupKey] = {
+        accommodation: accommodationLabel,
+        category: categoryLabel,
+        apartment_count: 0,
+        available_rooms: 0,
         pax_count: 0,
         total_value: 0,
       }

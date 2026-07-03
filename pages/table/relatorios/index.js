@@ -183,6 +183,7 @@ export default function RelatoriosPage() {
         "ACOMODAÇÃO": item.accommodation,
         "CATEGORIA": item.category,
         "QTD. APTO.": item.apartment_count,
+        "QTD. DISP.": item.available_rooms,
         "Nº PAX": item.pax_count,
         "VALOR TOTAL": item.total_value,
       }))
@@ -489,6 +490,7 @@ export default function RelatoriosPage() {
 
     if (selectedReport === "by-accommodation" && Array.isArray(reportData)) {
       const totalApto = reportData.reduce((sum, item) => sum + parseInt(item.apartment_count || 0), 0)
+      const totalAvailable = reportData.reduce((sum, item) => sum + parseInt(item.available_rooms || 0), 0)
       const totalPax = reportData.reduce((sum, item) => sum + parseInt(item.pax_count || 0), 0)
       const totalValue = reportData.reduce((sum, item) => sum + parseFloat(item.total_value || 0), 0)
 
@@ -512,6 +514,9 @@ export default function RelatoriosPage() {
                       Qtd. Apto.
                     </th>
                     <th className="px-4 py-3 text-right font-bold text-gray-900 uppercase tracking-wider">
+                      Qtd. Disp.
+                    </th>
+                    <th className="px-4 py-3 text-right font-bold text-gray-900 uppercase tracking-wider">
                       Nº Pax
                     </th>
                     <th className="px-4 py-3 text-right font-bold text-gray-900 uppercase tracking-wider">
@@ -530,6 +535,9 @@ export default function RelatoriosPage() {
                       </td>
                       <td className="px-4 py-2.5 text-right font-bold text-gray-700">
                         {row.apartment_count}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-bold text-gray-700">
+                        {row.available_rooms}
                       </td>
                       <td className="px-4 py-2.5 text-right font-bold text-gray-700">
                         {row.pax_count}
@@ -551,6 +559,9 @@ export default function RelatoriosPage() {
                     <td className="px-4 py-3"></td>
                     <td className="px-4 py-3 text-right text-gray-900 font-black">
                       {totalApto}
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-900 font-black">
+                      {totalAvailable}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-900 font-black">
                       {totalPax}

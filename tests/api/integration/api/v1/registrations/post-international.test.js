@@ -255,6 +255,7 @@ describe("POST /api/v1/registrations (International)", () => {
     expect(accomItem.accommodation).toBeDefined()
     expect(accomItem.category).toBeDefined()
     expect(accomItem.apartment_count).toBeGreaterThanOrEqual(1)
+    expect(accomItem.available_rooms).toBeDefined()
     expect(accomItem.pax_count).toBeGreaterThanOrEqual(1)
     expect(Number(accomItem.total_value)).toBeGreaterThan(0)
   })
