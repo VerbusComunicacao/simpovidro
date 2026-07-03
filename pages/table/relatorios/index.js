@@ -63,7 +63,8 @@ const reportTypes = [
   {
     value: "by-accommodation",
     label: "Participantes por tipo de acomodação e totais",
-    description: "Distribuição de apartamentos, hóspedes e valores por tipo de acomodação",
+    description:
+      "Distribuição de apartamentos, hóspedes e valores por tipo de acomodação",
   },
   {
     value: "companies-by-activity",
@@ -180,8 +181,8 @@ export default function RelatoriosPage() {
       dataToExport = reportData.ranges
     } else if (selectedReport === "by-accommodation") {
       dataToExport = reportData.map((item) => ({
-        "ACOMODAÇÃO": item.accommodation,
-        "CATEGORIA": item.category,
+        ACOMODAÇÃO: item.accommodation,
+        CATEGORIA: item.category,
         "QTD. APTO.": item.apartment_count,
         "QTD. DISP.": item.available_rooms,
         "Nº PAX": item.pax_count,
@@ -489,10 +490,22 @@ export default function RelatoriosPage() {
     }
 
     if (selectedReport === "by-accommodation" && Array.isArray(reportData)) {
-      const totalApto = reportData.reduce((sum, item) => sum + parseInt(item.apartment_count || 0), 0)
-      const totalAvailable = reportData.reduce((sum, item) => sum + parseInt(item.available_rooms || 0), 0)
-      const totalPax = reportData.reduce((sum, item) => sum + parseInt(item.pax_count || 0), 0)
-      const totalValue = reportData.reduce((sum, item) => sum + parseFloat(item.total_value || 0), 0)
+      const totalApto = reportData.reduce(
+        (sum, item) => sum + parseInt(item.apartment_count || 0),
+        0,
+      )
+      const totalAvailable = reportData.reduce(
+        (sum, item) => sum + parseInt(item.available_rooms || 0),
+        0,
+      )
+      const totalPax = reportData.reduce(
+        (sum, item) => sum + parseInt(item.pax_count || 0),
+        0,
+      )
+      const totalValue = reportData.reduce(
+        (sum, item) => sum + parseFloat(item.total_value || 0),
+        0,
+      )
 
       return (
         <div className="space-y-8">
@@ -543,10 +556,13 @@ export default function RelatoriosPage() {
                         {row.pax_count}
                       </td>
                       <td className="px-4 py-2.5 text-right font-bold text-gray-900">
-                        {parseFloat(row.total_value || 0).toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        })}
+                        {parseFloat(row.total_value || 0).toLocaleString(
+                          "pt-BR",
+                          {
+                            style: "currency",
+                            currency: "BRL",
+                          },
+                        )}
                       </td>
                     </tr>
                   ))}

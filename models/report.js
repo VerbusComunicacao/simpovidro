@@ -103,7 +103,7 @@ async function generateCompleteReport(hotelId) {
   return result.rows.map((row) => {
     return {
       "Data de Registro": row.data_registro || "",
-      "Nome do quarto": row.nome_quarto || "",
+      "Nome do quarto": translateText(row.nome_quarto, false) || "",
       "Tipo de acomodação": row.tipo_acomodacao || "",
       "AÉREO CARRO": "",
       Diretoria: "",
@@ -579,8 +579,12 @@ async function generateByAccommodationReport(hotelId) {
   const groups = {}
 
   roomsResult.rows.forEach((room) => {
-    const accommodationLabel = room.room_name ? room.room_name.trim().toUpperCase() : "INDIVIDUAL"
-    const categoryLabel = room.room_category_name ? room.room_category_name.trim().toUpperCase() : "STANDARD"
+    const accommodationLabel = room.room_name
+      ? translateText(room.room_name, false).trim().toUpperCase()
+      : "INDIVIDUAL"
+    const categoryLabel = room.room_category_name
+      ? translateText(room.room_category_name, false).trim().toUpperCase()
+      : "STANDARD"
     const groupKey = `${accommodationLabel}||${categoryLabel}`
 
     if (!groups[groupKey]) {
@@ -619,8 +623,12 @@ async function generateByAccommodationReport(hotelId) {
   })
 
   salesResult.rows.forEach((row) => {
-    const accommodationLabel = row.room_name ? row.room_name.trim().toUpperCase() : "INDIVIDUAL"
-    const categoryLabel = row.room_category_name ? row.room_category_name.trim().toUpperCase() : "STANDARD"
+    const accommodationLabel = row.room_name
+      ? translateText(row.room_name, false).trim().toUpperCase()
+      : "INDIVIDUAL"
+    const categoryLabel = row.room_category_name
+      ? translateText(row.room_category_name, false).trim().toUpperCase()
+      : "STANDARD"
     const groupKey = `${accommodationLabel}||${categoryLabel}`
 
     if (!groups[groupKey]) {
@@ -635,7 +643,7 @@ async function generateByAccommodationReport(hotelId) {
     }
 
     groups[groupKey].apartment_count++
-    groups[groupKey].pax_count += (row.guest_ids ? row.guest_ids.length : 0)
+    groups[groupKey].pax_count += row.guest_ids ? row.guest_ids.length : 0
     groups[groupKey].total_value += parseFloat(row.final_amount || 0)
   })
 

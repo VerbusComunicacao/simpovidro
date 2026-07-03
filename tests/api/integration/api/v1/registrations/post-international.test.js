@@ -249,7 +249,8 @@ describe("POST /api/v1/registrations (International)", () => {
     expect(activityReportItem.total_companies).toBe(1)
     expect(activityReportItem.companies[0].name).toBe("Global Glass Inc.")
 
-    const accommodationReport = await report.generateByAccommodationReport(hotelId)
+    const accommodationReport =
+      await report.generateByAccommodationReport(hotelId)
     expect(accommodationReport.length).toBeGreaterThanOrEqual(1)
     const accomItem = accommodationReport[0]
     expect(accomItem.accommodation).toBeDefined()
