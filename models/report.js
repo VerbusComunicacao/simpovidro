@@ -103,7 +103,7 @@ async function generateCompleteReport(hotelId) {
   return result.rows.map((row) => {
     return {
       "Data de Registro": row.data_registro || "",
-      "Nome do quarto": row.nome_quarto || "",
+      "Nome do quarto": translateText(row.nome_quarto, false) || "",
       "Tipo de acomodação": row.tipo_acomodacao || "",
       "AÉREO CARRO": "",
       Diretoria: "",
@@ -555,6 +555,105 @@ async function generateCompaniesByActivityReport(hotelId) {
   return result.rows
 }
 
+async function generateByAccommodationReport(hotelId) {
+  if (!hotelId) {
+    throw new Error("Hotel ID é obrigatório para gerar relatórios.")
+  }
+
+  // 1. Fetch available rooms count per name and category
+  const roomsQuery = `
+    SELECT 
+      r.id as room_id,
+      r.name as room_name,
+      rc.name as room_category_name,
+      r.available_rooms
+    FROM rooms r
+    JOIN "room-categories" rc ON r.room_category_id = rc.id
+    WHERE r.hotel_id = $1
+  `
+  const roomsResult = await database.query({
+    text: roomsQuery,
+    values: [hotelId],
+  })
+
+  const groups = {}
+
+  roomsResult.rows.forEach((room) => {
+    const accommodationLabel = room.room_name
+      ? translateText(room.room_name, false).trim().toUpperCase()
+      : "INDIVIDUAL"
+    const categoryLabel = room.room_category_name
+      ? translateText(room.room_category_name, false).trim().toUpperCase()
+      : "STANDARD"
+    const groupKey = `${accommodationLabel}||${categoryLabel}`
+
+    if (!groups[groupKey]) {
+      groups[groupKey] = {
+        accommodation: accommodationLabel,
+        category: categoryLabel,
+        apartment_count: 0,
+        available_rooms: 0,
+        pax_count: 0,
+        total_value: 0,
+      }
+    }
+    groups[groupKey].available_rooms += parseInt(room.available_rooms || 0)
+  })
+
+  // 2. Fetch bookings/sales for active rooms
+  const salesQuery = `
+    SELECT 
+      s.id as sale_id,
+      s.final_amount,
+      r.name as room_name,
+      rc.name as room_category_name,
+      json_agg(g.id) as guest_ids
+    FROM sales s
+    JOIN rooms r ON s.room_id = r.id
+    JOIN "room-categories" rc ON r.room_category_id = rc.id
+    JOIN hotels h ON r.hotel_id = h.id
+    JOIN sales_guests sg ON s.id = sg.sale_id
+    JOIN guests g ON sg.guest_id = g.id
+    WHERE s.status != 'cancelled' AND h.id = $1
+    GROUP BY s.id, s.final_amount, r.name, rc.name
+  `
+  const salesResult = await database.query({
+    text: salesQuery,
+    values: [hotelId],
+  })
+
+  salesResult.rows.forEach((row) => {
+    const accommodationLabel = row.room_name
+      ? translateText(row.room_name, false).trim().toUpperCase()
+      : "INDIVIDUAL"
+    const categoryLabel = row.room_category_name
+      ? translateText(row.room_category_name, false).trim().toUpperCase()
+      : "STANDARD"
+    const groupKey = `${accommodationLabel}||${categoryLabel}`
+
+    if (!groups[groupKey]) {
+      groups[groupKey] = {
+        accommodation: accommodationLabel,
+        category: categoryLabel,
+        apartment_count: 0,
+        available_rooms: 0,
+        pax_count: 0,
+        total_value: 0,
+      }
+    }
+
+    groups[groupKey].apartment_count++
+    groups[groupKey].pax_count += row.guest_ids ? row.guest_ids.length : 0
+    groups[groupKey].total_value += parseFloat(row.final_amount || 0)
+  })
+
+  return Object.values(groups).sort((a, b) => {
+    const catCompare = a.category.localeCompare(b.category)
+    if (catCompare !== 0) return catCompare
+    return a.accommodation.localeCompare(b.accommodation)
+  })
+}
+
 async function generateCheckoutQuestionsReport(hotelId) {
   if (!hotelId) {
     throw new Error("Hotel ID é obrigatório para gerar relatórios.")
@@ -580,7 +679,11 @@ async function generateCheckoutQuestionsReport(hotelId) {
     text: query,
     values: [hotelId],
   })
-  return result.rows
+
+  return result.rows.map((row) => ({
+    ...row,
+    Pergunta: translateText(row.Pergunta, false),
+  }))
 }
 
 async function generateCompaniesDiscountReport(hotelId) {
@@ -621,6 +724,7 @@ const report = {
   generateByCountry,
   generateByUF,
   generateCompaniesByActivityReport,
+  generateByAccommodationReport,
   generateCheckoutQuestionsReport,
   generateCompaniesDiscountReport,
 }

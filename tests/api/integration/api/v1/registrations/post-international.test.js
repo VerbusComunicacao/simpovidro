@@ -248,6 +248,17 @@ describe("POST /api/v1/registrations (International)", () => {
     expect(activityReportItem).toBeDefined()
     expect(activityReportItem.total_companies).toBe(1)
     expect(activityReportItem.companies[0].name).toBe("Global Glass Inc.")
+
+    const accommodationReport =
+      await report.generateByAccommodationReport(hotelId)
+    expect(accommodationReport.length).toBeGreaterThanOrEqual(1)
+    const accomItem = accommodationReport[0]
+    expect(accomItem.accommodation).toBeDefined()
+    expect(accomItem.category).toBeDefined()
+    expect(accomItem.apartment_count).toBeGreaterThanOrEqual(1)
+    expect(accomItem.available_rooms).toBeDefined()
+    expect(accomItem.pax_count).toBeGreaterThanOrEqual(1)
+    expect(Number(accomItem.total_value)).toBeGreaterThan(0)
   })
 
   test("should fail validation if passport number is missing for a foreign guest", async () => {

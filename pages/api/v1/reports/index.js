@@ -53,6 +53,9 @@ async function getHandler(request, response) {
     case "by-uf":
       reportData = await report.generateByUF(hotel_id)
       break
+    case "by-accommodation":
+      reportData = await report.generateByAccommodationReport(hotel_id)
+      break
     case "companies-by-activity":
       reportData = await report.generateCompaniesByActivityReport(hotel_id)
       break
