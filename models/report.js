@@ -555,6 +555,64 @@ async function generateCompaniesByActivityReport(hotelId) {
   return result.rows
 }
 
+async function generateByAccommodationReport(hotelId) {
+  if (!hotelId) {
+    throw new Error("Hotel ID é obrigatório para gerar relatórios.")
+  }
+
+  const query = `
+    SELECT 
+      s.id as sale_id,
+      s.final_amount,
+      rt.name as room_type_name,
+      rc.name as room_category_name,
+      json_agg(g.id) as guest_ids
+    FROM sales s
+    JOIN rooms r ON s.room_id = r.id
+    JOIN "room-categories" rc ON r.room_category_id = rc.id
+    JOIN "room-types" rt ON r.room_type_id = rt.id
+    JOIN hotels h ON r.hotel_id = h.id
+    JOIN sales_guests sg ON s.id = sg.sale_id
+    JOIN guests g ON sg.guest_id = g.id
+    WHERE s.status != 'cancelled' AND h.id = $1
+    GROUP BY s.id, s.final_amount, rt.name, rc.name
+  `
+
+  const result = await database.query({
+    text: query,
+    values: [hotelId],
+  })
+
+  const groups = {}
+
+  result.rows.forEach((row) => {
+    const accommodationLabel = row.room_type_name ? row.room_type_name.trim().toUpperCase() : "INDIVIDUAL"
+    const categoryLabel = row.room_category_name ? row.room_category_name.trim().toUpperCase() : "STANDARD"
+
+    const groupKey = `${accommodationLabel}||${categoryLabel}`
+
+    if (!groups[groupKey]) {
+      groups[groupKey] = {
+        accommodation: accommodationLabel,
+        category: categoryLabel,
+        apartment_count: 0,
+        pax_count: 0,
+        total_value: 0,
+      }
+    }
+
+    groups[groupKey].apartment_count++
+    groups[groupKey].pax_count += (row.guest_ids ? row.guest_ids.length : 0)
+    groups[groupKey].total_value += parseFloat(row.final_amount || 0)
+  })
+
+  return Object.values(groups).sort((a, b) => {
+    const catCompare = a.category.localeCompare(b.category)
+    if (catCompare !== 0) return catCompare
+    return a.accommodation.localeCompare(b.accommodation)
+  })
+}
+
 async function generateCheckoutQuestionsReport(hotelId) {
   if (!hotelId) {
     throw new Error("Hotel ID é obrigatório para gerar relatórios.")
@@ -621,6 +679,7 @@ const report = {
   generateByCountry,
   generateByUF,
   generateCompaniesByActivityReport,
+  generateByAccommodationReport,
   generateCheckoutQuestionsReport,
   generateCompaniesDiscountReport,
 }

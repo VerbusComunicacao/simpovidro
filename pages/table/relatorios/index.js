@@ -61,6 +61,11 @@ const reportTypes = [
     description: "Distribuição geográfica por estado brasileiro",
   },
   {
+    value: "by-accommodation",
+    label: "Participantes por tipo de acomodação e totais",
+    description: "Distribuição de apartamentos, hóspedes e valores por tipo de acomodação",
+  },
+  {
     value: "companies-by-activity",
     label: "Empresas por área de atuação",
     description: "Distribuição de empresas por área de atuação",
@@ -170,8 +175,20 @@ export default function RelatoriosPage() {
     const filename = `${reportLabel.toLowerCase().replace(/\s+/g, "_")}_${timestamp}`
 
     // Flatten data for export
-    const dataToExport =
-      selectedReport === "by-age" ? reportData.ranges : reportData
+    let dataToExport
+    if (selectedReport === "by-age") {
+      dataToExport = reportData.ranges
+    } else if (selectedReport === "by-accommodation") {
+      dataToExport = reportData.map((item) => ({
+        "ACOMODAÇÃO": item.accommodation,
+        "CATEGORIA": item.category,
+        "QTD. APTO.": item.apartment_count,
+        "Nº PAX": item.pax_count,
+        "VALOR TOTAL": item.total_value,
+      }))
+    } else {
+      dataToExport = reportData
+    }
     const flattenedData = flattenDataForExport(dataToExport)
     exportToExcel(flattenedData, filename)
   }
@@ -463,6 +480,89 @@ export default function RelatoriosPage() {
                     </tr>
                   ))}
                 </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (selectedReport === "by-accommodation" && Array.isArray(reportData)) {
+      const totalApto = reportData.reduce((sum, item) => sum + parseInt(item.apartment_count || 0), 0)
+      const totalPax = reportData.reduce((sum, item) => sum + parseInt(item.pax_count || 0), 0)
+      const totalValue = reportData.reduce((sum, item) => sum + parseFloat(item.total_value || 0), 0)
+
+      return (
+        <div className="space-y-8">
+          <div className="overflow-x-auto">
+            <h3 className="text-lg font-semibold mb-4 text-center">
+              Participantes por Tipo de Acomodação
+            </h3>
+            <div className="max-h-[500px] overflow-y-auto border rounded shadow-sm">
+              <table className="w-full text-sm border-collapse">
+                <thead className="bg-yellow-400 sticky top-0 font-bold border-b border-gray-300">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-bold text-gray-900 uppercase tracking-wider">
+                      Acomodação
+                    </th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-900 uppercase tracking-wider">
+                      Categoria
+                    </th>
+                    <th className="px-4 py-3 text-right font-bold text-gray-900 uppercase tracking-wider">
+                      Qtd. Apto.
+                    </th>
+                    <th className="px-4 py-3 text-right font-bold text-gray-900 uppercase tracking-wider">
+                      Nº Pax
+                    </th>
+                    <th className="px-4 py-3 text-right font-bold text-gray-900 uppercase tracking-wider">
+                      Valor Total
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {reportData.map((row, index) => (
+                    <tr key={index} className="hover:bg-gray-50 border-b">
+                      <td className="px-4 py-2.5 font-medium text-gray-900">
+                        {row.accommodation}
+                      </td>
+                      <td className="px-4 py-2.5 text-gray-500 font-semibold">
+                        {row.category}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-bold text-gray-700">
+                        {row.apartment_count}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-bold text-gray-700">
+                        {row.pax_count}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-bold text-gray-900">
+                        {parseFloat(row.total_value || 0).toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-yellow-400 font-bold border-t-2 border-gray-400">
+                  <tr>
+                    <td className="px-4 py-3 text-left text-gray-900 uppercase font-black">
+                      Totais
+                    </td>
+                    <td className="px-4 py-3"></td>
+                    <td className="px-4 py-3 text-right text-gray-900 font-black">
+                      {totalApto}
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-900 font-black">
+                      {totalPax}
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-900 font-black">
+                      {totalValue.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      })}
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </div>
