@@ -368,7 +368,7 @@ export default function RoomDetailsPage({ room }) {
                                   ? priceDetails.memberTotal
                                   : room.member_price_per_night,
                               )}{" "}
-                              {t("para associados", "for associates")}
+                              {t("para associados", "associated companies")}
                             </span>
                           </div>
                         )}
@@ -435,7 +435,7 @@ export default function RoomDetailsPage({ room }) {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">
-                    {t("Desconto associado", "Associate discount")}
+                    {t("Desconto associado", "Discount for members")}
                   </p>
                   <p className="text-sm text-gray-500">
                     {t(

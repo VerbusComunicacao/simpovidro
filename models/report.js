@@ -190,7 +190,7 @@ async function generateByCompany(hotelId) {
     LEFT JOIN discounts d ON c.discount_id = d.id
     WHERE s.status != 'cancelled' AND h.id = $1
     GROUP BY c.id, c.corporate_name, c.cnpj, c.state, c.custom_discount_percentage, d.id, d.name, d.value
-    ORDER BY "Total de participantes" DESC
+    ORDER BY LOWER(COALESCE(c.corporate_name, 'Sem Empresa')) ASC
   `
 
   const result = await database.query({
@@ -699,7 +699,7 @@ async function generateCompaniesDiscountReport(hotelId) {
     FROM companies c
     LEFT JOIN discounts d ON c.discount_id = d.id
     WHERE COALESCE(c.custom_discount_percentage, d.value, 0) > 0
-    ORDER BY c.corporate_name ASC
+    ORDER BY LOWER(c.corporate_name) ASC
   `
 
   const result = await database.query({

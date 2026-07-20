@@ -379,7 +379,7 @@ export default function Accommodations() {
           <p className="text-slate-600 mt-4 font-medium text-base leading-relaxed">
             {t(
               "Um dos focos da reforma pela qual o hotel passou é oferecer um serviço ainda mais premium aos hóspedes. Confira abaixo as acomodações disponíveis aos participantes do Simpovidro, todas elas renovadas.",
-              "One of the focuses of the renovation that the hotel underwent is to offer an even more premium service to guests. Check out below the accommodations available to Simpovidro participants, all of them renovated.",
+              "Check out below the accommodations available to Simpovidro participants, all of them renovated.",
             )}
           </p>
         </div>

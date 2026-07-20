@@ -221,9 +221,20 @@ export default function Location() {
               </h3>
 
               <div className="space-y-4 text-slate-600 leading-relaxed text-base">
-                <p>
-                  {t(
-                    <>
+                {isEn ? (
+                  <p>
+                    This year, Simpovidro, in its <strong> 17th edition</strong>
+                    , lands in one of the most desired destinations in Brazil,
+                    the <strong> Costão do Santinho Resort</strong>. <br />
+                    <br /> Voted the best beach resort in Brazil at the{" "}
+                    <strong>Prêmio Caio 2025</strong>, the most important award
+                    for the tourism industry in Brazil, Costão is a venue that
+                    combines the exuberance of Santa Catarina&apos;s nature with
+                    a state-of-the-art infrastructure for events.
+                  </p>
+                ) : (
+                  <>
+                    <p>
                       Este ano, o Simpovidro, em sua <strong>17ª edição</strong>
                       , desembarca em um dos destinos mais desejados do Brasil,
                       o{" "}
@@ -232,23 +243,8 @@ export default function Location() {
                       </strong>
                       , local que combina a exuberância da natureza catarinense
                       com uma infraestrutura de ponta para eventos.
-                    </>,
-                    <>
-                      This year, Simpovidro, in its{" "}
-                      <strong>17th edition</strong>, lands in one of the most
-                      desired destinations in Brazil, the{" "}
-                      <strong>
-                        Costão do Santinho <em>Resort</em>
-                      </strong>
-                      , a venue that combines the exuberance of Santa
-                      Catarina&apos;s nature with a state-of-the-art
-                      infrastructure for events.
-                    </>,
-                  )}
-                </p>
-                <p>
-                  {t(
-                    <>
+                    </p>
+                    <p>
                       Eleito o melhor <em>resort</em> de praia do Brasil no{" "}
                       <strong>Prêmio Caio 2025</strong>, a mais importante
                       premiação da indústria de eventos e turismo do Brasil, o
@@ -260,21 +256,9 @@ export default function Location() {
                       . Portanto, os participantes do Simpovidro encontrarão um
                       espaço renovado, oferecendo ainda mais conforto aos
                       hóspedes.
-                    </>,
-                    <>
-                      Voted the best beach <em>resort</em> in Brazil at the{" "}
-                      <strong>Prêmio Caio 2025</strong>, the most important
-                      awards for the events and tourism industry in Brazil,
-                      Costão is full of updates: over the last few years,{" "}
-                      <strong>
-                        it underwent an extensive <em>retrofit</em> to upgrade
-                        facilities and accommodations
-                      </strong>
-                      . Therefore, Simpovidro participants will find a renovated
-                      space, offering even more comfort to guests.
-                    </>,
-                  )}
-                </p>
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
@@ -399,7 +383,7 @@ export default function Location() {
                     {t("Localização", "Location")}
                   </div>
                   <h4 className="text-xl font-medium text-white font-eastman">
-                    Florianópolis - SC
+                    {t("Florianópolis - SC", "Florianópolis, SC - Brazil")}
                   </h4>
                   <p className="text-xs text-slate-300 max-w-md font-medium leading-relaxed">
                     {t(

@@ -19,7 +19,7 @@ export default function CTA({ router: propRouter, HERO_IMAGE }) {
           <h2 className="text-4xl md:text-5xl text-white mb-6">
             {t(
               "Pronto para embarcar em um evento fundamental para a sua empresa?",
-              "Ready to embark on an event essential for your company?",
+              "Ready to join the Brazilian flat glass industry's must-attend event?",
             )}
           </h2>
           <p className="text-lg text-blue-100 mb-10 opacity-80">
