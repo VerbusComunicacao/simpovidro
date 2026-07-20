@@ -12,17 +12,23 @@ export default router.handler(controller.errorHandlers)
 
 async function patchHandler(request, response) {
   const token = request.query.token
-  const { password } = request.body
+  const { password, lang } = request.body || {}
 
   if (!password) {
     return response.status(400).json({
-      message: "O campo 'password' é obrigatório.",
+      message:
+        lang === "en"
+          ? "The 'password' field is required."
+          : "O campo 'password' é obrigatório.",
     })
   }
 
-  await passwordRecovery.resetPassword(token, password)
+  await passwordRecovery.resetPassword(token, password, lang)
 
   return response.status(200).json({
-    message: "Senha alterada com sucesso.",
+    message:
+      lang === "en"
+        ? "Password successfully changed."
+        : "Senha alterada com sucesso.",
   })
 }
