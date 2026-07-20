@@ -73,11 +73,12 @@ export default function AboutEvent({ scrollToSection }) {
                       Brazil gather at Simpovidro. In 2026, the meeting will
                       take place from{" "}
                       <strong>
-                        November 5 to 8, at Costão do Santinho Resort
+                        November 5<sup>th</sup> to 8<sup>th</sup>, at Costão do
+                        Santinho Resort
                       </strong>
                       , in Florianópolis. Organized by Abravidro, the event
                       focuses on
-                      <em>networking</em> among the various links in the chain
+                      <em>networking</em> among the various players in the chain
                       in a relaxed atmosphere, bringing together{" "}
                       <strong>
                         business opportunities, technical content, and leisure

@@ -108,7 +108,12 @@ export default function Hero({ scrollToSection, router: propRouter }) {
               </div>
               <div className="flex flex-col">
                 <span className="font-black text-slate-900 text-base md:text-lg leading-tight font-title whitespace-nowrap">
-                  {t("5 a 8 de Novembro", "November 5 to 8")}
+                  {t(
+                    "5 a 8 de Novembro",
+                    <>
+                      November 5<sup>th</sup> to 8<sup>th</sup>
+                    </>,
+                  )}
                 </span>
                 <span className="text-xs uppercase font-bold text-slate-400 tracking-wider mt-0.5 whitespace-nowrap">
                   2026
@@ -129,10 +134,10 @@ export default function Hero({ scrollToSection, router: propRouter }) {
                 </div>
                 <div className="flex flex-col">
                   <span className="font-black text-slate-900 text-base md:text-lg leading-tight font-title whitespace-nowrap">
-                    Costão do Santinho
+                    {t("Costão do Santinho", "Costão do Santinho")}
                   </span>
                   <span className="text-xs uppercase font-bold text-slate-400 tracking-wider mt-0.5 whitespace-nowrap">
-                    Florianópolis, SC
+                    {t("Florianópolis, SC", "Florianópolis, SC - Brazil")}
                   </span>
                 </div>
               </div>
