@@ -1760,5 +1760,91 @@ describe("POST /api/v1/registrations", () => {
       const registrationData = await registrationResponse.json()
       expect(registrationData.saleId).toBeDefined()
     })
+
+    test("should FAIL when submitting a new guest with a different CPF but a duplicated RG belonging to an existing guest", async () => {
+      // 1. Create Existing Guest A with RG "99887766" and CPF "111.111.111-11"
+      const createdUser = await orchestrator.createUser({
+        full_name: "Original Guest A",
+        email: "original-guest-a@example.com",
+        password: "password123",
+      })
+      await orchestrator.activateUser(createdUser.id)
+      await orchestrator.setUserFeatures(createdUser.id, [
+        "create:session",
+        "read:session",
+        "create:guest",
+        "read:guest",
+      ])
+      const userSession = await orchestrator.createSession(createdUser.id)
+
+      const guestAResponse = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/guests`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${userSession.token}`,
+          },
+          body: JSON.stringify({
+            name: "Original Guest A",
+            badge_name: "Original A",
+            email: "original-guest-a@example.com",
+            phone: "(11) 98888-8888",
+            gender: "Masculino",
+            rg_number: "99887766",
+            cpf_number: "444.444.444-44",
+            birth_date: "1985-05-05",
+          }),
+        },
+      )
+      expect(guestAResponse.status).toBe(201)
+      const guestAData = await guestAResponse.json()
+
+      // 2. Now attempt to register Guest B with a DIFFERENT CPF ("555.555.555-55") but the SAME RG ("99887766")
+      const registrationResponse = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${userSession.token}`,
+          },
+          body: JSON.stringify({
+            room_id: roomId,
+            guests_data: [
+              {
+                name: "New Guest B",
+                badge_name: "Guest B",
+                email: "guest-b@example.com",
+                phone: "(11) 97777-7777",
+                gender: "Feminino",
+                rg_number: "99887766", // DUPLICATE RG of Guest A!
+                cpf_number: "555.555.555-55", // DIFFERENT CPF!
+                birth_date: "1992-02-02",
+              },
+            ],
+            payment_method: "cash",
+          }),
+        },
+      )
+
+      // It SHOULD fail with ConflictError (409) indicating RG duplicate, NOT overwrite Guest A!
+      const body = await registrationResponse.json()
+      expect(registrationResponse.status).toBe(409)
+      expect(body.message).toBe("Já existe um hóspede cadastrado com este RG.")
+
+      // Verify Guest A was NOT overwritten in DB!
+      const getGuestAResponse = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/guests/${guestAData.id}`,
+        {
+          headers: {
+            Cookie: `session_id=${userSession.token}`,
+          },
+        },
+      )
+      const fetchedGuestA = await getGuestAResponse.json()
+      expect(fetchedGuestA.name).toBe("Original Guest A")
+      expect(fetchedGuestA.cpf_number).toBe("444.444.444-44")
+    })
   })
 })
