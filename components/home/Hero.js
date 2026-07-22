@@ -8,7 +8,11 @@ import { useRouter } from "next/router"
 export default function Hero({ scrollToSection, router: propRouter }) {
   const localRouter = useRouter()
   const router = propRouter || localRouter
-  const isEn = router?.locale === "en"
+  const isEn =
+    router?.locale === "en" ||
+    router?.query?.lang === "en" ||
+    router?.asPath?.startsWith("/en") ||
+    router?.pathname?.startsWith("/en")
   const t = (pt, en) => (isEn ? en : pt)
 
   const containerVariants = {
@@ -60,7 +64,11 @@ export default function Hero({ scrollToSection, router: propRouter }) {
         >
           <div className="mb-8 md:mb-12">
             <Image
-              src="/images/logo-17-simpovidro.png"
+              src={
+                isEn
+                  ? "/images/logo_simpovidro_ingles.png"
+                  : "/images/logo-17-simpovidro.png"
+              }
               alt="17º SIMPOVIDRO"
               width={600}
               height={600}

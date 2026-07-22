@@ -247,9 +247,9 @@ async function upsert(
 
   validateRequiredFields(guestData, requiredFields)
 
-  const existingGuest = await findOneByCpfOrRgOrPassport(
+  const existingGuest = await findExistingGuestForUpsert(
+    guestData.id,
     guestData.cpf_number,
-    guestData.rg_number,
     guestData.passport_number,
     client,
   )
@@ -259,6 +259,47 @@ async function upsert(
   }
 
   return await create(guestData, userId, client, isImport, lang)
+}
+
+async function findExistingGuestForUpsert(
+  id,
+  cpf_number,
+  passport_number,
+  client,
+) {
+  const db = client || database
+
+  if (id) {
+    const results = await db.query({
+      text: "SELECT * FROM guests WHERE id = $1 LIMIT 1",
+      values: [id],
+    })
+    if (results.rowCount > 0) return results.rows[0]
+  }
+
+  if (cpf_number) {
+    const cleanCpf = cpf_number.replace(/\D/g, "")
+    const results = await db.query({
+      text: `
+        SELECT * FROM guests 
+        WHERE cpf_number = $1 
+           OR ($2 != '' AND REPLACE(REPLACE(cpf_number, '.', ''), '-', '') = $2)
+        LIMIT 1
+      `,
+      values: [cpf_number, cleanCpf],
+    })
+    if (results.rowCount > 0) return results.rows[0]
+  }
+
+  if (passport_number) {
+    const results = await db.query({
+      text: "SELECT * FROM guests WHERE passport_number = $1 LIMIT 1",
+      values: [passport_number],
+    })
+    if (results.rowCount > 0) return results.rows[0]
+  }
+
+  return null
 }
 
 async function findOneByCpfOrRg(cpf_number, rg_number, client) {
@@ -275,49 +316,6 @@ async function findOneByCpfOrRg(cpf_number, rg_number, client) {
         1
       ;`,
     values: [cpf_number || null, rg_number || null],
-  })
-
-  return results.rows[0] || null
-}
-
-async function findOneByCpfOrRgOrPassport(
-  cpf_number,
-  rg_number,
-  passport_number,
-  client,
-) {
-  const db = client || database
-
-  const conditions = []
-  const values = []
-
-  if (cpf_number) {
-    values.push(cpf_number)
-    conditions.push(`cpf_number = $${values.length}`)
-  }
-  if (rg_number) {
-    values.push(rg_number)
-    conditions.push(`rg_number = $${values.length}`)
-  }
-  if (passport_number) {
-    values.push(passport_number)
-    conditions.push(`passport_number = $${values.length}`)
-  }
-
-  if (conditions.length === 0) return null
-
-  const results = await db.query({
-    text: `
-      SELECT
-        *
-      FROM
-        guests
-      WHERE
-        ${conditions.join(" OR ")}
-      LIMIT
-        1
-      ;`,
-    values,
   })
 
   return results.rows[0] || null
@@ -352,6 +350,8 @@ async function findAll({ search = "", page = 1, limit = 10 } = {}) {
         OR ($5 != '' AND cpf_number ILIKE $5)
         OR cpf_number ILIKE $2 
         OR email ILIKE $2
+        OR rg_number ILIKE $2
+        OR passport_number ILIKE $2
       ORDER BY
         created_at DESC
       LIMIT $3 OFFSET $4

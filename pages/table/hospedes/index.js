@@ -77,7 +77,7 @@ export default function GuestsTable() {
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Buscar por nome, CPF ou email..."
+              placeholder="Buscar por nome, CPF, RG, passaporte ou email..."
               className="pl-9 bg-white"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

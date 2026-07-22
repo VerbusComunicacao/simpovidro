@@ -46,6 +46,12 @@ export default function Sponsors({ variant = "full" }) {
       link: "https://sfti.com.br/",
     },
     {
+      name: "Glass Parts Control",
+      logo: "/images/apoiadores/glass-parts-controll.jpg",
+      link: "https://www.glassparts.com.br",
+      isVertical: true,
+    },
+    {
       name: "Gusmao",
       logo: "/images/apoiadores/gusmao.png",
       link: "https://www.gusmao.com.br/",
@@ -329,7 +335,7 @@ export default function Sponsors({ variant = "full" }) {
                   width={300}
                   height={150}
                   style={{ width: "auto" }}
-                  className="h-16 md:h-16 object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+                  className={`${sponsor.isVertical ? "h-20 md:h-20" : "h-16 md:h-16"}  object-contain opacity-90 group-hover:opacity-100 transition-opacity`}
                 />
               </a>
             ))}

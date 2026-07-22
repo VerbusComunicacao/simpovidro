@@ -134,7 +134,10 @@ async function create(saleInputValues, externalClient) {
     const overlapResults = await client.query({
       text: `
             SELECT 
-                g.name
+                g.name,
+                g.cpf_number,
+                g.rg_number,
+                g.passport_number
             FROM 
                 sales_guests sg
             JOIN 
@@ -153,11 +156,22 @@ async function create(saleInputValues, externalClient) {
     })
 
     if (overlapResults.rowCount > 0) {
+      const match = overlapResults.rows[0]
+      let docInfo = ""
+      if (match.cpf_number) {
+        docInfo = `CPF: ${match.cpf_number}`
+      } else if (match.rg_number) {
+        docInfo = `RG: ${match.rg_number}`
+      } else if (match.passport_number) {
+        docInfo = `Passaporte: ${match.passport_number}`
+      }
+      const detail = docInfo ? ` (${docInfo})` : ""
+
       throw new ValidationError({
         message:
           lang === "en"
-            ? `The guest ${overlapResults.rows[0].name} already has a registration for this hotel in this period.`
-            : `O hóspede ${overlapResults.rows[0].name} já possui uma inscrição para este hotel neste período.`,
+            ? `The guest ${match.name}${detail} already has a registration for this hotel in this period.`
+            : `O hóspede ${match.name}${detail} já possui uma inscrição para este hotel neste período.`,
         action:
           lang === "en"
             ? "Verify the registration details or contact support."
@@ -917,7 +931,10 @@ async function replaceGuest(saleId, oldGuestId, newGuestId, externalClient) {
     const overlapResults = await client.query({
       text: `
         SELECT 
-          g.name
+          g.name,
+          g.cpf_number,
+          g.rg_number,
+          g.passport_number
         FROM 
           sales_guests sg
         JOIN 
@@ -937,8 +954,19 @@ async function replaceGuest(saleId, oldGuestId, newGuestId, externalClient) {
     })
 
     if (overlapResults.rowCount > 0) {
+      const match = overlapResults.rows[0]
+      let docInfo = ""
+      if (match.cpf_number) {
+        docInfo = `CPF: ${match.cpf_number}`
+      } else if (match.rg_number) {
+        docInfo = `RG: ${match.rg_number}`
+      } else if (match.passport_number) {
+        docInfo = `Passaporte: ${match.passport_number}`
+      }
+      const detail = docInfo ? ` (${docInfo})` : ""
+
       throw new ValidationError({
-        message: `O hóspede ${overlapResults.rows[0].name} já possui uma inscrição ativa para este hotel.`,
+        message: `O hóspede ${match.name}${detail} já possui uma inscrição ativa para este hotel.`,
         action: "Verifique as inscrições deste hóspede.",
       })
     }
