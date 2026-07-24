@@ -72,6 +72,11 @@ export default function Sponsors({ variant = "full" }) {
       link: "https://www.qlupvb.com",
     },
     {
+      name: "Sglass",
+      logo: "/images/apoiadores/sglass.png",
+      link: "https://sglass.com.br",
+    },
+    {
       name: "Vetro Maquinas",
       logo: "/images/apoiadores/vetro-maquinas.png",
       link: "https://vetromaquinas.com.br",
@@ -320,7 +325,7 @@ export default function Sponsors({ variant = "full" }) {
           <h2 className="text-2xl text-slate-400 uppercase mb-10 font-title">
             {t("Apoio", "Support")}
           </h2>
-          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-12 md:max-w-[900px] md:mx-auto mb-10">
+          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-12 md:max-w-[1000px] md:mx-auto mb-10">
             {supporters.map((sponsor) => (
               <a
                 key={sponsor.name}
