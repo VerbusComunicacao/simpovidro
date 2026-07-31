@@ -41,7 +41,7 @@ describe("registration-helpers.js - Casos de Teste (Hotel 05/11)", () => {
     expect(dates[0]).toBe("2026-10-06") // +5 dias
   })
 
-  test("Inscrição em 29/10 deve permitir apenas 1 parcela travada no limite (30/10)", () => {
+  test("Inscrição em 30/10 deve permitir apenas 1 parcela travada no limite (30/10)", () => {
     jest.setSystemTime(new Date("2026-10-29T12:00:00Z"))
 
     expect(calculateMaxInstallments(hotelEntryDate)).toBe(1)
