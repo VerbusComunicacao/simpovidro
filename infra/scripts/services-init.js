@@ -3,7 +3,7 @@ const { spawn } = require("node:child_process")
 function runCommand(command, args) {
   // eslint-disable-next-line no-undef
   return new Promise((resolve, reject) => {
-    const proc = spawn(command, args, { stdio: "inherit" })
+    const proc = spawn(command, args, { stdio: "inherit", shell: true })
     proc.on("exit", (code) => (code === 0 ? resolve() : reject(code)))
   })
 }
@@ -19,7 +19,10 @@ async function startServicesAndDev() {
 
     await runCommand("npm", ["run", "migrations:up"])
 
-    const nextProcess = spawn("npx", ["next", "dev"], { stdio: "inherit" })
+    const nextProcess = spawn("npx", ["next", "dev"], {
+      stdio: "inherit",
+      shell: true,
+    })
 
     nextProcess.on("exit", async (code) => {
       await stopServices()

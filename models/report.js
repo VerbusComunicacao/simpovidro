@@ -178,6 +178,8 @@ async function generateByCompany(hotelId) {
           'name', g.name,
           'email', g.email,
           'phone', g.phone,
+          'cpf', g.cpf_number,
+          'badge_name', g.badge_name,
           'hotel', h.name
         ) ORDER BY g.name
       ) as participants
@@ -197,7 +199,10 @@ async function generateByCompany(hotelId) {
     text: query,
     values: [hotelId],
   })
-  return result.rows
+  return result.rows.map((row) => ({
+    ...row,
+    CNPJ: formatCNPJ(row.CNPJ) || row.CNPJ,
+  }))
 }
 
 async function generateByAge(hotelId) {
