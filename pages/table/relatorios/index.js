@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Download, FileText, Loader2 } from "lucide-react"
+import { ChevronDown, Download, FileText, Loader2 } from "lucide-react"
 import { exportToExcel, flattenDataForExport } from "@/lib/exportUtils"
 import { useEffect } from "react"
 import {
@@ -87,6 +87,14 @@ export default function RelatoriosPage() {
   const [reportData, setReportData] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [expandedCompanies, setExpandedCompanies] = useState({})
+
+  const toggleCompany = (index) => {
+    setExpandedCompanies((prev) => ({
+      ...prev,
+      [index]: prev[index] === undefined ? false : !prev[index],
+    }))
+  }
 
   useEffect(() => {
     // Fetch hotels for the filter (user already has read:content permission)
@@ -188,6 +196,38 @@ export default function RelatoriosPage() {
         "Nº PAX": item.pax_count,
         "VALOR TOTAL": item.total_value,
       }))
+    } else if (selectedReport === "by-company") {
+      dataToExport = reportData.flatMap((company) => {
+        const participants = company.participants || []
+        if (participants.length === 0) {
+          return [
+            {
+              Empresa: company["Nome da empresa"],
+              CNPJ: company["CNPJ"],
+              Estado: company["Estado"],
+              "Tipo de Associação": company["Tipo de Associação"],
+              "Total de Participantes": company["Total de participantes"],
+              Participante: "",
+              CPF: "",
+              Email: "",
+              Telefone: "",
+              "Nome no Crachá": "",
+            },
+          ]
+        }
+        return participants.map((p) => ({
+          Empresa: company["Nome da empresa"],
+          CNPJ: company["CNPJ"],
+          Estado: company["Estado"],
+          "Tipo de Associação": company["Tipo de Associação"],
+          "Total de Participantes": company["Total de participantes"],
+          Participante: p.name || "",
+          CPF: p.cpf || "",
+          Email: p.email || "",
+          Telefone: p.phone || "",
+          "Nome no Crachá": p.badge_name || "",
+        }))
+      })
     } else {
       dataToExport = reportData
     }
@@ -658,6 +698,166 @@ export default function RelatoriosPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (selectedReport === "by-company" && Array.isArray(reportData)) {
+      const totalCompanies = reportData.length
+      const totalParticipants = reportData.reduce(
+        (acc, curr) => acc + parseInt(curr["Total de participantes"] || 0),
+        0,
+      )
+
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 bg-gray-50 p-4 rounded-lg border">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Relatório de Participantes por Empresa
+              </h3>
+              <p className="text-sm text-gray-600">
+                Total de Empresas: <strong>{totalCompanies}</strong> | Total de
+                Participantes: <strong>{totalParticipants}</strong>
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const allExpanded = reportData.every(
+                  (_, idx) => expandedCompanies[idx] !== false,
+                )
+                const newState = {}
+                reportData.forEach((_, idx) => {
+                  newState[idx] = !allExpanded
+                })
+                setExpandedCompanies(newState)
+              }}
+            >
+              {reportData.every((_, idx) => expandedCompanies[idx] !== false)
+                ? "Recolher Todos"
+                : "Expandir Todos"}
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            {reportData.map((company, index) => {
+              const isExpanded = expandedCompanies[index] !== false
+              const participants = company.participants || []
+
+              return (
+                <div
+                  key={index}
+                  className="border rounded-lg overflow-hidden shadow-sm bg-white"
+                >
+                  {/* Header da Empresa */}
+                  <div
+                    className="bg-blue-50 hover:bg-blue-100/80 p-4 cursor-pointer flex flex-wrap items-center justify-between gap-4 transition-colors"
+                    onClick={() => toggleCompany(index)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-blue-950 text-base">
+                        {company["Nome da empresa"]}
+                      </span>
+                      <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-blue-200 text-blue-900 border border-blue-300">
+                        {company["Tipo de Associação"]}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-6 text-sm text-gray-700">
+                      <div>
+                        <span className="font-medium text-gray-500">
+                          CNPJ:{" "}
+                        </span>
+                        <span className="font-semibold">{company["CNPJ"]}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-500">UF: </span>
+                        <span className="font-semibold font-mono">
+                          {company["Estado"]}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-500">
+                          Participantes:{" "}
+                        </span>
+                        <span className="font-bold text-blue-800 bg-white px-2 py-0.5 rounded border border-blue-200">
+                          {company["Total de participantes"]}
+                        </span>
+                      </div>
+                      <ChevronDown
+                        className={`h-5 w-5 text-gray-500 transition-transform duration-200 ${
+                          isExpanded ? "transform rotate-180" : ""
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tabela de Participantes */}
+                  {isExpanded && (
+                    <div className="p-4 bg-gray-50/50 border-t">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-600 mb-3 flex items-center gap-2">
+                        Participantes vinculados ({participants.length})
+                      </h4>
+                      {participants.length > 0 ? (
+                        <div className="overflow-x-auto border rounded-lg bg-white shadow-inner">
+                          <table className="w-full text-sm">
+                            <thead className="bg-gray-100 border-b text-gray-800">
+                              <tr>
+                                <th className="px-4 py-2.5 text-left font-semibold">
+                                  Nome
+                                </th>
+                                <th className="px-4 py-2.5 text-left font-semibold">
+                                  CPF
+                                </th>
+                                <th className="px-4 py-2.5 text-left font-semibold">
+                                  E-mail
+                                </th>
+                                <th className="px-4 py-2.5 text-left font-semibold">
+                                  Telefone / Celular
+                                </th>
+                                <th className="px-4 py-2.5 text-left font-semibold">
+                                  Nome no Crachá
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                              {participants.map((person, pIndex) => (
+                                <tr
+                                  key={pIndex}
+                                  className="hover:bg-blue-50/60 transition-colors"
+                                >
+                                  <td className="px-4 py-2.5 font-medium text-gray-900">
+                                    {person.name || "-"}
+                                  </td>
+                                  <td className="px-4 py-2.5 text-gray-600 font-mono text-xs">
+                                    {person.cpf || "-"}
+                                  </td>
+                                  <td className="px-4 py-2.5 text-gray-600">
+                                    {person.email || "-"}
+                                  </td>
+                                  <td className="px-4 py-2.5 text-gray-600">
+                                    {person.phone || "-"}
+                                  </td>
+                                  <td className="px-4 py-2.5 text-gray-600 font-medium">
+                                    {person.badge_name || "-"}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">
+                          Nenhum participante encontrado.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )
