@@ -125,6 +125,8 @@ export default function RoomDetailsPage({ room }) {
     isInternational,
   )
 
+  const isSoldOut = (room.available_rooms ?? 0) <= 0
+
   return (
     <RegistrationLayout title={`${roomName} - Simpovidro 2026`} showBackButton>
       <main className="container mx-auto px-4 py-8">
@@ -269,6 +271,24 @@ export default function RoomDetailsPage({ room }) {
               </div>
             </div>
 
+            {isSoldOut && (
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center gap-4 shadow-sm">
+                <Image
+                  src="/images/esgotado - imagem.png"
+                  alt="Esgotado"
+                  width={120}
+                  height={60}
+                  className="w-24 h-auto object-contain shrink-0"
+                />
+                <p className="text-xs md:text-sm font-semibold text-slate-800 leading-relaxed">
+                  {t(
+                    "Maiores informações entre em contato com a organização do evento no telefone: 11-3873-9908 – ramal 1039 com Mauricio Botelho.",
+                    "For more information, please contact the event organization by phone: +55 11 3873-9908 – ext. 1039 with Mauricio Botelho.",
+                  )}
+                </p>
+              </div>
+            )}
+
             <div className="prose prose-blue max-w-none">
               <h3 className="text-lg font-semibold text-gray-900">
                 {t("Descrição", "Description")}
@@ -377,7 +397,10 @@ export default function RoomDetailsPage({ room }) {
                   <div>
                     <Button
                       size="lg"
-                      disabled={searchData.adults === 2 && !beddingPreference}
+                      disabled={
+                        isSoldOut ||
+                        (searchData.adults === 2 && !beddingPreference)
+                      }
                       className="bg-blue-600 hover:bg-blue-700 px-8 text-lg font-semibold shadow-md active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                       onClick={() => {
                         const params = new URLSearchParams()
@@ -396,16 +419,20 @@ export default function RoomDetailsPage({ room }) {
                         )
                       }}
                     >
-                      {t("Fazer minha inscrição", "Register now")}
+                      {isSoldOut
+                        ? t("Esgotado", "Sold Out")
+                        : t("Fazer minha inscrição", "Register now")}
                     </Button>
-                    {searchData.adults === 2 && !beddingPreference && (
-                      <p className="text-sm text-red-500 mt-2">
-                        {t(
-                          "*Escolha o tipo de acomodação para continuar",
-                          "*Choose accommodation type to continue",
-                        )}
-                      </p>
-                    )}
+                    {!isSoldOut &&
+                      searchData.adults === 2 &&
+                      !beddingPreference && (
+                        <p className="text-sm text-red-500 mt-2">
+                          {t(
+                            "*Escolha o tipo de acomodação para continuar",
+                            "*Choose accommodation type to continue",
+                          )}
+                        </p>
+                      )}
                   </div>
                 </div>
               </CardContent>
