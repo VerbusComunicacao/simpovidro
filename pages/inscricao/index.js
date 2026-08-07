@@ -76,7 +76,6 @@ export default function RegistrationPage({ hotels, discounts }) {
       const maxAdults = room.max_adults ?? Infinity
       const maxChildren = room.max_children ?? Infinity
       const minGuests = room.min_guests ?? 0
-      const hasAvailability = (room.available_rooms ?? 0) > 0
 
       const adultCapacityMatch = maxAdults >= searchData.adults
       const childCapacityMatch = maxChildren >= childrenCount
@@ -87,11 +86,7 @@ export default function RegistrationPage({ hotels, discounts }) {
         translateText(room.room_type, isInternational) === selectedType
 
       return (
-        hasAvailability &&
-        adultCapacityMatch &&
-        childCapacityMatch &&
-        minAdultsMatch &&
-        typeMatch
+        adultCapacityMatch && childCapacityMatch && minAdultsMatch && typeMatch
       )
     })
 
@@ -105,8 +100,13 @@ export default function RegistrationPage({ hotels, discounts }) {
       return { ...room, ...priceDetails }
     })
 
-    // Sort by finalTotal ascending
-    roomsWithPrices.sort((a, b) => a.finalTotal - b.finalTotal)
+    // Sort available rooms first, then by finalTotal ascending
+    roomsWithPrices.sort((a, b) => {
+      const aAvail = (a.available_rooms ?? 0) > 0 ? 1 : 0
+      const bAvail = (b.available_rooms ?? 0) > 0 ? 1 : 0
+      if (aAvail !== bAvail) return bAvail - aAvail
+      return a.finalTotal - b.finalTotal
+    })
 
     return {
       roomTypes: Array.from(types),
@@ -446,213 +446,209 @@ export default function RegistrationPage({ hotels, discounts }) {
                       isInternational,
                     )
 
+                    const isSoldOut = (room.available_rooms ?? 0) <= 0
+
                     return (
                       <Card
                         key={room.id}
-                        className="overflow-hidden hover:shadow-md transition-shadow flex flex-col"
+                        className={`overflow-hidden relative flex flex-col transition-shadow ${
+                          isSoldOut
+                            ? "border-slate-300 bg-slate-50"
+                            : "hover:shadow-md"
+                        }`}
                       >
-                        <div className="h-48 w-full relative bg-gray-100 border-b overflow-hidden">
-                          {room.photos && room.photos.length > 0 ? (
-                            <Image
-                              src={room.photos[0]}
-                              alt={roomName}
-                              className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
-                              fill
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-r from-brand-start to-brand-end flex items-center justify-center">
-                              <BedDouble className="h-12 w-12 text-white/50" />
-                            </div>
-                          )}
-                        </div>
-                        <CardHeader>
-                          <div className="flex justify-between items-start mb-2">
-                            {roomTypeDesc ? (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Badge
-                                    variant="outline"
-                                    className="border-blue-200 text-blue-700 bg-blue-50 cursor-help"
-                                  >
-                                    {roomTypeLabel}
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="w-64">
-                                  <p className="leading-relaxed font-medium">
-                                    {roomTypeDesc}
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
+                        <div
+                          className={`flex flex-col h-full ${
+                            isSoldOut
+                              ? "grayscale opacity-50 pointer-events-none select-none"
+                              : ""
+                          }`}
+                        >
+                          <div className="h-48 w-full relative bg-gray-100 border-b overflow-hidden">
+                            {room.photos && room.photos.length > 0 ? (
+                              <Image
+                                src={room.photos[0]}
+                                alt={roomName}
+                                className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
+                                fill
+                              />
                             ) : (
-                              <Badge
-                                variant="outline"
-                                className="border-blue-200 text-blue-700 bg-blue-50"
-                              >
-                                {roomTypeLabel}
-                              </Badge>
+                              <div className="w-full h-full bg-gradient-to-r from-brand-start to-brand-end flex items-center justify-center">
+                                <BedDouble className="h-12 w-12 text-white/50" />
+                              </div>
                             )}
                           </div>
-                          <CardTitle className="text-xl">{roomName}</CardTitle>
-                          <CardDescription>
-                            {roomDesc ||
-                              t(
-                                "Nenhuma descrição disponível",
-                                "No description available",
-                              )}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                              <div className="flex items-center gap-1">
-                                <Users className="h-4 w-4" />
-                                <span>
-                                  {" "}
-                                  {searchData.adults}{" "}
-                                  {searchData.adults === 1
-                                    ? t("adulto", "adult")
-                                    : t("adultos", "adults")}
-                                </span>
-                              </div>
-                              {childrenCount > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <span>
-                                    + {childrenCount}{" "}
-                                    {childrenCount === 1
-                                      ? t("criança", "child")
-                                      : t("crianças", "children")}
-                                  </span>
-                                </div>
+                          <CardHeader>
+                            <div className="flex justify-between items-start mb-2">
+                              {roomTypeDesc ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge
+                                      variant="outline"
+                                      className="border-blue-200 text-blue-700 bg-blue-50 cursor-help"
+                                    >
+                                      {roomTypeLabel}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="w-64">
+                                    <p className="leading-relaxed font-medium">
+                                      {roomTypeDesc}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="border-blue-200 text-blue-700 bg-blue-50"
+                                >
+                                  {roomTypeLabel}
+                                </Badge>
                               )}
                             </div>
-
-                            <div className="pt-4 border-t space-y-3">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
-                                    {t(
-                                      "Valor da Inscrição",
-                                      "Registration Fee",
-                                    )}
-                                  </p>
-                                  <p className="text-2xl font-bold text-blue-600">
-                                    {new Intl.NumberFormat(
-                                      isInternational ? "en-US" : "pt-BR",
-                                      {
-                                        style: "currency",
-                                        currency: "BRL",
-                                      },
-                                    ).format(room.finalTotal)}
-                                  </p>
+                            <CardTitle className="text-xl">
+                              {roomName}
+                            </CardTitle>
+                            <CardDescription>
+                              {roomDesc ||
+                                t(
+                                  "Nenhuma descrição disponível",
+                                  "No description available",
+                                )}
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-4 text-sm text-gray-600">
+                                <div className="flex items-center gap-1">
+                                  <Users className="h-4 w-4" />
+                                  <span>
+                                    {" "}
+                                    {searchData.adults}{" "}
+                                    {searchData.adults === 1
+                                      ? t("adulto", "adult")
+                                      : t("adultos", "adults")}
+                                  </span>
                                 </div>
-                                <Button
-                                  className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
-                                  onClick={() => {
-                                    const params = new URLSearchParams()
-                                    Object.keys(searchData).forEach((key) => {
-                                      params.append(key, searchData[key])
-                                    })
-                                    router.push(
-                                      `/inscricao/quarto/${room.id}?${params.toString()}`,
-                                    )
-                                  }}
-                                >
-                                  {t("Selecionar", "Select")}
-                                </Button>
+                                {childrenCount > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <span>
+                                      + {childrenCount}{" "}
+                                      {childrenCount === 1
+                                        ? t("criança", "child")
+                                        : t("crianças", "children")}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
 
-                              <div className="w-full text-sm bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2.5">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
-                                  {t(
-                                    "Descontos especiais:",
-                                    "Special discounts:",
-                                  )}
-                                </p>
-                                {discounts.map((discount, index) => {
-                                  const discountName = translateText(
-                                    discount.name,
-                                    isInternational,
-                                  )
-                                  const isMemberDiscount =
-                                    discountName
-                                      .toLowerCase()
-                                      .includes("associada") ||
-                                    discountName
-                                      .toLowerCase()
-                                      .includes("associado") ||
-                                    discountName
-                                      .toLowerCase()
-                                      .includes("member")
+                              <div className="pt-4 border-t space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                                      {t(
+                                        "Valor da Inscrição",
+                                        "Registration Fee",
+                                      )}
+                                    </p>
+                                    <p className="text-2xl font-bold text-blue-600">
+                                      {new Intl.NumberFormat(
+                                        isInternational ? "en-US" : "pt-BR",
+                                        {
+                                          style: "currency",
+                                          currency: "BRL",
+                                        },
+                                      ).format(room.finalTotal)}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                                    disabled={isSoldOut}
+                                    onClick={() => {
+                                      const params = new URLSearchParams()
+                                      Object.keys(searchData).forEach((key) => {
+                                        params.append(key, searchData[key])
+                                      })
+                                      router.push(
+                                        `/inscricao/quarto/${room.id}?${params.toString()}`,
+                                      )
+                                    }}
+                                  >
+                                    {t("Selecionar", "Select")}
+                                  </Button>
+                                </div>
 
-                                  const displayPrice =
-                                    isMemberDiscount && room.memberTotal
-                                      ? room.memberTotal
-                                      : room.originalTotal -
-                                        calculateAdultDiscount(
-                                          room.adultOriginalTotal ??
-                                            room.originalTotal,
-                                          Number(discount.value || 0),
-                                        )
+                                <div className="w-full text-sm bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2.5">
+                                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                    {t(
+                                      "Descontos especiais:",
+                                      "Special discounts:",
+                                    )}
+                                  </p>
+                                  {discounts.map((discount, index) => {
+                                    const discountName = translateText(
+                                      discount.name,
+                                      isInternational,
+                                    )
+                                    const isMemberDiscount =
+                                      discountName
+                                        .toLowerCase()
+                                        .includes("associada") ||
+                                      discountName
+                                        .toLowerCase()
+                                        .includes("associado") ||
+                                      discountName
+                                        .toLowerCase()
+                                        .includes("member")
 
-                                  const discountValue = Number(
-                                    discount.value || 0,
-                                  )
+                                    const displayPrice =
+                                      isMemberDiscount && room.memberTotal
+                                        ? room.memberTotal
+                                        : room.originalTotal -
+                                          calculateAdultDiscount(
+                                            room.adultOriginalTotal ??
+                                              room.originalTotal,
+                                            Number(discount.value || 0),
+                                          )
 
-                                  const savedAmount =
-                                    room.originalTotal - displayPrice
+                                    const discountValue = Number(
+                                      discount.value || 0,
+                                    )
 
-                                  return (
-                                    <div
-                                      key={discount.id}
-                                      className={`flex items-center justify-between py-2.5 ${
-                                        index !== discounts.length - 1
-                                          ? "border-b border-slate-100"
-                                          : ""
-                                      }`}
-                                    >
-                                      <div className="flex flex-col gap-1">
-                                        <span className="font-bold text-slate-800 text-sm md:text-base">
-                                          {discountName
-                                            .toLowerCase()
-                                            .includes("associada") ||
-                                          discountName
-                                            .toLowerCase()
-                                            .includes("associado")
-                                            ? t(
-                                                "Associado Abravidro",
-                                                "Abravidro Associate",
-                                              )
-                                            : discountName}
-                                        </span>
-                                        {discountValue > 0 && (
-                                          <span className="text-[10px] md:text-[11px] font-black text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2 py-0.5 rounded-full w-fit uppercase tracking-wider">
-                                            {discountValue}% OFF
+                                    const savedAmount =
+                                      room.originalTotal - displayPrice
+
+                                    return (
+                                      <div
+                                        key={discount.id}
+                                        className={`flex items-center justify-between py-2.5 ${
+                                          index !== discounts.length - 1
+                                            ? "border-b border-slate-100"
+                                            : ""
+                                        }`}
+                                      >
+                                        <div className="flex flex-col gap-1">
+                                          <span className="font-bold text-slate-800 text-sm md:text-base">
+                                            {discountName
+                                              .toLowerCase()
+                                              .includes("associada") ||
+                                            discountName
+                                              .toLowerCase()
+                                              .includes("associado")
+                                              ? t(
+                                                  "Associado Abravidro",
+                                                  "Abravidro Associate",
+                                                )
+                                              : discountName}
                                           </span>
-                                        )}
-                                      </div>
+                                          {discountValue > 0 && (
+                                            <span className="text-[10px] md:text-[11px] font-black text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2 py-0.5 rounded-full w-fit uppercase tracking-wider">
+                                              {discountValue}% OFF
+                                            </span>
+                                          )}
+                                        </div>
 
-                                      <div className="flex flex-col items-end">
-                                        <span className="text-xs text-slate-400 line-through">
-                                          {new Intl.NumberFormat(
-                                            isInternational ? "en-US" : "pt-BR",
-                                            {
-                                              style: "currency",
-                                              currency: "BRL",
-                                            },
-                                          ).format(room.originalTotal)}
-                                        </span>
-                                        <span className="font-black text-blue-600 text-base md:text-lg lg:text-xl animate-pulse-subtle">
-                                          {new Intl.NumberFormat(
-                                            isInternational ? "en-US" : "pt-BR",
-                                            {
-                                              style: "currency",
-                                              currency: "BRL",
-                                            },
-                                          ).format(displayPrice)}
-                                        </span>
-                                        {savedAmount > 0 && (
-                                          <span className="text-xs text-emerald-600 font-extrabold">
-                                            {t("Economize", "Save")}{" "}
+                                        <div className="flex flex-col items-end">
+                                          <span className="text-xs text-slate-400 line-through">
                                             {new Intl.NumberFormat(
                                               isInternational
                                                 ? "en-US"
@@ -661,17 +657,62 @@ export default function RegistrationPage({ hotels, discounts }) {
                                                 style: "currency",
                                                 currency: "BRL",
                                               },
-                                            ).format(savedAmount)}
+                                            ).format(room.originalTotal)}
                                           </span>
-                                        )}
+                                          <span className="font-black text-blue-600 text-base md:text-lg lg:text-xl animate-pulse-subtle">
+                                            {new Intl.NumberFormat(
+                                              isInternational
+                                                ? "en-US"
+                                                : "pt-BR",
+                                              {
+                                                style: "currency",
+                                                currency: "BRL",
+                                              },
+                                            ).format(displayPrice)}
+                                          </span>
+                                          {savedAmount > 0 && (
+                                            <span className="text-xs text-emerald-600 font-extrabold">
+                                              {t("Economize", "Save")}{" "}
+                                              {new Intl.NumberFormat(
+                                                isInternational
+                                                  ? "en-US"
+                                                  : "pt-BR",
+                                                {
+                                                  style: "currency",
+                                                  currency: "BRL",
+                                                },
+                                              ).format(savedAmount)}
+                                            </span>
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
-                                  )
-                                })}
+                                    )
+                                  })}
+                                </div>
                               </div>
                             </div>
+                          </CardContent>
+                        </div>
+
+                        {isSoldOut && (
+                          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-slate-900/60 text-center">
+                            <Image
+                              src="/images/esgotado - imagem.png"
+                              alt="Esgotado"
+                              width={220}
+                              height={110}
+                              className="w-48 h-auto object-contain mb-4 drop-shadow-xl"
+                            />
+                            <div className="bg-white/95 border border-slate-200 p-4 rounded-xl shadow-2xl max-w-xs">
+                              <p className="text-xs md:text-sm font-semibold text-slate-800 leading-relaxed">
+                                {t(
+                                  "Maiores informações entre em contato com a organização do evento no telefone: 11-3873-9908 – ramal 1039 com Mauricio Botelho.",
+                                  "For more information, please contact the event organization by phone: +55 11 3873-9908 – ext. 1039 with Mauricio Botelho.",
+                                )}
+                              </p>
+                            </div>
                           </div>
-                        </CardContent>
+                        )}
                       </Card>
                     )
                   })}
