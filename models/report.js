@@ -177,7 +177,7 @@ async function generateByCompany(hotelId) {
         json_build_object(
           'name', g.name,
           'email', g.email,
-          'phone', g.phone,
+          'age', CASE WHEN g.birth_date IS NOT NULL THEN EXTRACT(YEAR FROM AGE(COALESCE(h.check_in_date, NOW()), g.birth_date)) ELSE NULL END,
           'cpf', g.cpf_number,
           'badge_name', g.badge_name,
           'hotel', h.name
