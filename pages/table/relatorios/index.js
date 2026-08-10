@@ -210,7 +210,7 @@ export default function RelatoriosPage() {
               Participante: "",
               CPF: "",
               Email: "",
-              Telefone: "",
+              Idade: "",
               "Nome no Crachá": "",
             },
           ]
@@ -224,7 +224,7 @@ export default function RelatoriosPage() {
           Participante: p.name || "",
           CPF: p.cpf || "",
           Email: p.email || "",
-          Telefone: p.phone || "",
+          Idade: p.age !== undefined && p.age !== null ? p.age : "",
           "Nome no Crachá": p.badge_name || "",
         }))
       })
@@ -815,7 +815,7 @@ export default function RelatoriosPage() {
                                   E-mail
                                 </th>
                                 <th className="px-4 py-2.5 text-left font-semibold">
-                                  Telefone / Celular
+                                  Idade
                                 </th>
                                 <th className="px-4 py-2.5 text-left font-semibold">
                                   Nome no Crachá
@@ -838,7 +838,10 @@ export default function RelatoriosPage() {
                                     {person.email || "-"}
                                   </td>
                                   <td className="px-4 py-2.5 text-gray-600">
-                                    {person.phone || "-"}
+                                    {person.age !== undefined &&
+                                    person.age !== null
+                                      ? person.age
+                                      : "-"}
                                   </td>
                                   <td className="px-4 py-2.5 text-gray-600 font-medium">
                                     {person.badge_name || "-"}
