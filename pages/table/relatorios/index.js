@@ -44,9 +44,9 @@ function parseSortableValue(val) {
   const trimmed = val.trim()
 
   // Currency: R$ 1.500,00 or R$1.500,00 or R$ 1500,00
-  if (/^R\$\s*[\d\.\,]+$/i.test(trimmed)) {
+  if (/^R\$\s*[\d.,]+$/i.test(trimmed)) {
     const cleaned = trimmed
-      .replace(/[R\$\s]/gi, "")
+      .replace(/[R$\s]/gi, "")
       .replace(/\./g, "")
       .replace(",", ".")
     const num = parseFloat(cleaned)
