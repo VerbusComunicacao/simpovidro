@@ -12,7 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ChevronDown, Download, FileText, Loader2 } from "lucide-react"
+import {
+  ChevronDown,
+  Download,
+  FileText,
+  Loader2,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+} from "lucide-react"
 import { exportToExcel, flattenDataForExport } from "@/lib/exportUtils"
 import { useEffect } from "react"
 import {
@@ -28,6 +36,101 @@ import {
   Pie,
   Cell,
 } from "recharts"
+
+function parseSortableValue(val) {
+  if (typeof val === "number") return val
+  if (typeof val === "boolean") return val ? 1 : 0
+  if (typeof val !== "string") return null
+  const trimmed = val.trim()
+
+  // Currency: R$ 1.500,00 or R$1.500,00 or R$ 1500,00
+  if (/^R\$\s*[\d\.\,]+$/i.test(trimmed)) {
+    const cleaned = trimmed
+      .replace(/[R\$\s]/gi, "")
+      .replace(/\./g, "")
+      .replace(",", ".")
+    const num = parseFloat(cleaned)
+    if (!isNaN(num)) return num
+  }
+
+  // Date: DD/MM/YYYY
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) {
+    const [day, month, year] = trimmed.split("/")
+    const d = new Date(`${year}-${month}-${day}`).getTime()
+    if (!isNaN(d)) return d
+  }
+
+  // Number string: "123" or "45.67"
+  if (!isNaN(Number(trimmed)) && trimmed !== "") {
+    return Number(trimmed)
+  }
+
+  return null
+}
+
+function sortItems(items, key, direction) {
+  if (!Array.isArray(items) || !key) return items
+
+  return [...items].sort((a, b) => {
+    let aVal = a[key]
+    let bVal = b[key]
+
+    if (aVal === null || aVal === undefined) aVal = ""
+    if (bVal === null || bVal === undefined) bVal = ""
+
+    const aNum = parseSortableValue(aVal)
+    const bNum = parseSortableValue(bVal)
+
+    if (aNum !== null && bNum !== null) {
+      return direction === "asc" ? aNum - bNum : bNum - aNum
+    }
+
+    const strA = String(aVal).toLowerCase()
+    const strB = String(bVal).toLowerCase()
+
+    if (strA < strB) return direction === "asc" ? -1 : 1
+    if (strA > strB) return direction === "asc" ? 1 : -1
+    return 0
+  })
+}
+
+function SortableHeader({
+  label,
+  columnKey,
+  sortConfig,
+  onSort,
+  align = "left",
+  className = "",
+}) {
+  const isSorted = sortConfig.key === columnKey
+  const isAsc = sortConfig.direction === "asc"
+
+  return (
+    <th
+      onClick={() => onSort(columnKey)}
+      className={`px-4 py-2.5 font-semibold whitespace-nowrap cursor-pointer select-none hover:bg-gray-200/80 transition-colors ${
+        align === "right" ? "text-right" : "text-left"
+      } ${className}`}
+    >
+      <div
+        className={`flex items-center gap-1.5 ${
+          align === "right" ? "justify-end" : "justify-start"
+        }`}
+      >
+        <span>{label}</span>
+        {isSorted ? (
+          isAsc ? (
+            <ArrowUp className="h-4 w-4 text-blue-600 shrink-0 font-bold" />
+          ) : (
+            <ArrowDown className="h-4 w-4 text-blue-600 shrink-0 font-bold" />
+          )
+        ) : (
+          <ArrowUpDown className="h-3.5 w-3.5 text-gray-400 opacity-60 hover:opacity-100 shrink-0" />
+        )}
+      </div>
+    </th>
+  )
+}
 
 const reportTypes = [
   {
@@ -93,6 +196,16 @@ export default function RelatoriosPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [expandedCompanies, setExpandedCompanies] = useState({})
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" })
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === "asc" ? "desc" : "asc" }
+      }
+      return { key, direction: "asc" }
+    })
+  }
 
   const toggleCompany = (index) => {
     setExpandedCompanies((prev) => ({
@@ -160,6 +273,7 @@ export default function RelatoriosPage() {
     setIsLoading(true)
     setError("")
     setReportData(null)
+    setSortConfig({ key: null, direction: "asc" })
 
     try {
       const response = await fetch(
@@ -399,16 +513,22 @@ export default function RelatoriosPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-100 sticky top-0">
                     <tr>
-                      <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                        Descrição
-                      </th>
-                      <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                        Quantidade
-                      </th>
+                      <SortableHeader
+                        label="Descrição"
+                        columnKey="Descrição"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
+                      <SortableHeader
+                        label="Quantidade"
+                        columnKey="Quantidade"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
                     </tr>
                   </thead>
                   <tbody>
-                    {summary.map((row, index) => (
+                    {sortItems(summary, sortConfig.key, sortConfig.direction).map((row, index) => (
                       <tr key={index} className="border-t hover:bg-gray-50">
                         <td className="px-4 py-2 whitespace-nowrap font-medium">
                           {row.Descrição}
@@ -431,22 +551,34 @@ export default function RelatoriosPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-100 sticky top-0">
                     <tr>
-                      <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                        Faixa Etária
-                      </th>
-                      <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                        Total
-                      </th>
-                      <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                        Masculino
-                      </th>
-                      <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                        Feminino
-                      </th>
+                      <SortableHeader
+                        label="Faixa Etária"
+                        columnKey="age_range"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
+                      <SortableHeader
+                        label="Total"
+                        columnKey="total"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
+                      <SortableHeader
+                        label="Masculino"
+                        columnKey="male_count"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
+                      <SortableHeader
+                        label="Feminino"
+                        columnKey="female_count"
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                      />
                     </tr>
                   </thead>
                   <tbody>
-                    {ranges.map((row, index) => (
+                    {sortItems(ranges, sortConfig.key, sortConfig.direction).map((row, index) => (
                       <tr key={index} className="border-t hover:bg-gray-50">
                         <td className="px-4 py-2 whitespace-nowrap">
                           {row.age_range}
@@ -507,16 +639,22 @@ export default function RelatoriosPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-100 sticky top-0">
                   <tr>
-                    <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                      Estado
-                    </th>
-                    <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                      Total de Participantes
-                    </th>
+                    <SortableHeader
+                      label="Estado"
+                      columnKey="state"
+                      sortConfig={sortConfig}
+                      onSort={handleSort}
+                    />
+                    <SortableHeader
+                      label="Total de Participantes"
+                      columnKey="total_participants"
+                      sortConfig={sortConfig}
+                      onSort={handleSort}
+                    />
                   </tr>
                 </thead>
                 <tbody>
-                  {reportData.map((row, index) => (
+                  {sortItems(reportData, sortConfig.key, sortConfig.direction).map((row, index) => (
                     <tr key={index} className="border-t hover:bg-gray-50">
                       <td className="px-4 py-2 whitespace-nowrap font-medium">
                         {row.state}
@@ -562,28 +700,56 @@ export default function RelatoriosPage() {
               <table className="w-full text-sm border-collapse">
                 <thead className="bg-yellow-400 sticky top-0 font-bold border-b border-gray-300">
                   <tr>
-                    <th className="px-4 py-3 text-left font-bold text-gray-900 uppercase tracking-wider">
-                      Acomodação
-                    </th>
-                    <th className="px-4 py-3 text-left font-bold text-gray-900 uppercase tracking-wider">
-                      Categoria
-                    </th>
-                    <th className="px-4 py-3 text-right font-bold text-gray-900 uppercase tracking-wider">
-                      Qtd. Apto.
-                    </th>
-                    <th className="px-4 py-3 text-right font-bold text-gray-900 uppercase tracking-wider">
-                      Qtd. Disp.
-                    </th>
-                    <th className="px-4 py-3 text-right font-bold text-gray-900 uppercase tracking-wider">
-                      Nº Pax
-                    </th>
-                    <th className="px-4 py-3 text-right font-bold text-gray-900 uppercase tracking-wider">
-                      Valor Total
-                    </th>
+                    <SortableHeader
+                      label="Acomodação"
+                      columnKey="accommodation"
+                      sortConfig={sortConfig}
+                      onSort={handleSort}
+                      className="uppercase tracking-wider text-gray-900 font-bold"
+                    />
+                    <SortableHeader
+                      label="Categoria"
+                      columnKey="category"
+                      sortConfig={sortConfig}
+                      onSort={handleSort}
+                      className="uppercase tracking-wider text-gray-900 font-bold"
+                    />
+                    <SortableHeader
+                      label="Qtd. Apto."
+                      columnKey="apartment_count"
+                      sortConfig={sortConfig}
+                      onSort={handleSort}
+                      align="right"
+                      className="uppercase tracking-wider text-gray-900 font-bold"
+                    />
+                    <SortableHeader
+                      label="Qtd. Disp."
+                      columnKey="available_rooms"
+                      sortConfig={sortConfig}
+                      onSort={handleSort}
+                      align="right"
+                      className="uppercase tracking-wider text-gray-900 font-bold"
+                    />
+                    <SortableHeader
+                      label="Nº Pax"
+                      columnKey="pax_count"
+                      sortConfig={sortConfig}
+                      onSort={handleSort}
+                      align="right"
+                      className="uppercase tracking-wider text-gray-900 font-bold"
+                    />
+                    <SortableHeader
+                      label="Valor Total"
+                      columnKey="total_value"
+                      sortConfig={sortConfig}
+                      onSort={handleSort}
+                      align="right"
+                      className="uppercase tracking-wider text-gray-900 font-bold"
+                    />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {reportData.map((row, index) => (
+                  {sortItems(reportData, sortConfig.key, sortConfig.direction).map((row, index) => (
                     <tr key={index} className="hover:bg-gray-50 border-b">
                       <td className="px-4 py-2.5 font-medium text-gray-900">
                         {row.accommodation}
@@ -681,16 +847,22 @@ export default function RelatoriosPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-100 sticky top-0">
                   <tr>
-                    <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                      Área de Atuação
-                    </th>
-                    <th className="px-4 py-2 text-left font-semibold whitespace-nowrap">
-                      Total de Empresas
-                    </th>
+                    <SortableHeader
+                      label="Área de Atuação"
+                      columnKey="activity_sector"
+                      sortConfig={sortConfig}
+                      onSort={handleSort}
+                    />
+                    <SortableHeader
+                      label="Total de Empresas"
+                      columnKey="total_companies"
+                      sortConfig={sortConfig}
+                      onSort={handleSort}
+                    />
                   </tr>
                 </thead>
                 <tbody>
-                  {reportData.map((row, index) => (
+                  {sortItems(reportData, sortConfig.key, sortConfig.direction).map((row, index) => (
                     <tr key={index} className="border-t hover:bg-gray-50">
                       <td className="px-4 py-2 whitespace-nowrap font-medium">
                         {row.activity_sector}
@@ -810,25 +982,40 @@ export default function RelatoriosPage() {
                           <table className="w-full text-sm">
                             <thead className="bg-gray-100 border-b text-gray-800">
                               <tr>
-                                <th className="px-4 py-2.5 text-left font-semibold">
-                                  Nome
-                                </th>
-                                <th className="px-4 py-2.5 text-left font-semibold">
-                                  CPF
-                                </th>
-                                <th className="px-4 py-2.5 text-left font-semibold">
-                                  E-mail
-                                </th>
-                                <th className="px-4 py-2.5 text-left font-semibold">
-                                  Idade
-                                </th>
-                                <th className="px-4 py-2.5 text-left font-semibold">
-                                  Nome no Crachá
-                                </th>
+                                <SortableHeader
+                                  label="Nome"
+                                  columnKey="name"
+                                  sortConfig={sortConfig}
+                                  onSort={handleSort}
+                                />
+                                <SortableHeader
+                                  label="CPF"
+                                  columnKey="cpf"
+                                  sortConfig={sortConfig}
+                                  onSort={handleSort}
+                                />
+                                <SortableHeader
+                                  label="E-mail"
+                                  columnKey="email"
+                                  sortConfig={sortConfig}
+                                  onSort={handleSort}
+                                />
+                                <SortableHeader
+                                  label="Idade"
+                                  columnKey="age"
+                                  sortConfig={sortConfig}
+                                  onSort={handleSort}
+                                />
+                                <SortableHeader
+                                  label="Nome no Crachá"
+                                  columnKey="badge_name"
+                                  sortConfig={sortConfig}
+                                  onSort={handleSort}
+                                />
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                              {participants.map((person, pIndex) => (
+                              {sortItems(participants, sortConfig.key, sortConfig.direction).map((person, pIndex) => (
                                 <tr
                                   key={pIndex}
                                   className="hover:bg-blue-50/60 transition-colors"
@@ -879,6 +1066,21 @@ export default function RelatoriosPage() {
       return <p className="text-gray-500">Nenhum dado encontrado</p>
     }
 
+    const sortedData = sortItems(
+      reportData,
+      sortConfig.key,
+      sortConfig.direction,
+    )
+
+    const keys =
+      reportData.length > 0
+        ? Object.keys(reportData[0]).filter(
+            (key) =>
+              typeof reportData[0][key] !== "object" ||
+              reportData[0][key] === null,
+          )
+        : []
+
     return (
       <div className="overflow-x-auto">
         <p className="text-sm text-gray-600 mb-2">
@@ -888,25 +1090,19 @@ export default function RelatoriosPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-100 sticky top-0">
               <tr>
-                {reportData.length > 0 &&
-                  Object.keys(reportData[0])
-                    .filter(
-                      (key) =>
-                        typeof reportData[0][key] !== "object" ||
-                        reportData[0][key] === null,
-                    )
-                    .map((key) => (
-                      <th
-                        key={key}
-                        className="px-4 py-2 text-left font-semibold whitespace-nowrap"
-                      >
-                        {key}
-                      </th>
-                    ))}
+                {keys.map((key) => (
+                  <SortableHeader
+                    key={key}
+                    label={key}
+                    columnKey={key}
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                ))}
               </tr>
             </thead>
             <tbody>
-              {reportData.slice(0, 50).map((row, index) => (
+              {sortedData.slice(0, 50).map((row, index) => (
                 <tr key={index} className="border-t hover:bg-gray-50">
                   {Object.entries(row)
                     .filter(
@@ -926,9 +1122,9 @@ export default function RelatoriosPage() {
               ))}
             </tbody>
           </table>
-          {reportData.length > 50 && (
+          {sortedData.length > 50 && (
             <p className="p-4 text-sm text-gray-500 text-center">
-              Mostrando 50 de {reportData.length} registros. Exporte para ver
+              Mostrando 50 de {sortedData.length} registros. Exporte para ver
               todos.
             </p>
           )}
