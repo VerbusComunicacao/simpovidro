@@ -752,10 +752,7 @@ async function generateFinancialReport(hotelId) {
     "Data da Compra": row.data_compra || "",
     "Nome do Quarto": translateText(row.nome_quarto, false) || "",
     "Nome da Empresa": row.nome_empresa || "Pessoa Física",
-    "Valor Total": new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(parseFloat(row.valor_total || 0)),
+    "Valor Total": row.valor_total ? parseFloat(row.valor_total) : 0,
   }))
 }
 
