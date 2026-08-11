@@ -1139,7 +1139,12 @@ export default function RelatoriosPage() {
                           ? "Sim"
                           : value === false
                             ? "-"
-                            : value || "-"}
+                            : typeof value === "number" && key === "Valor Total"
+                              ? value.toLocaleString("pt-BR", {
+                                  style: "currency",
+                                  currency: "BRL",
+                                })
+                              : value || "-"}
                       </td>
                     ))}
                 </tr>

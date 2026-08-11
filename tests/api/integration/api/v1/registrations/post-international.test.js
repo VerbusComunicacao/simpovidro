@@ -268,7 +268,7 @@ describe("POST /api/v1/registrations (International)", () => {
     expect(finItem["Nº da Inscrição"]).toBeDefined()
     expect(finItem["Data da Compra"]).toBeDefined()
     expect(finItem["Nome do Quarto"]).toBeDefined()
-    expect(finItem["Valor Total"]).toMatch(/^R\$/)
+    expect(finItem["Valor Total"]).toBeGreaterThan(0)
     expect(Number(accomItem.total_value)).toBeGreaterThan(0)
   })
 
