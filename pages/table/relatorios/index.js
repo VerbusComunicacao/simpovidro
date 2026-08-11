@@ -528,7 +528,11 @@ export default function RelatoriosPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sortItems(summary, sortConfig.key, sortConfig.direction).map((row, index) => (
+                    {sortItems(
+                      summary,
+                      sortConfig.key,
+                      sortConfig.direction,
+                    ).map((row, index) => (
                       <tr key={index} className="border-t hover:bg-gray-50">
                         <td className="px-4 py-2 whitespace-nowrap font-medium">
                           {row.Descrição}
@@ -578,7 +582,11 @@ export default function RelatoriosPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sortItems(ranges, sortConfig.key, sortConfig.direction).map((row, index) => (
+                    {sortItems(
+                      ranges,
+                      sortConfig.key,
+                      sortConfig.direction,
+                    ).map((row, index) => (
                       <tr key={index} className="border-t hover:bg-gray-50">
                         <td className="px-4 py-2 whitespace-nowrap">
                           {row.age_range}
@@ -654,7 +662,11 @@ export default function RelatoriosPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortItems(reportData, sortConfig.key, sortConfig.direction).map((row, index) => (
+                  {sortItems(
+                    reportData,
+                    sortConfig.key,
+                    sortConfig.direction,
+                  ).map((row, index) => (
                     <tr key={index} className="border-t hover:bg-gray-50">
                       <td className="px-4 py-2 whitespace-nowrap font-medium">
                         {row.state}
@@ -749,7 +761,11 @@ export default function RelatoriosPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {sortItems(reportData, sortConfig.key, sortConfig.direction).map((row, index) => (
+                  {sortItems(
+                    reportData,
+                    sortConfig.key,
+                    sortConfig.direction,
+                  ).map((row, index) => (
                     <tr key={index} className="hover:bg-gray-50 border-b">
                       <td className="px-4 py-2.5 font-medium text-gray-900">
                         {row.accommodation}
@@ -862,7 +878,11 @@ export default function RelatoriosPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortItems(reportData, sortConfig.key, sortConfig.direction).map((row, index) => (
+                  {sortItems(
+                    reportData,
+                    sortConfig.key,
+                    sortConfig.direction,
+                  ).map((row, index) => (
                     <tr key={index} className="border-t hover:bg-gray-50">
                       <td className="px-4 py-2 whitespace-nowrap font-medium">
                         {row.activity_sector}
@@ -1015,7 +1035,11 @@ export default function RelatoriosPage() {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                              {sortItems(participants, sortConfig.key, sortConfig.direction).map((person, pIndex) => (
+                              {sortItems(
+                                participants,
+                                sortConfig.key,
+                                sortConfig.direction,
+                              ).map((person, pIndex) => (
                                 <tr
                                   key={pIndex}
                                   className="hover:bg-blue-50/60 transition-colors"
