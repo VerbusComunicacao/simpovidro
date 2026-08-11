@@ -36,6 +36,11 @@ const reportTypes = [
     description: "Todos os participantes com informações completas",
   },
   {
+    value: "financial",
+    label: "Relatório Financeiro de Inscrições",
+    description: "Relatório por inscrição",
+  },
+  {
     value: "checkout-questions",
     label: "Questionário da inscrição",
     description: "Apenas as respostas dos participantes à pergunta.",

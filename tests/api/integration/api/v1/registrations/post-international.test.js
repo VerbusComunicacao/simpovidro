@@ -258,6 +258,17 @@ describe("POST /api/v1/registrations (International)", () => {
     expect(accomItem.apartment_count).toBeGreaterThanOrEqual(1)
     expect(accomItem.available_rooms).toBeDefined()
     expect(accomItem.pax_count).toBeGreaterThanOrEqual(1)
+
+    const financialReport = await report.generateFinancialReport(hotelId)
+    expect(financialReport.length).toBeGreaterThanOrEqual(1)
+    const finItem = financialReport.find(
+      (item) => item["Nome da Empresa"] === "Global Glass Inc.",
+    )
+    expect(finItem).toBeDefined()
+    expect(finItem["Nº da Inscrição"]).toBeDefined()
+    expect(finItem["Data da Compra"]).toBeDefined()
+    expect(finItem["Nome do Quarto"]).toBeDefined()
+    expect(finItem["Valor Total"]).toMatch(/^R\$/)
     expect(Number(accomItem.total_value)).toBeGreaterThan(0)
   })
 

@@ -722,6 +722,43 @@ async function generateCompaniesDiscountReport(hotelId) {
   })
 }
 
+async function generateFinancialReport(hotelId) {
+  if (!hotelId) {
+    throw new Error("Hotel ID é obrigatório para gerar relatórios.")
+  }
+
+  const query = `
+    SELECT 
+      s.sale_number as numero_inscricao,
+      TO_CHAR(s.created_at, 'DD/MM/YYYY') as data_compra,
+      r.name as nome_quarto,
+      c.corporate_name as nome_empresa,
+      s.final_amount as valor_total
+    FROM sales s
+    JOIN rooms r ON s.room_id = r.id
+    JOIN hotels h ON r.hotel_id = h.id
+    LEFT JOIN companies c ON s.company_id = c.id
+    WHERE s.status != 'cancelled' AND h.id = $1
+    ORDER BY s.created_at ASC, s.sale_number ASC
+  `
+
+  const result = await database.query({
+    text: query,
+    values: [hotelId],
+  })
+
+  return result.rows.map((row) => ({
+    "Nº da Inscrição": row.numero_inscricao || "",
+    "Data da Compra": row.data_compra || "",
+    "Nome do Quarto": translateText(row.nome_quarto, false) || "",
+    "Nome da Empresa": row.nome_empresa || "Pessoa Física",
+    "Valor Total": new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(parseFloat(row.valor_total || 0)),
+  }))
+}
+
 const report = {
   generateCompleteReport,
   generateByCompany,
@@ -732,6 +769,8 @@ const report = {
   generateByAccommodationReport,
   generateCheckoutQuestionsReport,
   generateCompaniesDiscountReport,
+  generateFinancialReport,
 }
 
 export default report
+
