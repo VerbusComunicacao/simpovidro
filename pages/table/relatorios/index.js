@@ -20,6 +20,7 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  Search,
 } from "lucide-react"
 import { exportToExcel, flattenDataForExport } from "@/lib/exportUtils"
 import { useEffect } from "react"
@@ -196,6 +197,7 @@ export default function RelatoriosPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [expandedCompanies, setExpandedCompanies] = useState({})
+  const [participantSearch, setParticipantSearch] = useState("")
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" })
 
   const handleSort = (key) => {
@@ -273,6 +275,7 @@ export default function RelatoriosPage() {
     setIsLoading(true)
     setError("")
     setReportData(null)
+    setParticipantSearch("")
     setSortConfig({ key: null, direction: "asc" })
 
     try {
@@ -326,6 +329,7 @@ export default function RelatoriosPage() {
               Estado: company["Estado"],
               "Tipo de Associação": company["Tipo de Associação"],
               "Total de Participantes": company["Total de participantes"],
+              "Nº da Venda": "",
               Participante: "",
               CPF: "",
               Email: "",
@@ -340,6 +344,7 @@ export default function RelatoriosPage() {
           Estado: company["Estado"],
           "Tipo de Associação": company["Tipo de Associação"],
           "Total de Participantes": company["Total de participantes"],
+          "Nº da Venda": p.sale_number || "",
           Participante: p.name || "",
           CPF: p.cpf || "",
           Email: p.email || "",
@@ -901,9 +906,63 @@ export default function RelatoriosPage() {
     }
 
     if (selectedReport === "by-company" && Array.isArray(reportData)) {
-      const totalCompanies = reportData.length
-      const totalParticipants = reportData.reduce(
-        (acc, curr) => acc + parseInt(curr["Total de participantes"] || 0),
+      const searchNormalized = participantSearch
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+
+      const filteredReportData = reportData
+        .map((company) => {
+          const participants = company.participants || []
+          if (!searchNormalized)
+            return { ...company, filteredParticipants: participants }
+
+          const companyName = (company["Nome da empresa"] || "")
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+
+          const isCompanyMatch = companyName.includes(searchNormalized)
+
+          const filteredParticipants = participants.filter((p) => {
+            const name = (p.name || "")
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+            const badgeName = (p.badge_name || "")
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+            const saleNum = String(p.sale_number || "").toLowerCase()
+            const cpf = (p.cpf || "").replace(/\D/g, "")
+            const email = (p.email || "").toLowerCase()
+
+            return (
+              name.includes(searchNormalized) ||
+              badgeName.includes(searchNormalized) ||
+              saleNum.includes(searchNormalized) ||
+              cpf.includes(searchNormalized) ||
+              email.includes(searchNormalized)
+            )
+          })
+
+          if (isCompanyMatch || filteredParticipants.length > 0) {
+            return {
+              ...company,
+              filteredParticipants:
+                isCompanyMatch && filteredParticipants.length === 0
+                  ? participants
+                  : filteredParticipants,
+            }
+          }
+          return null
+        })
+        .filter(Boolean)
+
+      const totalCompanies = filteredReportData.length
+      const totalParticipants = filteredReportData.reduce(
+        (acc, curr) => acc + (curr.filteredParticipants?.length || 0),
         0,
       )
 
@@ -919,30 +978,44 @@ export default function RelatoriosPage() {
                 Participantes: <strong>{totalParticipants}</strong>
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const allExpanded = reportData.every(
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Pesquisar participante..."
+                  value={participantSearch}
+                  onChange={(e) => setParticipantSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const allExpanded = filteredReportData.every(
+                    (_, idx) => expandedCompanies[idx] !== false,
+                  )
+                  const newState = {}
+                  filteredReportData.forEach((_, idx) => {
+                    newState[idx] = !allExpanded
+                  })
+                  setExpandedCompanies(newState)
+                }}
+              >
+                {filteredReportData.every(
                   (_, idx) => expandedCompanies[idx] !== false,
                 )
-                const newState = {}
-                reportData.forEach((_, idx) => {
-                  newState[idx] = !allExpanded
-                })
-                setExpandedCompanies(newState)
-              }}
-            >
-              {reportData.every((_, idx) => expandedCompanies[idx] !== false)
-                ? "Recolher Todos"
-                : "Expandir Todos"}
-            </Button>
+                  ? "Recolher Todos"
+                  : "Expandir Todos"}
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-4">
-            {reportData.map((company, index) => {
+            {filteredReportData.map((company, index) => {
               const isExpanded = expandedCompanies[index] !== false
-              const participants = company.participants || []
+              const participants = company.filteredParticipants || []
 
               return (
                 <div
@@ -980,7 +1053,7 @@ export default function RelatoriosPage() {
                           Participantes:{" "}
                         </span>
                         <span className="font-bold text-blue-800 bg-white px-2 py-0.5 rounded border border-blue-200">
-                          {company["Total de participantes"]}
+                          {participants.length}
                         </span>
                       </div>
                       <ChevronDown
@@ -1002,6 +1075,12 @@ export default function RelatoriosPage() {
                           <table className="w-full text-sm">
                             <thead className="bg-gray-100 border-b text-gray-800">
                               <tr>
+                                <SortableHeader
+                                  label="Nº Venda"
+                                  columnKey="sale_number"
+                                  sortConfig={sortConfig}
+                                  onSort={handleSort}
+                                />
                                 <SortableHeader
                                   label="Nome"
                                   columnKey="name"
@@ -1044,6 +1123,9 @@ export default function RelatoriosPage() {
                                   key={pIndex}
                                   className="hover:bg-blue-50/60 transition-colors"
                                 >
+                                  <td className="px-4 py-2.5 text-gray-700 font-mono text-xs font-semibold">
+                                    {person.sale_number || "-"}
+                                  </td>
                                   <td className="px-4 py-2.5 font-medium text-gray-900">
                                     {person.name || "-"}
                                   </td>
