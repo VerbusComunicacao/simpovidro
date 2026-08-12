@@ -238,6 +238,7 @@ describe("POST /api/v1/registrations (International)", () => {
     expect(companyReportItem).toBeDefined()
     expect(companyReportItem["CNPJ"]).toBe("N/A")
     expect(Number(companyReportItem["Total de participantes"])).toBe(1)
+    expect(companyReportItem.participants[0].sale_number).toBeDefined()
 
     const activityReport =
       await report.generateCompaniesByActivityReport(hotelId)

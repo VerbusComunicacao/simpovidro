@@ -175,6 +175,7 @@ async function generateByCompany(hotelId) {
       COUNT(DISTINCT g.id) as "Total de participantes",
       json_agg(
         json_build_object(
+          'sale_number', s.sale_number,
           'name', g.name,
           'email', g.email,
           'age', CASE WHEN g.birth_date IS NOT NULL THEN EXTRACT(YEAR FROM AGE(COALESCE(h.check_in_date, NOW()), g.birth_date)) ELSE NULL END,
