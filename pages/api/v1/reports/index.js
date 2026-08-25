@@ -68,6 +68,12 @@ async function getHandler(request, response) {
     case "financial":
       reportData = await report.generateFinancialReport(hotel_id)
       break
+    case "transfer-in":
+      reportData = await report.generateTransferInReport(hotel_id)
+      break
+    case "transfer-out":
+      reportData = await report.generateTransferOutReport(hotel_id)
+      break
     default:
       throw new ValidationError({
         message: "Tipo de relatório inválido.",

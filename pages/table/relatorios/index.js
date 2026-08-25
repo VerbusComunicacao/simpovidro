@@ -185,6 +185,16 @@ const reportTypes = [
     label: "Empresas com Desconto",
     description: "Lista empresas (inscritas ou não) com desconto",
   },
+  {
+    value: "transfer-in",
+    label: "TRANSFER IN",
+    description: "Relatório de Transfer In",
+  },
+  {
+    value: "transfer-out",
+    label: "TRANSFER OUT",
+    description: "Relatório de Transfer Out",
+  },
 ]
 
 export default function RelatoriosPage() {
@@ -1199,7 +1209,7 @@ export default function RelatoriosPage() {
                 {keys.map((key) => (
                   <SortableHeader
                     key={key}
-                    label={key}
+                    label={key.trim()}
                     columnKey={key}
                     sortConfig={sortConfig}
                     onSort={handleSort}
@@ -1210,12 +1220,9 @@ export default function RelatoriosPage() {
             <tbody>
               {sortedData.slice(0, 50).map((row, index) => (
                 <tr key={index} className="border-t hover:bg-gray-50">
-                  {Object.entries(row)
-                    .filter(
-                      ([, value]) =>
-                        typeof value !== "object" || value === null,
-                    )
-                    .map(([key, value]) => (
+                  {keys.map((key) => {
+                    const value = row[key]
+                    return (
                       <td key={key} className="px-4 py-2 whitespace-nowrap">
                         {value === true
                           ? "Sim"
@@ -1228,7 +1235,8 @@ export default function RelatoriosPage() {
                                 })
                               : value || "-"}
                       </td>
-                    ))}
+                    )
+                  })}
                 </tr>
               ))}
             </tbody>

@@ -222,7 +222,7 @@ describe("POST /api/v1/registrations (International)", () => {
     const completeReport = await report.generateCompleteReport(hotelId)
     expect(completeReport.length).toBeGreaterThanOrEqual(1)
     const reportItem = completeReport.find(
-      (item) => item["Nome"] === "Alice Smith",
+      (item) => item["Nome"] === "ALICE SMITH",
     )
     expect(reportItem).toBeDefined()
     expect(reportItem["Passaporte"]).toBe("US987654321")

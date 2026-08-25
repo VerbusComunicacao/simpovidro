@@ -145,5 +145,33 @@ describe("GET /api/v1/reports", () => {
       const responseBody = await response.json()
       expect(Array.isArray(responseBody)).toBe(true)
     })
+
+    test("When requesting transfer-in report, should return 200 and expected columns", async () => {
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/reports?type=transfer-in&hotel_id=${hotelId}`,
+        {
+          headers: {
+            Cookie: `session_id=${reportUserToken}`,
+          },
+        },
+      )
+      expect(response.status).toBe(200)
+      const responseBody = await response.json()
+      expect(Array.isArray(responseBody)).toBe(true)
+    })
+
+    test("When requesting transfer-out report, should return 200 and expected columns", async () => {
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/reports?type=transfer-out&hotel_id=${hotelId}`,
+        {
+          headers: {
+            Cookie: `session_id=${reportUserToken}`,
+          },
+        },
+      )
+      expect(response.status).toBe(200)
+      const responseBody = await response.json()
+      expect(Array.isArray(responseBody)).toBe(true)
+    })
   })
 })
