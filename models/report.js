@@ -113,7 +113,7 @@ async function generateCompleteReport(hotelId) {
       Usinas: "",
       "Número da venda": row.numero_venda || "",
       Empresa: row.empresa || "",
-      Nome: row.nome || "",
+      Nome: row.nome.toUpperCase() || "",
       "CHECK-IN": "",
       "CHECK-OUT": "",
       Passaporte: row.passaporte || null,
@@ -757,6 +757,54 @@ async function generateFinancialReport(hotelId) {
   }))
 }
 
+async function generateTransferInReport(hotelId) {
+  if (!hotelId) {
+    throw new Error("Hotel ID é obrigatório para gerar relatórios.")
+  }
+
+  const query = `
+    SELECT 
+      s.sale_number as numero_venda,
+      g.name as nome,
+      g.cpf_number as cpf,
+      g.rg_number as rg,
+      g.passport_number as passaporte,
+      TO_CHAR(g.birth_date, 'DD/MM/YYYY') as data_nascimento
+    FROM guests g
+    JOIN sales_guests sg ON g.id = sg.guest_id
+    JOIN sales s ON sg.sale_id = s.id
+    JOIN rooms r ON s.room_id = r.id
+    JOIN hotels h ON r.hotel_id = h.id
+    WHERE s.status != 'cancelled' AND h.id = $1
+    ORDER BY s.sale_number ASC, g.name ASC
+  `
+
+  const result = await database.query({
+    text: query,
+    values: [hotelId],
+  })
+
+  return result.rows.map((row) => ({
+    "nº Venda": row.numero_venda || "",
+    Nomes: row.nome.toUpperCase() || "",
+    CPF: row.cpf || "",
+    RG: row.rg || "",
+    Passaport: row.passaporte || "",
+    "Data Nascimento": row.data_nascimento || "",
+    "Data in": "",
+    Cia: "",
+    "Voo ida": "",
+    Aeroporto: "",
+    "Horário/chegada": "",
+    "Aeroporto ": "",
+    Transporte: "",
+  }))
+}
+
+async function generateTransferOutReport(hotelId) {
+  return generateTransferInReport(hotelId)
+}
+
 const report = {
   generateCompleteReport,
   generateByCompany,
@@ -768,6 +816,8 @@ const report = {
   generateCheckoutQuestionsReport,
   generateCompaniesDiscountReport,
   generateFinancialReport,
+  generateTransferInReport,
+  generateTransferOutReport,
 }
 
 export default report
