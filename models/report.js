@@ -757,7 +757,7 @@ async function generateFinancialReport(hotelId) {
   }))
 }
 
-async function generateTransferInReport(hotelId) {
+async function generateTransferReport(hotelId, flightType = "Voo ida") {
   if (!hotelId) {
     throw new Error("Hotel ID é obrigatório para gerar relatórios.")
   }
@@ -769,6 +769,7 @@ async function generateTransferInReport(hotelId) {
       g.cpf_number as cpf,
       g.rg_number as rg,
       g.passport_number as passaporte,
+      g.email as email,
       TO_CHAR(g.birth_date, 'DD/MM/YYYY') as data_nascimento
     FROM guests g
     JOIN sales_guests sg ON g.id = sg.guest_id
@@ -785,15 +786,18 @@ async function generateTransferInReport(hotelId) {
   })
 
   return result.rows.map((row) => ({
+    Status: "",
     "nº Venda": row.numero_venda || "",
-    Nomes: row.nome.toUpperCase() || "",
+    Nomes: row.nome ? row.nome.toUpperCase() : "",
     CPF: row.cpf || "",
     RG: row.rg || "",
     Passaport: row.passaporte || "",
+    "E-mail": row.email || "",
     "Data Nascimento": row.data_nascimento || "",
     "Data in": "",
     Cia: "",
-    "Voo ida": "",
+    Localizador: "",
+    [flightType]: "",
     Aeroporto: "",
     "Horário/chegada": "",
     "Aeroporto ": "",
@@ -801,8 +805,12 @@ async function generateTransferInReport(hotelId) {
   }))
 }
 
+async function generateTransferInReport(hotelId) {
+  return generateTransferReport(hotelId, "Voo ida")
+}
+
 async function generateTransferOutReport(hotelId) {
-  return generateTransferInReport(hotelId)
+  return generateTransferReport(hotelId, "Voo volta")
 }
 
 const report = {
