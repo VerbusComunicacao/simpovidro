@@ -198,7 +198,8 @@ const reportTypes = [
   {
     value: "by-month",
     label: "Número de inscritos x aptos vendidos por mês",
-    description: "Quantidade de inscritos e quartos vendidos por mês com porcentagem e totais",
+    description:
+      "Quantidade de inscritos e quartos vendidos por mês com porcentagem e totais",
   },
 ]
 
@@ -940,7 +941,7 @@ export default function RelatoriosPage() {
     if (selectedReport === "by-month" && reportData && reportData.rows) {
       const chartData = reportData.rows.map((row) => ({
         name: row.month_name,
-        "Inscritos": row.registered_count,
+        Inscritos: row.registered_count,
         "Quartos Vendidos": row.rooms_sold_count,
       }))
 
@@ -969,7 +970,9 @@ export default function RelatoriosPage() {
           <div className="max-w-3xl mx-auto border-2 border-black rounded shadow-md overflow-hidden bg-white">
             <div className="bg-yellow-400 text-black font-bold text-center border-b-2 border-black py-2">
               <div className="text-xl font-black">{reportData.year}</div>
-              <div className="text-base font-bold">Quantidade de inscritos por mês</div>
+              <div className="text-base font-bold">
+                Quantidade de inscritos por mês
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -988,9 +991,7 @@ export default function RelatoriosPage() {
                     <th className="border-r border-black px-4 py-2 font-bold">
                       Quartos Vendidos
                     </th>
-                    <th className="px-4 py-2 font-bold">
-                      %
-                    </th>
+                    <th className="px-4 py-2 font-bold">%</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-300">
@@ -1008,9 +1009,7 @@ export default function RelatoriosPage() {
                       <td className="border-r border-gray-300 px-4 py-2 font-medium">
                         {row.rooms_sold_count > 0 ? row.rooms_sold_count : ""}
                       </td>
-                      <td className="px-4 py-2">
-                        {row.rooms_sold_percentage}
-                      </td>
+                      <td className="px-4 py-2">{row.rooms_sold_percentage}</td>
                     </tr>
                   ))}
                 </tbody>
