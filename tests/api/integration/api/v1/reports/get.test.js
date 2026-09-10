@@ -173,5 +173,21 @@ describe("GET /api/v1/reports", () => {
       const responseBody = await response.json()
       expect(Array.isArray(responseBody)).toBe(true)
     })
+
+    test("When requesting by-month report, should return 200 and rows with percentages and totals", async () => {
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/reports?type=by-month&hotel_id=${hotelId}`,
+        {
+          headers: {
+            Cookie: `session_id=${reportUserToken}`,
+          },
+        },
+      )
+      expect(response.status).toBe(200)
+      const responseBody = await response.json()
+      expect(responseBody.rows).toBeDefined()
+      expect(Array.isArray(responseBody.rows)).toBe(true)
+      expect(responseBody.total).toBeDefined()
+    })
   })
 })
