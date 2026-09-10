@@ -195,6 +195,12 @@ const reportTypes = [
     label: "TRANSFER OUT",
     description: "Relatório de Transfer Out",
   },
+  {
+    value: "by-month",
+    label: "Número de inscritos x aptos vendidos por mês",
+    description:
+      "Quantidade de inscritos e quartos vendidos por mês com porcentagem e totais",
+  },
 ]
 
 export default function RelatoriosPage() {
@@ -362,6 +368,23 @@ export default function RelatoriosPage() {
           "Nome no Crachá": p.badge_name || "",
         }))
       })
+    } else if (selectedReport === "by-month" && reportData && reportData.rows) {
+      dataToExport = [
+        ...reportData.rows.map((row) => ({
+          Mês: row.month_name,
+          "Quantidade inscritos": row.registered_count || "",
+          "% Inscritos": row.registered_percentage,
+          "Quartos Vendidos": row.rooms_sold_count || "",
+          "% Quartos": row.rooms_sold_percentage,
+        })),
+        {
+          Mês: reportData.total.month_name,
+          "Quantidade inscritos": reportData.total.registered_count,
+          "% Inscritos": reportData.total.registered_percentage,
+          "Quartos Vendidos": reportData.total.rooms_sold_count,
+          "% Quartos": reportData.total.rooms_sold_percentage,
+        },
+      ]
     } else {
       dataToExport = reportData
     }
@@ -908,6 +931,107 @@ export default function RelatoriosPage() {
                     </tr>
                   ))}
                 </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (selectedReport === "by-month" && reportData && reportData.rows) {
+      const chartData = reportData.rows.map((row) => ({
+        name: row.month_name,
+        Inscritos: row.registered_count,
+        "Quartos Vendidos": row.rooms_sold_count,
+      }))
+
+      return (
+        <div className="space-y-8">
+          <div className="h-96 border rounded p-4 bg-white shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-center">
+              Inscritos x Quartos Vendidos por Mês
+            </h3>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart
+                data={chartData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="Inscritos" fill="#3B82F6" />
+                <Bar dataKey="Quartos Vendidos" fill="#10B981" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="max-w-3xl mx-auto border-2 border-black rounded shadow-md overflow-hidden bg-white">
+            <div className="bg-yellow-400 text-black font-bold text-center border-b-2 border-black py-2">
+              <div className="text-xl font-black">{reportData.year}</div>
+              <div className="text-base font-bold">
+                Quantidade de inscritos por mês
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse text-center">
+                <thead>
+                  <tr className="bg-gray-100 border-b border-black font-bold text-gray-900">
+                    <th className="border-r border-black px-4 py-2 text-left font-bold">
+                      Mês
+                    </th>
+                    <th className="border-r border-black px-4 py-2 font-bold">
+                      Quantidade inscritos
+                    </th>
+                    <th className="border-r border-black px-4 py-2 font-bold">
+                      %
+                    </th>
+                    <th className="border-r border-black px-4 py-2 font-bold">
+                      Quartos Vendidos
+                    </th>
+                    <th className="px-4 py-2 font-bold">%</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-300">
+                  {reportData.rows.map((row, index) => (
+                    <tr key={index} className="hover:bg-yellow-50">
+                      <td className="border-r border-gray-300 px-4 py-2 font-semibold text-left">
+                        {row.month_name}
+                      </td>
+                      <td className="border-r border-gray-300 px-4 py-2 font-medium">
+                        {row.registered_count > 0 ? row.registered_count : ""}
+                      </td>
+                      <td className="border-r border-gray-300 px-4 py-2">
+                        {row.registered_percentage}
+                      </td>
+                      <td className="border-r border-gray-300 px-4 py-2 font-medium">
+                        {row.rooms_sold_count > 0 ? row.rooms_sold_count : ""}
+                      </td>
+                      <td className="px-4 py-2">{row.rooms_sold_percentage}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-yellow-400 font-black text-black border-t-2 border-black">
+                    <td className="border-r border-black px-4 py-2 text-left font-black uppercase">
+                      {reportData.total.month_name}
+                    </td>
+                    <td className="border-r border-black px-4 py-2 font-black text-base">
+                      {reportData.total.registered_count}
+                    </td>
+                    <td className="border-r border-black px-4 py-2 font-black text-base">
+                      {reportData.total.registered_percentage}
+                    </td>
+                    <td className="border-r border-black px-4 py-2 font-black text-base">
+                      {reportData.total.rooms_sold_count}
+                    </td>
+                    <td className="px-4 py-2 font-black text-base">
+                      {reportData.total.rooms_sold_percentage}
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </div>

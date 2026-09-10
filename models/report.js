@@ -813,6 +813,143 @@ async function generateTransferOutReport(hotelId) {
   return generateTransferReport(hotelId, "Voo volta")
 }
 
+async function generateByMonthReport(hotelId) {
+  if (!hotelId) {
+    throw new Error("Hotel ID é obrigatório para gerar relatórios.")
+  }
+
+  // Fetch hotel info to get check_in_date
+  const hotelQuery = `SELECT check_in_date FROM hotels WHERE id = $1`
+  const hotelResult = await database.query({
+    text: hotelQuery,
+    values: [hotelId],
+  })
+
+  const hotelCheckIn = hotelResult.rows[0]?.check_in_date
+    ? new Date(hotelResult.rows[0].check_in_date)
+    : null
+
+  // Fetch monthly sales data for active sales in the specified hotel
+  const query = `
+    SELECT 
+      EXTRACT(YEAR FROM s.created_at)::int as year,
+      EXTRACT(MONTH FROM s.created_at)::int as month_num,
+      COUNT(DISTINCT sg.guest_id)::int as registered_count,
+      COUNT(DISTINCT s.id)::int as rooms_sold_count
+    FROM sales s
+    JOIN rooms r ON s.room_id = r.id
+    JOIN hotels h ON r.hotel_id = h.id
+    JOIN sales_guests sg ON s.id = sg.sale_id
+    WHERE s.status != 'cancelled' AND h.id = $1
+    GROUP BY EXTRACT(YEAR FROM s.created_at), EXTRACT(MONTH FROM s.created_at)
+    ORDER BY year ASC, month_num ASC
+  `
+
+  const result = await database.query({
+    text: query,
+    values: [hotelId],
+  })
+
+  const monthNames = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+  ]
+
+  let minYear = new Date().getFullYear()
+  let minMonth = 5 // Default June (0-indexed 5)
+  let maxYear = hotelCheckIn ? hotelCheckIn.getFullYear() : minYear
+  let maxMonth = hotelCheckIn ? hotelCheckIn.getMonth() : 10 // Default November (0-indexed 10)
+
+  if (result.rows.length > 0) {
+    minYear = result.rows[0].year
+    minMonth = result.rows[0].month_num - 1
+
+    const lastRow = result.rows[result.rows.length - 1]
+    if (
+      lastRow.year > maxYear ||
+      (lastRow.year === maxYear && lastRow.month_num - 1 > maxMonth)
+    ) {
+      maxYear = lastRow.year
+      maxMonth = lastRow.month_num - 1
+    }
+  }
+
+  // Create lookup for SQL results
+  const salesMap = {}
+  let totalRegistered = 0
+  let totalRoomsSold = 0
+
+  result.rows.forEach((row) => {
+    const key = `${row.year}-${row.month_num - 1}`
+    salesMap[key] = {
+      registered_count: row.registered_count,
+      rooms_sold_count: row.rooms_sold_count,
+    }
+    totalRegistered += row.registered_count
+    totalRoomsSold += row.rooms_sold_count
+  })
+
+  const rows = []
+  let currYear = minYear
+  let currMonth = minMonth
+
+  while (
+    currYear < maxYear ||
+    (currYear === maxYear && currMonth <= maxMonth)
+  ) {
+    const key = `${currYear}-${currMonth}`
+    const data = salesMap[key] || { registered_count: 0, rooms_sold_count: 0 }
+
+    const registered_pct_num =
+      totalRegistered > 0
+        ? Math.round((data.registered_count / totalRegistered) * 100)
+        : 0
+    const rooms_pct_num =
+      totalRoomsSold > 0
+        ? Math.round((data.rooms_sold_count / totalRoomsSold) * 100)
+        : 0
+
+    rows.push({
+      month_name: monthNames[currMonth],
+      year: currYear,
+      registered_count: data.registered_count,
+      registered_percentage: `${registered_pct_num}%`,
+      rooms_sold_count: data.rooms_sold_count,
+      rooms_sold_percentage: `${rooms_pct_num}%`,
+      raw_registered_pct: registered_pct_num,
+      raw_rooms_pct: rooms_pct_num,
+    })
+
+    currMonth++
+    if (currMonth > 11) {
+      currMonth = 0
+      currYear++
+    }
+  }
+
+  return {
+    year: minYear === maxYear ? minYear : `${minYear}/${maxYear}`,
+    rows,
+    total: {
+      month_name: "Total",
+      registered_count: totalRegistered,
+      registered_percentage: totalRegistered > 0 ? "100%" : "0%",
+      rooms_sold_count: totalRoomsSold,
+      rooms_sold_percentage: totalRoomsSold > 0 ? "100%" : "0%",
+    },
+  }
+}
+
 const report = {
   generateCompleteReport,
   generateByCompany,
@@ -826,6 +963,7 @@ const report = {
   generateFinancialReport,
   generateTransferInReport,
   generateTransferOutReport,
+  generateByMonthReport,
 }
 
 export default report

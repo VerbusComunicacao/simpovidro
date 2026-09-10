@@ -74,6 +74,9 @@ async function getHandler(request, response) {
     case "transfer-out":
       reportData = await report.generateTransferOutReport(hotel_id)
       break
+    case "by-month":
+      reportData = await report.generateByMonthReport(hotel_id)
+      break
     default:
       throw new ValidationError({
         message: "Tipo de relatório inválido.",
