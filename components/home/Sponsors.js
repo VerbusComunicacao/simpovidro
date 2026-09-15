@@ -41,6 +41,11 @@ export default function Sponsors({ variant = "full" }) {
       link: "https://diamanfer.com.br/",
     },
     {
+      name: "Excellam Azul",
+      logo: "/images/apoiadores/LOGO_EXCELLAM_AZUL PETRÓLEO_V1.png",
+      link: "https://excellam.com.br/",
+    },
+    {
       name: "Glass Control",
       logo: "/images/apoiadores/glass-control.png",
       link: "https://sfti.com.br/",
