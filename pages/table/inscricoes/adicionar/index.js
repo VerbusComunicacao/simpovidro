@@ -658,8 +658,13 @@ export default function AdminAddRegistrationPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="cash">À Vista / Boleto</SelectItem>
-                        <SelectItem value="installments">Parcelado</SelectItem>
+                        <SelectItem value="cash">Boleto à vista</SelectItem>
+                        <SelectItem value="installments">
+                          Boleto parcelado
+                        </SelectItem>
+                        <SelectItem value="credit_card">
+                          Cartão de crédito
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -703,6 +708,46 @@ export default function AdminAddRegistrationPage() {
                             </p>
                           ))}
                         </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {paymentMethod === "credit_card" && currentRoom && (
+                    <div className="space-y-2 flex flex-col justify-center">
+                      <Label className="text-gray-600 text-xs">
+                        Condições do Cartão
+                      </Label>
+                      <div className="pt-2 flex flex-col gap-2 bg-white p-3 rounded-md border border-blue-50">
+                        <div className="space-y-1 text-xs">
+                          <div className="flex justify-between items-center">
+                            <span className="font-semibold text-gray-800">
+                              Mastercard / Visa:
+                            </span>
+                            <span className="font-bold text-blue-600">
+                              até 10x de{" "}
+                              {new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(pricing.finalTotal / 10)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="font-semibold text-gray-800">
+                              AMEX:
+                            </span>
+                            <span className="font-bold text-blue-600">
+                              até 6x de{" "}
+                              {new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(pricing.finalTotal / 6)}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-gray-500 italic mt-1 border-t pt-1">
+                          A organização entrará em contato para envio do link de
+                          pagamento.
+                        </p>
                       </div>
                     </div>
                   )}

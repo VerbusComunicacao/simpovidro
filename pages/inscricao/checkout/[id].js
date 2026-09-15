@@ -20,7 +20,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { AlertCircle, Loader2, Calendar, User, Lock } from "lucide-react"
+import {
+  AlertCircle,
+  Loader2,
+  Calendar,
+  User,
+  Lock,
+  Info,
+  CreditCard,
+} from "lucide-react"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 
 import * as cookie from "cookie"
@@ -2675,7 +2683,7 @@ export default function CheckoutPage({
                               : "Forma de Pagamento"}
                           </h3>
                           {!isInternational && (
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                               <Button
                                 type="button"
                                 variant={
@@ -2691,7 +2699,9 @@ export default function CheckoutPage({
                                   setInstallmentsCount(1)
                                 }}
                               >
-                                À Vista
+                                {isInternational
+                                  ? "Invoice (Single)"
+                                  : "Boleto à vista"}
                               </Button>
                               <Button
                                 type="button"
@@ -2710,7 +2720,30 @@ export default function CheckoutPage({
                                   setInstallmentsCount(maxInstallments)
                                 }}
                               >
-                                Parcelado
+                                {isInternational
+                                  ? "Invoice (Installments)"
+                                  : "Boleto parcelado"}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant={
+                                  paymentMethod === "credit_card"
+                                    ? "default"
+                                    : "outline"
+                                }
+                                className={
+                                  paymentMethod === "credit_card"
+                                    ? "bg-blue-600"
+                                    : ""
+                                }
+                                onClick={() => {
+                                  setPaymentMethod("credit_card")
+                                  setInstallmentsCount(1)
+                                }}
+                              >
+                                {isInternational
+                                  ? "Credit Card"
+                                  : "Cartão de crédito"}
                               </Button>
                             </div>
                           )}
@@ -2838,6 +2871,112 @@ export default function CheckoutPage({
                                       </span>
                                     </p>
                                   ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {paymentMethod === "credit_card" && (
+                            <div className="space-y-4 bg-blue-50/50 p-4 rounded-lg border border-blue-100 mt-4">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-blue-900 font-bold">
+                                  {isInternational
+                                    ? "Credit Card"
+                                    : "Cartão de Crédito"}
+                                </Label>
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
+                                >
+                                  {isInternational
+                                    ? "Total Amount"
+                                    : "Valor Total"}
+                                </Badge>
+                              </div>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-2xl font-black text-blue-600">
+                                  {new Intl.NumberFormat(
+                                    isInternational ? "en-US" : "pt-BR",
+                                    {
+                                      style: "currency",
+                                      currency: "BRL",
+                                    },
+                                  ).format(finalTotal)}
+                                </span>
+                              </div>
+
+                              <div className="pt-3 border-t border-blue-100 space-y-3">
+                                <p className="text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                  {isInternational
+                                    ? "Accepted Brands & Installment Conditions:"
+                                    : "Bandeiras e Condições de Parcelamento:"}
+                                </p>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div className="bg-white p-3 rounded-lg border border-blue-100 shadow-sm space-y-1">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs font-bold text-gray-800">
+                                        Mastercard e Visa
+                                      </span>
+                                      <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] font-semibold hover:bg-emerald-100">
+                                        {isInternational
+                                          ? "Up to 10x"
+                                          : "Até 10x sem juros"}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-sm font-black text-blue-600">
+                                      10x de{" "}
+                                      {new Intl.NumberFormat(
+                                        isInternational ? "en-US" : "pt-BR",
+                                        {
+                                          style: "currency",
+                                          currency: "BRL",
+                                        },
+                                      ).format(finalTotal / 10)}
+                                    </p>
+                                    <p className="text-[11px] text-gray-500">
+                                      {isInternational
+                                        ? "Interest-free installments"
+                                        : "Parcelamento sem juros"}
+                                    </p>
+                                  </div>
+
+                                  <div className="bg-white p-3 rounded-lg border border-blue-100 shadow-sm space-y-1">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs font-bold text-gray-800">
+                                        AMEX
+                                      </span>
+                                      <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] font-semibold hover:bg-emerald-100">
+                                        {isInternational
+                                          ? "Up to 6x"
+                                          : "Até 6x sem juros"}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-sm font-black text-blue-600">
+                                      6x de{" "}
+                                      {new Intl.NumberFormat(
+                                        isInternational ? "en-US" : "pt-BR",
+                                        {
+                                          style: "currency",
+                                          currency: "BRL",
+                                        },
+                                      ).format(finalTotal / 6)}
+                                    </p>
+                                    <p className="text-[11px] text-gray-500">
+                                      {isInternational
+                                        ? "Interest-free installments"
+                                        : "Parcelamento sem juros"}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="bg-blue-100/50 p-3 rounded-md flex items-start gap-2 text-xs text-blue-800 mt-2">
+                                  <Info className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
+                                  <span>
+                                    {isInternational
+                                      ? "After completing your registration, our team will contact you to send the credit card payment link."
+                                      : "Após a realização da inscrição, a organização entrará em contato com você para o envio do link de pagamento do cartão."}
+                                  </span>
                                 </div>
                               </div>
                             </div>

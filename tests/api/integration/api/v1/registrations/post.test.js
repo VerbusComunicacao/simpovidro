@@ -487,6 +487,57 @@ describe("POST /api/v1/registrations", () => {
       })
     })
 
+    test("should successfully register with payment_method 'credit_card' and generate 1 installment", async () => {
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${userToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomId,
+            payment_method: "credit_card",
+            guests_data: [
+              {
+                name: "Regular User",
+                badge_name: "Crachá Regular",
+                email: "user-registration@example.com",
+                phone: "11966666666",
+                gender: "Masculino",
+                rg_number: "777666555",
+                cpf_number: "777.666.555-44",
+                birth_date: "1985-12-12",
+              },
+            ],
+          }),
+        },
+      )
+
+      if (response.status !== 201) {
+        console.error("Credit card registration failed:", await response.text())
+      }
+
+      expect(response.status).toBe(201)
+      const data = JSON.parse(await response.text())
+
+      const saleResponse = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/sales/${data.saleId}`,
+        {
+          headers: { Cookie: `session_id=${userToken}` },
+        },
+      )
+      const saleData = JSON.parse(await saleResponse.text())
+
+      expect(saleData.payment_method).toBe("credit_card")
+      expect(saleData.installments_count).toBe(1)
+      expect(saleData.installments).toHaveLength(1)
+      expect(parseFloat(saleData.installments[0].amount)).toBe(
+        parseFloat(saleData.final_amount),
+      )
+    })
+
     test("should rollback all changes if an error occurs during sale creation (Transaction Atomicity)", async () => {
       // 1. Manually set room as unavailable to trigger a validation error in sale.create
       // but AFTER guest.upsert has been called in registration.create.

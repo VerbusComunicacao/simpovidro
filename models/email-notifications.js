@@ -185,7 +185,28 @@ export async function sendRegistrationEmail(
     `
       : ""
 
-    const installmentsSection = `
+    const isCreditCard = saleDetails.payment_method === "credit_card"
+
+    const installmentsSection = isCreditCard
+      ? `
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
+        <tr><td height="25" style="font-size: 1px; line-height: 1px;">&nbsp;</td></tr>
+        <tr>
+          <td>
+            <h3 style="font-family: Arial, Helvetica, sans-serif; color: #374151; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin: 0 0 15px 0;">${isInternational ? "Payment Method: Credit Card" : "Forma de Pagamento: Cartão de Crédito"}</h3>
+            <div style="background-color: #eff6ff; padding: 15px 20px; border: 1px solid #bfdbfe; border-radius: 8px; font-family: Arial, Helvetica, sans-serif; font-size: 13.5px;">
+              <p style="margin: 0 0 8px 0; color: #1e3a8a; font-weight: bold;">${isInternational ? "Accepted Brands & Conditions:" : "Bandeiras e Condições de Parcelamento:"}</p>
+              <ul style="margin: 0 0 10px 0; padding-left: 20px; color: #1e40af; line-height: 1.6;">
+                <li><strong>Mastercard e Visa:</strong> ${isInternational ? "up to 10 interest-free installments" : "parcelado em até 10 vezes sem juros"}</li>
+                <li><strong>AMEX:</strong> ${isInternational ? "up to 6 interest-free installments" : "parcelado em até 6 vezes sem juros"}</li>
+              </ul>
+              <p style="margin: 0; color: #1d4ed8; font-style: italic;">${isInternational ? "The organization will contact you to send the credit card payment link." : "A organização entrará em contato para o envio do link de pagamento do cartão."}</p>
+            </div>
+          </td>
+        </tr>
+      </table>
+      `
+      : `
       <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
         <tr><td height="25" style="font-size: 1px; line-height: 1px;">&nbsp;</td></tr>
         <tr>
@@ -435,8 +456,8 @@ export async function sendRegistrationEmail(
                       ${
                         isInternational
                           ? `
-                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 8px 0; font-weight: bold; color: #111827;">Payment - Due date: ${saleDetails.installments?.[0]?.due_date ? formatDate(saleDetails.installments[0].due_date) : ""}</p>
-                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 15px 0; color: #4b5563;">After confirming the veracity of the information provided, the organization will contact you to arrange payment details.</p>
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 8px 0; font-weight: bold; color: #111827;">${isCreditCard ? "Credit Card Payment:" : `Payment - Due date: ${saleDetails.installments?.[0]?.due_date ? formatDate(saleDetails.installments[0].due_date) : ""}`}</p>
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 15px 0; color: #4b5563;">${isCreditCard ? "The organization will contact you to send the credit card payment link." : "After confirming the veracity of the information provided, the organization will contact you to arrange payment details."}</p>
                         <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 25px 0; color: #4b5563;">All participants have to inform their flights to organization until October, 16th 2026, to fit all transfers.<br/>
                         Phone: (+55.11) 3873-9908.<br/>
                         E-mail: logistica@abravidro.org.br</p>
@@ -446,9 +467,9 @@ export async function sendRegistrationEmail(
                         </p>
                       `
                           : `
-                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 8px 0; font-weight: bold; color: #111827;">Boletos:</p>
-                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 15px 0; color: #4b5563;">Os boletos serão enviados para o e-mail do titular.</p>
-                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 25px 0; color: #4b5563;">Sua inscrição estará efetivada após comprovação da veracidade das informações prestadas e do pagamento de todas as parcelas com vencimento antes do evento.</p>
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 8px 0; font-weight: bold; color: #111827;">${isCreditCard ? "Cartão de Crédito:" : "Boletos:"}</p>
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 15px 0; color: #4b5563;">${isCreditCard ? "A organização entrará em contato para o envio do link de pagamento do cartão de crédito." : "Os boletos serão enviados para o e-mail do titular."}</p>
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 25px 0; color: #4b5563;">Sua inscrição estará efetivada após comprovação da veracidade das informações prestadas e do pagamento ${isCreditCard ? "do valor total da inscrição." : "de todas as parcelas com vencimento antes do evento."}</p>
                         <p style="font-family: Arial, Helvetica, sans-serif; margin: 0; color: #4b5563;">
                           Atenciosamente,<br/><br/>
                           <strong>Organização 17º Simpovidro</strong>
