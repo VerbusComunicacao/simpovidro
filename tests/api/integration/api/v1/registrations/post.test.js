@@ -487,7 +487,7 @@ describe("POST /api/v1/registrations", () => {
       })
     })
 
-    test("should successfully register with payment_method 'credit_card' and generate 1 installment", async () => {
+    test("should successfully register with payment_method 'credit-card_mastercard-visa' in 10 installments", async () => {
       const response = await fetch(
         `${orchestrator.webserverUrl}/api/v1/registrations`,
         {
@@ -498,7 +498,8 @@ describe("POST /api/v1/registrations", () => {
           },
           body: JSON.stringify({
             room_id: roomId,
-            payment_method: "credit_card",
+            payment_method: "credit-card_mastercard-visa",
+            installments_count: 10,
             guests_data: [
               {
                 name: "Regular User",
@@ -515,9 +516,53 @@ describe("POST /api/v1/registrations", () => {
         },
       )
 
-      if (response.status !== 201) {
-        console.error("Credit card registration failed:", await response.text())
-      }
+      expect(response.status).toBe(201)
+      const data = JSON.parse(await response.text())
+
+      const saleResponse = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/sales/${data.saleId}`,
+        {
+          headers: { Cookie: `session_id=${userToken}` },
+        },
+      )
+      const saleData = JSON.parse(await saleResponse.text())
+
+      expect(saleData.payment_method).toBe("credit-card_mastercard-visa")
+      expect(saleData.installments_count).toBe(10)
+      expect(saleData.installments).toHaveLength(1)
+      expect(parseFloat(saleData.installments[0].amount)).toBe(
+        parseFloat(saleData.final_amount),
+      )
+    })
+
+    test("should successfully register with payment_method 'credit-card_amex' in 6 installments", async () => {
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${userToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomId,
+            payment_method: "credit-card_amex",
+            installments_count: 6,
+            guests_data: [
+              {
+                name: "Regular User",
+                badge_name: "Crachá Regular",
+                email: "user-registration@example.com",
+                phone: "11966666666",
+                gender: "Masculino",
+                rg_number: "888777666",
+                cpf_number: "888.777.666-55",
+                birth_date: "1985-12-12",
+              },
+            ],
+          }),
+        },
+      )
 
       expect(response.status).toBe(201)
       const data = JSON.parse(await response.text())
@@ -530,8 +575,8 @@ describe("POST /api/v1/registrations", () => {
       )
       const saleData = JSON.parse(await saleResponse.text())
 
-      expect(saleData.payment_method).toBe("credit_card")
-      expect(saleData.installments_count).toBe(1)
+      expect(saleData.payment_method).toBe("credit-card_amex")
+      expect(saleData.installments_count).toBe(6)
       expect(saleData.installments).toHaveLength(1)
       expect(parseFloat(saleData.installments[0].amount)).toBe(
         parseFloat(saleData.final_amount),

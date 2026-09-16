@@ -305,6 +305,21 @@ async function create(saleInputValues, externalClient) {
     // Enforce fixed installments count if payment method is 'installments'
     if (payment_method === "installments") {
       installments_count = calculateMaxInstallments(dateString)
+    } else if (payment_method === "credit-card_mastercard-visa") {
+      installments_count = Math.min(
+        Math.max(1, parseInt(installments_count, 10) || 1),
+        10,
+      )
+    } else if (payment_method === "credit-card_amex") {
+      installments_count = Math.min(
+        Math.max(1, parseInt(installments_count, 10) || 1),
+        6,
+      )
+    } else if (payment_method === "credit_card") {
+      installments_count = Math.min(
+        Math.max(1, parseInt(installments_count, 10) || 1),
+        10,
+      )
     } else {
       installments_count = 1
     }
@@ -376,32 +391,51 @@ async function create(saleInputValues, externalClient) {
     })
 
     // 6. Generate and Create Installments
-    const installmentAmount = (final_amount / installments_count).toFixed(2)
-    const installmentDates = saleInstallment.generateInstallmentDates(
-      installments_count,
-      eventDate,
-    )
+    if (payment_method === "installments") {
+      const installmentAmount = (final_amount / installments_count).toFixed(2)
+      const installmentDates = saleInstallment.generateInstallmentDates(
+        installments_count,
+        eventDate,
+      )
 
-    const installmentsToCreate = installmentDates.map((date, index) => ({
-      sale_id: newSale.id,
-      installment_number: index + 1,
-      amount: installmentAmount,
-      due_date: date,
-    }))
+      const installmentsToCreate = installmentDates.map((date, index) => ({
+        sale_id: newSale.id,
+        installment_number: index + 1,
+        amount: installmentAmount,
+        due_date: date,
+      }))
 
-    // Adjust the last installment for rounding differences
-    const totalInstallmentsAmount = (
-      Number(installmentAmount) * installments_count
-    ).toFixed(2)
-    const diff = (final_amount - Number(totalInstallmentsAmount)).toFixed(2)
-    if (Number(diff) !== 0) {
-      installmentsToCreate[installments_count - 1].amount = (
-        Number(installmentsToCreate[installments_count - 1].amount) +
-        Number(diff)
+      // Adjust the last installment for rounding differences
+      const totalInstallmentsAmount = (
+        Number(installmentAmount) * installments_count
       ).toFixed(2)
-    }
+      const diff = (final_amount - Number(totalInstallmentsAmount)).toFixed(2)
+      if (Number(diff) !== 0) {
+        installmentsToCreate[installments_count - 1].amount = (
+          Number(installmentsToCreate[installments_count - 1].amount) +
+          Number(diff)
+        ).toFixed(2)
+      }
 
-    await saleInstallment.createMany(installmentsToCreate, client)
+      await saleInstallment.createMany(installmentsToCreate, client)
+    } else {
+      // cash or credit-card: 1 single installment of full amount for tracking payment
+      const singleInstallmentDate = saleInstallment.generateInstallmentDates(
+        1,
+        eventDate,
+      )[0]
+      await saleInstallment.createMany(
+        [
+          {
+            sale_id: newSale.id,
+            installment_number: 1,
+            amount: final_amount,
+            due_date: singleInstallmentDate,
+          },
+        ],
+        client,
+      )
+    }
 
     if (isInternalTransaction) await client.query("COMMIT")
     return newSale

@@ -185,7 +185,18 @@ export async function sendRegistrationEmail(
     `
       : ""
 
-    const isCreditCard = saleDetails.payment_method === "credit_card"
+    const isCreditCard =
+      saleDetails.payment_method === "credit_card" ||
+      saleDetails.payment_method?.startsWith("credit")
+
+    const cardBrandLabel =
+      saleDetails.payment_method === "credit-card_amex"
+        ? "AMEX"
+        : "Mastercard / Visa"
+
+    const cardInstallmentsCount = saleDetails.installments_count || 1
+    const cardInstallmentAmount =
+      saleDetails.final_amount / cardInstallmentsCount
 
     const installmentsSection = isCreditCard
       ? `
@@ -195,11 +206,8 @@ export async function sendRegistrationEmail(
           <td>
             <h3 style="font-family: Arial, Helvetica, sans-serif; color: #374151; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin: 0 0 15px 0;">${isInternational ? "Payment Method: Credit Card" : "Forma de Pagamento: Cartão de Crédito"}</h3>
             <div style="background-color: #eff6ff; padding: 15px 20px; border: 1px solid #bfdbfe; border-radius: 8px; font-family: Arial, Helvetica, sans-serif; font-size: 13.5px;">
-              <p style="margin: 0 0 8px 0; color: #1e3a8a; font-weight: bold;">${isInternational ? "Accepted Brands & Conditions:" : "Bandeiras e Condições de Parcelamento:"}</p>
-              <ul style="margin: 0 0 10px 0; padding-left: 20px; color: #1e40af; line-height: 1.6;">
-                <li><strong>Mastercard e Visa:</strong> ${isInternational ? "up to 10 interest-free installments" : "parcelado em até 10 vezes sem juros"}</li>
-                <li><strong>AMEX:</strong> ${isInternational ? "up to 6 interest-free installments" : "parcelado em até 6 vezes sem juros"}</li>
-              </ul>
+              <p style="margin: 0 0 6px 0; color: #1e3a8a;"><strong>${isInternational ? "Card Brand:" : "Bandeira:"}</strong> ${cardBrandLabel}</p>
+              <p style="margin: 0 0 8px 0; color: #1e3a8a;"><strong>${isInternational ? "Installments Plan:" : "Parcelas:"}</strong> ${cardInstallmentsCount}x ${isInternational ? "of" : "de"} ${formatCurrency(cardInstallmentAmount)} ${isInternational ? "interest-free" : "sem juros"}</p>
               <p style="margin: 0; color: #1d4ed8; font-style: italic;">${isInternational ? "The organization will contact you to send the credit card payment link." : "A organização entrará em contato para o envio do link de pagamento do cartão."}</p>
             </div>
           </td>

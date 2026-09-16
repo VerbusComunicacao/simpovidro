@@ -286,9 +286,13 @@ export default function PaymentsTable() {
                       <p className="text-xs text-gray-500">
                         {sale.payment_method === "installments"
                           ? "Boleto Parcelado"
-                          : sale.payment_method === "credit_card"
-                            ? "Cartão de Crédito"
-                            : "Boleto à Vista"}
+                          : sale.payment_method === "credit-card_mastercard-visa"
+                            ? `Cartão (${sale.installments_count}x Mastercard/Visa)`
+                            : sale.payment_method === "credit-card_amex"
+                              ? `Cartão (${sale.installments_count}x AMEX)`
+                              : sale.payment_method?.startsWith("credit")
+                                ? `Cartão (${sale.installments_count}x)`
+                                : "Boleto à Vista"}
                       </p>
                     </div>
 
@@ -362,9 +366,13 @@ export default function PaymentsTable() {
                     <p className="text-sm font-semibold">
                       {selectedSale.payment_method === "installments"
                         ? "Boleto Parcelado"
-                        : selectedSale.payment_method === "credit_card"
-                          ? "Cartão de Crédito"
-                          : "Boleto à Vista"}
+                        : selectedSale.payment_method === "credit-card_mastercard-visa"
+                          ? `Cartão de Crédito - Mastercard / Visa (${selectedSale.installments_count}x)`
+                          : selectedSale.payment_method === "credit-card_amex"
+                            ? `Cartão de Crédito - AMEX (${selectedSale.installments_count}x)`
+                            : selectedSale.payment_method?.startsWith("credit")
+                              ? `Cartão de Crédito (${selectedSale.installments_count}x)`
+                              : "Boleto à Vista"}
                     </p>
                   </div>
                 </div>
@@ -449,13 +457,13 @@ export default function PaymentsTable() {
                   </div>
 
                   {(selectedSale.payment_method === "cash" ||
-                    selectedSale.payment_method === "credit_card") &&
+                    selectedSale.payment_method?.startsWith("credit")) &&
                     (!selectedSale.installments ||
                       selectedSale.installments.length === 0) && (
                       <div className="p-8 text-center text-gray-500 border-2 border-dashed rounded-lg">
                         <Info className="h-8 w-8 mx-auto mb-2 text-gray-300" />
                         <p className="text-sm">
-                          {selectedSale.payment_method === "credit_card"
+                          {selectedSale.payment_method?.startsWith("credit")
                             ? "Pagamento via link de Cartão de Crédito."
                             : "Pagamento via boleto à vista sem parcelas geradas no sistema."}
                           <br />
