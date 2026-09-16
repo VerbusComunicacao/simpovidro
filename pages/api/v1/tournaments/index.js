@@ -15,7 +15,8 @@ async function getHandler(request, response) {
 
   if (!user || !user.id) {
     throw new ValidationError({
-      message: "Você precisa estar logado para acessar as inscrições dos torneios.",
+      message:
+        "Você precisa estar logado para acessar as inscrições dos torneios.",
       action: "Faça login e tente novamente.",
     })
   }
@@ -29,7 +30,8 @@ async function postHandler(request, response) {
 
   if (!user || !user.id) {
     throw new ValidationError({
-      message: "Você precisa estar logado para realizar inscrições nos torneios.",
+      message:
+        "Você precisa estar logado para realizar inscrições nos torneios.",
       action: "Faça login e tente novamente.",
     })
   }

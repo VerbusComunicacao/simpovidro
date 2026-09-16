@@ -345,21 +345,12 @@ export default function TorneiosPage() {
               <Trophy className="h-12 w-12 text-blue-600" />
             </div>
 
-            <span className="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border border-amber-200">
-              Acesso Exclusivo para Congressistas
-            </span>
-
             <h1 className="text-3xl sm:text-4xl font-black text-slate-900 mb-4 tracking-tight">
-              Inscrições em Torneios Oficiais
+              Inscrições em torneios
             </h1>
 
             <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto mb-8 leading-relaxed">
-              Para se inscrever e inscrever outros participantes nos torneios
-              oficiais de{" "}
-              <strong className="text-slate-900 font-bold">Futebol ⚽</strong>,{" "}
-              <strong className="text-slate-900 font-bold">Vôlei 🏐</strong> e{" "}
-              <strong className="text-slate-900 font-bold">Tênis 🎾</strong> do
-              17º Simpovidro, você precisa estar autenticado com a sua conta.
+              Para se inscrever, acesse com a sua conta.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">

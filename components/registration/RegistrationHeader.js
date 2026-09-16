@@ -102,9 +102,7 @@ export default function RegistrationHeader({ showBackButton = false }) {
                   size="sm"
                   className="hidden sm:flex text-slate-600 font-bold hover:text-blue-600"
                 >
-                  <Link href="/torneios">
-                    {t("Torneios", "Tournaments")}
-                  </Link>
+                  <Link href="/torneios">{t("Torneios", "Tournaments")}</Link>
                 </Button>
                 <Button
                   asChild

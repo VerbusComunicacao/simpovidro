@@ -26,19 +26,22 @@ describe("DELETE /api/v1/tournaments/[id]", () => {
       const session = await orchestrator.createSession(user.id)
 
       // Create registration
-      const createRes = await fetch("http://localhost:3000/api/v1/tournaments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `session_id=${session.token}`,
+      const createRes = await fetch(
+        "http://localhost:3000/api/v1/tournaments",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${session.token}`,
+          },
+          body: JSON.stringify({
+            tournament: "volei",
+            company_name: "Empresa Delete",
+            participant_name: "Participante Delete",
+            phone: "11999995555",
+          }),
         },
-        body: JSON.stringify({
-          tournament: "volei",
-          company_name: "Empresa Delete",
-          participant_name: "Participante Delete",
-          phone: "11999995555",
-        }),
-      })
+      )
       const created = await createRes.json()
 
       // Delete registration
@@ -75,19 +78,22 @@ describe("DELETE /api/v1/tournaments/[id]", () => {
       const session2 = await orchestrator.createSession(user2.id)
 
       // User 1 creates registration
-      const createRes = await fetch("http://localhost:3000/api/v1/tournaments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `session_id=${session1.token}`,
+      const createRes = await fetch(
+        "http://localhost:3000/api/v1/tournaments",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${session1.token}`,
+          },
+          body: JSON.stringify({
+            tournament: "futebol",
+            company_name: "Empresa User 1",
+            participant_name: "Participante User 1",
+            phone: "11999991111",
+          }),
         },
-        body: JSON.stringify({
-          tournament: "futebol",
-          company_name: "Empresa User 1",
-          participant_name: "Participante User 1",
-          phone: "11999991111",
-        }),
-      })
+      )
       const created = await createRes.json()
 
       // User 2 tries to delete User 1's registration

@@ -49,7 +49,11 @@ async function deleteHandler(request, response) {
   }
 
   const { id } = request.query
-  const deletedItem = await tournament.deleteById(id, user.id, user.features || [])
+  const deletedItem = await tournament.deleteById(
+    id,
+    user.id,
+    user.features || [],
+  )
 
   return response.status(200).json(deletedItem)
 }
