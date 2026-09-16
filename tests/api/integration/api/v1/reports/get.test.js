@@ -189,5 +189,41 @@ describe("GET /api/v1/reports", () => {
       expect(Array.isArray(responseBody.rows)).toBe(true)
       expect(responseBody.total).toBeDefined()
     })
+
+    test("When requesting tournaments report, should return 200 and list of tournament registrations", async () => {
+      // Create a tournament registration first
+      await fetch(`${orchestrator.webserverUrl}/api/v1/tournaments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${reportUserToken}`,
+        },
+        body: JSON.stringify({
+          tournament: "futebol",
+          company_name: "Report Tournament Test Ltd",
+          participant_name: "Jogador Teste",
+          phone: "11988889999",
+        }),
+      })
+
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/reports?type=tournaments`,
+        {
+          headers: {
+            Cookie: `session_id=${reportUserToken}`,
+          },
+        },
+      )
+      expect(response.status).toBe(200)
+      const responseBody = await response.json()
+      expect(Array.isArray(responseBody)).toBe(true)
+      expect(responseBody.length).toBeGreaterThanOrEqual(1)
+      const item = responseBody.find((r) => r.participante === "Jogador Teste")
+      expect(item).toBeDefined()
+      expect(item.torneio).toBe("Futebol")
+      expect(item.empresa).toBe("Report Tournament Test Ltd")
+      expect(item.celular).toBe("11988889999")
+      expect(item.cadastrado_por).toBe("Report Reader User")
+    })
   })
 })

@@ -201,6 +201,12 @@ const reportTypes = [
     description:
       "Quantidade de inscritos e quartos vendidos por mês com porcentagem e totais",
   },
+  {
+    value: "tournaments",
+    label: "Inscrições em Torneios Oficiais",
+    description:
+      "Lista de participantes inscritos nos torneios de Futebol, Vôlei e Tênis",
+  },
 ]
 
 export default function RelatoriosPage() {
@@ -214,6 +220,7 @@ export default function RelatoriosPage() {
   const [error, setError] = useState("")
   const [expandedCompanies, setExpandedCompanies] = useState({})
   const [participantSearch, setParticipantSearch] = useState("")
+  const [tournamentFilter, setTournamentFilter] = useState("all")
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" })
 
   const handleSort = (key) => {
@@ -385,6 +392,16 @@ export default function RelatoriosPage() {
           "% Quartos": reportData.total.rooms_sold_percentage,
         },
       ]
+    } else if (selectedReport === "tournaments" && Array.isArray(reportData)) {
+      dataToExport = reportData.map((item) => ({
+        Torneio: item.torneio,
+        Participante: item.participante,
+        Celular: item.celular,
+        Empresa: item.empresa,
+        "Cadastrado Por": item.cadastrado_por,
+        "Email do Cadastrador": item.email_cadastrador,
+        "Data de Inscrição": item.data_inscricao,
+      }))
     } else {
       dataToExport = reportData
     }
@@ -1039,6 +1056,266 @@ export default function RelatoriosPage() {
       )
     }
 
+    if (selectedReport === "tournaments" && Array.isArray(reportData)) {
+      const searchNormalized = participantSearch
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+
+      const futebolCount = reportData.filter(
+        (i) => (i.modalidade_raw || "").toLowerCase() === "futebol",
+      ).length
+      const voleiCount = reportData.filter(
+        (i) =>
+          (i.modalidade_raw || "").toLowerCase() === "volei" ||
+          (i.modalidade_raw || "").toLowerCase() === "vôlei",
+      ).length
+      const tenisCount = reportData.filter(
+        (i) =>
+          (i.modalidade_raw || "").toLowerCase() === "tenis" ||
+          (i.modalidade_raw || "").toLowerCase() === "tênis",
+      ).length
+
+      const filteredItems = reportData.filter((item) => {
+        if (tournamentFilter !== "all") {
+          const itemTour = (item.modalidade_raw || "").toLowerCase()
+          if (tournamentFilter === "futebol" && itemTour !== "futebol")
+            return false
+          if (
+            tournamentFilter === "volei" &&
+            itemTour !== "volei" &&
+            itemTour !== "vôlei"
+          )
+            return false
+          if (
+            tournamentFilter === "tenis" &&
+            itemTour !== "tenis" &&
+            itemTour !== "tênis"
+          )
+            return false
+        }
+
+        if (!searchNormalized) return true
+        const str =
+          `${item.participante || ""} ${item.empresa || ""} ${item.celular || ""} ${item.cadastrado_por || ""}`
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+
+        return str.includes(searchNormalized)
+      })
+
+      const sortedFilteredItems = sortItems(
+        filteredItems,
+        sortConfig.key,
+        sortConfig.direction,
+      )
+
+      return (
+        <div className="space-y-6">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="flex gap-4 items-center p-4 rounded-xl border bg-slate-50 border-slate-200">
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Total de Inscritos
+              </div>
+              <div className="text-2xl font-black text-slate-900">
+                {reportData.length}
+              </div>
+            </div>
+            <div className="flex gap-4 items-center p-4 rounded-xl border bg-slate-50 border-slate-200">
+              <div className="text-xs font-bold uppercase tracking-wider text-emerald-700">
+                Futebol
+              </div>
+              <div className="text-2xl font-black text-emerald-900">
+                {futebolCount}
+              </div>
+            </div>
+            <div className="flex gap-4 items-center p-4 rounded-xl border bg-slate-50 border-slate-200">
+              <div className="text-xs font-bold uppercase tracking-wider text-amber-700">
+                Vôlei
+              </div>
+              <div className="text-2xl font-black text-amber-900">
+                {voleiCount}
+              </div>
+            </div>
+            <div className="flex gap-4 items-center p-4 rounded-xl border bg-slate-50 border-slate-200">
+              <div className="text-xs font-bold uppercase tracking-wider text-blue-700">
+                Tênis
+              </div>
+              <div className="text-2xl font-black text-blue-900">
+                {tenisCount}
+              </div>
+            </div>
+          </div>
+
+          {/* Filters & Search */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg overflow-x-auto">
+              <button
+                onClick={() => setTournamentFilter("all")}
+                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all whitespace-nowrap ${
+                  tournamentFilter === "all"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Todos ({reportData.length})
+              </button>
+              <button
+                onClick={() => setTournamentFilter("futebol")}
+                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all whitespace-nowrap ${
+                  tournamentFilter === "futebol"
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Futebol ({futebolCount})
+              </button>
+              <button
+                onClick={() => setTournamentFilter("volei")}
+                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all whitespace-nowrap ${
+                  tournamentFilter === "volei"
+                    ? "bg-amber-600 text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Vôlei ({voleiCount})
+              </button>
+              <button
+                onClick={() => setTournamentFilter("tenis")}
+                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all whitespace-nowrap ${
+                  tournamentFilter === "tenis"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Tênis ({tenisCount})
+              </button>
+            </div>
+
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                value={participantSearch}
+                onChange={(e) => setParticipantSearch(e.target.value)}
+                placeholder="Buscar participante, empresa..."
+                className="w-full pl-9 pr-4 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-sm">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-700">
+                <tr>
+                  <SortableHeader
+                    label="Torneio"
+                    columnKey="torneio"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="Participante"
+                    columnKey="participante"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="Celular"
+                    columnKey="celular"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="Empresa"
+                    columnKey="empresa"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="Cadastrado Por"
+                    columnKey="cadastrado_por"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="Data da Inscrição"
+                    columnKey="data_inscricao"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {sortedFilteredItems.length > 0 ? (
+                  sortedFilteredItems.map((row, idx) => {
+                    const t = (row.modalidade_raw || "").toLowerCase()
+                    const badgeClass =
+                      t === "futebol"
+                        ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                        : t === "volei" || t === "vôlei"
+                          ? "bg-amber-100 text-amber-800 border-amber-200"
+                          : "bg-blue-100 text-blue-800 border-blue-200"
+
+                    return (
+                      <tr
+                        key={row.id || idx}
+                        className="hover:bg-slate-50/80 transition-colors"
+                      >
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${badgeClass}`}
+                          >
+                            {row.torneio}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">
+                          {row.participante}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                          {row.celular}
+                        </td>
+                        <td className="px-4 py-3 text-slate-800">
+                          {row.empresa}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          <div className="font-medium text-slate-800">
+                            {row.cadastrado_por}
+                          </div>
+                          {row.email_cadastrador && (
+                            <div className="text-xs text-slate-400 font-mono">
+                              {row.email_cadastrador}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate-500 font-mono whitespace-nowrap">
+                          {row.data_inscricao}
+                        </td>
+                      </tr>
+                    )
+                  })
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-4 py-8 text-center text-slate-500 italic"
+                    >
+                      Nenhuma inscrição de torneio encontrada com os filtros
+                      atuais.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )
+    }
+
     if (selectedReport === "by-company" && Array.isArray(reportData)) {
       const searchNormalized = participantSearch
         .trim()
@@ -1444,7 +1721,11 @@ export default function RelatoriosPage() {
 
             <Button
               onClick={handleGenerateReport}
-              disabled={!selectedReport || !selectedHotel || isLoading}
+              disabled={
+                !selectedReport ||
+                (!selectedHotel && selectedReport !== "tournaments") ||
+                isLoading
+              }
               className="w-full md:w-auto"
             >
               {isLoading ? (

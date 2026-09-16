@@ -28,7 +28,7 @@ async function getHandler(request, response) {
 
   const { type, hotel_id } = request.query
 
-  if (!hotel_id) {
+  if (!hotel_id && type !== "tournaments") {
     throw new ValidationError({
       message: "É obrigatório selecionar um hotel.",
       action: "Selecione um hotel e tente novamente.",
@@ -38,6 +38,9 @@ async function getHandler(request, response) {
   let reportData
 
   switch (type) {
+    case "tournaments":
+      reportData = await report.generateTournamentsReport(hotel_id)
+      break
     case "complete":
       reportData = await report.generateCompleteReport(hotel_id)
       break

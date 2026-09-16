@@ -102,6 +102,16 @@ export default function RegistrationHeader({ showBackButton = false }) {
                   size="sm"
                   className="hidden sm:flex text-slate-600 font-bold hover:text-blue-600"
                 >
+                  <Link href="/torneios">
+                    {t("Torneios", "Tournaments")}
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="hidden sm:flex text-slate-600 font-bold hover:text-blue-600"
+                >
                   <Link href="/meus-pedidos">
                     {t("Meus Pedidos", "My Orders")}
                   </Link>
@@ -209,6 +219,24 @@ export default function RegistrationHeader({ showBackButton = false }) {
               </Link>
             )
           })}
+          {user && (
+            <>
+              <Link
+                href="/torneios"
+                onClick={() => setIsOpen(false)}
+                className="text-slate-700 hover:text-blue-600 font-semibold text-base py-1 transition-colors flex items-center justify-between"
+              >
+                <span>🏆 {t("Torneios", "Tournaments")}</span>
+              </Link>
+              <Link
+                href="/meus-pedidos"
+                onClick={() => setIsOpen(false)}
+                className="text-slate-700 hover:text-blue-600 font-semibold text-base py-1 transition-colors"
+              >
+                {t("Meus Pedidos", "My Orders")}
+              </Link>
+            </>
+          )}
           {!user && (
             <Button
               asChild
