@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { BedDouble, Users, AlertCircle, Search } from "lucide-react"
+import { BedDouble, Users, AlertCircle, Search, CreditCard } from "lucide-react"
 import {
   Empty,
   EmptyHeader,
@@ -32,6 +32,7 @@ import RegistrationLayout from "@/components/registration/RegistrationLayout"
 import {
   calculateSummaryPrice,
   calculateAdultDiscount,
+  calculateMaxInstallments,
   getChildrenCount,
   translateText,
 } from "@/lib/registration-helpers"
@@ -45,6 +46,19 @@ export default function RegistrationPage({ hotels, discounts }) {
   const t = (pt, en) => (isInternational ? en : pt)
   const activeHotel = hotels?.[0]
   const [isSearchPerformed, setIsSearchPerformed] = useState(false)
+
+  // Remove any 'Staff' discount from display and calculation
+  const cleanDiscounts = useMemo(() => {
+    return (discounts || []).filter(
+      (d) => (d.name || "").toLowerCase().trim() !== "staff",
+    )
+  }, [discounts])
+
+  // Calculate maximum boleto installments until event date
+  const maxBoletoInstallments = useMemo(() => {
+    return calculateMaxInstallments(activeHotel?.check_in_date)
+  }, [activeHotel?.check_in_date])
+
   const [searchData, setSearchData] = useState(() => {
     const initial = { adults: 1 }
     if (activeHotel?.price_policies) {
@@ -95,7 +109,7 @@ export default function RegistrationPage({ hotels, discounts }) {
         room,
         searchData,
         null, // No company at this stage
-        discounts,
+        cleanDiscounts,
       )
       return { ...room, ...priceDetails }
     })
@@ -485,7 +499,7 @@ export default function RegistrationPage({ hotels, discounts }) {
                                   <TooltipTrigger asChild>
                                     <Badge
                                       variant="outline"
-                                      className="border-blue-200 text-blue-700 bg-blue-50 cursor-help"
+                                      className="border-blue-200 text-blue-700 bg-blue-50 cursor-help mt-2"
                                     >
                                       {roomTypeLabel}
                                     </Badge>
@@ -519,7 +533,7 @@ export default function RegistrationPage({ hotels, discounts }) {
                           <CardContent>
                             <div className="space-y-4">
                               <div className="flex items-center gap-4 text-sm text-gray-600">
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1 mt-2">
                                   <Users className="h-4 w-4" />
                                   <span>
                                     {" "}
@@ -539,6 +553,21 @@ export default function RegistrationPage({ hotels, discounts }) {
                                     </span>
                                   </div>
                                 )}
+                              </div>
+
+                              {/* Formas de pagamento */}
+                              <div className="gap-2 py-2 px-3 rounded-lg bg-slate-50 border border-slate-200/80 text-xs font-semibold text-slate-700">
+                                <span className="text-sm font-semibold">
+                                  Formas de pagamento:
+                                </span>
+                                <div className="flex items-start gap-2 pt-1">
+                                  <CreditCard className="h-4 w-4 text-blue-600 shrink-0" />
+                                  <span className="text-[0.8rem]">
+                                    {isInternational
+                                      ? `${maxBoletoInstallments > 1 ? `Up to ${maxBoletoInstallments}x via bank slip` : "Bank slip"} or up to 10x on credit card`
+                                      : `${maxBoletoInstallments > 1 ? `${maxBoletoInstallments}x no boleto` : "Boleto à vista"} ou até 10x no cartão de crédito`}
+                                  </span>
+                                </div>
                               </div>
 
                               <div className="pt-4 border-t space-y-3">
@@ -577,102 +606,79 @@ export default function RegistrationPage({ hotels, discounts }) {
                                   </Button>
                                 </div>
 
-                                <div className="w-full text-sm bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2.5">
-                                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
-                                    {t(
-                                      "Descontos especiais:",
-                                      "Special discounts:",
-                                    )}
-                                  </p>
-                                  {discounts.map((discount, index) => {
-                                    const discountName = translateText(
-                                      discount.name,
-                                      isInternational,
-                                    )
-                                    const isMemberDiscount =
-                                      discountName
-                                        .toLowerCase()
-                                        .includes("associada") ||
-                                      discountName
-                                        .toLowerCase()
-                                        .includes("associado") ||
-                                      discountName
-                                        .toLowerCase()
-                                        .includes("member")
+                                {cleanDiscounts.length > 0 && (
+                                  <div className="w-full text-sm bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2.5">
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                      {t(
+                                        "Descontos especiais:",
+                                        "Special discounts:",
+                                      )}
+                                    </p>
+                                    {cleanDiscounts.map((discount, index) => {
+                                      const discountName = translateText(
+                                        discount.name,
+                                        isInternational,
+                                      )
+                                      const isMemberDiscount =
+                                        discountName
+                                          .toLowerCase()
+                                          .includes("associada") ||
+                                        discountName
+                                          .toLowerCase()
+                                          .includes("associado") ||
+                                        discountName
+                                          .toLowerCase()
+                                          .includes("member")
 
-                                    const displayPrice =
-                                      isMemberDiscount && room.memberTotal
-                                        ? room.memberTotal
-                                        : room.originalTotal -
-                                          calculateAdultDiscount(
-                                            room.adultOriginalTotal ??
-                                              room.originalTotal,
-                                            Number(discount.value || 0),
-                                          )
+                                      const displayPrice =
+                                        isMemberDiscount && room.memberTotal
+                                          ? room.memberTotal
+                                          : room.originalTotal -
+                                            calculateAdultDiscount(
+                                              room.adultOriginalTotal ??
+                                                room.originalTotal,
+                                              Number(discount.value || 0),
+                                            )
 
-                                    const discountValue = Number(
-                                      discount.value || 0,
-                                    )
+                                      const discountValue = Number(
+                                        discount.value || 0,
+                                      )
 
-                                    const savedAmount =
-                                      room.originalTotal - displayPrice
+                                      const savedAmount =
+                                        room.originalTotal - displayPrice
 
-                                    return (
-                                      <div
-                                        key={discount.id}
-                                        className={`flex items-center justify-between py-2.5 ${
-                                          index !== discounts.length - 1
-                                            ? "border-b border-slate-100"
-                                            : ""
-                                        }`}
-                                      >
-                                        <div className="flex flex-col gap-1">
-                                          <span className="font-bold text-slate-800 text-sm md:text-base">
-                                            {discountName
-                                              .toLowerCase()
-                                              .includes("associada") ||
-                                            discountName
-                                              .toLowerCase()
-                                              .includes("associado")
-                                              ? t(
-                                                  "Associado Abravidro",
-                                                  "Abravidro Associate",
-                                                )
-                                              : discountName}
-                                          </span>
-                                          {discountValue > 0 && (
-                                            <span className="text-[10px] md:text-[11px] font-black text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2 py-0.5 rounded-full w-fit uppercase tracking-wider">
-                                              {discountValue}% OFF
+                                      return (
+                                        <div
+                                          key={discount.id}
+                                          className={`flex items-center justify-between py-2.5 ${
+                                            index !== cleanDiscounts.length - 1
+                                              ? "border-b border-slate-100"
+                                              : ""
+                                          }`}
+                                        >
+                                          <div className="flex flex-col gap-1">
+                                            <span className="font-bold text-slate-800 text-sm md:text-base">
+                                              {discountName
+                                                .toLowerCase()
+                                                .includes("associada") ||
+                                              discountName
+                                                .toLowerCase()
+                                                .includes("associado")
+                                                ? t(
+                                                    "Associado Abravidro",
+                                                    "Abravidro Associate",
+                                                  )
+                                                : discountName}
                                             </span>
-                                          )}
-                                        </div>
+                                            {discountValue > 0 && (
+                                              <span className="text-[10px] md:text-[11px] font-black text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2 py-0.5 rounded-full w-fit uppercase tracking-wider">
+                                                {discountValue}% OFF
+                                              </span>
+                                            )}
+                                          </div>
 
-                                        <div className="flex flex-col items-end">
-                                          <span className="text-xs text-slate-400 line-through">
-                                            {new Intl.NumberFormat(
-                                              isInternational
-                                                ? "en-US"
-                                                : "pt-BR",
-                                              {
-                                                style: "currency",
-                                                currency: "BRL",
-                                              },
-                                            ).format(room.originalTotal)}
-                                          </span>
-                                          <span className="font-black text-blue-600 text-base md:text-lg lg:text-xl animate-pulse-subtle">
-                                            {new Intl.NumberFormat(
-                                              isInternational
-                                                ? "en-US"
-                                                : "pt-BR",
-                                              {
-                                                style: "currency",
-                                                currency: "BRL",
-                                              },
-                                            ).format(displayPrice)}
-                                          </span>
-                                          {savedAmount > 0 && (
-                                            <span className="text-xs text-emerald-600 font-extrabold">
-                                              {t("Economize", "Save")}{" "}
+                                          <div className="flex flex-col items-end">
+                                            <span className="text-xs text-slate-400 line-through">
                                               {new Intl.NumberFormat(
                                                 isInternational
                                                   ? "en-US"
@@ -681,14 +687,39 @@ export default function RegistrationPage({ hotels, discounts }) {
                                                   style: "currency",
                                                   currency: "BRL",
                                                 },
-                                              ).format(savedAmount)}
+                                              ).format(room.originalTotal)}
                                             </span>
-                                          )}
+                                            <span className="font-black text-blue-600 text-base md:text-lg lg:text-xl animate-pulse-subtle">
+                                              {new Intl.NumberFormat(
+                                                isInternational
+                                                  ? "en-US"
+                                                  : "pt-BR",
+                                                {
+                                                  style: "currency",
+                                                  currency: "BRL",
+                                                },
+                                              ).format(displayPrice)}
+                                            </span>
+                                            {savedAmount > 0 && (
+                                              <span className="text-xs text-emerald-600 font-extrabold">
+                                                {t("Economize", "Save")}{" "}
+                                                {new Intl.NumberFormat(
+                                                  isInternational
+                                                    ? "en-US"
+                                                    : "pt-BR",
+                                                  {
+                                                    style: "currency",
+                                                    currency: "BRL",
+                                                  },
+                                                ).format(savedAmount)}
+                                              </span>
+                                            )}
+                                          </div>
                                         </div>
-                                      </div>
-                                    )
-                                  })}
-                                </div>
+                                      )
+                                    })}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </CardContent>
@@ -757,10 +788,14 @@ export async function getServerSideProps() {
     const response = await fetch(`${webserver.origin}/api/v1/hotels/active`)
     const { hotels, discounts } = await response.json()
 
+    const filteredDiscounts = (discounts || []).filter(
+      (d) => (d.name || "").toLowerCase().trim() !== "staff",
+    )
+
     return {
       props: {
         hotels: hotels || [],
-        discounts: discounts || [],
+        discounts: filteredDiscounts,
       },
     }
   } catch (error) {
