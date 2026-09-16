@@ -20,7 +20,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { AlertCircle, Loader2, Calendar, User, Lock } from "lucide-react"
+import {
+  AlertCircle,
+  Loader2,
+  Calendar,
+  User,
+  Lock,
+  Info,
+  CreditCard,
+} from "lucide-react"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 
 import * as cookie from "cookie"
@@ -160,6 +168,8 @@ export default function CheckoutPage({
   }, [newCompanyData.cnpj, newCompanyData.activity_sector])
   const [paymentMethod, setPaymentMethod] = useState("cash")
   const [installmentsCount, setInstallmentsCount] = useState(1)
+  const [cardBrand, setCardBrand] = useState("")
+  const [cardInstallments, setCardInstallments] = useState(1)
   const [globalDiscounts] = useState(initialDiscounts || [])
   const [guestErrors, setGuestErrors] = useState({})
   const [acceptedTerms, setAcceptedTerms] = useState(false)
@@ -646,6 +656,27 @@ export default function CheckoutPage({
     }
 
     try {
+      let finalPaymentMethod = paymentMethod
+      let finalInstallmentsCount = installmentsCount
+
+      if (paymentMethod === "credit_card") {
+        if (!cardBrand) {
+          setError(
+            isInternational
+              ? "Please select your credit card brand."
+              : "Por favor, selecione a bandeira do cartão de crédito.",
+          )
+          setIsLoading(false)
+          window.scrollTo({ top: 0, behavior: "smooth" })
+          return
+        }
+        finalPaymentMethod =
+          cardBrand === "amex"
+            ? "credit-card_amex"
+            : "credit-card_mastercard-visa"
+        finalInstallmentsCount = cardInstallments
+      }
+
       const response = await fetch("/api/v1/registrations", {
         method: "POST",
         headers: {
@@ -656,8 +687,8 @@ export default function CheckoutPage({
           guests_data: guests,
           company_data: newCompanyData.corporate_name ? newCompanyData : null,
           company_cnpj: foundCompany?.cnpj || newCompanyData.cnpj || cnpj,
-          payment_method: paymentMethod,
-          installments_count: installmentsCount,
+          payment_method: finalPaymentMethod,
+          installments_count: finalInstallmentsCount,
           bed_preference: router.query.bed_preference,
           checkout_question_response: checkoutQuestionResponse,
           lang: isInternational ? "en" : "pt-BR",
@@ -2675,7 +2706,7 @@ export default function CheckoutPage({
                               : "Forma de Pagamento"}
                           </h3>
                           {!isInternational && (
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                               <Button
                                 type="button"
                                 variant={
@@ -2691,7 +2722,9 @@ export default function CheckoutPage({
                                   setInstallmentsCount(1)
                                 }}
                               >
-                                À Vista
+                                {isInternational
+                                  ? "Invoice (Single)"
+                                  : "Boleto à vista"}
                               </Button>
                               <Button
                                 type="button"
@@ -2710,7 +2743,30 @@ export default function CheckoutPage({
                                   setInstallmentsCount(maxInstallments)
                                 }}
                               >
-                                Parcelado
+                                {isInternational
+                                  ? "Invoice (Installments)"
+                                  : "Boleto parcelado"}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant={
+                                  paymentMethod === "credit_card"
+                                    ? "default"
+                                    : "outline"
+                                }
+                                className={
+                                  paymentMethod === "credit_card"
+                                    ? "bg-blue-600"
+                                    : ""
+                                }
+                                onClick={() => {
+                                  setPaymentMethod("credit_card")
+                                  setInstallmentsCount(1)
+                                }}
+                              >
+                                {isInternational
+                                  ? "Credit Card"
+                                  : "Cartão de crédito"}
                               </Button>
                             </div>
                           )}
@@ -2840,6 +2896,171 @@ export default function CheckoutPage({
                                   ))}
                                 </div>
                               </div>
+                            </div>
+                          )}
+
+                          {paymentMethod === "credit_card" && (
+                            <div className="space-y-4 bg-blue-50/50 p-4 rounded-lg border border-blue-100 mt-4">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-blue-900 font-bold">
+                                  {isInternational
+                                    ? "Credit Card"
+                                    : "Cartão de Crédito"}
+                                </Label>
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
+                                >
+                                  {isInternational
+                                    ? "Total Amount"
+                                    : "Valor Total"}
+                                </Badge>
+                              </div>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-2xl font-black text-blue-600">
+                                  {new Intl.NumberFormat(
+                                    isInternational ? "en-US" : "pt-BR",
+                                    {
+                                      style: "currency",
+                                      currency: "BRL",
+                                    },
+                                  ).format(finalTotal)}
+                                </span>
+                              </div>
+
+                              {/* 1. Seleção da Bandeira */}
+                              <div className="pt-3 border-t border-blue-100 space-y-3">
+                                <p className="text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                  {isInternational
+                                    ? "1. Select Card Brand:"
+                                    : "1. Escolha a Bandeira do Cartão:"}
+                                </p>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setCardBrand("mastercard-visa")
+                                      if (cardInstallments > 10)
+                                        setCardInstallments(10)
+                                    }}
+                                    className={`p-3 rounded-lg border text-left transition-all ${
+                                      cardBrand === "mastercard-visa"
+                                        ? "bg-white border-blue-600 ring-2 ring-blue-600/20 shadow-sm"
+                                        : "bg-white/60 border-gray-200 hover:border-gray-300 hover:bg-white"
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className="text-sm font-bold text-gray-900">
+                                        Mastercard e Visa
+                                      </span>
+                                      <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] font-semibold hover:bg-emerald-100">
+                                        {isInternational
+                                          ? "Up to 10x"
+                                          : "Até 10x sem juros"}
+                                      </Badge>
+                                    </div>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setCardBrand("amex")
+                                      if (cardInstallments > 6)
+                                        setCardInstallments(6)
+                                    }}
+                                    className={`p-3 rounded-lg border text-left transition-all ${
+                                      cardBrand === "amex"
+                                        ? "bg-white border-blue-600 ring-2 ring-blue-600/20 shadow-sm"
+                                        : "bg-white/60 border-gray-200 hover:border-gray-300 hover:bg-white"
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className="text-sm font-bold text-gray-900">
+                                        AMEX
+                                      </span>
+                                      <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] font-semibold hover:bg-emerald-100">
+                                        {isInternational
+                                          ? "Up to 6x"
+                                          : "Até 6x sem juros"}
+                                      </Badge>
+                                    </div>
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* 2. Seleção de Parcelas */}
+                              {cardBrand ? (
+                                <div className="pt-3 border-t border-blue-100 space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-xs font-bold text-blue-900 uppercase tracking-wider">
+                                      {isInternational
+                                        ? "2. Select Number of Installments:"
+                                        : "2. Escolha o Número de Parcelas:"}
+                                    </p>
+                                  </div>
+
+                                  <Select
+                                    value={String(cardInstallments)}
+                                    onValueChange={(val) =>
+                                      setCardInstallments(Number(val))
+                                    }
+                                  >
+                                    <SelectTrigger className="w-full bg-white font-medium text-gray-800 border-blue-200">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {Array.from(
+                                        {
+                                          length: cardBrand === "amex" ? 6 : 10,
+                                        },
+                                        (_, i) => i + 1,
+                                      ).map((num) => {
+                                        const installmentVal = finalTotal / num
+                                        return (
+                                          <SelectItem
+                                            key={num}
+                                            value={String(num)}
+                                          >
+                                            {num}x de{" "}
+                                            {new Intl.NumberFormat(
+                                              isInternational
+                                                ? "en-US"
+                                                : "pt-BR",
+                                              {
+                                                style: "currency",
+                                                currency: "BRL",
+                                              },
+                                            ).format(installmentVal)}{" "}
+                                            {num === 1
+                                              ? isInternational
+                                                ? "(Single Payment)"
+                                                : "(à vista)"
+                                              : isInternational
+                                                ? "interest-free"
+                                                : "sem juros"}
+                                          </SelectItem>
+                                        )
+                                      })}
+                                    </SelectContent>
+                                  </Select>
+
+                                  <div className="bg-blue-100/50 p-3 rounded-md flex items-start gap-2 text-xs text-blue-800 mt-2">
+                                    <Info className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
+                                    <span>
+                                      {isInternational
+                                        ? "After completing your registration, our team will contact you to send the credit card payment link."
+                                        : "Após a realização da inscrição, a organização entrará em contato com você para o envio do link de pagamento do cartão."}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="pt-2 text-xs text-blue-600/80 italic">
+                                  {isInternational
+                                    ? "Select a card brand above to choose the number of installments."
+                                    : "Selecione uma bandeira acima para liberar as opções de parcelamento."}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>

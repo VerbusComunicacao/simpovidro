@@ -457,6 +457,36 @@ export default function MyOrdersPage() {
                       </div>
                     </div>
 
+                    {/* Credit Card Info */}
+                    {(order.payment_method === "credit_card" ||
+                      order.payment_method?.startsWith("credit")) && (
+                      <div className="mt-6 border-t pt-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          {isInternational
+                            ? "Credit Card Payment"
+                            : "Pagamento via Cartão de Crédito"}
+                        </h3>
+                        <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100 text-sm text-blue-900 space-y-2">
+                          <p className="font-bold text-blue-900">
+                            {order.payment_method === "credit-card_amex"
+                              ? "AMEX"
+                              : "Mastercard / Visa"}{" "}
+                            - {order.installments_count || 1}x de{" "}
+                            {formatCurrency(
+                              order.final_amount /
+                                (order.installments_count || 1),
+                            )}{" "}
+                            {isInternational ? "interest-free" : "sem juros"}
+                          </p>
+                          <p className="text-xs text-blue-700">
+                            {isInternational
+                              ? "The event organization will contact you to send the secure payment link."
+                              : "A organização do evento entrará em contato para o envio do link de pagamento."}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Installments Table */}
                     {order.payment_method === "installments" &&
                       order.installments &&

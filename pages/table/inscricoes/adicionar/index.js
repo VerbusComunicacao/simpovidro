@@ -208,6 +208,12 @@ export default function AdminAddRegistrationPage() {
   useEffect(() => {
     if (paymentMethod === "installments") {
       setInstallmentsCount(maxInstallments)
+    } else if (paymentMethod === "credit-card_mastercard-visa") {
+      setInstallmentsCount(10)
+    } else if (paymentMethod === "credit-card_amex") {
+      setInstallmentsCount(6)
+    } else {
+      setInstallmentsCount(1)
     }
   }, [paymentMethod, maxInstallments])
 
@@ -658,8 +664,16 @@ export default function AdminAddRegistrationPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="cash">À Vista / Boleto</SelectItem>
-                        <SelectItem value="installments">Parcelado</SelectItem>
+                        <SelectItem value="cash">Boleto à vista</SelectItem>
+                        <SelectItem value="installments">
+                          Boleto parcelado
+                        </SelectItem>
+                        <SelectItem value="credit-card_mastercard-visa">
+                          Cartão de crédito - Mastercard / Visa (até 10x)
+                        </SelectItem>
+                        <SelectItem value="credit-card_amex">
+                          Cartão de crédito - AMEX (até 6x)
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -706,6 +720,48 @@ export default function AdminAddRegistrationPage() {
                       </div>
                     </div>
                   )}
+
+                  {(paymentMethod === "credit-card_mastercard-visa" ||
+                    paymentMethod === "credit-card_amex") &&
+                    currentRoom && (
+                      <div className="space-y-2 flex flex-col justify-center">
+                        <Label className="text-gray-600 text-xs">
+                          Número de Parcelas no Cartão
+                        </Label>
+                        <Select
+                          value={String(installmentsCount)}
+                          onValueChange={(val) =>
+                            setInstallmentsCount(Number(val))
+                          }
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from(
+                              {
+                                length:
+                                  paymentMethod === "credit-card_amex" ? 6 : 10,
+                              },
+                              (_, i) => i + 1,
+                            ).map((num) => (
+                              <SelectItem key={num} value={String(num)}>
+                                {num}x de{" "}
+                                {new Intl.NumberFormat("pt-BR", {
+                                  style: "currency",
+                                  currency: "BRL",
+                                }).format(pricing.finalTotal / num)}{" "}
+                                sem juros
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-gray-500 italic">
+                          A organização entrará em contato para envio do link de
+                          pagamento.
+                        </p>
+                      </div>
+                    )}
                 </div>
               </div>
 

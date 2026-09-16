@@ -767,8 +767,15 @@ export default function RegistrationDetailsPage() {
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-gray-700 uppercase text-sm">
                         {sale.payment_method === "installments"
-                          ? "Parcelado"
-                          : "À Vista no Boleto"}
+                          ? "Boleto Parcelado"
+                          : sale.payment_method ===
+                              "credit-card_mastercard-visa"
+                            ? "Cartão de Crédito (Mastercard/Visa)"
+                            : sale.payment_method === "credit-card_amex"
+                              ? "Cartão de Crédito (AMEX)"
+                              : sale.payment_method?.startsWith("credit")
+                                ? "Cartão de Crédito"
+                                : "Boleto à Vista"}
                       </span>
                       <Badge variant="outline">
                         {sale.installments_count}x
