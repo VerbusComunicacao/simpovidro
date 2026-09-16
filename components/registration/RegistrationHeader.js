@@ -46,11 +46,13 @@ export default function RegistrationHeader({ showBackButton = false }) {
                     ? t("Local", "Location")
                     : item.id === "condicoes-especiais"
                       ? t("Condições Especiais", "Special Conditions")
-                      : item.name
+                      : item.id === "torneios"
+                        ? t("Torneios", "Tournaments")
+                        : item.name
               return (
                 <Link
                   key={item.id}
-                  href={`/#${item.id}`}
+                  href={item.href || `/#${item.id}`}
                   className="hover:text-blue-600 transition-colors"
                 >
                   {name}
@@ -96,14 +98,7 @@ export default function RegistrationHeader({ showBackButton = false }) {
                     <Link href="/table">{t("Painel", "Admin Panel")}</Link>
                   </Button>
                 )}
-                <Button
-                  asChild
-                  variant="ghost"
-                  size="sm"
-                  className="hidden sm:flex text-slate-600 font-bold hover:text-blue-600"
-                >
-                  <Link href="/torneios">{t("Torneios", "Tournaments")}</Link>
-                </Button>
+
                 <Button
                   asChild
                   variant="ghost"
@@ -205,11 +200,13 @@ export default function RegistrationHeader({ showBackButton = false }) {
                   ? t("Local", "Location")
                   : item.id === "condicoes-especiais"
                     ? t("Condições Especiais", "Special Conditions")
-                    : item.name
+                    : item.id === "torneios"
+                      ? t("Torneios", "Tournaments")
+                      : item.name
             return (
               <Link
                 key={item.id}
-                href={`/#${item.id}`}
+                href={item.href || `/#${item.id}`}
                 onClick={() => setIsOpen(false)}
                 className="text-slate-700 hover:text-blue-600 font-semibold text-base py-1 transition-colors"
               >
@@ -218,22 +215,13 @@ export default function RegistrationHeader({ showBackButton = false }) {
             )
           })}
           {user && (
-            <>
-              <Link
-                href="/torneios"
-                onClick={() => setIsOpen(false)}
-                className="text-slate-700 hover:text-blue-600 font-semibold text-base py-1 transition-colors flex items-center justify-between"
-              >
-                <span>🏆 {t("Torneios", "Tournaments")}</span>
-              </Link>
-              <Link
-                href="/meus-pedidos"
-                onClick={() => setIsOpen(false)}
-                className="text-slate-700 hover:text-blue-600 font-semibold text-base py-1 transition-colors"
-              >
-                {t("Meus Pedidos", "My Orders")}
-              </Link>
-            </>
+            <Link
+              href="/meus-pedidos"
+              onClick={() => setIsOpen(false)}
+              className="text-slate-700 hover:text-blue-600 font-semibold text-base py-1 transition-colors"
+            >
+              {t("Meus Pedidos", "My Orders")}
+            </Link>
           )}
           {!user && (
             <Button
