@@ -950,6 +950,47 @@ async function generateByMonthReport(hotelId) {
   }
 }
 
+async function generateTournamentsReport() {
+  const query = `
+    SELECT 
+      tr.id,
+      tr.tournament,
+      tr.participant_name,
+      tr.phone as celular,
+      tr.company_name as empresa,
+      u.full_name as cadastrado_por,
+      u.email as email_cadastrador,
+      TO_CHAR(tr.created_at, 'DD/MM/YYYY HH24:MI') as data_inscricao,
+      tr.created_at
+    FROM tournament_registrations tr
+    LEFT JOIN users u ON tr.user_id = u.id
+    ORDER BY tr.tournament ASC, tr.created_at ASC
+  `
+
+  const result = await database.query({ text: query })
+
+  return result.rows.map((row) => {
+    let torneioLabel = "Futebol"
+    const t = (row.tournament || "").toLowerCase()
+    if (t === "volei" || t === "vôlei") torneioLabel = "Vôlei"
+    else if (t === "tenis" || t === "tênis") torneioLabel = "Tênis"
+    else if (t === "futebol") torneioLabel = "Futebol"
+    else torneioLabel = row.tournament
+
+    return {
+      id: row.id,
+      torneio: torneioLabel,
+      modalidade_raw: row.tournament,
+      participante: row.participant_name,
+      celular: row.celular,
+      empresa: row.empresa,
+      cadastrado_por: row.cadastrado_por || row.email_cadastrador || "N/A",
+      email_cadastrador: row.email_cadastrador || "",
+      data_inscricao: row.data_inscricao,
+    }
+  })
+}
+
 const report = {
   generateCompleteReport,
   generateByCompany,
@@ -964,6 +1005,7 @@ const report = {
   generateTransferInReport,
   generateTransferOutReport,
   generateByMonthReport,
+  generateTournamentsReport,
 }
 
 export default report
