@@ -741,9 +741,7 @@ export default function AdminAddRegistrationPage() {
                             {Array.from(
                               {
                                 length:
-                                  paymentMethod === "credit-card_amex"
-                                    ? 6
-                                    : 10,
+                                  paymentMethod === "credit-card_amex" ? 6 : 10,
                               },
                               (_, i) => i + 1,
                             ).map((num) => (

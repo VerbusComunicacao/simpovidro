@@ -286,7 +286,8 @@ export default function PaymentsTable() {
                       <p className="text-xs text-gray-500">
                         {sale.payment_method === "installments"
                           ? "Boleto Parcelado"
-                          : sale.payment_method === "credit-card_mastercard-visa"
+                          : sale.payment_method ===
+                              "credit-card_mastercard-visa"
                             ? `Cartão (${sale.installments_count}x Mastercard/Visa)`
                             : sale.payment_method === "credit-card_amex"
                               ? `Cartão (${sale.installments_count}x AMEX)`
@@ -366,7 +367,8 @@ export default function PaymentsTable() {
                     <p className="text-sm font-semibold">
                       {selectedSale.payment_method === "installments"
                         ? "Boleto Parcelado"
-                        : selectedSale.payment_method === "credit-card_mastercard-visa"
+                        : selectedSale.payment_method ===
+                            "credit-card_mastercard-visa"
                           ? `Cartão de Crédito - Mastercard / Visa (${selectedSale.installments_count}x)`
                           : selectedSale.payment_method === "credit-card_amex"
                             ? `Cartão de Crédito - AMEX (${selectedSale.installments_count}x)`

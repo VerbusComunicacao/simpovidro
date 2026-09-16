@@ -3012,8 +3012,7 @@ export default function CheckoutPage({
                                     <SelectContent>
                                       {Array.from(
                                         {
-                                          length:
-                                            cardBrand === "amex" ? 6 : 10,
+                                          length: cardBrand === "amex" ? 6 : 10,
                                         },
                                         (_, i) => i + 1,
                                       ).map((num) => {

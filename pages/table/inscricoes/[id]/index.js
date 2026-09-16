@@ -768,7 +768,8 @@ export default function RegistrationDetailsPage() {
                       <span className="font-bold text-gray-700 uppercase text-sm">
                         {sale.payment_method === "installments"
                           ? "Boleto Parcelado"
-                          : sale.payment_method === "credit-card_mastercard-visa"
+                          : sale.payment_method ===
+                              "credit-card_mastercard-visa"
                             ? "Cartão de Crédito (Mastercard/Visa)"
                             : sale.payment_method === "credit-card_amex"
                               ? "Cartão de Crédito (AMEX)"
