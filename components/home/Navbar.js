@@ -9,6 +9,7 @@ export const navItems = [
   { name: "Sobre", id: "sobre" },
   { name: "Local", id: "local" },
   { name: "Condições Especiais", id: "condicoes-especiais" },
+  { name: "Torneios", id: "torneios", href: "/torneios" },
 ]
 
 export default function Navbar({ scrollToSection, router: propRouter }) {
@@ -47,7 +48,22 @@ export default function Navbar({ scrollToSection, router: propRouter }) {
                   ? t("Local", "Location")
                   : item.id === "condicoes-especiais"
                     ? t("Condições Especiais", "Special Conditions")
-                    : item.name
+                    : item.id === "torneios"
+                      ? t("Torneios", "Tournaments")
+                      : item.name
+
+            if (item.href) {
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="text-slate-600 hover:text-blue-600 transition-colors cursor-pointer font-medium"
+                >
+                  {name}
+                </Link>
+              )
+            }
+
             return (
               <a
                 key={item.id}
@@ -120,7 +136,23 @@ export default function Navbar({ scrollToSection, router: propRouter }) {
                   ? t("Local", "Location")
                   : item.id === "condicoes-especiais"
                     ? t("Condições Especiais", "Special Conditions")
-                    : item.name
+                    : item.id === "torneios"
+                      ? t("Torneios", "Tournaments")
+                      : item.name
+
+            if (item.href) {
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
+                  className="text-slate-700 hover:text-blue-600 font-semibold text-base py-1 transition-colors cursor-pointer"
+                >
+                  {name}
+                </Link>
+              )
+            }
+
             return (
               <a
                 key={item.id}

@@ -57,6 +57,14 @@ export default function Footer({ scrollToSection }) {
                 </a>
               </li>
               <li>
+                <Link
+                  href="/torneios"
+                  className="hover:text-white transition-colors"
+                >
+                  {t("Torneios", "Tournaments")}
+                </Link>
+              </li>
+              <li>
                 <a
                   href="#programacao"
                   onClick={(e) => scrollToSection(e, "programacao")}
