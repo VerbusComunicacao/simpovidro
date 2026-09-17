@@ -110,8 +110,6 @@ export default function RegistrationHeader({ showBackButton = false }) {
                   </Link>
                 </Button>
 
-                {/* Language Switcher */}
-                {/*
                 <div className="flex items-center bg-slate-100 p-0.5 rounded-full border border-slate-200/60 mr-2 gap-0.5">
                   <button
                     onClick={() =>
@@ -144,7 +142,6 @@ export default function RegistrationHeader({ showBackButton = false }) {
                     🇺🇸
                   </button>
                 </div>
-                */}
 
                 <Button
                   variant="outline"

@@ -558,7 +558,9 @@ export default function RegistrationPage({ hotels, discounts }) {
                               {/* Formas de pagamento */}
                               <div className="gap-2 py-2 px-3 rounded-lg bg-yellow-300 border border-yellow-200/80 text-xs font-semibold text-slate-700">
                                 <span className="text-sm font-semibold">
-                                  Formas de pagamento:
+                                  {isInternational
+                                    ? "Payment methods:"
+                                    : "Formas de pagamento:"}
                                 </span>
                                 <div className="flex items-start gap-2 pt-1">
                                   <CreditCard className="h-4 w-4 text-blue-600 shrink-0" />
