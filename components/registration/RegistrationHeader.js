@@ -80,9 +80,6 @@ export default function RegistrationHeader({ showBackButton = false }) {
                 <span className="text-sm font-black text-slate-900 uppercase italic tracking-tighter">
                   {user.name || user.username}
                 </span>
-                <span className="text-[10px] text-blue-600 font-bold uppercase tracking-widest">
-                  {t("Logado", "Logged In")}
-                </span>
               </div>
 
               <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>

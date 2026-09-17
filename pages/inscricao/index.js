@@ -556,21 +556,22 @@ export default function RegistrationPage({ hotels, discounts }) {
                               </div>
 
                               {/* Formas de pagamento */}
-                              <div className="gap-2 py-2 px-3 rounded-lg bg-yellow-300 border border-yellow-200/80 text-xs font-semibold text-slate-700">
-                                <span className="text-sm font-semibold">
-                                  {isInternational
-                                    ? "Payment methods:"
-                                    : "Formas de pagamento:"}
-                                </span>
-                                <div className="flex items-start gap-2 pt-1">
-                                  <CreditCard className="h-4 w-4 text-blue-600 shrink-0" />
-                                  <span className="text-[0.8rem]">
-                                    {isInternational
-                                      ? `${maxBoletoInstallments > 1 ? `Up to ${maxBoletoInstallments}x via bank slip` : "Bank slip"} or up to 10x on credit card`
-                                      : `${maxBoletoInstallments > 1 ? `${maxBoletoInstallments}x no boleto` : "Boleto à vista"} ou até 10x no cartão de crédito`}
+                              {!isInternational && (
+                                <div className="gap-2 py-2 px-3 rounded-lg bg-yellow-300 border border-yellow-200/80 text-xs font-semibold text-slate-700">
+                                  <span className="text-sm font-semibold">
+                                    Formas de pagamento:
                                   </span>
+                                  <div className="flex items-start gap-2 pt-1">
+                                    <CreditCard className="h-4 w-4 text-blue-600 shrink-0" />
+                                    <span className="text-[0.8rem]">
+                                      {maxBoletoInstallments > 1
+                                        ? `${maxBoletoInstallments}x no boleto`
+                                        : "Boleto à vista"}{" "}
+                                      ou até 10x no cartão de crédito
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
 
                               <div className="pt-4 border-t space-y-3">
                                 <div className="flex items-center justify-between">
