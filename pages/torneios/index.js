@@ -34,10 +34,7 @@ import {
   Building2,
   User,
   Phone,
-  Sparkles,
-  Calendar,
   ShieldCheck,
-  ChevronRight,
 } from "lucide-react"
 
 const fetcher = async (url) => {
@@ -96,14 +93,11 @@ const TOURNAMENTS_INFO = [
 ]
 
 export default function TorneiosPage() {
-  const router = useRouter()
   const { user, isLoading: userLoading } = useUser()
-  const isInternational = router.locale === "en" || router.query.lang === "en"
 
   // SWR for user's tournament inscriptions
   const {
     data: myRegistrations,
-    error: regError,
     isLoading: regLoading,
     mutate: mutateRegistrations,
   } = useSWR(user?.id ? "/api/v1/tournaments" : null, fetcher)
