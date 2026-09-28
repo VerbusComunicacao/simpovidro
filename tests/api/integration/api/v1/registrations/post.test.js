@@ -8,12 +8,6 @@ beforeAll(async () => {
 })
 
 describe("POST /api/v1/registrations", () => {
-  jest.useFakeTimers()
-
-  afterAll(() => {
-    jest.useRealTimers()
-  })
-
   describe("Anonymous user", () => {
     test("should return 401", async () => {
       const response = await fetch(
@@ -1941,6 +1935,83 @@ describe("POST /api/v1/registrations", () => {
       const fetchedGuestA = await getGuestAResponse.json()
       expect(fetchedGuestA.name).toBe("Original Guest A")
       expect(fetchedGuestA.cpf_number).toBe("444.444.444-44")
+    })
+
+    test("should successfully create registration with 100% discount (staff/free) without violating installment constraints", async () => {
+      // 1. Create a Company with 100% custom discount
+      const staffCnpj = "11.222.333/0001-99"
+      await fetch(`${orchestrator.webserverUrl}/api/v1/companies`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${adminToken}`,
+        },
+        body: JSON.stringify({
+          corporate_name: "Staff Organization",
+          cnpj: staffCnpj,
+          badge: "Staff",
+          phone: "11999999999",
+          email: "staff@example.com",
+          address: "Rua Staff",
+          address_number: "100",
+          neighborhood: "Centro",
+          city: "São Paulo",
+          state: "SP",
+          responsible_person: "Staff Lead",
+          zip_code: "01000-000",
+          permission: "A",
+          custom_discount_percentage: 100,
+        }),
+      })
+
+      // 2. Perform registration
+      const registrationResponse = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/registrations`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${adminToken}`,
+          },
+          body: JSON.stringify({
+            room_id: roomId,
+            company_cnpj: staffCnpj,
+            payment_method: "cash",
+            guests_data: [
+              {
+                name: "Staff Member",
+                badge_name: "Staff Person",
+                email: "staff-person@example.com",
+                phone: "11988887777",
+                gender: "Masculino",
+                rg_number: "554433221",
+                cpf_number: "999.888.777-66",
+                birth_date: "1990-01-01",
+              },
+            ],
+          }),
+        },
+      )
+
+      expect(registrationResponse.status).toBe(201)
+      const data = await registrationResponse.json()
+      expect(data.saleId).toBeDefined()
+
+      // 3. Fetch sale details and verify status and installments
+      const saleResponse = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/sales/${data.saleId}`,
+        {
+          headers: { Cookie: `session_id=${adminToken}` },
+        },
+      )
+      expect(saleResponse.status).toBe(200)
+      const saleData = await saleResponse.json()
+
+      expect(Number(saleData.final_amount)).toBe(0)
+      expect(Number(saleData.discount_percentage)).toBe(100)
+      expect(saleData.status).toBe("confirmed")
+      expect(saleData.payment_status).toBe("paid")
+      expect(saleData.installments).toBeNull()
     })
   })
 })
