@@ -330,12 +330,14 @@ async function create(saleInputValues, externalClient) {
 
     const lead_guest_id = guest_ids[0]
 
+    const isFree = Number(final_amount) === 0
+
     const saleResults = await client.query({
       text: `
         INSERT INTO
-          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, discount_percentage, discount_amount, final_amount, company_id, payment_method, installments_count, bed_preference, user_id, checkout_question_response)
+          sales (hotel_id, guest_id, room_id, check_in_date, check_out_date, total_amount, discount_percentage, discount_amount, final_amount, company_id, payment_method, installments_count, bed_preference, user_id, checkout_question_response, status, payment_status)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
         RETURNING
           *
       `,
@@ -355,6 +357,8 @@ async function create(saleInputValues, externalClient) {
         saleInputValues.bed_preference || null,
         user_id,
         checkout_question_response,
+        isFree ? "confirmed" : "pending",
+        isFree ? "paid" : "pending",
       ],
     })
 
@@ -390,51 +394,53 @@ async function create(saleInputValues, externalClient) {
       values: [inventoryRoomId],
     })
 
-    // 6. Generate and Create Installments
-    if (payment_method === "installments") {
-      const installmentAmount = (final_amount / installments_count).toFixed(2)
-      const installmentDates = saleInstallment.generateInstallmentDates(
-        installments_count,
-        eventDate,
-      )
+    // 6. Generate and Create Installments (only if final_amount > 0)
+    if (Number(final_amount) > 0) {
+      if (payment_method === "installments") {
+        const installmentAmount = (final_amount / installments_count).toFixed(2)
+        const installmentDates = saleInstallment.generateInstallmentDates(
+          installments_count,
+          eventDate,
+        )
 
-      const installmentsToCreate = installmentDates.map((date, index) => ({
-        sale_id: newSale.id,
-        installment_number: index + 1,
-        amount: installmentAmount,
-        due_date: date,
-      }))
+        const installmentsToCreate = installmentDates.map((date, index) => ({
+          sale_id: newSale.id,
+          installment_number: index + 1,
+          amount: installmentAmount,
+          due_date: date,
+        }))
 
-      // Adjust the last installment for rounding differences
-      const totalInstallmentsAmount = (
-        Number(installmentAmount) * installments_count
-      ).toFixed(2)
-      const diff = (final_amount - Number(totalInstallmentsAmount)).toFixed(2)
-      if (Number(diff) !== 0) {
-        installmentsToCreate[installments_count - 1].amount = (
-          Number(installmentsToCreate[installments_count - 1].amount) +
-          Number(diff)
+        // Adjust the last installment for rounding differences
+        const totalInstallmentsAmount = (
+          Number(installmentAmount) * installments_count
         ).toFixed(2)
-      }
+        const diff = (final_amount - Number(totalInstallmentsAmount)).toFixed(2)
+        if (Number(diff) !== 0) {
+          installmentsToCreate[installments_count - 1].amount = (
+            Number(installmentsToCreate[installments_count - 1].amount) +
+            Number(diff)
+          ).toFixed(2)
+        }
 
-      await saleInstallment.createMany(installmentsToCreate, client)
-    } else {
-      // cash or credit-card: 1 single installment of full amount for tracking payment
-      const singleInstallmentDate = saleInstallment.generateInstallmentDates(
-        1,
-        eventDate,
-      )[0]
-      await saleInstallment.createMany(
-        [
-          {
-            sale_id: newSale.id,
-            installment_number: 1,
-            amount: final_amount,
-            due_date: singleInstallmentDate,
-          },
-        ],
-        client,
-      )
+        await saleInstallment.createMany(installmentsToCreate, client)
+      } else {
+        // cash or credit-card: 1 single installment of full amount for tracking payment
+        const singleInstallmentDate = saleInstallment.generateInstallmentDates(
+          1,
+          eventDate,
+        )[0]
+        await saleInstallment.createMany(
+          [
+            {
+              sale_id: newSale.id,
+              installment_number: 1,
+              amount: final_amount,
+              due_date: singleInstallmentDate,
+            },
+          ],
+          client,
+        )
+      }
     }
 
     if (isInternalTransaction) await client.query("COMMIT")

@@ -7,6 +7,7 @@ import { useRouter } from "next/router"
 
 export const navItems = [
   { name: "Sobre", id: "sobre" },
+  { name: "Palestrantes", id: "palestrantes" },
   { name: "Local", id: "local" },
   { name: "Condições Especiais", id: "condicoes-especiais" },
   { name: "Torneios", id: "torneios", href: "/torneios" },
@@ -44,13 +45,15 @@ export default function Navbar({ scrollToSection, router: propRouter }) {
             const name =
               item.id === "sobre"
                 ? t("Sobre", "About")
-                : item.id === "local"
-                  ? t("Local", "Location")
-                  : item.id === "condicoes-especiais"
-                    ? t("Condições Especiais", "Special Conditions")
-                    : item.id === "torneios"
-                      ? t("Torneios", "Tournaments")
-                      : item.name
+                : item.id === "palestrantes"
+                  ? t("Palestrantes", "Speakers")
+                  : item.id === "local"
+                    ? t("Local", "Location")
+                    : item.id === "condicoes-especiais"
+                      ? t("Condições Especiais", "Special Conditions")
+                      : item.id === "torneios"
+                        ? t("Torneios", "Tournaments")
+                        : item.name
 
             if (item.href) {
               return (
@@ -129,13 +132,15 @@ export default function Navbar({ scrollToSection, router: propRouter }) {
             const name =
               item.id === "sobre"
                 ? t("Sobre", "About")
-                : item.id === "local"
-                  ? t("Local", "Location")
-                  : item.id === "condicoes-especiais"
-                    ? t("Condições Especiais", "Special Conditions")
-                    : item.id === "torneios"
-                      ? t("Torneios", "Tournaments")
-                      : item.name
+                : item.id === "palestrantes"
+                  ? t("Palestrantes", "Speakers")
+                  : item.id === "local"
+                    ? t("Local", "Location")
+                    : item.id === "condicoes-especiais"
+                      ? t("Condições Especiais", "Special Conditions")
+                      : item.id === "torneios"
+                        ? t("Torneios", "Tournaments")
+                        : item.name
 
             if (item.href) {
               return (

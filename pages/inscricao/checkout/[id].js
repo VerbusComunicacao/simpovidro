@@ -20,15 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import {
-  AlertCircle,
-  Loader2,
-  Calendar,
-  User,
-  Lock,
-  Info,
-  CreditCard,
-} from "lucide-react"
+import { AlertCircle, Loader2, Calendar, User, Lock, Info } from "lucide-react"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
 
 import * as cookie from "cookie"

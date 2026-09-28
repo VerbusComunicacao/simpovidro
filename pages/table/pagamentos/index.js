@@ -241,10 +241,12 @@ export default function PaymentsTable() {
 
       <div className="grid gap-4">
         {filteredSales.map((sale) => {
-          const paidInstallments =
-            sale.installments?.filter((i) => i.status === "paid").length || 0
-          const totalInstallments = sale.installments?.length || 1
-          const isFullyPaid = paidInstallments === totalInstallments
+          const isFree = Number(sale.final_amount) === 0
+          const paidInstallments = isFree
+            ? 1
+            : sale.installments?.filter((i) => i.status === "paid").length || 0
+          const totalInstallments = isFree ? 1 : sale.installments?.length || 1
+          const isFullyPaid = isFree || paidInstallments === totalInstallments
 
           return (
             <Card
@@ -386,93 +388,93 @@ export default function PaymentsTable() {
                   </h4>
 
                   <div className="border rounded-lg overflow-hidden divide-y">
-                    {selectedSale.installments?.map((installment) => (
-                      <div
-                        key={installment.id}
-                        className={`p-4 flex items-center justify-between transition-colors ${
-                          installment.status === "paid"
-                            ? "bg-green-50/20"
-                            : "hover:bg-gray-50"
-                        }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div
-                            className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                              installment.status === "paid"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-gray-100 text-gray-600"
-                            }`}
-                          >
-                            {installment.installment_number}
+                    {selectedSale.installments &&
+                    selectedSale.installments.length > 0 ? (
+                      selectedSale.installments.map((installment) => (
+                        <div
+                          key={installment.id}
+                          className={`p-4 flex items-center justify-between transition-colors ${
+                            installment.status === "paid"
+                              ? "bg-green-50/20"
+                              : "hover:bg-gray-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div
+                              className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                                installment.status === "paid"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {installment.installment_number}
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-900">
+                                {formatCurrency(installment.amount)}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Vencimento: {formatDate(installment.due_date)}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-bold text-gray-900">
-                              {formatCurrency(installment.amount)}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Vencimento: {formatDate(installment.due_date)}
-                            </p>
+
+                          <div className="flex items-center gap-3">
+                            {getStatusBadge(installment.status)}
+                            {installment.status === "pending" ? (
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700 h-8 gap-1"
+                                onClick={() =>
+                                  handleUpdateInstallmentStatus(
+                                    installment.id,
+                                    "paid",
+                                  )
+                                }
+                                disabled={isUpdating}
+                              >
+                                {isUpdating ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <CheckCircle2 className="h-3 w-3" />
+                                )}
+                                Marcar como Pago
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 border-yellow-200 text-yellow-700 hover:bg-yellow-50"
+                                onClick={() =>
+                                  handleUpdateInstallmentStatus(
+                                    installment.id,
+                                    "pending",
+                                  )
+                                }
+                                disabled={isUpdating}
+                              >
+                                <Clock className="h-3 w-3 mr-1" />
+                                Reverter
+                              </Button>
+                            )}
                           </div>
                         </div>
-
-                        <div className="flex items-center gap-3">
-                          {getStatusBadge(installment.status)}
-                          {installment.status === "pending" ? (
-                            <Button
-                              size="sm"
-                              className="bg-green-600 hover:bg-green-700 h-8 gap-1"
-                              onClick={() =>
-                                handleUpdateInstallmentStatus(
-                                  installment.id,
-                                  "paid",
-                                )
-                              }
-                              disabled={isUpdating}
-                            >
-                              {isUpdating ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <CheckCircle2 className="h-3 w-3" />
-                              )}
-                              Marcar como Pago
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 border-yellow-200 text-yellow-700 hover:bg-yellow-50"
-                              onClick={() =>
-                                handleUpdateInstallmentStatus(
-                                  installment.id,
-                                  "pending",
-                                )
-                              }
-                              disabled={isUpdating}
-                            >
-                              <Clock className="h-3 w-3 mr-1" />
-                              Reverter
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {(selectedSale.payment_method === "cash" ||
-                    selectedSale.payment_method?.startsWith("credit")) &&
-                    (!selectedSale.installments ||
-                      selectedSale.installments.length === 0) && (
-                      <div className="p-8 text-center text-gray-500 border-2 border-dashed rounded-lg">
+                      ))
+                    ) : (
+                      <div className="p-8 text-center text-gray-500">
                         <Info className="h-8 w-8 mx-auto mb-2 text-gray-300" />
                         <p className="text-sm">
-                          {selectedSale.payment_method?.startsWith("credit")
-                            ? "Pagamento via link de Cartão de Crédito."
-                            : "Pagamento via boleto à vista sem parcelas geradas no sistema."}
+                          {Number(selectedSale.final_amount) === 0
+                            ? "Inscrição isenta (100% de desconto) sem parcelas geradas."
+                            : selectedSale.payment_method?.startsWith("credit")
+                              ? "Pagamento via link de Cartão de Crédito."
+                              : "Pagamento via boleto à vista sem parcelas geradas no sistema."}
                           <br />
                           Este pedido é considerado quitado após a confirmação.
                         </p>
                       </div>
                     )}
+                  </div>
                 </div>
 
                 <div className="pt-4 flex justify-between gap-3">

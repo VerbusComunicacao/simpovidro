@@ -813,31 +813,38 @@ export default function RegistrationDetailsPage() {
                     Fluxo de Pagamento
                   </p>
                   <div className="divide-y border rounded-lg overflow-hidden">
-                    {sale.installments?.map((inst) => (
-                      <div
-                        key={inst.id}
-                        className="p-3 flex items-center justify-between bg-white text-sm"
-                      >
-                        <div>
-                          <p className="font-bold text-gray-900">
-                            {inst.installment_number}ª Parcela
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {formatDate(inst.due_date)}
-                          </p>
+                    {sale.installments && sale.installments.length > 0 ? (
+                      sale.installments.map((inst) => (
+                        <div
+                          key={inst.id}
+                          className="p-3 flex items-center justify-between bg-white text-sm"
+                        >
+                          <div>
+                            <p className="font-bold text-gray-900">
+                              {inst.installment_number}ª Parcela
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {formatDate(inst.due_date)}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-black text-gray-900">
+                              {formatCurrency(inst.amount)}
+                            </p>
+                            <span
+                              className={`text-[10px] font-bold uppercase ${inst.status === "paid" ? "text-green-600" : "text-gray-400"}`}
+                            >
+                              {inst.status === "paid" ? "Pago" : "Aguardando"}
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-black text-gray-900">
-                            {formatCurrency(inst.amount)}
-                          </p>
-                          <span
-                            className={`text-[10px] font-bold uppercase ${inst.status === "paid" ? "text-green-600" : "text-gray-400"}`}
-                          >
-                            {inst.status === "paid" ? "Pago" : "Aguardando"}
-                          </span>
-                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-sm text-gray-500 bg-white">
+                        Nenhuma parcela gerada (inscrição isenta / 100% de
+                        desconto).
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>

@@ -185,6 +185,8 @@ export async function sendRegistrationEmail(
     `
       : ""
 
+    const isFree = Number(saleDetails.final_amount) === 0
+
     const isCreditCard =
       saleDetails.payment_method === "credit_card" ||
       saleDetails.payment_method?.startsWith("credit")
@@ -198,8 +200,22 @@ export async function sendRegistrationEmail(
     const cardInstallmentAmount =
       saleDetails.final_amount / cardInstallmentsCount
 
-    const installmentsSection = isCreditCard
+    const installmentsSection = isFree
       ? `
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
+        <tr><td height="25" style="font-size: 1px; line-height: 1px;">&nbsp;</td></tr>
+        <tr>
+          <td>
+            <h3 style="font-family: Arial, Helvetica, sans-serif; color: #374151; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin: 0 0 15px 0;">${isInternational ? "Payment: Free Registration" : "Pagamento: Isenção (100% de Desconto)"}</h3>
+            <div style="background-color: #f0fdf4; padding: 15px 20px; border: 1px solid #bbf7d0; border-radius: 8px; font-family: Arial, Helvetica, sans-serif; font-size: 13.5px;">
+              <p style="margin: 0; color: #166534; font-weight: bold;">${isInternational ? "No payment required. Registration confirmed." : "Inscrição com 100% de desconto confirmada sem custos adicionais."}</p>
+            </div>
+          </td>
+        </tr>
+      </table>
+      `
+      : isCreditCard
+        ? `
       <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
         <tr><td height="25" style="font-size: 1px; line-height: 1px;">&nbsp;</td></tr>
         <tr>
@@ -214,7 +230,7 @@ export async function sendRegistrationEmail(
         </tr>
       </table>
       `
-      : `
+        : `
       <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; font-family: Arial, Helvetica, sans-serif;">
         <tr><td height="25" style="font-size: 1px; line-height: 1px;">&nbsp;</td></tr>
         <tr>
@@ -229,7 +245,7 @@ export async function sendRegistrationEmail(
                 </tr>
               </thead>
               <tbody>
-                ${saleDetails.installments
+                ${(saleDetails.installments || [])
                   .map(
                     (inst) => `
                   <tr>
@@ -462,8 +478,30 @@ export async function sendRegistrationEmail(
 
                     <div style="margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px; font-family: Arial, Helvetica, sans-serif; font-size: 0.95em;">
                       ${
-                        isInternational
-                          ? `
+                        isFree
+                          ? isInternational
+                            ? `
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 8px 0; font-weight: bold; color: #111827;">Registration Confirmed:</p>
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 15px 0; color: #4b5563;">Your registration has a 100% discount and is fully confirmed.</p>
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 25px 0; color: #4b5563;">All participants have to inform their flights to organization until October, 16th 2026, to fit all transfers.<br/>
+                        Phone: (+55.11) 3873-9908.<br/>
+                        E-mail: logistica@abravidro.org.br</p>
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0; color: #4b5563;">
+                          Best regards,<br/><br/>
+                          <strong>17th Simpovidro organization</strong>
+                        </p>
+                      `
+                            : `
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 8px 0; font-weight: bold; color: #111827;">Inscrição Confirmada:</p>
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 15px 0; color: #4b5563;">Sua inscrição possui 100% de desconto e está confirmada.</p>
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 25px 0; color: #4b5563;">Todos os participantes devem informar seus voos à organização até 16 de outubro de 2026 para organização dos transfers.<br/>Telefone: (11) 3873-9908.<br/>E-mail: logistica@abravidro.org.br</p>
+                        <p style="font-family: Arial, Helvetica, sans-serif; margin: 0; color: #4b5563;">
+                          Atenciosamente,<br/><br/>
+                          <strong>Organização 17º Simpovidro</strong>
+                        </p>
+                      `
+                          : isInternational
+                            ? `
                         <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 8px 0; font-weight: bold; color: #111827;">${isCreditCard ? "Credit Card Payment:" : `Payment - Due date: ${saleDetails.installments?.[0]?.due_date ? formatDate(saleDetails.installments[0].due_date) : ""}`}</p>
                         <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 15px 0; color: #4b5563;">${isCreditCard ? "The organization will contact you to send the credit card payment link." : "After confirming the veracity of the information provided, the organization will contact you to arrange payment details."}</p>
                         <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 25px 0; color: #4b5563;">All participants have to inform their flights to organization until October, 16th 2026, to fit all transfers.<br/>
@@ -474,7 +512,7 @@ export async function sendRegistrationEmail(
                           <strong>17th Simpovidro organization</strong>
                         </p>
                       `
-                          : `
+                            : `
                         <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 8px 0; font-weight: bold; color: #111827;">${isCreditCard ? "Cartão de Crédito:" : "Boletos:"}</p>
                         <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 15px 0; color: #4b5563;">${isCreditCard ? "A organização entrará em contato para o envio do link de pagamento do cartão de crédito." : "Os boletos serão enviados para o e-mail do titular."}</p>
                         <p style="font-family: Arial, Helvetica, sans-serif; margin: 0 0 25px 0; color: #4b5563;">Sua inscrição estará efetivada após comprovação da veracidade das informações prestadas e do pagamento ${isCreditCard ? "do valor total da inscrição." : "de todas as parcelas com vencimento antes do evento."}</p>
