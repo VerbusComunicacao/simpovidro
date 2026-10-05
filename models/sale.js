@@ -505,9 +505,10 @@ async function findAllByHotelId(hotelId) {
   return results.rows
 }
 
-async function findOneByIdWithDetails(saleId) {
+async function findOneByIdWithDetails(saleId, externalClient) {
   validateUUID(saleId)
-  const results = await database.query({
+  const db = externalClient || database
+  const results = await db.query({
     text: `
       SELECT 
         sales.*,
@@ -1267,6 +1268,225 @@ async function updateCheckoutQuestionResponse(
   }
 }
 
+async function adjustPrice(saleId, newValue, externalClient) {
+  validateUUID(saleId)
+
+  if (newValue === undefined || newValue === null || newValue === "") {
+    throw new ValidationError({
+      message: "O novo valor é obrigatório.",
+      action: "Informe o campo 'new_value' com um número válido.",
+    })
+  }
+
+  const numericNewValue = Number(newValue)
+
+  if (isNaN(numericNewValue) || numericNewValue < 0) {
+    throw new ValidationError({
+      message: "O novo valor deve ser um número maior ou igual a zero.",
+      action: "Informe um valor numérico válido maior ou igual a zero.",
+    })
+  }
+
+  const client = externalClient || (await database.getNewClient())
+  const isInternalTransaction = !externalClient
+
+  try {
+    if (isInternalTransaction) await client.query("BEGIN")
+
+    const saleResult = await client.query({
+      text: `SELECT * FROM sales WHERE id = $1 FOR UPDATE`,
+      values: [saleId],
+    })
+
+    const targetSale = saleResult.rows[0]
+
+    if (!targetSale) {
+      throw new NotFoundError({
+        message: "Inscrição não encontrada.",
+        action: "Verifique o ID da inscrição.",
+      })
+    }
+
+    if (targetSale.status === "cancelled") {
+      throw new ValidationError({
+        message: "Não é possível alterar o valor de uma inscrição cancelada.",
+        action: "Inscrições canceladas não podem sofrer alterações.",
+      })
+    }
+
+    const totalAmount = Number(targetSale.total_amount)
+
+    if (numericNewValue > totalAmount) {
+      throw new ValidationError({
+        message:
+          "O novo valor não pode ser maior que o valor bruto original da inscrição.",
+        action: "Informe um valor menor ou igual ao valor bruto original.",
+      })
+    }
+
+    const discountAmount = Number((totalAmount - numericNewValue).toFixed(2))
+    const discountPercentage =
+      totalAmount > 0
+        ? Number(((discountAmount / totalAmount) * 100).toFixed(2))
+        : 0
+    const finalAmount = Number(numericNewValue.toFixed(2))
+
+    let newStatus = targetSale.status
+    let newPaymentStatus = targetSale.payment_status
+
+    if (finalAmount === 0) {
+      newStatus = "confirmed"
+      newPaymentStatus = "paid"
+    }
+
+    // 1. Update sales record
+    await client.query({
+      text: `
+        UPDATE sales
+        SET
+          discount_percentage = $2,
+          discount_amount = $3,
+          final_amount = $4,
+          status = $5,
+          payment_status = $6,
+          updated_at = timezone('utc', now())
+        WHERE id = $1
+      `,
+      values: [
+        saleId,
+        discountPercentage,
+        discountAmount,
+        finalAmount,
+        newStatus,
+        newPaymentStatus,
+      ],
+    })
+
+    // 2. Handle installments
+    const existingInstallmentsResult = await client.query({
+      text: `SELECT * FROM sale_installments WHERE sale_id = $1 ORDER BY installment_number ASC`,
+      values: [saleId],
+    })
+
+    const existingInstallments = existingInstallmentsResult.rows
+
+    if (finalAmount === 0) {
+      await client.query({
+        text: `DELETE FROM sale_installments WHERE sale_id = $1 AND status IN ('pending', 'overdue')`,
+        values: [saleId],
+      })
+    } else if (existingInstallments.length > 0) {
+      const paidInstallments = existingInstallments.filter(
+        (i) => i.status === "paid",
+      )
+      const unpaidInstallments = existingInstallments.filter(
+        (i) => i.status !== "paid",
+      )
+
+      if (paidInstallments.length === 0) {
+        const count = existingInstallments.length
+        const installmentAmount = (finalAmount / count).toFixed(2)
+        const totalCalculated = (Number(installmentAmount) * count).toFixed(2)
+        const diff = (finalAmount - Number(totalCalculated)).toFixed(2)
+
+        for (let i = 0; i < count; i++) {
+          let instAmount = Number(installmentAmount)
+          if (i === count - 1) {
+            instAmount = Number((instAmount + Number(diff)).toFixed(2))
+          }
+
+          await client.query({
+            text: `
+              UPDATE sale_installments
+              SET amount = $2, updated_at = timezone('utc', now())
+              WHERE id = $1
+            `,
+            values: [existingInstallments[i].id, instAmount],
+          })
+        }
+      } else {
+        const totalPaid = paidInstallments.reduce(
+          (sum, i) => sum + Number(i.paid_amount || i.amount),
+          0,
+        )
+
+        if (finalAmount < totalPaid) {
+          throw new ValidationError({
+            message:
+              "O novo valor não pode ser menor que o total já pago nas parcelas.",
+            action: "Informe um valor maior ou igual ao total já pago.",
+          })
+        }
+
+        const remainingAmount = Number((finalAmount - totalPaid).toFixed(2))
+
+        if (unpaidInstallments.length > 0) {
+          const count = unpaidInstallments.length
+          const installmentAmount = (remainingAmount / count).toFixed(2)
+          const totalCalculated = (
+            Number(installmentAmount) * count
+          ).toFixed(2)
+          const diff = (remainingAmount - Number(totalCalculated)).toFixed(2)
+
+          for (let i = 0; i < count; i++) {
+            let instAmount = Number(installmentAmount)
+            if (i === count - 1) {
+              instAmount = Number((instAmount + Number(diff)).toFixed(2))
+            }
+
+            await client.query({
+              text: `
+                UPDATE sale_installments
+                SET amount = $2, updated_at = timezone('utc', now())
+                WHERE id = $1
+              `,
+              values: [unpaidInstallments[i].id, instAmount],
+            })
+          }
+        }
+      }
+    } else {
+      const eventDate = targetSale.check_in_date
+        ? Temporal.PlainDate.from(
+            targetSale.check_in_date instanceof Date
+              ? targetSale.check_in_date.toISOString().split("T")[0]
+              : targetSale.check_in_date.split("T")[0],
+          )
+        : Temporal.Now.plainDateISO()
+
+      const singleInstallmentDate = saleInstallment.generateInstallmentDates(
+        1,
+        eventDate,
+      )[0]
+
+      await saleInstallment.createMany(
+        [
+          {
+            sale_id: saleId,
+            installment_number: 1,
+            amount: finalAmount,
+            due_date: singleInstallmentDate,
+          },
+        ],
+        client,
+      )
+    }
+
+    if (isInternalTransaction) await client.query("COMMIT")
+
+    const updatedSaleDetails = await findOneByIdWithDetails(
+      saleId,
+      isInternalTransaction ? undefined : client,
+    )
+    return updatedSaleDetails
+  } catch (error) {
+    if (isInternalTransaction) await client.query("ROLLBACK")
+    throw error
+  } finally {
+    if (isInternalTransaction) await client.end()
+  }
+}
+
 const sale = {
   create,
   findOneById,
@@ -1282,6 +1502,7 @@ const sale = {
   replaceGuest,
   updateBedPreference,
   updateCheckoutQuestionResponse,
+  adjustPrice,
 }
 
 export default sale
