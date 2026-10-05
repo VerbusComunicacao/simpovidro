@@ -1423,9 +1423,7 @@ async function adjustPrice(saleId, newValue, externalClient) {
         if (unpaidInstallments.length > 0) {
           const count = unpaidInstallments.length
           const installmentAmount = (remainingAmount / count).toFixed(2)
-          const totalCalculated = (
-            Number(installmentAmount) * count
-          ).toFixed(2)
+          const totalCalculated = (Number(installmentAmount) * count).toFixed(2)
           const diff = (remainingAmount - Number(totalCalculated)).toFixed(2)
 
           for (let i = 0; i < count; i++) {

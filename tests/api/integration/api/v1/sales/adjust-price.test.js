@@ -15,8 +15,7 @@ describe("PATCH /api/v1/sales/[id]/adjust-price", () => {
   let saleId
 
   function generateCpf() {
-    const randomDigits = () =>
-      Math.floor(100 + Math.random() * 900).toString()
+    const randomDigits = () => Math.floor(100 + Math.random() * 900).toString()
     const d1 = randomDigits()
     const d2 = randomDigits()
     const d3 = randomDigits()
@@ -329,7 +328,9 @@ describe("PATCH /api/v1/sales/[id]/adjust-price", () => {
     expect(res.status).toBe(400)
     const body = await res.json()
     expect(body.name).toBe("ValidationError")
-    expect(body.message).toContain("não pode ser maior que o valor bruto original")
+    expect(body.message).toContain(
+      "não pode ser maior que o valor bruto original",
+    )
   })
 
   test("should return 400 when new_value is missing or invalid", async () => {

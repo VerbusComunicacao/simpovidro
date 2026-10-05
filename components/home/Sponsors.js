@@ -67,6 +67,11 @@ export default function Sponsors({ variant = "full" }) {
       link: "https://www.keraglass.com/pt/home",
     },
     {
+      name: "Latam",
+      logo: "/images/apoiadores/latam.png",
+      link: "https://www.latamglass.com.br",
+    },
+    {
       name: "Lisec",
       logo: "/images/apoiadores/lisec-1.png",
       link: "https://www.lisec.com",
