@@ -57,6 +57,11 @@ export default function Sponsors({ variant = "full" }) {
       isVertical: true,
     },
     {
+      name: "Glass South America",
+      logo: "/images/apoiadores/glass-south.png",
+      link: "https://home.glassexpo.com.br",
+    },
+    {
       name: "Gusmao",
       logo: "/images/apoiadores/gusmao.png",
       link: "https://www.gusmao.com.br/",
@@ -67,7 +72,7 @@ export default function Sponsors({ variant = "full" }) {
       link: "https://www.keraglass.com/pt/home",
     },
     {
-      name: "Latam",
+      name: "Latamglass",
       logo: "/images/apoiadores/latam.png",
       link: "https://www.latamglass.com.br",
     },
