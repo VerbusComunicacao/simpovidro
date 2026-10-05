@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const fetcher = async (url) => {
   const res = await fetch(url)
@@ -71,6 +73,64 @@ export default function RegistrationDetailsPage() {
   const [showEditQuestionDialog, setShowEditQuestionDialog] = useState(false)
   const [pendingQuestionResponse, setPendingQuestionResponse] = useState("")
   const [isUpdatingQuestion, setIsUpdatingQuestion] = useState(false)
+
+  const [showEditPriceDialog, setShowEditPriceDialog] = useState(false)
+  const [pendingPrice, setPendingPrice] = useState("")
+  const [sendPriceEmail, setSendPriceEmail] = useState(false)
+  const [isUpdatingPrice, setIsUpdatingPrice] = useState(false)
+
+  const handleEditPriceClick = () => {
+    setPendingPrice(
+      sale?.final_amount !== undefined && sale?.final_amount !== null
+        ? String(sale.final_amount)
+        : "",
+    )
+    setSendPriceEmail(false)
+    setShowEditPriceDialog(true)
+  }
+
+  const executeAdjustPrice = async () => {
+    const numericValue = parseFloat(pendingPrice)
+    if (isNaN(numericValue) || numericValue < 0) {
+      alert("Por favor, informe um valor válido maior ou igual a zero.")
+      return
+    }
+
+    if (numericValue > Number(sale?.total_amount || 0)) {
+      alert(
+        `O novo valor não pode ser maior que o valor bruto original (${formatCurrency(sale.total_amount)}).`,
+      )
+      return
+    }
+
+    setIsUpdatingPrice(true)
+    try {
+      const response = await fetch(`/api/v1/sales/${sale.id}/adjust-price`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          new_value: numericValue,
+          send_email: sendPriceEmail,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || "Falha ao alterar o valor da inscrição")
+      }
+
+      alert("Valor da inscrição ajustado com sucesso!")
+      setShowEditPriceDialog(false)
+      mutate()
+    } catch (error) {
+      console.error(error)
+      alert(error.message)
+    } finally {
+      setIsUpdatingPrice(false)
+    }
+  }
 
   const handleEditQuestionClick = () => {
     setPendingQuestionResponse(sale.checkout_question_response || "")
@@ -751,11 +811,21 @@ export default function RegistrationDetailsPage() {
 
           {/* Seção Financeira */}
           <Card className="border-t-4 border-t-green-500">
-            <CardHeader className="pb-3 border-b">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
               <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
                 <CreditCard className="h-5 w-5 text-green-600" />
                 Financeiro
               </CardTitle>
+              {sale.status !== "cancelled" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEditPriceClick}
+                  className="h-7 text-xs px-2.5 text-blue-600 border-blue-200 hover:bg-blue-50"
+                >
+                  Editar
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -790,9 +860,20 @@ export default function RegistrationDetailsPage() {
                         {formatCurrency(sale.total_amount)}
                       </p>
                     </div>
+                    {Number(sale.discount_amount) > 0 && (
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-sm text-green-600 font-medium">
+                          Desconto ({Number(sale.discount_percentage || 0)}%)
+                        </p>
+                        <p className="text-sm font-medium text-green-600">
+                          - {formatCurrency(sale.discount_amount)}
+                        </p>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-sm font-bold text-gray-900">
-                        Total Pago
+                        Total{" "}
+                        {sale.payment_status === "paid" ? "Pago" : "a Pagar"}
                       </p>
                       <p className="text-xl font-black text-blue-600">
                         {formatCurrency(sale.final_amount)}
@@ -1055,6 +1136,123 @@ export default function RegistrationDetailsPage() {
               ) : (
                 "Salvar"
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showEditPriceDialog} onOpenChange={setShowEditPriceDialog}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-green-600" />
+              Ajustar Valor da Inscrição
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 pt-1">
+              O valor original permanecerá como valor bruto e a diferença será
+              calculada automaticamente como desconto.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-3">
+            <div className="bg-gray-50 p-3 rounded-lg border flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase">
+                  Valor Bruto Original
+                </p>
+                <p className="text-base font-bold text-gray-800">
+                  {formatCurrency(sale?.total_amount)}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="new_sale_price"
+                className="text-sm font-bold text-gray-700"
+              >
+                Novo Valor Total (R$)
+              </Label>
+              <Input
+                id="new_sale_price"
+                type="number"
+                step="0.01"
+                min="0"
+                max={sale?.total_amount}
+                placeholder="Ex: 2500.00"
+                value={pendingPrice}
+                onChange={(e) => setPendingPrice(e.target.value)}
+                className="font-medium text-base"
+              />
+            </div>
+
+            {pendingPrice !== "" && !isNaN(parseFloat(pendingPrice)) && (
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 space-y-1.5 text-xs">
+                <div className="flex justify-between text-blue-900">
+                  <span>Novo Total Final:</span>
+                  <strong className="text-sm font-bold">
+                    {formatCurrency(parseFloat(pendingPrice))}
+                  </strong>
+                </div>
+                <div className="flex justify-between text-green-700">
+                  <span>Desconto Gerado:</span>
+                  <strong>
+                    {formatCurrency(
+                      Math.max(
+                        0,
+                        Number(sale?.total_amount || 0) -
+                          parseFloat(pendingPrice),
+                      ),
+                    )}{" "}
+                    (
+                    {Number(sale?.total_amount || 0) > 0
+                      ? (
+                          (Math.max(
+                            0,
+                            Number(sale?.total_amount || 0) -
+                              parseFloat(pendingPrice),
+                          ) /
+                            Number(sale?.total_amount)) *
+                          100
+                        ).toFixed(1)
+                      : 0}
+                    %)
+                  </strong>
+                </div>
+              </div>
+            )}
+
+            <div className="pt-2 border-t flex items-center space-x-2">
+              <Checkbox
+                id="send_price_email"
+                checked={sendPriceEmail}
+                onCheckedChange={(checked) => setSendPriceEmail(!!checked)}
+              />
+              <Label
+                htmlFor="send_price_email"
+                className="text-xs font-medium text-gray-700 cursor-pointer"
+              >
+                Enviar e-mail avisando o participante sobre a alteração de valor
+              </Label>
+            </div>
+          </div>
+          <DialogFooter className="border-t pt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowEditPriceDialog(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={executeAdjustPrice}
+              disabled={isUpdatingPrice}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isUpdatingPrice ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
+              Salvar Alteração
             </Button>
           </DialogFooter>
         </DialogContent>
