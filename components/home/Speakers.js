@@ -272,7 +272,7 @@ export default function Speakers({ router: propRouter }) {
               className="bg-[#003873]/80 rounded-2xl border border-white/15 p-6 flex flex-col justify-between shadow-xl backdrop-blur-sm"
             >
               <div>
-                <h3 className="text-sm md:text-base font-bold text-white leading-snug mb-5">
+                <h3 className="text-sm md:text-base font-sans font-bold text-white leading-snug mb-5">
                   {session.title}
                 </h3>
               </div>
@@ -301,7 +301,7 @@ export default function Speakers({ router: propRouter }) {
                       )}
                     </div>
 
-                    <h4 className="text-xs md:text-sm font-semibold text-white group-hover:text-amber-300 transition-colors leading-tight line-clamp-2">
+                    <h4 className="text-xs md:text-sm font-semibold font-sans text-white group-hover:text-amber-300 transition-colors leading-tight line-clamp-2">
                       {speaker.name}
                     </h4>
                     <span className="text-[11px] text-blue-200 mt-1 group-hover:text-white">
