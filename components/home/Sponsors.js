@@ -36,6 +36,11 @@ export default function Sponsors({ variant = "full" }) {
       link: "https://www.bottero.com/",
     },
     {
+      name: "China Glass",
+      logo: "/images/apoiadores/china-glass.png",
+      link: "https://www.chinaglass.com.br",
+    },
+    {
       name: "Diamanfer",
       logo: "/images/apoiadores/diamanfer.jpeg",
       link: "https://diamanfer.com.br/",
