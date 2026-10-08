@@ -146,6 +146,20 @@ describe("GET /api/v1/reports", () => {
       expect(Array.isArray(responseBody)).toBe(true)
     })
 
+    test("When requesting companies-by-state report with valid user and hotel_id, should return 200 and array of states with company count", async () => {
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/reports?type=companies-by-state&hotel_id=${hotelId}`,
+        {
+          headers: {
+            Cookie: `session_id=${reportUserToken}`,
+          },
+        },
+      )
+      expect(response.status).toBe(200)
+      const responseBody = await response.json()
+      expect(Array.isArray(responseBody)).toBe(true)
+    })
+
     test("When requesting transfer-in report, should return 200 and expected columns", async () => {
       const response = await fetch(
         `${orchestrator.webserverUrl}/api/v1/reports?type=transfer-in&hotel_id=${hotelId}`,

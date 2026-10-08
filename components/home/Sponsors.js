@@ -87,6 +87,11 @@ export default function Sponsors({ variant = "full" }) {
       link: "https://www.lisec.com",
     },
     {
+      name: "Massfix",
+      logo: "/images/apoiadores/massfix-logo-2.png",
+      link: "https://www.massfix.com.br",
+    },
+    {
       name: "Qilu PVP",
       logo: "/images/apoiadores/qilu.png",
       link: "https://www.qlupvb.com",

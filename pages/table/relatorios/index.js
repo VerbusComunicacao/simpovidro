@@ -167,7 +167,12 @@ const reportTypes = [
   {
     value: "by-uf",
     label: "Participantes por Estado (UF)",
-    description: "Distribuição geográfica por estado brasileiro",
+    description: "Distribuição de participantes por estado brasileiro",
+  },
+  {
+    value: "companies-by-state",
+    label: "Empresas por Estado (UF)",
+    description: "Distribuição de empresas por estado brasileiro",
   },
   {
     value: "by-accommodation",
@@ -402,6 +407,33 @@ export default function RelatoriosPage() {
         "Email do Cadastrador": item.email_cadastrador,
         "Data de Inscrição": item.data_inscricao,
       }))
+    } else if (
+      selectedReport === "companies-by-state" &&
+      Array.isArray(reportData)
+    ) {
+      dataToExport = reportData.flatMap((stateGroup) => {
+        const companies = stateGroup.companies || []
+        if (companies.length === 0) {
+          return [
+            {
+              Estado: stateGroup.state,
+              "Total de Empresas": stateGroup.total_companies,
+              Empresa: "",
+              CNPJ: "",
+              Cidade: "",
+              "Área de Atuação": "",
+            },
+          ]
+        }
+        return companies.map((c) => ({
+          Estado: stateGroup.state,
+          "Total de Empresas": stateGroup.total_companies,
+          Empresa: c.name || "",
+          CNPJ: c.cnpj || "",
+          Cidade: c.city || "",
+          "Área de Atuação": c.activity_sector || "",
+        }))
+      })
     } else {
       dataToExport = reportData
     }
@@ -728,6 +760,79 @@ export default function RelatoriosPage() {
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap font-bold">
                         {row.total_participants}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (selectedReport === "companies-by-state" && Array.isArray(reportData)) {
+      const data = reportData.map((item) => ({
+        state: item.state,
+        Empresas: parseInt(item.total_companies),
+      }))
+
+      return (
+        <div className="space-y-8">
+          <div className="h-96 border rounded p-4">
+            <h3 className="text-lg font-semibold mb-4 text-start">
+              Distribuição de Empresas por Estado (UF)
+            </h3>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart
+                layout="vertical"
+                data={data}
+                margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis dataKey="state" type="category" />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="Empresas" fill="#6366F1" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="overflow-x-auto">
+            <h3 className="text-lg font-semibold mb-4">
+              Detalhamento por Estado
+            </h3>
+            <div className="max-h-96 overflow-y-auto border rounded">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-100 sticky top-0">
+                  <tr>
+                    <SortableHeader
+                      label="Estado"
+                      columnKey="state"
+                      sortConfig={sortConfig}
+                      onSort={handleSort}
+                    />
+                    <SortableHeader
+                      label="Total de Empresas"
+                      columnKey="total_companies"
+                      sortConfig={sortConfig}
+                      onSort={handleSort}
+                    />
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortItems(
+                    reportData,
+                    sortConfig.key,
+                    sortConfig.direction,
+                  ).map((row, index) => (
+                    <tr key={index} className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-2 whitespace-nowrap font-medium">
+                        {row.state}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap font-bold">
+                        {row.total_companies}
                       </td>
                     </tr>
                   ))}
@@ -1707,7 +1812,7 @@ export default function RelatoriosPage() {
                     {reportTypes.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         <div>
-                          <p className="font-medium">{type.label}</p>
+                          <p className="font-medium text-start">{type.label}</p>
                           <p className="text-xs text-gray-500">
                             {type.description}
                           </p>
