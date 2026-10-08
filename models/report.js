@@ -518,6 +518,69 @@ async function generateByUF(hotelId) {
   )
 }
 
+async function generateCompaniesByStateReport(hotelId) {
+  if (!hotelId) {
+    throw new Error("Hotel ID é obrigatório para gerar relatórios.")
+  }
+
+  const query = `
+    WITH unique_companies AS (
+      SELECT DISTINCT ON (c.id)
+        c.id,
+        c.corporate_name as name,
+        COALESCE(c.cnpj, 'N/A') as cnpj,
+        COALESCE(c.state, '') as raw_state,
+        COALESCE(c.city, 'N/A') as city,
+        COALESCE(NULLIF(TRIM(c.activity_sector), ''), 'Não Informado') as activity_sector
+      FROM sales s
+      JOIN rooms r ON s.room_id = r.id
+      JOIN hotels h ON r.hotel_id = h.id
+      JOIN companies c ON s.company_id = c.id
+      WHERE s.status != 'cancelled' AND h.id = $1
+    )
+    SELECT * FROM unique_companies ORDER BY name ASC
+  `
+
+  const result = await database.query({
+    text: query,
+    values: [hotelId],
+  })
+
+  const stateGroups = {}
+
+  result.rows.forEach((row) => {
+    const fullState = getFullStateName(row.raw_state)
+    if (!stateGroups[fullState]) {
+      stateGroups[fullState] = {
+        state: fullState,
+        total_companies: 0,
+        companies: [],
+      }
+    }
+
+    stateGroups[fullState].total_companies++
+    stateGroups[fullState].companies.push({
+      name: row.name,
+      cnpj: formatCNPJ(row.cnpj) || row.cnpj,
+      city: row.city,
+      activity_sector: row.activity_sector,
+    })
+  })
+
+  // Sort companies inside each state
+  Object.values(stateGroups).forEach((group) => {
+    group.companies.sort((a, b) => a.name.localeCompare(b.name))
+  })
+
+  // Return sorted states by total_companies DESC, then state ASC
+  return Object.values(stateGroups).sort((a, b) => {
+    if (b.total_companies !== a.total_companies) {
+      return b.total_companies - a.total_companies
+    }
+    return a.state.localeCompare(b.state)
+  })
+}
+
 async function generateCompaniesByActivityReport(hotelId) {
   if (!hotelId) {
     throw new Error("Hotel ID é obrigatório para gerar relatórios.")
@@ -997,6 +1060,7 @@ const report = {
   generateByAge,
   generateByCountry,
   generateByUF,
+  generateCompaniesByStateReport,
   generateCompaniesByActivityReport,
   generateByAccommodationReport,
   generateCheckoutQuestionsReport,
