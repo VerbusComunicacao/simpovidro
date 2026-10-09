@@ -468,8 +468,8 @@ export default function TransferPage() {
             </h1>
 
             <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto mb-8 leading-relaxed">
-              Para informar os dados de seus voos e organizar os transfers
-              oficiais do 17º Simpovidro, acesse com a sua conta.
+              Para informar os dados de seus voos e organizar os transfers do
+              17º Simpovidro, acesse com a sua conta.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
