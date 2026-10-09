@@ -201,6 +201,11 @@ const reportTypes = [
     description: "Relatório de Transfer Out",
   },
   {
+    value: "translado",
+    label: "TRANSLADO",
+    description: "Translado dos participantes (Voos e Transfers preenchidos)",
+  },
+  {
     value: "by-month",
     label: "Número de inscritos x aptos vendidos por mês",
     description:

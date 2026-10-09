@@ -115,10 +115,11 @@ export default function Pricing({ router }) {
                   )}
                 </p>
                 <Button
+                  onClick={() => router.push("/transfer")}
                   variant="outline"
-                  className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
+                  className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 font-bold cursor-pointer"
                 >
-                  {t("Em breve", "Coming soon")}
+                  {t("Informar dados de voo", "Submit flight details")}
                 </Button>
               </CardContent>
             </Card>

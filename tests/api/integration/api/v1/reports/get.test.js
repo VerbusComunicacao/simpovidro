@@ -239,5 +239,44 @@ describe("GET /api/v1/reports", () => {
       expect(item.celular).toBe("11988889999")
       expect(item.cadastrado_por).toBe("Report Reader User")
     })
+
+    test("When requesting translado report, should return 200 and list filled flight transfers", async () => {
+      // Create a flight transfer first
+      await fetch(`${orchestrator.webserverUrl}/api/v1/flight-transfers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${reportUserToken}`,
+        },
+        body: JSON.stringify({
+          hotel_id: hotelId,
+          participant_name: "Passageiro Translado Teste",
+          company_name: "Empresa Translado Ltd",
+          in_airline: "Azul",
+          in_flight_number: "AD 9900",
+          in_locator: "TRANS1",
+        }),
+      })
+
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/reports?type=translado&hotel_id=${hotelId}`,
+        {
+          headers: {
+            Cookie: `session_id=${reportUserToken}`,
+          },
+        },
+      )
+      expect(response.status).toBe(200)
+      const responseBody = await response.json()
+      expect(Array.isArray(responseBody)).toBe(true)
+      const item = responseBody.find(
+        (r) => r["Nome Completo"] === "Passageiro Translado Teste",
+      )
+      expect(item).toBeDefined()
+      expect(item["Nome Empresa"]).toBe("Empresa Translado Ltd")
+      expect(item["Companhia Aérea"]).toBe("Azul")
+      expect(item["LOCALIZADOR"]).toBe("TRANS1")
+      expect(item["Voo ida"]).toBe("AD 9900")
+    })
   })
 })

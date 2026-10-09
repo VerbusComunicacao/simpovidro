@@ -570,3 +570,238 @@ export async function sendRegistrationEmail(
     )
   }
 }
+
+export async function sendFlightTransferEmail(flightData) {
+  try {
+    const toEmail = "logistica@abravidro.org.br"
+    const bccList = [
+      "inscricao@abravidro.org.br",
+      "rsilva@abravidro.org.br",
+      "scarvalho@abravidro.org.br",
+      flightData.participant_email,
+    ]
+      .filter(Boolean)
+      .join(", ")
+
+    const subject = `[17º Simpovidro] Informações de Voo e Transfer - ${flightData.participant_name || "Participante"}`
+
+    const hasInFlight =
+      flightData.in_date ||
+      flightData.in_flight_number ||
+      flightData.in_airline ||
+      flightData.in_locator
+    const hasOutFlight =
+      flightData.out_date ||
+      flightData.out_flight_number ||
+      flightData.out_airline ||
+      flightData.out_locator
+
+    const emailHtml = `
+      <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+      <html xmlns="http://www.w3.org/1999/xhtml">
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>${subject}</title>
+      </head>
+      <body style="margin: 0; padding: 0; background-color: #f3f4f6; -webkit-text-size-adjust: 100%;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#f3f4f6" style="background-color: #f3f4f6; width: 100%; margin: 0; padding: 20px 0;">
+          <tr>
+            <td align="center" valign="top">
+              <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="width: 600px; max-width: 100%; font-family: Arial, Helvetica, sans-serif; color: #374151; line-height: 1.5; border-collapse: collapse; margin: 0 auto; border: 1px solid #e5e7eb; background-color: #ffffff;" bgcolor="#ffffff">
+                <!-- Header Image -->
+                <tr>
+                  <td style="padding: 0; line-height: 0;">
+                    <img src="${webserver.origin}/images/banner-topo2.png" alt="17º Simpovidro" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0;">
+                  </td>
+                </tr>
+
+                <!-- Content -->
+                <tr>
+                  <td bgcolor="#ffffff" style="padding: 24px; text-align: left;">
+                    <h2 style="color: #111827; font-size: 1.3em; margin: 0 0 12px 0; border-bottom: 2px solid #3b82f6; padding-bottom: 8px;">
+                      ✈️ Informações de Voo e Transfer Cadastradas
+                    </h2>
+                    <p style="margin: 0 0 20px 0; font-size: 14px; color: #4b5563;">
+                      Novos dados de voo/transfer foram informados para a logística do 17º Simpovidro.
+                    </p>
+
+                    <!-- Participante Info -->
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
+                      <tr>
+                        <td>
+                          <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #1e293b;">👤 Dados do Participante</h3>
+                          <table border="0" cellpadding="3" cellspacing="0" width="100%" style="font-size: 13.5px;">
+                            <tr>
+                              <td width="150" style="font-weight: bold; color: #64748b;">Nome:</td>
+                              <td style="color: #0f172a; font-weight: 600;">${flightData.participant_name || "-"}</td>
+                            </tr>
+                            ${flightData.company_name ? `<tr><td style="font-weight: bold; color: #64748b;">Empresa:</td><td>${flightData.company_name}</td></tr>` : ""}
+                            ${flightData.participant_cpf ? `<tr><td style="font-weight: bold; color: #64748b;">CPF/Doc:</td><td>${flightData.participant_cpf}</td></tr>` : ""}
+                            ${flightData.participant_phone ? `<tr><td style="font-weight: bold; color: #64748b;">Celular:</td><td>${flightData.participant_phone}</td></tr>` : ""}
+                            ${flightData.participant_email ? `<tr><td style="font-weight: bold; color: #64748b;">E-mail:</td><td>${flightData.participant_email}</td></tr>` : ""}
+                            ${flightData.hotel_name ? `<tr><td style="font-weight: bold; color: #64748b;">Hotel:</td><td>${flightData.hotel_name}</td></tr>` : ""}
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Voo Ida (IN) -->
+                    ${
+                      hasInFlight
+                        ? `
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 15px;">
+                      <tr>
+                        <td>
+                          <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #1e40af;">🛫 Voo de Ida (Transfer IN / Chegada)</h3>
+                          <table border="0" cellpadding="3" cellspacing="0" width="100%" style="font-size: 13.5px;">
+                            <tr>
+                              <td width="150" style="font-weight: bold; color: #3b82f6;">Data in Chegada:</td>
+                              <td style="color: #1e3a8a; font-weight: 600;">${flightData.in_date || "-"}</td>
+                            </tr>
+                            <tr>
+                              <td style="font-weight: bold; color: #3b82f6;">Companhia Aérea:</td>
+                              <td>${flightData.in_airline || "-"}</td>
+                            </tr>
+                            <tr>
+                              <td style="font-weight: bold; color: #3b82f6;">LOCALIZADOR:</td>
+                              <td style="font-family: monospace; font-weight: bold;">${flightData.in_locator || "-"}</td>
+                            </tr>
+                            <tr>
+                              <td style="font-weight: bold; color: #3b82f6;">Voo ida (Nº):</td>
+                              <td>${flightData.in_flight_number || "-"}</td>
+                            </tr>
+                            <tr>
+                              <td style="font-weight: bold; color: #3b82f6;">Aeroporto Origem:</td>
+                              <td>${flightData.in_origin_airport || "-"}</td>
+                            </tr>
+                            <tr>
+                              <td style="font-weight: bold; color: #3b82f6;">Horário chegada:</td>
+                              <td style="font-weight: 600;">${flightData.in_arrival_time || "-"}</td>
+                            </tr>
+                            <tr>
+                              <td style="font-weight: bold; color: #3b82f6;">Aeroporto Destino:</td>
+                              <td>${flightData.in_destination_airport || "-"}</td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                    `
+                        : ""
+                    }
+
+                    <!-- Voo Volta (OUT) -->
+                    ${
+                      hasOutFlight
+                        ? `
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 20px; background-color: #fefce8; border: 1px solid #fef08a; border-radius: 8px; padding: 15px;">
+                      <tr>
+                        <td>
+                          <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #854d0e;">🛬 Voo de Retorno (Transfer OUT / Saída)</h3>
+                          <table border="0" cellpadding="3" cellspacing="0" width="100%" style="font-size: 13.5px;">
+                            <tr>
+                              <td width="150" style="font-weight: bold; color: #ca8a04;">Data OUT Saída:</td>
+                              <td style="color: #713f12; font-weight: 600;">${flightData.out_date || "-"}</td>
+                            </tr>
+                            <tr>
+                              <td style="font-weight: bold; color: #ca8a04;">Companhia Aérea:</td>
+                              <td>${flightData.out_airline || "-"}</td>
+                            </tr>
+                            <tr>
+                              <td style="font-weight: bold; color: #ca8a04;">LOCALIZADOR:</td>
+                              <td style="font-family: monospace; font-weight: bold;">${flightData.out_locator || "-"}</td>
+                            </tr>
+                            <tr>
+                              <td style="font-weight: bold; color: #ca8a04;">Voo Retorno (Nº):</td>
+                              <td>${flightData.out_flight_number || "-"}</td>
+                            </tr>
+                            <tr>
+                              <td style="font-weight: bold; color: #ca8a04;">Aeroporto Saída:</td>
+                              <td>${flightData.out_departure_airport || "-"}</td>
+                            </tr>
+                            <tr>
+                              <td style="font-weight: bold; color: #ca8a04;">Horário/Saída:</td>
+                              <td style="font-weight: 600;">${flightData.out_departure_time || "-"}</td>
+                            </tr>
+                            ${flightData.out_destination_airport ? `<tr><td style="font-weight: bold; color: #ca8a04;">Aeroporto Destino:</td><td>${flightData.out_destination_airport}</td></tr>` : ""}
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                    `
+                        : ""
+                    }
+
+                    ${
+                      flightData.notes
+                        ? `
+                    <div style="background-color: #f1f5f9; padding: 12px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 13.5px;">
+                      <strong>Observações:</strong> ${flightData.notes}
+                    </div>
+                    `
+                        : ""
+                    }
+
+                    <p style="font-size: 13px; color: #64748b; margin-top: 20px;">
+                      Equipe de Logística 17º Simpovidro<br/>
+                      Telefone: (+55.11) 3873-9908<br/>
+                      E-mail: logistica@abravidro.org.br
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Footer Image -->
+                <tr>
+                  <td style="padding: 0; line-height: 0;">
+                    <img src="${webserver.origin}/images/banner-rodape2.png" alt="Patrocinadores e Realização" width="600" style="width: 600px; max-width: 100%; height: auto; display: block; border-radius: 0 0 8px 8px;">
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `
+
+    const plainText = `
+Informações de Voo e Transfer - 17º Simpovidro
+Participante: ${flightData.participant_name}
+Empresa: ${flightData.company_name || "-"}
+Telefone: ${flightData.participant_phone || "-"}
+E-mail: ${flightData.participant_email || "-"}
+
+VOO IDA (IN):
+Data: ${flightData.in_date || "-"}
+Companhia: ${flightData.in_airline || "-"}
+Localizador: ${flightData.in_locator || "-"}
+Nº Voo: ${flightData.in_flight_number || "-"}
+Origem: ${flightData.in_origin_airport || "-"}
+Horário Chegada: ${flightData.in_arrival_time || "-"}
+Destino: ${flightData.in_destination_airport || "-"}
+
+VOO VOLTA (OUT):
+Data: ${flightData.out_date || "-"}
+Companhia: ${flightData.out_airline || "-"}
+Localizador: ${flightData.out_locator || "-"}
+Nº Voo: ${flightData.out_flight_number || "-"}
+Aeroporto Saída: ${flightData.out_departure_airport || "-"}
+Horário Saída: ${flightData.out_departure_time || "-"}
+Destino: ${flightData.out_destination_airport || "-"}
+
+Obs: ${flightData.notes || "-"}
+    `.trim()
+
+    await email.send({
+      from: `Simpovidro Logística <simpovidro@abravidro.org.br>`,
+      to: toEmail,
+      bcc: bccList,
+      subject: subject,
+      html: emailHtml,
+      text: plainText,
+    })
+  } catch (err) {
+    console.error("Falha ao enviar email de voo e transfer:", err)
+  }
+}

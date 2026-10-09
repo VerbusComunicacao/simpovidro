@@ -80,6 +80,10 @@ async function getHandler(request, response) {
     case "transfer-out":
       reportData = await report.generateTransferOutReport(hotel_id)
       break
+    case "flight-transfers":
+    case "translado":
+      reportData = await report.generateTransladoReport(hotel_id)
+      break
     case "by-month":
       reportData = await report.generateByMonthReport(hotel_id)
       break
