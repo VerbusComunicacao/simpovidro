@@ -13,6 +13,7 @@ import {
   Users,
   MapPin,
   Phone,
+  Plane,
 } from "lucide-react"
 import Link from "next/link"
 import { Empty } from "@/components/ui/empty"
@@ -97,6 +98,34 @@ export default function MyOrdersPage() {
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
           {isInternational ? "My Orders" : "Meus Pedidos"}
         </h1>
+
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-blue-50 border border-blue-200 rounded-xl mb-6">
+          <div className="flex items-center gap-3">
+            <Plane className="h-6 w-6 text-blue-600 shrink-0" />
+            <div>
+              <p className="font-bold text-sm text-blue-950">
+                {isInternational
+                  ? "Flight & Transfer Details"
+                  : "Informações de Voo e Transfer"}
+              </p>
+              <p className="text-xs text-blue-700">
+                {isInternational
+                  ? "Already have your flight tickets? Inform your flight details for transfer logistics."
+                  : "Já comprou suas passagens? Informe os dados dos seus voos para organizarmos o transfer oficial."}
+              </p>
+            </div>
+          </div>
+          <Button
+            asChild
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            <Link href="/transfer">
+              <Plane className="h-3.5 w-3.5" />
+              {isInternational ? "Inform Flights" : "Informar Voos"}
+            </Link>
+          </Button>
+        </div>
 
         {isLoading && (
           <div className="flex items-center justify-center p-12">

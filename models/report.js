@@ -876,6 +876,71 @@ async function generateTransferOutReport(hotelId) {
   return generateTransferReport(hotelId, "Voo volta")
 }
 
+async function generateTransladoReport(hotelId) {
+  if (!hotelId) {
+    throw new Error("Hotel ID é obrigatório para gerar relatórios.")
+  }
+
+  const query = `
+    SELECT 
+      COALESCE(c.corporate_name, ft.company_name, '') as nome_empresa,
+      COALESCE(g.name, ft.participant_name) as nome_completo,
+      COALESCE(g.cpf_number, ft.participant_cpf, '') as cpf,
+      COALESCE(g.rg_number, '') as rg,
+      COALESCE(g.passport_number, '') as passaporte,
+      COALESCE(g.email, ft.participant_email, '') as email,
+      TO_CHAR(g.birth_date, 'DD/MM/YYYY') as data_nascimento,
+      ft.in_date,
+      ft.in_airline,
+      ft.in_locator,
+      ft.in_flight_number,
+      ft.in_origin_airport,
+      ft.in_arrival_time,
+      ft.in_destination_airport,
+      ft.out_date,
+      ft.out_airline,
+      ft.out_locator,
+      ft.out_flight_number,
+      ft.out_departure_airport,
+      ft.out_departure_time,
+      ft.out_destination_airport
+    FROM flight_transfers ft
+    LEFT JOIN guests g ON ft.guest_id = g.id
+    LEFT JOIN sales s ON ft.sale_id = s.id
+    LEFT JOIN companies c ON s.company_id = c.id
+    WHERE ft.hotel_id = $1
+    ORDER BY ft.created_at ASC
+  `
+
+  const result = await database.query({
+    text: query,
+    values: [hotelId],
+  })
+
+  return result.rows.map((row) => ({
+    "Nome Empresa": row.nome_empresa || "",
+    "Nome Completo": row.nome_completo || "",
+    CPF: row.cpf || "",
+    RG: row.rg || "",
+    Passaport: row.passaporte || "",
+    "E-MAIL": row.email || "",
+    "Data Nascimento": row.data_nascimento || "",
+    "Data in Chegada": row.in_date || "",
+    "Companhia Aérea": row.in_airline || "",
+    LOCALIZADOR: row.in_locator || "",
+    "Voo ida": row.in_flight_number || "",
+    "Aeroporto Origem": row.in_origin_airport || "",
+    "Horário chegada": row.in_arrival_time || "",
+    "Aeroporto Destino": row.in_destination_airport || "",
+    "Data OUT Saída": row.out_date || "",
+    "Companhia Aérea ": row.out_airline || "",
+    "LOCALIZADOR ": row.out_locator || "",
+    "Voo Retorno": row.out_flight_number || "",
+    Aeroporto: row.out_departure_airport || "",
+    "Horário/Saída": row.out_departure_time || "",
+  }))
+}
+
 async function generateByMonthReport(hotelId) {
   if (!hotelId) {
     throw new Error("Hotel ID é obrigatório para gerar relatórios.")
@@ -1068,6 +1133,7 @@ const report = {
   generateFinancialReport,
   generateTransferInReport,
   generateTransferOutReport,
+  generateTransladoReport,
   generateByMonthReport,
   generateTournamentsReport,
 }
