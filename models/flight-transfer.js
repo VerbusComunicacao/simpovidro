@@ -3,12 +3,9 @@ import { ValidationError, NotFoundError } from "infra/errors.js"
 import { validateUUID } from "infra/validator.js"
 import { sendFlightTransferEmail } from "models/email-notifications.js"
 
-async function create(flightData, userId) {
-  if (!userId) {
-    throw new ValidationError({
-      message: "Usuário não autenticado.",
-      action: "Faça login para cadastrar as informações de voo.",
-    })
+async function create(flightData, userId = null) {
+  if (userId) {
+    validateUUID(userId)
   }
 
   // Support both batch participants array and single participant object
@@ -103,28 +100,44 @@ async function create(flightData, userId) {
     let resolvedGuestId = p.guest_id || null
     let resolvedSaleId = p.sale_id || null
 
-    if (!resolvedGuestId && p.participant_cpf) {
-      const cleanCpf = p.participant_cpf.replace(/\D/g, "")
+    let effectiveUserId = userId || p.user_id || flightData.user_id || null
+    const cleanCpf = (p.participant_cpf || "").replace(/\D/g, "")
+    const passport = (p.passport_number || p.participant_cpf || "").trim()
+
+    if (!resolvedGuestId && (cleanCpf || passport)) {
       const guestSearch = await database.query({
         text: `
-          SELECT sg.guest_id, sg.sale_id 
+          SELECT sg.guest_id, sg.sale_id, s.user_id, g.user_id as guest_user_id 
           FROM guests g 
           JOIN sales_guests sg ON g.id = sg.guest_id
           JOIN sales s ON sg.sale_id = s.id
           WHERE s.status != 'cancelled' 
             AND (
-              (LENGTH($1) > 0 AND REGEXP_REPLACE(g.cpf_number, '\\D', '', 'g') = $1)
-              OR (LOWER(TRIM(g.passport_number)) = LOWER(TRIM($2)))
+              (LENGTH($1) > 0 AND REGEXP_REPLACE(COALESCE(g.cpf_number, ''), '\\D', '', 'g') = $1)
+              OR (LENGTH($2) > 0 AND LOWER(TRIM(COALESCE(g.passport_number, ''))) = LOWER(TRIM($2)))
             )
           LIMIT 1
         `,
-        values: [cleanCpf, p.participant_cpf.trim()],
+        values: [cleanCpf, passport],
       })
 
       if (guestSearch.rowCount > 0) {
         resolvedGuestId = guestSearch.rows[0].guest_id
         resolvedSaleId = resolvedSaleId || guestSearch.rows[0].sale_id
+        if (!effectiveUserId) {
+          effectiveUserId =
+            guestSearch.rows[0].user_id ||
+            guestSearch.rows[0].guest_user_id ||
+            null
+        }
       }
+    }
+
+    if (!effectiveUserId) {
+      throw new ValidationError({
+        message: "Participante não vinculado a uma inscrição no evento atual.",
+        action: "Verifique o CPF ou Passaporte informado e tente novamente.",
+      })
     }
 
     const query = `
@@ -208,7 +221,7 @@ async function create(flightData, userId) {
 
     const values = [
       hotelId,
-      userId,
+      effectiveUserId || null,
       resolvedSaleId || null,
       resolvedGuestId || null,
       (p.participant_name || "").trim(),
@@ -423,12 +436,152 @@ async function getUserDefaults(userId) {
   }
 }
 
+async function lookupParticipant(document) {
+  if (!document || !document.toString().trim()) {
+    throw new ValidationError({
+      message: "Informe o CPF ou Passaporte para continuar.",
+      action: "Digite um documento válido e tente novamente.",
+    })
+  }
+
+  const raw = document.toString().trim()
+  const cleanCpf = raw.replace(/\D/g, "")
+  const isLikelyCpf =
+    cleanCpf.length === 11 || (cleanCpf.length > 0 && /^\d+$/.test(raw))
+
+  // 1. Resolve active hotel
+  let activeHotel = null
+  const activeHotelQuery = await database.query({
+    text: "SELECT id, name FROM hotels WHERE active = true LIMIT 1",
+  })
+  if (activeHotelQuery.rowCount > 0) {
+    activeHotel = activeHotelQuery.rows[0]
+  } else {
+    const fallbackHotel = await database.query({
+      text: "SELECT id, name FROM hotels ORDER BY created_at DESC LIMIT 1",
+    })
+    if (fallbackHotel.rowCount > 0) {
+      activeHotel = fallbackHotel.rows[0]
+    }
+  }
+
+  if (!activeHotel) {
+    throw new ValidationError({
+      message: "Nenhum evento/hotel ativo cadastrado no sistema.",
+      action: "Aguarde a abertura oficial ou contate a organização.",
+    })
+  }
+
+  // 2. Search in guests of non-cancelled sales in the active hotel
+  const guestQuery = await database.query({
+    text: `
+      SELECT 
+        g.id as guest_id,
+        g.name as participant_name,
+        g.cpf_number as participant_cpf,
+        g.passport_number,
+        g.email as participant_email,
+        g.phone as participant_phone,
+        COALESCE(c.corporate_name, '') as company_name,
+        s.id as sale_id,
+        s.sale_number,
+        COALESCE(g.user_id, s.user_id) as user_id,
+        s.hotel_id,
+        h.name as hotel_name
+      FROM guests g
+      JOIN sales_guests sg ON g.id = sg.guest_id
+      JOIN sales s ON sg.sale_id = s.id AND s.status != 'cancelled'
+      JOIN hotels h ON s.hotel_id = h.id
+      LEFT JOIN companies c ON s.company_id = c.id
+      WHERE 
+        s.hotel_id = $3
+        AND (
+          (LENGTH($1) > 0 AND REGEXP_REPLACE(COALESCE(g.cpf_number, ''), '\\D', '', 'g') = $1)
+          OR (LENGTH($2) > 0 AND LOWER(TRIM(COALESCE(g.passport_number, ''))) = LOWER(TRIM($2)))
+        )
+      ORDER BY s.created_at DESC
+      LIMIT 1
+    `,
+    values: [cleanCpf, raw, activeHotel.id],
+  })
+
+  let participant = null
+
+  if (guestQuery.rowCount > 0) {
+    participant = guestQuery.rows[0]
+  }
+
+  if (!participant) {
+    return {
+      found: false,
+      message:
+        "Nenhuma inscrição confirmada encontrada para este documento no 17º Simpovidro. Verifique o CPF/Passaporte digitado ou contate a organização em logistica@abravidro.org.br.",
+      document: raw,
+      document_type: isLikelyCpf ? "cpf" : "passport",
+      hotel: activeHotel,
+    }
+  }
+
+  let resolvedUserId = participant.user_id
+  if (!resolvedUserId) {
+    const adminUser = await database.query({
+      text: "SELECT id FROM users ORDER BY created_at ASC LIMIT 1",
+    })
+    resolvedUserId = adminUser.rows[0]?.id || null
+  }
+
+  // 4. Check for existing flight transfer
+  let existingTransfer = null
+  const guestId = participant.guest_id || null
+
+  const transferQuery = await database.query({
+    text: `
+      SELECT *
+      FROM flight_transfers
+      WHERE 
+        hotel_id = $3
+        AND (
+          ($1::uuid IS NOT NULL AND guest_id = $1)
+          OR (LENGTH($2) > 0 AND REGEXP_REPLACE(COALESCE(participant_cpf, ''), '\\D', '', 'g') = $2)
+        )
+      ORDER BY created_at DESC
+      LIMIT 1
+    `,
+    values: [guestId, cleanCpf, activeHotel.id],
+  })
+
+  if (transferQuery.rowCount > 0) {
+    existingTransfer = transferQuery.rows[0]
+  }
+
+  return {
+    found: true,
+    document: raw,
+    document_type: isLikelyCpf ? "cpf" : "passport",
+    hotel: activeHotel,
+    participant: {
+      user_id: resolvedUserId,
+      guest_id: participant.guest_id || null,
+      sale_id: participant.sale_id || null,
+      sale_number: participant.sale_number || null,
+      participant_name: participant.participant_name || "",
+      participant_cpf: participant.participant_cpf || (isLikelyCpf ? raw : ""),
+      passport_number: participant.passport_number || (!isLikelyCpf ? raw : ""),
+      participant_email: participant.participant_email || "",
+      participant_phone: participant.participant_phone || "",
+      company_name: participant.company_name || "",
+    },
+    existing_transfer: existingTransfer,
+  }
+}
+
 const flightTransfer = {
   create,
   findByUserId,
   findById,
   deleteById,
   getUserDefaults,
+  lookupParticipant,
 }
 
 export default flightTransfer

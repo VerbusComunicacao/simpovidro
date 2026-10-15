@@ -8,8 +8,62 @@ beforeAll(async () => {
 })
 
 describe("POST /api/v1/flight-transfers", () => {
+  let adminUser
+  let hotelId
+  let registeredUser
+  let registeredCpf = "41998224729"
+
+  beforeAll(async () => {
+    // 1. Create Admin
+    adminUser = await orchestrator.createUser({
+      full_name: "Admin Transfer User",
+      email: "admin-transfer@example.com",
+      password: "password123",
+    })
+    await orchestrator.activateAdmUser(adminUser.id)
+
+    // 2. Create and Activate Hotel
+    const hotel = await orchestrator.createHotel(adminUser.id, {
+      name: "Hotel Transfer Test",
+      city: "Maceió",
+      country: "Brasil",
+      check_in_date: "2026-11-01",
+      check_out_date: "2026-11-05",
+    })
+    hotelId = hotel.id
+    await orchestrator.activateHotel(hotelId)
+
+    // 3. Create room and a confirmed registration with a guest
+    const room = await orchestrator.createRoom(adminUser.id, {
+      hotel_id: hotelId,
+    })
+
+    registeredUser = await orchestrator.createUser({
+      full_name: "Inscrito Transfer",
+      email: "inscrito-transfer@example.com",
+      password: "password123",
+    })
+    await orchestrator.activateUser(registeredUser.id)
+
+    await orchestrator.createRegistration(registeredUser.id, {
+      room_id: room.id,
+      guests_data: [
+        {
+          name: "Inscrito Transfer",
+          badge_name: "Inscrito",
+          email: "inscrito-transfer@example.com",
+          phone: "11988887777",
+          gender: "Masculino",
+          rg_number: "123456789",
+          cpf_number: registeredCpf,
+          birth_date: "1990-01-01",
+        },
+      ],
+    })
+  })
+
   describe("Anonymous user", () => {
-    test("Should return 401 when unauthenticated", async () => {
+    test("Should return 400 when unauthenticated participant has no linked registration", async () => {
       const response = await fetch(
         `${orchestrator.webserverUrl}/api/v1/flight-transfers`,
         {
@@ -18,66 +72,65 @@ describe("POST /api/v1/flight-transfers", () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            participant_name: "Carlos Teste",
+            participant_name: "Carlos Sem Inscricao",
+            participant_cpf: "000.000.000-00",
             in_airline: "LATAM",
             in_locator: "ABC123",
           }),
         },
       )
 
-      expect(response.status).toBe(401)
+      expect(response.status).toBe(400)
       const body = await response.json()
-      expect(body.name).toBe("UnauthorizedError")
+      expect(body.message).toContain("não vinculado a uma inscrição")
+    })
+
+    test("Should register flight transfer when unauthenticated participant has a confirmed registration", async () => {
+      const response = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/flight-transfers`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            hotel_id: hotelId,
+            participant_name: "Inscrito Transfer",
+            participant_cpf: registeredCpf,
+            participant_email: "inscrito-transfer@example.com",
+            in_date: "01/11/2026",
+            in_airline: "GOL",
+            in_locator: "GOL789",
+            in_flight_number: "G3 1500",
+            in_arrival_time: "12:00",
+            out_date: "05/11/2026",
+            out_airline: "AZUL",
+            out_locator: "AZU456",
+            out_flight_number: "AD 2200",
+            out_departure_time: "16:00",
+            notes: "Transfer público sem login",
+          }),
+        },
+      )
+
+      expect(response.status).toBe(201)
+      const body = await response.json()
+      expect(uuidVersion(body.id)).toBe(4)
+      expect(body.user_id).toBe(registeredUser.id)
+      expect(body.hotel_id).toBe(hotelId)
+      expect(body.participant_name).toBe("Inscrito Transfer")
+      expect(body.in_airline).toBe("GOL")
+      expect(body.in_locator).toBe("GOL789")
+      expect(body.out_airline).toBe("AZUL")
+      expect(body.notes).toBe("Transfer público sem login")
     })
   })
 
   describe("Authenticated user", () => {
     let userToken
     let userId
-    let hotelId
 
     beforeAll(async () => {
-      const adminUser = await orchestrator.createUser({
-        full_name: "Admin Transfer User",
-        email: "admin-transfer@example.com",
-        password: "password123",
-      })
-      await orchestrator.activateAdmUser(adminUser.id)
-      const adminSession = await orchestrator.createSession(adminUser.id)
-
-      // Create hotel
-      const hotelRes = await fetch(
-        `${orchestrator.webserverUrl}/api/v1/hotels`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${adminSession.token}`,
-          },
-          body: JSON.stringify({
-            name: "Hotel Transfer Test",
-            city: "Maceió",
-            country: "Brasil",
-            check_in_date: "2026-11-01",
-            check_out_date: "2026-11-05",
-          }),
-        },
-      )
-      const hotelData = await hotelRes.json()
-      hotelId = hotelData.id
-
-      // Activate hotel
-      await fetch(
-        `${orchestrator.webserverUrl}/api/v1/hotels/${hotelId}/activate`,
-        {
-          method: "PATCH",
-          headers: {
-            Cookie: `session_id=${adminSession.token}`,
-          },
-        },
-      )
-
-      // Regular user
       const user = await orchestrator.createUser({
         full_name: "Participante Voo",
         email: "participante-voo@example.com",

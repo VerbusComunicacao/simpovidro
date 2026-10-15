@@ -27,14 +27,8 @@ async function getHandler(request, response) {
 
 async function postHandler(request, response) {
   const user = request.context.user
+  const userId = user?.id || null
 
-  if (!user.id) {
-    throw new UnauthorizedError({
-      message: "Você precisa estar logado para cadastrar informações de voo.",
-      action: "Faça login e tente novamente.",
-    })
-  }
-
-  const createdTransfer = await flightTransfer.create(request.body, user.id)
+  const createdTransfer = await flightTransfer.create(request.body, userId)
   return response.status(201).json(createdTransfer)
 }
