@@ -1,3 +1,5 @@
+name: simpovidro
+
 services:
   database:
     container_name: "postgres-dev"

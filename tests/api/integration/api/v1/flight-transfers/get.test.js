@@ -31,39 +31,17 @@ describe("GET /api/v1/flight-transfers", () => {
         password: "password123",
       })
       await orchestrator.activateAdmUser(adminUser.id)
-      const adminSession = await orchestrator.createSession(adminUser.id)
 
       // Create hotel
-      const hotelRes = await fetch(
-        `${orchestrator.webserverUrl}/api/v1/hotels`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${adminSession.token}`,
-          },
-          body: JSON.stringify({
-            name: "Hotel Transfer Test 2",
-            city: "Salvador",
-            country: "Brasil",
-            check_in_date: "2026-11-01",
-            check_out_date: "2026-11-05",
-          }),
-        },
-      )
-      const hotelData = await hotelRes.json()
-      hotelId = hotelData.id
-
-      // Activate hotel
-      await fetch(
-        `${orchestrator.webserverUrl}/api/v1/hotels/${hotelId}/activate`,
-        {
-          method: "PATCH",
-          headers: {
-            Cookie: `session_id=${adminSession.token}`,
-          },
-        },
-      )
+      const hotel = await orchestrator.createHotel(adminUser.id, {
+        name: "Hotel Transfer Test 2",
+        city: "Salvador",
+        country: "Brasil",
+        check_in_date: "2026-11-01",
+        check_out_date: "2026-11-05",
+      })
+      hotelId = hotel.id
+      await orchestrator.activateHotel(hotelId)
 
       // Regular user
       const user = await orchestrator.createUser({
