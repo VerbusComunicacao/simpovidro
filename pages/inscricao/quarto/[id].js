@@ -280,12 +280,6 @@ export default function RoomDetailsPage({ room }) {
                   height={60}
                   className="w-24 h-auto object-contain shrink-0"
                 />
-                <p className="text-xs md:text-sm font-semibold text-slate-800 leading-relaxed">
-                  {t(
-                    "Maiores informações entre em contato com a organização do evento no telefone: 11-3873-9908 – ramal 1039 com Mauricio Botelho.",
-                    "For more information, please contact the event organization by phone: +55 11 3873-9908 – ext. 1039 with Mauricio Botelho.",
-                  )}
-                </p>
               </div>
             )}
 
