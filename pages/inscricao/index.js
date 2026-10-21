@@ -130,7 +130,7 @@ export default function RegistrationPage({ hotels, discounts }) {
     activeHotel,
     selectedType,
     searchData,
-    discounts,
+    cleanDiscounts,
     childrenCount,
     isInternational,
   ])

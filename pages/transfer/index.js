@@ -135,7 +135,6 @@ export default function TransferPage() {
   const [formData, setFormData] = useState(initialFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
-  const [submitSuccess, setSubmitSuccess] = useState("")
   const [deletingId, setDeletingId] = useState(null)
 
   // Handlers for Step 1: Lookup
@@ -263,13 +262,11 @@ export default function TransferPage() {
   const handleBackToStep1 = () => {
     setCurrentStep(1)
     setSubmitError("")
-    setSubmitSuccess("")
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSubmitError("")
-    setSubmitSuccess("")
 
     const requiredFields = [
       { key: "participant_name", label: "Nome do Participante" },
@@ -358,9 +355,6 @@ export default function TransferPage() {
         )
       }
 
-      setSubmitSuccess(
-        `Informações de voo de ${formData.participant_name} salvas com sucesso! A equipe de logística foi notificada por e-mail.`,
-      )
       setCurrentStep(3)
 
       if (mutateTransfers) {
@@ -378,7 +372,6 @@ export default function TransferPage() {
   const handleStartNewSubmission = () => {
     setDocValue("")
     setFormData(initialFormData)
-    setSubmitSuccess("")
     setSubmitError("")
     setLookupError("")
     setCurrentStep(1)

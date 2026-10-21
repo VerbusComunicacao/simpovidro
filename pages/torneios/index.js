@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react"
-import { useRouter } from "next/router"
 import useSWR from "swr"
 import Link from "next/link"
 import RegistrationLayout from "@/components/registration/RegistrationLayout"
