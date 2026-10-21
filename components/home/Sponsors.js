@@ -127,7 +127,7 @@ export default function Sponsors({ variant = "full" }) {
     },
     {
       name: "Ascevi",
-      logo: "/images/apoio-institucional/ASCEVI.png",
+      logo: "/images/apoio-institucional/ascevi-logo.jpeg",
       link: "",
       isVertical: true,
     },
