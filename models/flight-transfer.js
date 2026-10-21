@@ -74,26 +74,6 @@ async function create(flightData, userId = null) {
     }
   }
 
-  const {
-    // Voo Ida (IN)
-    in_date = null,
-    in_airline = null,
-    in_locator = null,
-    in_flight_number = null,
-    in_origin_airport = null,
-    in_arrival_time = null,
-    in_destination_airport = null,
-    // Voo Volta (OUT)
-    out_date = null,
-    out_airline = null,
-    out_locator = null,
-    out_flight_number = null,
-    out_departure_airport = null,
-    out_departure_time = null,
-    out_destination_airport = null,
-    notes = null,
-  } = flightData
-
   const insertedRecords = []
 
   for (const p of participantsToInsert) {

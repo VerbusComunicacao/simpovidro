@@ -21,7 +21,6 @@ describe("GET /api/v1/flight-transfers", () => {
 
   describe("Authenticated user", () => {
     let userToken
-    let userId
     let hotelId
 
     beforeAll(async () => {
@@ -52,7 +51,6 @@ describe("GET /api/v1/flight-transfers", () => {
       await orchestrator.activateUser(user.id)
       const session = await orchestrator.createSession(user.id)
       userToken = session.token
-      userId = user.id
 
       // Create a flight transfer
       await fetch(`${orchestrator.webserverUrl}/api/v1/flight-transfers`, {

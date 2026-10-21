@@ -26,6 +26,16 @@ async function getHandler(request, response) {
     }
   }
 
+  if (request.query.q) {
+    await controller.canRequest("read:company")(request, response, async () => {
+      const results = await company.search(request.query.q, {
+        limit: parseInt(request.query.limit, 10) || 10,
+      })
+      return response.status(200).json(results)
+    })
+    return
+  }
+
   if (request.query.search) {
     const results = await company.searchForeignCompanies(request.query.search)
     return response.status(200).json(results)

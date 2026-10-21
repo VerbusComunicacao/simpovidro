@@ -445,7 +445,7 @@ function getFullStateName(stateStr) {
     return stateMap[clean]
   }
 
-  const foundEntry = Object.entries(stateMap).find(([key, val]) => {
+  const foundVal = Object.values(stateMap).find((val) => {
     const normVal = val
       .toUpperCase()
       .normalize("NFD")
@@ -453,8 +453,8 @@ function getFullStateName(stateStr) {
     return normVal === clean
   })
 
-  if (foundEntry) {
-    return foundEntry[1]
+  if (foundVal) {
+    return foundVal
   }
 
   return "Não Informado"

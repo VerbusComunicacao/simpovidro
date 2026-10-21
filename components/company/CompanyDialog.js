@@ -19,6 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { AlertTriangle } from "lucide-react"
 import ErrorDialog from "@/components/ui/ErrorDialog"
 import { maskPhone, maskCNPJ, maskCEP } from "@/lib/masks"
 import { validateCNPJ, validatePhone } from "@/lib/validators"
@@ -49,6 +60,7 @@ export function CompanyDialog({
   const [internalCompanyToEdit, setInternalCompanyToEdit] =
     useState(companyToEdit)
   const [open, setOpen] = useState(false)
+  const [showOverwriteConfirm, setShowOverwriteConfirm] = useState(false)
   const [formData, setFormData] = useState({
     corporate_name: "",
     badge: "",
@@ -201,10 +213,9 @@ export function CompanyDialog({
     setFormData((prev) => ({ ...prev, ...location }))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     setError("")
-    setAction("")
     setAction("")
 
     // Validation
@@ -218,6 +229,19 @@ export function CompanyDialog({
       return
     }
 
+    const companyId = internalCompanyToEdit?.id
+    const isActuallyEditMode = !!companyId
+
+    if (isActuallyEditMode) {
+      setShowOverwriteConfirm(true)
+      return
+    }
+
+    executeSaveCompany()
+  }
+
+  const executeSaveCompany = async () => {
+    setShowOverwriteConfirm(false)
     setLoading(true)
 
     const companyId = internalCompanyToEdit?.id
@@ -229,36 +253,43 @@ export function CompanyDialog({
 
     const method = isActuallyEditMode ? "PATCH" : "POST"
 
-    const response = await fetch(url, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        ...formData,
-        discount_id:
-          formData.discount_id === "none" ? null : formData.discount_id,
-        custom_discount_percentage:
-          formData.custom_discount_percentage === ""
-            ? null
-            : Number(formData.custom_discount_percentage),
-      }),
-    })
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          discount_id:
+            formData.discount_id === "none" ? null : formData.discount_id,
+          custom_discount_percentage:
+            formData.custom_discount_percentage === ""
+              ? null
+              : Number(formData.custom_discount_percentage),
+        }),
+      })
 
-    setLoading(false)
+      setLoading(false)
 
-    if (response.ok) {
-      if (onCompanySuccess) onCompanySuccess()
-      setOpen(false)
-    } else {
-      const data = await response.json()
-      setError(
-        data.message ||
-          `Ocorreu um erro ao ${isEditMode ? "editar" : "adicionar"} a empresa.`,
-      )
-      if (data.action) {
-        setAction(data.action)
+      if (response.ok) {
+        const savedCompany = await response.json()
+        if (onCompanySuccess) onCompanySuccess(savedCompany)
+        setOpen(false)
+      } else {
+        const data = await response.json()
+        setError(
+          data.message ||
+            `Ocorreu um erro ao ${isEditMode ? "editar" : "adicionar"} a empresa.`,
+        )
+        if (data.action) {
+          setAction(data.action)
+        }
+        setIsErrorDialogOpen(true)
       }
+    } catch (err) {
+      setLoading(false)
+      setError("Erro inesperado ao salvar os dados da empresa.")
       setIsErrorDialogOpen(true)
     }
   }
@@ -519,6 +550,53 @@ export function CompanyDialog({
         message={error}
         actionMessage={action}
       />
+      <AlertDialog
+        open={showOverwriteConfirm}
+        onOpenChange={setShowOverwriteConfirm}
+      >
+        <AlertDialogContent className="z-[70] sm:max-w-[480px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
+              Confirmar Sobrescrita de Dados
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-gray-600 space-y-2 mt-2">
+              <span>
+                Você está atualizando os dados cadastrais da empresa{" "}
+                <strong>{formData.corporate_name || "selecionada"}</strong>.
+              </span>
+              <div className="text-amber-800 bg-amber-50 p-2.5 rounded border border-amber-200 text-xs leading-relaxed mt-2">
+                <strong>Atenção:</strong> Esta alteração sobrescreverá as
+                informações desta empresa no sistema para todas as inscrições
+                vinculadas a ela.
+              </div>
+              <span className="block text-xs text-gray-500 mt-2">
+                Se você deseja apenas substituir a empresa desta inscrição por
+                outra, utilize a opção <strong>&quot;Trocar&quot;</strong> na
+                tela de inscrição.
+              </span>
+              <span className="block text-sm font-semibold text-gray-800 pt-1 mt-2">
+                Tem certeza de que deseja salvar e sobrescrever estes dados?
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 gap-2">
+            <AlertDialogCancel
+              disabled={loading}
+              onClick={() => setShowOverwriteConfirm(false)}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={executeSaveCompany}
+              disabled={loading}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {loading ? "Salvando..." : "Sim, sobrescrever dados"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

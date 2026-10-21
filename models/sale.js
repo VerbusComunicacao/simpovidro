@@ -1160,6 +1160,101 @@ async function replaceGuest(saleId, oldGuestId, newGuestId, externalClient) {
   }
 }
 
+async function replaceCompany(saleId, newCompanyId, externalClient) {
+  validateUUID(saleId)
+  validateUUID(newCompanyId)
+
+  const client = externalClient || (await database.getNewClient())
+  const isInternalTransaction = !externalClient
+
+  try {
+    if (isInternalTransaction) await client.query("BEGIN")
+
+    // 1. Lock and fetch sale
+    const saleResult = await client.query({
+      text: `SELECT * FROM sales WHERE id = $1 FOR UPDATE`,
+      values: [saleId],
+    })
+
+    const targetSale = saleResult.rows[0]
+
+    if (!targetSale) {
+      throw new NotFoundError({
+        message: "Inscrição não encontrada.",
+        action: "Verifique o ID da inscrição.",
+      })
+    }
+
+    if (targetSale.status === "cancelled") {
+      throw new ValidationError({
+        message: "Não é possível alterar a empresa de uma inscrição cancelada.",
+        action: "Inscrições canceladas não podem sofrer alterações.",
+      })
+    }
+
+    if (targetSale.company_id === newCompanyId) {
+      throw new ValidationError({
+        message:
+          "A nova empresa selecionada é a mesma atualmente vinculada à inscrição.",
+        action: "Selecione uma empresa diferente para realizar a troca.",
+      })
+    }
+
+    // 2. Verify new company exists
+    const companyResult = await client.query({
+      text: `SELECT * FROM companies WHERE id = $1`,
+      values: [newCompanyId],
+    })
+
+    if (companyResult.rowCount === 0) {
+      throw new NotFoundError({
+        message: "A nova empresa informada não foi encontrada.",
+        action: "Selecione uma empresa cadastrada.",
+      })
+    }
+
+    const newCompany = companyResult.rows[0]
+
+    // 3. Update sale
+    await client.query({
+      text: `
+        UPDATE sales
+        SET company_id = $2, updated_at = timezone('utc', now())
+        WHERE id = $1
+      `,
+      values: [saleId, newCompanyId],
+    })
+
+    // 4. Update guests of this sale with the new company's CNPJ
+    const cleanCompanyCnpj = newCompany.cnpj
+      ? newCompany.cnpj.replace(/\D/g, "")
+      : null
+
+    await client.query({
+      text: `
+        UPDATE guests
+        SET company_cnpj = $2
+        WHERE id IN (
+          SELECT guest_id FROM sales_guests WHERE sale_id = $1
+        ) OR id = $3
+      `,
+      values: [saleId, cleanCompanyCnpj, targetSale.guest_id],
+    })
+
+    if (isInternalTransaction) await client.query("COMMIT")
+
+    if (isInternalTransaction) {
+      return await findOneByIdWithDetails(saleId)
+    }
+    return await findOneByIdWithDetails(saleId, client)
+  } catch (error) {
+    if (isInternalTransaction) await client.query("ROLLBACK")
+    throw error
+  } finally {
+    if (isInternalTransaction) await client.end()
+  }
+}
+
 async function updateBedPreference(saleId, bedPreference) {
   if (!["Duplo Casal", "Duplo Solteiro"].includes(bedPreference)) {
     throw new ValidationError({
@@ -1498,6 +1593,7 @@ const sale = {
   calculateMaxInstallments,
   cancel,
   replaceGuest,
+  replaceCompany,
   updateBedPreference,
   updateCheckoutQuestionResponse,
   adjustPrice,
