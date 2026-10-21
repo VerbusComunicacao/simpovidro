@@ -13,12 +13,23 @@ export const navItems = [
   { name: "Torneios", id: "torneios", href: "/torneios" },
 ]
 
-export default function Navbar({ scrollToSection, router: propRouter }) {
+export default function Navbar({
+  scrollToSection,
+  router: propRouter,
+  showTransfer,
+}) {
   const localRouter = useRouter()
   const router = propRouter || localRouter
   const [isOpen, setIsOpen] = useState(false)
   const isEn = router?.locale === "en"
   const t = (pt, en) => (isEn ? en : pt)
+
+  const isMainPage =
+    showTransfer !== undefined ? showTransfer : router?.pathname === "/"
+
+  const currentNavItems = isMainPage
+    ? [...navItems, { name: "Transfer", id: "transfer", href: "/transfer" }]
+    : navItems
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 py-3 bg-white/90 backdrop-blur-md shadow-sm">
@@ -40,8 +51,8 @@ export default function Navbar({ scrollToSection, router: propRouter }) {
           </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-          {navItems.map((item) => {
+        <div className="hidden md:flex items-center gap-4 lg:gap-8 text-sm font-medium">
+          {currentNavItems.map((item) => {
             const name =
               item.id === "sobre"
                 ? t("Sobre", "About")
@@ -53,7 +64,9 @@ export default function Navbar({ scrollToSection, router: propRouter }) {
                       ? t("Condições Especiais", "Special Conditions")
                       : item.id === "torneios"
                         ? t("Torneios", "Tournaments")
-                        : item.name
+                        : item.id === "transfer"
+                          ? t("Transfer", "Transfer")
+                          : item.name
 
             if (item.href) {
               return (
@@ -128,7 +141,7 @@ export default function Navbar({ scrollToSection, router: propRouter }) {
       {/* Mobile Menu Panel */}
       {isOpen && (
         <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-slate-100 absolute top-full left-0 right-0 py-6 px-6 shadow-xl flex flex-col gap-4 z-40 transition-all duration-300">
-          {navItems.map((item) => {
+          {currentNavItems.map((item) => {
             const name =
               item.id === "sobre"
                 ? t("Sobre", "About")
@@ -140,7 +153,9 @@ export default function Navbar({ scrollToSection, router: propRouter }) {
                       ? t("Condições Especiais", "Special Conditions")
                       : item.id === "torneios"
                         ? t("Torneios", "Tournaments")
-                        : item.name
+                        : item.id === "transfer"
+                          ? t("Transfer", "Transfer")
+                          : item.name
 
             if (item.href) {
               return (

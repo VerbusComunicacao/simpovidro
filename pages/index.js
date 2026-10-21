@@ -123,6 +123,7 @@ export default function Home() {
         scrolled={scrolled}
         scrollToSection={scrollToSection}
         router={router}
+        showTransfer
       />
 
       <AnimatePresence>
