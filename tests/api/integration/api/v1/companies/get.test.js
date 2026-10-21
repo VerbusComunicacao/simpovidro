@@ -51,4 +51,68 @@ describe("GET /api/v1/companies", () => {
       expect(responseBody.cnpj).toBe(cleanCnpj) // We expect it to be cleaned in the response too or at least found
     })
   })
+
+  describe("Admin user search via ?q", () => {
+    let adminToken
+
+    beforeAll(async () => {
+      const adminUser = await orchestrator.createUser({
+        full_name: "Admin User",
+        email: "admin-companies-search@example.com",
+        password: "password123",
+      })
+      await orchestrator.activateAdmUser(adminUser.id)
+      const adminSession = await orchestrator.createSession(adminUser.id)
+      adminToken = adminSession.token
+    })
+
+    test("Search company by partial corporate_name", async () => {
+      const response = await fetch(
+        `http://localhost:3000/api/v1/companies?q=Mascarada`,
+        {
+          headers: {
+            Cookie: `session_id=${adminToken}`,
+          },
+        },
+      )
+
+      expect(response.status).toBe(200)
+      const body = await response.json()
+      expect(Array.isArray(body)).toBe(true)
+      expect(body.length).toBeGreaterThanOrEqual(1)
+      expect(body[0].corporate_name).toBe("Empresa Mascarada")
+    })
+
+    test("Search company by partial badge", async () => {
+      const response = await fetch(
+        `http://localhost:3000/api/v1/companies?q=MASC`,
+        {
+          headers: {
+            Cookie: `session_id=${adminToken}`,
+          },
+        },
+      )
+
+      expect(response.status).toBe(200)
+      const body = await response.json()
+      expect(Array.isArray(body)).toBe(true)
+      expect(body.length).toBeGreaterThanOrEqual(1)
+    })
+
+    test("Search company by partial CNPJ digits", async () => {
+      const response = await fetch(
+        `http://localhost:3000/api/v1/companies?q=11.111`,
+        {
+          headers: {
+            Cookie: `session_id=${adminToken}`,
+          },
+        },
+      )
+
+      expect(response.status).toBe(200)
+      const body = await response.json()
+      expect(Array.isArray(body)).toBe(true)
+      expect(body.length).toBeGreaterThanOrEqual(1)
+    })
+  })
 })

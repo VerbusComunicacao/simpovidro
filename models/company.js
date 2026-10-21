@@ -319,6 +319,45 @@ async function findOneByCnpj(cnpj, client) {
   return results.rows[0]
 }
 
+async function search(searchTerm, { limit = 10 } = {}) {
+  if (!searchTerm || searchTerm.trim() === "") return []
+  const cleanTerm = searchTerm.trim()
+  const cleanDigits = cleanTerm.replace(/\D/g, "")
+
+  let queryText = `
+    SELECT 
+      c.*,
+      d.name as discount_name,
+      d.value as discount_value
+    FROM 
+      companies c
+    LEFT JOIN
+      discounts d ON c.discount_id = d.id
+    WHERE 
+      c.corporate_name ILIKE $1
+      OR c.badge ILIKE $1
+  `
+  const values = [`%${cleanTerm}%`]
+
+  if (cleanDigits.length >= 2) {
+    values.push(`%${cleanDigits}%`)
+    queryText += ` OR (c.cnpj IS NOT NULL AND c.cnpj LIKE $${values.length})`
+  }
+
+  queryText += `
+    ORDER BY c.corporate_name ASC
+    LIMIT $${values.length + 1};
+  `
+  values.push(limit)
+
+  const results = await database.query({
+    text: queryText,
+    values,
+  })
+
+  return results.rows
+}
+
 async function searchForeignCompanies(searchTerm) {
   if (!searchTerm || searchTerm.trim() === "") return []
   const results = await database.query({
@@ -444,6 +483,7 @@ const company = {
   findOneByCnpj,
   upsert,
   searchForeignCompanies,
+  search,
 }
 
 export default company

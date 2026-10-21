@@ -20,6 +20,7 @@ import { getGuestCountsString, translateText } from "@/lib/registration-helpers"
 import { GuestDialog } from "@/components/guest/GuestDialog"
 import { ReplaceGuestDialog } from "@/components/guest/ReplaceGuestDialog"
 import { CompanyDialog } from "@/components/company/CompanyDialog"
+import { ReplaceCompanyDialog } from "@/components/company/ReplaceCompanyDialog"
 import {
   Dialog,
   DialogContent,
@@ -69,6 +70,11 @@ export default function RegistrationDetailsPage() {
   const [showSwapEmailConfirm, setShowSwapEmailConfirm] = useState(false)
   const [isSwapping, setIsSwapping] = useState(false)
   const [pendingSwap, setPendingSwap] = useState(null)
+
+  const [showCompanySwapEmailConfirm, setShowCompanySwapEmailConfirm] =
+    useState(false)
+  const [isSwappingCompany, setIsSwappingCompany] = useState(false)
+  const [pendingCompanySwap, setPendingCompanySwap] = useState(null)
 
   const [showEditQuestionDialog, setShowEditQuestionDialog] = useState(false)
   const [pendingQuestionResponse, setPendingQuestionResponse] = useState("")
@@ -243,6 +249,43 @@ export default function RegistrationDetailsPage() {
     } finally {
       setIsSwapping(false)
       setPendingSwap(null)
+    }
+  }
+
+  const handleConfirmCompanySwap = (oldCompany, newCompany) => {
+    setPendingCompanySwap({ oldCompany, newCompany })
+    setShowCompanySwapEmailConfirm(true)
+  }
+
+  const executeSwapCompany = async (sendEmail) => {
+    if (!pendingCompanySwap) return
+    setShowCompanySwapEmailConfirm(false)
+    setIsSwappingCompany(true)
+    try {
+      const response = await fetch(`/api/v1/sales/${sale.id}/replace-company`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          new_company_id: pendingCompanySwap.newCompany.id,
+          send_email: sendEmail,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || "Falha ao realizar a troca de empresa")
+      }
+
+      alert("Empresa substituída com sucesso!")
+      mutate()
+    } catch (error) {
+      console.error(error)
+      alert(error.message)
+    } finally {
+      setIsSwappingCompany(false)
+      setPendingCompanySwap(null)
     }
   }
 
@@ -542,7 +585,7 @@ export default function RegistrationDetailsPage() {
           </Card>
 
           {/* Seção Empresa */}
-          {sale.company_id && (
+          {sale.company_id ? (
             <Card className="bg-blue-50/20 border-blue-100">
               <CardHeader className="pb-3 border-b border-blue-100 flex flex-row items-center justify-between gap-2">
                 <CardTitle className="text-lg flex items-center gap-2 text-blue-800">
@@ -550,18 +593,35 @@ export default function RegistrationDetailsPage() {
                   Dados da Empresa
                 </CardTitle>
                 {sale.status !== "cancelled" && (
-                  <CompanyDialog
-                    companyToEdit={companyObj}
-                    onCompanySuccess={() => mutate()}
-                  >
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-xs px-2.5 text-blue-600 border-blue-200 hover:bg-blue-50"
+                  <div className="flex items-center gap-2">
+                    <CompanyDialog
+                      companyToEdit={companyObj}
+                      onCompanySuccess={() => mutate()}
                     >
-                      Editar
-                    </Button>
-                  </CompanyDialog>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs px-2.5 text-blue-600 border-blue-200 hover:bg-blue-50"
+                      >
+                        Editar
+                      </Button>
+                    </CompanyDialog>
+                    <ReplaceCompanyDialog
+                      sale={sale}
+                      oldCompany={companyObj}
+                      onConfirm={(newCompany) =>
+                        handleConfirmCompanySwap(companyObj, newCompany)
+                      }
+                    >
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs px-2.5 text-blue-600 border-blue-200 hover:bg-blue-50"
+                      >
+                        Trocar
+                      </Button>
+                    </ReplaceCompanyDialog>
+                  </div>
                 )}
               </CardHeader>
               <CardContent className="pt-6">
@@ -602,7 +662,7 @@ export default function RegistrationDetailsPage() {
                       {sale.company_cnpj?.replace(
                         /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
                         "$1.$2.$3/$4-$5",
-                      )}
+                      ) || "-"}
                     </p>
                   </div>
                   <div>
@@ -631,6 +691,37 @@ export default function RegistrationDetailsPage() {
                     </p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-blue-50/20 border-blue-100">
+              <CardHeader className="pb-3 border-b border-blue-100 flex flex-row items-center justify-between gap-2">
+                <CardTitle className="text-lg flex items-center gap-2 text-blue-800">
+                  <Building2 className="h-5 w-5" />
+                  Dados da Empresa
+                </CardTitle>
+                {sale.status !== "cancelled" && (
+                  <ReplaceCompanyDialog
+                    sale={sale}
+                    oldCompany={null}
+                    onConfirm={(newCompany) =>
+                      handleConfirmCompanySwap(null, newCompany)
+                    }
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs px-2.5 text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      Vincular Empresa
+                    </Button>
+                  </ReplaceCompanyDialog>
+                )}
+              </CardHeader>
+              <CardContent className="pt-6">
+                <p className="text-sm text-gray-500 italic">
+                  Nenhuma empresa vinculada a esta inscrição.
+                </p>
               </CardContent>
             </Card>
           )}
@@ -1041,6 +1132,47 @@ export default function RegistrationDetailsPage() {
               type="button"
               onClick={() => executeSwapGuest(true)}
               disabled={isSwapping}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Sim, enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showCompanySwapEmailConfirm}
+        onOpenChange={setShowCompanySwapEmailConfirm}
+      >
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-gray-900">
+              Aviso de Alteração por E-mail
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 pt-2">
+              Deseja enviar e-mail avisando da alteração para o participante?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="border-t pt-4 mt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowCompanySwapEmailConfirm(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => executeSwapCompany(false)}
+              disabled={isSwappingCompany}
+            >
+              Não enviar
+            </Button>
+            <Button
+              type="button"
+              onClick={() => executeSwapCompany(true)}
+              disabled={isSwappingCompany}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               Sim, enviar
