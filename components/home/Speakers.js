@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { useRouter } from "next/router"
 import { AnimatePresence, motion } from "framer-motion"
-import { X, Users } from "lucide-react"
+import { X, Users, Calendar } from "lucide-react"
 
 export default function Speakers({ router: propRouter }) {
   const localRouter = useRouter()
@@ -29,211 +29,223 @@ export default function Speakers({ router: propRouter }) {
     }
   }, [selectedSpeaker])
 
-  const sessions = [
+  const days = [
     {
-      id: "ia",
-      title: t(
-        "Talk | IA na indústria vidreira – Menos promessa, mais resultado – Casos reais de aplicação na cadeia do vidro",
-        "Talk | AI in the glass industry – Less promise, more results – Real-world applications across the glass chain",
-      ),
-      speakers: [
+      date: t("Sexta-feira, 6 de novembro", "Friday, November 6"),
+      sessions: [
         {
-          id: "tiago-amor",
-          name: "Tiago Amor",
-          role: t("CEO da Lecom", "CEO at Lecom"),
-          image: "/images/palestrantes/tiago-amor.jpg",
-          bio: t(
-            "Tiago Amor é CEO da Lecom – plataforma pioneira em hiperautomação – e graduado em sistemas da informação pela Universidade Estadual Paulista (Unesp), onde também se especializou em Gestão Empresarial. Além disso, é especialista em gestão de projetos pela Fundação Getulio Vargas (FGV).",
-            "Tiago Amor is CEO of Lecom – a pioneering platform in hyperautomation – and holds a degree in Information Systems from Universidade Estadual Paulista (Unesp), where he also specialized in Business Management. Additionally, he is a project management specialist from Fundação Getulio Vargas (FGV).",
+          id: "energia",
+          title: t(
+            "Talk | Energia – Energia: muito além do preço – Riscos, oportunidades e decisões estratégicas para as empresas",
+            "Talk | Energy – Beyond price: Risks, opportunities, and strategic decisions for businesses",
           ),
-          linkedin: "https://www.linkedin.com/in/tiagoamor/?locale=pt",
+          speakers: [
+            {
+              id: "jean-tremura",
+              name: "Jean Vinicius Tremura",
+              role: t(
+                "Diretor de Projetos na Involt",
+                "Project Director at Involt",
+              ),
+              image: "/images/palestrantes/jean-tremura.jpg",
+              bio: t(
+                "Jean Tremura é executivo no setor de energias renováveis há mais de 25 anos, com experiência em eficiência energética, geração distribuída e soluções sustentáveis. É diretor de Projetos na Involt. Formado em Ciências Econômicas pela Universidade Presbiteriana Mackenzie, possui MBA em Gestão Estratégica e Econômica pela Fundação Getulio Vargas (FGV) e pós-graduação em Eficiência Energética, Cogeração e Energias Renováveis pelo Programa de Educação Continuada da Universidade de São Paulo (USP–PECE).",
+                "Jean Tremura is an executive in the renewable energy sector with over 25 years of experience in energy efficiency, distributed generation, and sustainable solutions. He is Project Director at Involt. He holds a degree in Economics from Universidade Presbiteriana Mackenzie, an MBA from FGV, and a postgraduate degree in Energy Efficiency from USP-PECE.",
+              ),
+              linkedin:
+                "https://www.linkedin.com/in/jean-vinicius-tremura-009426186/",
+            },
+            {
+              id: "carlos-schoeps",
+              name: "Carlos Schoeps",
+              role: t(
+                "Sócio-Diretor da Replace Consultoria",
+                "Managing Partner at Replace Consultoria",
+              ),
+              image: "/images/palestrantes/carlos-schoeps.jpg",
+              bio: t(
+                "Carlos Alberto Schoeps é Engenheiro Eletricista formado pela Escola de Engenharia Mauá e Sócio-Diretor da Replace Consultoria. Possui ampla experiência no setor elétrico, com atuação em planejamento do suprimento de energia, regulação, mercado livre, mercado regulado, geração distribuída, entre outros.",
+                "Carlos Alberto Schoeps is an electrical engineer graduated from Escola de Engenharia Mauá and Managing Partner at Replace Consultoria. He has extensive experience in the power sector, focusing on energy supply planning, regulation, free market, regulated market, and distributed generation.",
+              ),
+              linkedin: "https://www.linkedin.com/in/carlos-schoeps-0673b42/",
+            },
+          ],
         },
         {
-          id: "aristoteles-neto",
-          name: "Aristóteles Terceiro Neto",
-          role: t(
-            "Gerente de Transformação Industrial na Vivix",
-            "Industrial Transformation Manager at Vivix",
+          id: "mercado",
+          title: t(
+            "Talk | Para onde vai o mercado do vidro? Uma visão global sobre os movimentos que podem redefinir o setor",
+            "Talk | Where is the glass market heading? A global perspective on movements reshaping the industry",
           ),
-          image: "/images/palestrantes/aristoteles-neto.jpg",
-          bio: t(
-            "Aristóteles Terceiro Neto é gerente de Transformação Industrial na Vivix. Engenheiro eletricista, especialista em Indústria 4.0 e possui formação executiva em Transformação Digital pelo Massachusetts Institute of Technology (MIT). Além de professor e mentor em transformação digital e IA.",
-            "Aristóteles Terceiro Neto is the Industrial Transformation Manager at Vivix. An electrical engineer and Industry 4.0 specialist, he holds an executive certificate in Digital Transformation from the Massachusetts Institute of Technology (MIT). He is also a professor and mentor in digital transformation and AI.",
-          ),
-          linkedin: "https://www.linkedin.com/in/aristotelestn/",
+          speakers: [
+            {
+              id: "davide-cappellino",
+              name: "Davide Cappellino",
+              role: t(
+                "Presidente da Divisão de Arquitetura da AGC Europa e Américas",
+                "President of the Architectural Glass Division at AGC Europe and Americas",
+              ),
+              image: "/images/palestrantes/davide-cappellino.jpg",
+              bio: t(
+                "Italiano, Cappellino é presidente da Divisão de Arquitetura da AGC Europa e Américas. Passou pelo Brasil de 2011 a 2016, quando permaneceu à frente da operação da AGC em nosso país. Atualmente, também é chairman do conselho da entidade Glass For Europe.",
+                "Italian, Cappellino is President of the Architectural Glass Division at AGC Europe and Americas. He served in Brazil from 2011 to 2016 at the helm of AGC's operations in the country. Currently, he is also Chairman of the Board of Glass For Europe.",
+              ),
+              linkedin:
+                "https://www.linkedin.com/in/davide-cappellino-0231b22/",
+            },
+            {
+              id: "leopoldo-castiella",
+              name: "Leopoldo Castiella",
+              role: t(
+                "Chefe de Vidro Arquitetônico SBU Global e Diretor-Executivo-Sênior do Grupo NSG",
+                "Head of Architectural Glass Global SBU and Senior Executive Director at NSG Group",
+              ),
+              image: "/images/palestrantes/leopoldo-castiella.jpg",
+              bio: t(
+                "Argentino, Castiella é chefe de Vidro Arquitetônico SBU Global e diretor-executivo- sênior do Grupo NSG. Foi, por treze anos, diretor-executivo da Cebrace. Também atuou como presidente da Vasa Vidriería Argentina e da Associação Brasileira das Indústrias de Vidro (Abividro).",
+                "Argentine, Castiella is Head of Architectural Glass Global SBU and Senior Executive Director at NSG Group. For thirteen years, he served as CEO of Cebrace. He also served as President of Vasa Vidriería Argentina and the Brazilian Association of Glass Industries (Abividro).",
+              ),
+              linkedin:
+                "https://www.linkedin.com/in/leopoldo-cm-garc%C3%A9s-castiella-19a948123/",
+            },
+          ],
         },
         {
-          id: "liuam-cardoso",
-          name: "Líuam Cardoso",
-          role: t(
-            "Especialista em Estratégia Comercial e Inteligência de Mercado",
-            "Commercial Strategy and Market Intelligence Specialist",
+          id: "gestao",
+          title: t(
+            "Palestra | Gestão – O paradoxo da geração Z e a alta performance no trabalho",
+            "Keynote | Management – The Gen Z paradox and high performance in the workplace",
           ),
-          image: "/images/palestrantes/liuam-cardoso.jpg",
-          bio: t(
-            "Líuam Cardoso é graduado em Sistemas de Informação e pós-graduado em Marketing pela Universidade Federal Fluminense (UFF). Com 18 anos de experiência no setor vidreiro, atuou nas áreas de Vendas e Marketing em diversos países da América do Sul. É também especialista em estratégia comercial, inteligência de mercado e desenvolvimento de negócios.",
-            "Líuam Cardoso holds a degree in Information Systems and a postgraduate degree in Marketing from Universidade Federal Fluminense (UFF). With 18 years of experience in the glass sector, he has led Sales and Marketing operations across several South American countries. He specializes in commercial strategy, market intelligence, and business development.",
-          ),
-          linkedin: null,
+          speakers: [
+            {
+              id: "dado-schneider",
+              name: "Dado Schneider",
+              role: t(
+                "Doutor em comunicação, escritor e criador da marca Claro",
+                "Ph.D. in Communications, Author and Creator of the Claro brand",
+              ),
+              image: "/images/palestrantes/dado-schneider.jpg",
+              bio: t(
+                "Dado Schneider é Doutor em Comunicação pela Pontifícia Universidade Católica do Rio Grande do Sul (PUC-RS), especialista em mudança e cooperação entre as gerações e nos impactos da Geração Z no mercado de trabalho, criador da marca Claro e autor dos livros “O mundo mudou… Bem na minha vez!” e “Desacomodado”.",
+                "Dado Schneider holds a Ph.D. in Communications from Pontifícia Universidade Católica do Rio Grande do Sul (PUC-RS). He is an expert in change management, intergenerational collaboration, and the impact of Gen Z in the workplace, creator of the Claro brand, and author of bestselling books.",
+              ),
+              linkedin: "https://www.linkedin.com/in/dado-schneider/",
+            },
+          ],
         },
       ],
     },
     {
-      id: "mercado",
-      title: t(
-        "Talk | Para onde vai o mercado do vidro? Uma visão global sobre os movimentos que podem redefinir o setor",
-        "Talk | Where is the glass market heading? A global perspective on movements reshaping the industry",
-      ),
-      speakers: [
+      date: t("Sábado, 7 de novembro", "Saturday, November 7"),
+      sessions: [
         {
-          id: "davide-cappellino",
-          name: "Davide Cappellino",
-          role: t(
-            "Presidente da Divisão de Arquitetura da AGC Europa e Américas",
-            "President of the Architectural Glass Division at AGC Europe and Americas",
+          id: "ia",
+          title: t(
+            "Talk | IA na indústria vidreira – Menos promessa, mais resultado – Casos reais de aplicação na cadeia do vidro",
+            "Talk | AI in the glass industry – Less promise, more results – Real-world applications across the glass chain",
           ),
-          image: "/images/palestrantes/davide-cappellino.jpg",
-          bio: t(
-            "Italiano, Cappellino é presidente da Divisão de Arquitetura da AGC Europa e Américas. Passou pelo Brasil de 2011 a 2016, quando permaneceu à frente da operação da AGC em nosso país. Atualmente, também é chairman do conselho da entidade Glass For Europe.",
-            "Italian, Cappellino is President of the Architectural Glass Division at AGC Europe and Americas. He served in Brazil from 2011 to 2016 at the helm of AGC's operations in the country. Currently, he is also Chairman of the Board of Glass For Europe.",
-          ),
-          linkedin: "https://www.linkedin.com/in/davide-cappellino-0231b22/",
+          speakers: [
+            {
+              id: "tiago-amor",
+              name: "Tiago Amor",
+              role: t("CEO da Lecom", "CEO at Lecom"),
+              image: "/images/palestrantes/tiago-amor.jpg",
+              bio: t(
+                "Tiago Amor é CEO da Lecom – plataforma pioneira em hiperautomação – e graduado em sistemas da informação pela Universidade Estadual Paulista (Unesp), onde também se especializou em Gestão Empresarial. Além disso, é especialista em gestão de projetos pela Fundação Getulio Vargas (FGV).",
+                "Tiago Amor is CEO of Lecom – a pioneering platform in hyperautomation – and holds a degree in Information Systems from Universidade Estadual Paulista (Unesp), where he also specialized in Business Management. Additionally, he is a project management specialist from Fundação Getulio Vargas (FGV).",
+              ),
+              linkedin: "https://www.linkedin.com/in/tiagoamor/?locale=pt",
+            },
+            {
+              id: "aristoteles-neto",
+              name: "Aristóteles Terceiro Neto",
+              role: t(
+                "Gerente de Transformação Industrial na Vivix",
+                "Industrial Transformation Manager at Vivix",
+              ),
+              image: "/images/palestrantes/aristoteles-neto.jpg",
+              bio: t(
+                "Aristóteles Terceiro Neto é gerente de Transformação Industrial na Vivix. Engenheiro eletricista, especialista em Indústria 4.0 e possui formação executiva em Transformação Digital pelo Massachusetts Institute of Technology (MIT). Além de professor e mentor em transformação digital e IA.",
+                "Aristóteles Terceiro Neto is the Industrial Transformation Manager at Vivix. An electrical engineer and Industry 4.0 specialist, he holds an executive certificate in Digital Transformation from the Massachusetts Institute of Technology (MIT). He is also a professor and mentor in digital transformation and AI.",
+              ),
+              linkedin: "https://www.linkedin.com/in/aristotelestn/",
+            },
+            {
+              id: "betania-danelon",
+              name: "Betânia Danelon",
+              role: t(
+                "Gerente de Desenvolvimento de Mercado de Arquitetura para a América do Sul",
+                "Architectural Market Development Manager for South America",
+              ),
+              image: "/images/palestrantes/betania.jpg",
+              bio: t(
+                "Betânia Isquierdo Danelon atua há 25 anos no mercado da construção civil e, desde 2012, na indústria do vidro. Atualmente, é Gerente de Desenvolvimento de Mercado de Arquitetura para a América do Sul na Guardian Glass, com atuação voltada ao desenvolvimento de mercado e à conexão entre arquitetura, inovação e estratégia de negócios. É graduada em Arquitetura e Urbanismo e possui MBA em Construções Sustentáveis",
+                "Betânia Isquierdo Danelon has 25 years of experience in the construction industry and has been working in the glass industry since 2012. She currently serves as Architectural Market Development Manager for South America at Guardian Glass, focusing on market development and bridging architecture, innovation, and business strategy. She holds a degree in Architecture and Urban Planning, as well as an MBA in Sustainable Construction.",
+              ),
+              linkedin: null,
+            },
+          ],
         },
         {
-          id: "leopoldo-castiella",
-          name: "Leopoldo Castiella",
-          role: t(
-            "Chefe de Vidro Arquitetônico SBU Global e Diretor-Executivo-Sênior do Grupo NSG",
-            "Head of Architectural Glass Global SBU and Senior Executive Director at NSG Group",
+          id: "tributario",
+          title: t(
+            "Talk | Reforma tributária – Não é só imposto: Como a Reforma Tributária mexe com preços, créditos, contratos e negócios",
+            "Talk | Tax Reform – Beyond taxes: How the Tax Reform impacts pricing, credits, contracts, and business",
           ),
-          image: "/images/palestrantes/leopoldo-castiella.jpg",
-          bio: t(
-            "Argentino, Castiella é chefe de Vidro Arquitetônico SBU Global e diretor-executivo- sênior do Grupo NSG. Foi, por treze anos, diretor-executivo da Cebrace. Também atuou como presidente da Vasa Vidriería Argentina e da Associação Brasileira das Indústrias de Vidro (Abividro).",
-            "Argentine, Castiella is Head of Architectural Glass Global SBU and Senior Executive Director at NSG Group. For thirteen years, he served as CEO of Cebrace. He also served as President of Vasa Vidriería Argentina and the Brazilian Association of Glass Industries (Abividro).",
-          ),
-          linkedin:
-            "https://www.linkedin.com/in/leopoldo-cm-garc%C3%A9s-castiella-19a948123/",
-        },
-      ],
-    },
-    {
-      id: "gestao",
-      title: t(
-        "Palestra | Gestão – O paradoxo da geração Z e a alta performance no trabalho",
-        "Keynote | Management – The Gen Z paradox and high performance in the workplace",
-      ),
-      speakers: [
-        {
-          id: "dado-schneider",
-          name: "Dado Schneider",
-          role: t(
-            "Doutor em comunicação, escritor e criador da marca Claro",
-            "Ph.D. in Communications, Author and Creator of the Claro brand",
-          ),
-          image: "/images/palestrantes/dado-schneider.jpg",
-          bio: t(
-            "Dado Schneider é Doutor em Comunicação pela Pontifícia Universidade Católica do Rio Grande do Sul (PUC-RS), especialista em mudança e cooperação entre as gerações e nos impactos da Geração Z no mercado de trabalho, criador da marca Claro e autor dos livros “O mundo mudou… Bem na minha vez!” e “Desacomodado”.",
-            "Dado Schneider holds a Ph.D. in Communications from Pontifícia Universidade Católica do Rio Grande do Sul (PUC-RS). He is an expert in change management, intergenerational collaboration, and the impact of Gen Z in the workplace, creator of the Claro brand, and author of bestselling books.",
-          ),
-          linkedin: "https://www.linkedin.com/in/dado-schneider/",
-        },
-      ],
-    },
-    {
-      id: "tributario",
-      title: t(
-        "Palestra | Reforma tributária – Não é só imposto: Como a Reforma Tributária mexe com preços, créditos, contratos e negócios",
-        "Keynote | Tax Reform – Beyond taxes: How the Tax Reform impacts pricing, credits, contracts, and business",
-      ),
-      speakers: [
-        {
-          id: "lucilene-prado",
-          name: "Lucilene Prado",
-          role: t(
-            "Sócia-Fundadora e Líder da Prática Tributária da Prado Santarossa",
-            "Founding Partner and Tax Practice Leader at Prado Santarossa",
-          ),
-          image: "/images/palestrantes/lucilene-prado.png",
-          bio: t(
-            "Lucilene Prado é sócia fundadora e Líder da Prática Tributária da Prado Santarossa. Possui mais de 33 anos de experiência em Direito Tributário e Empresarial. Trabalhou nos departamentos jurídico e tributário de empresas como Natura Cosméticos e foi sócia do FM/Derraik Advogados. Graduada em Direito pela Universidade de Ribeirão Preto, possui pós-graduação em Direito Tributário pelo Instituto Brasileiro de Estudos Tributários (Ibet) e certificação como Conselheira de Administração e Governança Corporativa pelo Instituto Brasileiro de Governança Corporativa (IBGC).",
-            "Lucilene Prado is the founding partner and Tax Practice Leader at Prado Santarossa. She has over 33 years of experience in Tax and Corporate Law. She worked in the legal and tax departments of companies such as Natura Cosméticos and was a partner at FM/Derraik Advogados. She holds a Law degree from Universidade de Ribeirão Preto, a postgraduate degree in Tax Law from IBET, and is a certified Board Member by IBGC.",
-          ),
-          linkedin: "https://www.linkedin.com/in/lucilene-prado-b3aa083/",
+          speakers: [
+            {
+              id: "lucilene-prado",
+              name: "Lucilene Prado",
+              role: t(
+                "Sócia-Fundadora e Líder da Prática Tributária da Prado Santarossa",
+                "Founding Partner and Tax Practice Leader at Prado Santarossa",
+              ),
+              image: "/images/palestrantes/lucilene-prado.png",
+              bio: t(
+                "Lucilene Prado é sócia fundadora e Líder da Prática Tributária da Prado Santarossa. Possui mais de 33 anos de experiência em Direito Tributário e Empresarial. Trabalhou nos departamentos jurídico e tributário de empresas como Natura Cosméticos e foi sócia do FM/Derraik Advogados. Graduada em Direito pela Universidade de Ribeirão Preto, possui pós-graduação em Direito Tributário pelo Instituto Brasileiro de Estudos Tributários (Ibet) e certificação como Conselheira de Administração e Governança Corporativa pelo Instituto Brasileiro de Governança Corporativa (IBGC).",
+                "Lucilene Prado is the founding partner and Tax Practice Leader at Prado Santarossa. She has over 33 years of experience in Tax and Corporate Law. She worked in the legal and tax departments of companies such as Natura Cosméticos and was a partner at FM/Derraik Advogados. She holds a Law degree from Universidade de Ribeirão Preto, a postgraduate degree in Tax Law from IBET, and is a certified Board Member by IBGC.",
+              ),
+              linkedin: "https://www.linkedin.com/in/lucilene-prado-b3aa083/",
+            },
+            {
+              id: "halim-abud-neto",
+              name: "Halim José Abud Neto",
+              role: t(
+                "Sócio do DNA LAW e Consultor Jurídico da Abravidro",
+                "Partner at DNA LAW and Legal Consultant for Abravidro",
+              ),
+              image: "/images/palestrantes/halim-abud-neto.jpeg",
+              bio: t(
+                "Halim José Abud Neto é sócio do DNA LAW, Advogado, especialista em Direito Tributário pelo Instituto Brasileiro de Estudos Tributários (IBET), Consultor Jurídico da Abravidro, Conselheiro do Conselho Superior de Direito (CSD) e do Conselho de Assuntos Tributários (CAT) da Federação do Comércio de Bens, Serviços e Turismo (Fecomercio-SP), Diretor do Centro do Comércio do Estado de São Paulo (Cecomercio), Assessor Jurídico na Agenda Legislativa da Indústria da Confederação Nacional da Indústria (CNI).",
+                "Halim José Abud Neto is a partner at DNA LAW, attorney, Tax Law specialist by IBET, Legal Consultant for Abravidro, Counselor at Fecomercio-SP, Director at Cecomercio, and Legal Advisor for the National Confederation of Industry (CNI).",
+              ),
+              linkedin: null,
+            },
+          ],
         },
         {
-          id: "halim-abud-neto",
-          name: "Halim José Abud Neto",
-          role: t(
-            "Sócio do DNA LAW e Consultor Jurídico da Abravidro",
-            "Partner at DNA LAW and Legal Consultant for Abravidro",
+          id: "economia",
+          title: t(
+            "Palestra | E agora, Brasil? O cenário econômico depois das eleições",
+            "Keynote | What's next, Brazil? The economic landscape after elections",
           ),
-          image: "/images/palestrantes/halim-abud-neto.jpeg",
-          bio: t(
-            "Halim José Abud Neto é sócio do DNA LAW, Advogado, especialista em Direito Tributário pelo Instituto Brasileiro de Estudos Tributários (IBET), Consultor Jurídico da Abravidro, Conselheiro do Conselho Superior de Direito (CSD) e do Conselho de Assuntos Tributários (CAT) da Federação do Comércio de Bens, Serviços e Turismo (Fecomercio-SP), Diretor do Centro do Comércio do Estado de São Paulo (Cecomercio), Assessor Jurídico na Agenda Legislativa da Indústria da Confederação Nacional da Indústria (CNI).",
-            "Halim José Abud Neto is a partner at DNA LAW, attorney, Tax Law specialist by IBET, Legal Consultant for Abravidro, Counselor at Fecomercio-SP, Director at Cecomercio, and Legal Advisor for the National Confederation of Industry (CNI).",
-          ),
-          linkedin: null,
-        },
-      ],
-    },
-    {
-      id: "energia",
-      title: t(
-        "Talk | Energia – Energia: muito além do preço – Riscos, oportunidades e decisões estratégicas para as empresas",
-        "Talk | Energy – Beyond price: Risks, opportunities, and strategic decisions for businesses",
-      ),
-      speakers: [
-        {
-          id: "jean-tremura",
-          name: "Jean Vinicius Tremura",
-          role: t(
-            "Diretor de Projetos na Involt",
-            "Project Director at Involt",
-          ),
-          image: "/images/palestrantes/jean-tremura.jpg",
-          bio: t(
-            "Jean Tremura é executivo no setor de energias renováveis há mais de 25 anos, com experiência em eficiência energética, geração distribuída e soluções sustentáveis. É diretor de Projetos na Involt. Formado em Ciências Econômicas pela Universidade Presbiteriana Mackenzie, possui MBA em Gestão Estratégica e Econômica pela Fundação Getulio Vargas (FGV) e pós-graduação em Eficiência Energética, Cogeração e Energias Renováveis pelo Programa de Educação Continuada da Universidade de São Paulo (USP–PECE).",
-            "Jean Tremura is an executive in the renewable energy sector with over 25 years of experience in energy efficiency, distributed generation, and sustainable solutions. He is Project Director at Involt. He holds a degree in Economics from Universidade Presbiteriana Mackenzie, an MBA from FGV, and a postgraduate degree in Energy Efficiency from USP-PECE.",
-          ),
-          linkedin:
-            "https://www.linkedin.com/in/jean-vinicius-tremura-009426186/",
-        },
-        {
-          id: "carlos-schoeps",
-          name: "Carlos Schoeps",
-          role: t(
-            "Sócio-Diretor da Replace Consultoria",
-            "Managing Partner at Replace Consultoria",
-          ),
-          image: "/images/palestrantes/carlos-schoeps.jpg",
-          bio: t(
-            "Carlos Alberto Schoeps é Engenheiro Eletricista formado pela Escola de Engenharia Mauá e Sócio-Diretor da Replace Consultoria. Possui ampla experiência no setor elétrico, com atuação em planejamento do suprimento de energia, regulação, mercado livre, mercado regulado, geração distribuída, entre outros.",
-            "Carlos Alberto Schoeps is an electrical engineer graduated from Escola de Engenharia Mauá and Managing Partner at Replace Consultoria. He has extensive experience in the power sector, focusing on energy supply planning, regulation, free market, regulated market, and distributed generation.",
-          ),
-          linkedin: "https://www.linkedin.com/in/carlos-schoeps-0673b42/",
-        },
-      ],
-    },
-    {
-      id: "economia",
-      title: t(
-        "Palestra | E agora, Brasil? O cenário econômico depois das eleições",
-        "Keynote | What's next, Brazil? The economic landscape after elections",
-      ),
-      speakers: [
-        {
-          id: "alexandre-schwartsman",
-          name: "Alexandre Schwartsman",
-          role: t(
-            "Consultor na Pinotti & Schwartsman Associados",
-            "Consultant at Pinotti & Schwartsman Associados",
-          ),
-          image: "/images/palestrantes/alexandre-schwartsman.jpg",
-          bio: t(
-            "Alexandre Schwartsman é consultor da Pinotti & Schwartsman Associados. Foi também Diretor para Assuntos Internacionais do Banco Central do Brasil e membro votante do Comitê de Política Monetária (Copom). É Doutor em Economia pela Universidade da Califórnia (Berkeley). Colunista da Revista Veja e do jornal O Estado de São Paulo, além de comentarista semanal para a Rádio CBN.",
-            "Alexandre Schwartsman is a consultant at Pinotti & Schwartsman Associados. He previously served as Director of International Affairs at the Central Bank of Brazil and a voting member of the Monetary Policy Committee (Copom). He holds a Ph.D. in Economics from the University of California (Berkeley). Columnist for Veja and O Estado de S. Paulo, and weekly commentator on CBN Radio.",
-          ),
-          linkedin: "https://www.linkedin.com/in/alex-schwartsman-328a5913/",
+          speakers: [
+            {
+              id: "alexandre-schwartsman",
+              name: "Alexandre Schwartsman",
+              role: t(
+                "Consultor na Pinotti & Schwartsman Associados",
+                "Consultant at Pinotti & Schwartsman Associados",
+              ),
+              image: "/images/palestrantes/alexandre-schwartsman.jpg",
+              bio: t(
+                "Alexandre Schwartsman é consultor da Pinotti & Schwartsman Associados. Foi também Diretor para Assuntos Internacionais do Banco Central do Brasil e membro votante do Comitê de Política Monetária (Copom). É Doutor em Economia pela Universidade da Califórnia (Berkeley). Colunista da Revista Veja e do jornal O Estado de São Paulo, além de comentarista semanal para a Rádio CBN.",
+                "Alexandre Schwartsman is a consultant at Pinotti & Schwartsman Associados. He previously served as Director of International Affairs at the Central Bank of Brazil and a voting member of the Monetary Policy Committee (Copom). He holds a Ph.D. in Economics from the University of California (Berkeley). Columnist for Veja and O Estado de S. Paulo, and weekly commentator on CBN Radio.",
+              ),
+              linkedin:
+                "https://www.linkedin.com/in/alex-schwartsman-328a5913/",
+            },
+          ],
         },
       ],
     },
@@ -264,50 +276,66 @@ export default function Speakers({ router: propRouter }) {
           </h2>
         </div>
 
-        {/* Grid de sessões organizadas por tema */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sessions.map((session) => (
-            <div
-              key={session.id}
-              className="bg-[#003873]/80 rounded-2xl border border-white/15 p-6 flex flex-col justify-between shadow-xl backdrop-blur-sm"
-            >
-              <div>
-                <h3 className="text-sm md:text-base font-sans font-bold text-white leading-snug mb-5">
-                  {session.title}
-                </h3>
+        {/* Lista de sessões agrupadas por dia */}
+        <div className="space-y-14">
+          {days.map((day, dayIndex) => (
+            <div key={dayIndex}>
+              {/* Cabeçalho do Dia */}
+              <div className="flex items-center gap-3.5 mb-8">
+                <div className="flex items-center gap-2.5 bg-gradient-to-r from-amber-400/20 to-amber-500/10 border border-amber-400/30 text-amber-300 px-5 py-2 rounded-full text-base md:text-lg font-bold shadow-sm">
+                  <Calendar className="w-5 h-5 text-amber-400" />
+                  <span>{day.date}</span>
+                </div>
+                <div className="h-px flex-1 bg-gradient-to-r from-amber-400/30 via-white/10 to-transparent" />
               </div>
 
-              {/* Fotos lado a lado em tamanho maior */}
-              <div className="flex flex-wrap items-center justify-center gap-4 pt-4 border-t border-white/10">
-                {session.speakers.map((speaker) => (
-                  <button
-                    key={speaker.id}
-                    onClick={() => setSelectedSpeaker(speaker)}
-                    className="flex-1 min-w-[100px] max-w-[160px] flex flex-col items-center text-center group cursor-pointer"
+              {/* Grid de sessões */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {day.sessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className="bg-[#003873]/80 rounded-2xl border border-white/15 p-6 flex flex-col justify-between shadow-xl backdrop-blur-sm"
                   >
-                    <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-[#002a54] border-2 border-white/20 shadow-lg group-hover:border-amber-400 group-hover:scale-105 transition-all duration-300 mb-2.5">
-                      {speaker.image ? (
-                        <Image
-                          src={speaker.image}
-                          alt={speaker.name}
-                          fill
-                          sizes="(max-width: 640px) 96px, 112px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white/40">
-                          <Users className="w-10 h-10" />
-                        </div>
-                      )}
+                    <div>
+                      <h3 className="text-sm md:text-base font-sans font-bold text-white leading-snug mb-5">
+                        {session.title}
+                      </h3>
                     </div>
 
-                    <h4 className="text-xs md:text-sm font-semibold font-sans text-white group-hover:text-amber-300 transition-colors leading-tight line-clamp-2">
-                      {speaker.name}
-                    </h4>
-                    <span className="text-[11px] text-blue-200 mt-1 group-hover:text-white">
-                      {t("Ver bio", "View bio")}
-                    </span>
-                  </button>
+                    {/* Fotos lado a lado em tamanho maior */}
+                    <div className="flex flex-wrap items-center justify-center gap-4 pt-4 border-t border-white/10">
+                      {session.speakers.map((speaker) => (
+                        <button
+                          key={speaker.id}
+                          onClick={() => setSelectedSpeaker(speaker)}
+                          className="flex-1 min-w-[100px] max-w-[160px] flex flex-col items-center text-center group cursor-pointer"
+                        >
+                          <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-[#002a54] border-2 border-white/20 shadow-lg group-hover:border-amber-400 group-hover:scale-105 transition-all duration-300 mb-2.5">
+                            {speaker.image ? (
+                              <Image
+                                src={speaker.image}
+                                alt={speaker.name}
+                                fill
+                                sizes="(max-width: 640px) 96px, 112px"
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-white/40">
+                                <Users className="w-10 h-10" />
+                              </div>
+                            )}
+                          </div>
+
+                          <h4 className="text-xs md:text-sm font-semibold font-sans text-white group-hover:text-amber-300 transition-colors leading-tight line-clamp-2">
+                            {speaker.name}
+                          </h4>
+                          <span className="text-[11px] text-blue-200 mt-1 group-hover:text-white">
+                            {t("Ver bio", "View bio")}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
