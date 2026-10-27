@@ -1119,6 +1119,55 @@ async function generateTournamentsReport() {
   })
 }
 
+async function generateLunchesReport(hotelId) {
+  if (!hotelId) {
+    throw new Error("Hotel ID é obrigatório para gerar relatórios.")
+  }
+
+  const query = `
+    SELECT 
+      ROW_NUMBER() OVER (ORDER BY lr.created_at ASC)::int as posicao_geral,
+      ROW_NUMBER() OVER (PARTITION BY lr.lunch_id ORDER BY lr.created_at ASC)::int as posicao_na_mesa,
+      l.title as mesa_titulo,
+      l.speakers as painelistas,
+      COALESCE(g.name, '') as nome_completo,
+      COALESCE(g.cpf_number, '') as cpf,
+      COALESCE(g.passport_number, '') as passaporte,
+      COALESCE(g.email, '') as email,
+      COALESCE(g.phone, '') as telefone,
+      COALESCE(c.corporate_name, '') as empresa,
+      s.sale_number as numero_inscricao,
+      TO_CHAR(lr.created_at AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI:SS') as data_registro
+    FROM lunch_registrations lr
+    JOIN lunches l ON lr.lunch_id = l.id
+    JOIN guests g ON lr.guest_id = g.id
+    JOIN sales s ON lr.sale_id = s.id
+    LEFT JOIN companies c ON s.company_id = c.id
+    WHERE l.hotel_id = $1
+    ORDER BY lr.created_at ASC
+  `
+
+  const result = await database.query({
+    text: query,
+    values: [hotelId],
+  })
+
+  return result.rows.map((row) => ({
+    "Posição Geral": row.posicao_geral,
+    "Posição na Mesa": row.posicao_na_mesa,
+    "Data/Hora Registro": row.data_registro,
+    "Mesa / Painel": row.mesa_titulo,
+    Painelistas: row.painelistas,
+    "Nome Completo": row.nome_completo,
+    CPF: row.cpf,
+    Passaporte: row.passaporte,
+    "E-mail": row.email,
+    Telefone: row.telefone,
+    Empresa: row.empresa,
+    "Nº Inscrição": row.numero_inscricao,
+  }))
+}
+
 const report = {
   generateCompleteReport,
   generateByCompany,
@@ -1136,6 +1185,7 @@ const report = {
   generateTransladoReport,
   generateByMonthReport,
   generateTournamentsReport,
+  generateLunchesReport,
 }
 
 export default report
