@@ -97,12 +97,12 @@ export default function Speakers({ router: propRouter }) {
               id: "leopoldo-castiella",
               name: "Leopoldo Castiella",
               role: t(
-                "Chefe de Vidro Arquitetônico SBU Global e Diretor-Executivo-Sênior do Grupo NSG",
+                "Chefe de Vidro Arquitetônico SBU Global e vice-presidente executivo do Grupo NSG",
                 "Head of Architectural Glass Global SBU and Senior Executive Director at NSG Group",
               ),
               image: "/images/palestrantes/leopoldo-castiella.jpg",
               bio: t(
-                "Argentino, Castiella é chefe de Vidro Arquitetônico SBU Global e diretor-executivo- sênior do Grupo NSG. Foi, por treze anos, diretor-executivo da Cebrace. Também atuou como presidente da Vasa Vidriería Argentina e da Associação Brasileira das Indústrias de Vidro (Abividro).",
+                "Argentino, Castiella é chefe de Vidro Arquitetônico SBU Global e vice-presidente executivo do Grupo NSG. Foi, por treze anos, diretor-executivo da Cebrace. Também atuou como presidente da Vasa Vidriería Argentina e da Associação Brasileira das Indústrias de Vidro (Abividro).",
                 "Argentine, Castiella is Head of Architectural Glass Global SBU and Senior Executive Director at NSG Group. For thirteen years, he served as CEO of Cebrace. He also served as President of Vasa Vidriería Argentina and the Brazilian Association of Glass Industries (Abividro).",
               ),
               linkedin:
