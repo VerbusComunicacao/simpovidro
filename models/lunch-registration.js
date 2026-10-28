@@ -276,6 +276,31 @@ async function registerOrUpdate({ guest_id, sale_id, lunch_id, lunch_ids }) {
   })
   const currentMap = new Map(currentRegQuery.rows.map((r) => [r.lunch_id, r]))
 
+  // Business rule: one table per day. Tables without a date are not checked.
+  const finalLunchIds = isMultiMode
+    ? targetIds
+    : [...new Set([...currentMap.keys(), ...targetIds])]
+  const finalLunches = await database.query({
+    text: `
+      SELECT title, TO_CHAR(lunch_date, 'YYYY-MM-DD') AS lunch_date
+      FROM lunches
+      WHERE id = ANY($1::uuid[]) AND lunch_date IS NOT NULL
+    `,
+    values: [finalLunchIds],
+  })
+  const lunchesByDate = new Map()
+  for (const row of finalLunches.rows) {
+    const sameDay = lunchesByDate.get(row.lunch_date)
+    if (sameDay) {
+      const [year, month, day] = row.lunch_date.split("-")
+      throw new ValidationError({
+        message: `Não é possível se inscrever em mais de uma mesa no mesmo dia (${day}/${month}/${year}): "${sameDay}" e "${row.title}".`,
+        action: "Escolha apenas uma mesa por dia e tente novamente.",
+      })
+    }
+    lunchesByDate.set(row.lunch_date, row.title)
+  }
+
   // In multi mode: remove registrations for tables no longer in targetIds
   if (isMultiMode) {
     const toRemove = currentRegQuery.rows.filter(

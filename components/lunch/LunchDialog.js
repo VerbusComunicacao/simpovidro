@@ -25,6 +25,8 @@ export function LunchDialog({
   const [formData, setFormData] = useState({
     title: "",
     speakers: "",
+    lunch_date: "",
+    lunch_time: "",
     active: true,
   })
 
@@ -33,12 +35,16 @@ export function LunchDialog({
       setFormData({
         title: lunchToEdit.title || "",
         speakers: lunchToEdit.speakers || "",
+        lunch_date: lunchToEdit.lunch_date || "",
+        lunch_time: lunchToEdit.lunch_time || "",
         active: lunchToEdit.active !== false,
       })
     } else {
       setFormData({
         title: "",
         speakers: "",
+        lunch_date: "",
+        lunch_time: "",
         active: true,
       })
     }
@@ -73,6 +79,8 @@ export function LunchDialog({
     const payload = {
       title: formData.title.trim(),
       speakers: formData.speakers.trim(),
+      lunch_date: formData.lunch_date || null,
+      lunch_time: formData.lunch_time || null,
       active: formData.active,
     }
 
@@ -161,6 +169,29 @@ export function LunchDialog({
                 <p className="text-xs text-slate-500">
                   Separe os nomes dos convidados por vírgula.
                 </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="lunch-date">Data do almoço</Label>
+                  <Input
+                    id="lunch-date"
+                    name="lunch_date"
+                    type="date"
+                    value={formData.lunch_date}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="lunch-time">Horário</Label>
+                  <Input
+                    id="lunch-time"
+                    name="lunch_time"
+                    type="time"
+                    value={formData.lunch_time}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
 
               <div className="flex items-center space-x-2 pt-2">

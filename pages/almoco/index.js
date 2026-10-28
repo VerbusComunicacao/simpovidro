@@ -41,6 +41,42 @@ const SPEAKER_IMAGES = {
   "Halim José Abud Neto": "/images/palestrantes/halim-abud-neto.jpeg",
 }
 
+function formatLunchGroupHeader(lunchDate, lunchTime, isEn) {
+  if (!lunchDate) return isEn ? "Date to be defined" : "Data a definir"
+
+  const [year, month, day] = lunchDate.split("-").map(Number)
+  const date = new Date(year, month - 1, day)
+  const weekday = date.toLocaleDateString(isEn ? "en-US" : "pt-BR", {
+    weekday: "long",
+  })
+  const formattedDate = date.toLocaleDateString(isEn ? "en-US" : "pt-BR")
+
+  let header = `${formattedDate} - ${weekday}`
+  if (lunchTime) {
+    const [hours, minutes] = lunchTime.split(":").map(Number)
+    const suffix = minutes ? `:${String(minutes).padStart(2, "0")}` : ""
+    header += isEn
+      ? ` - ${hours % 12 || 12}${suffix} ${hours < 12 ? "AM" : "PM"}`
+      : ` - ${hours}${suffix}hs`
+  }
+  return header
+}
+
+function groupLunchesByDate(lunches) {
+  const groups = []
+  for (const item of lunches) {
+    const date = item.lunch_date || ""
+    const time = item.lunch_date ? item.lunch_time || "" : ""
+    let group = groups.find((g) => g.date === date && g.time === time)
+    if (!group) {
+      group = { date, time, items: [] }
+      groups.push(group)
+    }
+    group.items.push(item)
+  }
+  return groups
+}
+
 export default function AlmocoPage() {
   const router = useRouter()
   const isEn = router.locale === "en" || router.query.lang === "en"
@@ -83,13 +119,30 @@ export default function AlmocoPage() {
   }
 
   const toggleLunchSelection = (lunchId) => {
-    setSelectedLunchIds((prev) => {
-      if (prev.includes(lunchId)) {
-        return prev.filter((id) => id !== lunchId)
-      } else {
-        return [...prev, lunchId]
+    if (!selectedLunchIds.includes(lunchId)) {
+      const target = availableLunches.find((l) => l.id === lunchId)
+      const sameDay = target?.lunch_date
+        ? availableLunches.find(
+            (l) =>
+              selectedLunchIds.includes(l.id) &&
+              l.lunch_date === target.lunch_date,
+          )
+        : null
+      if (sameDay) {
+        setSubmitError(
+          t(
+            `Você já selecionou a mesa "${sameDay.title}" neste dia. Só é possível escolher uma mesa por dia.`,
+            `You have already selected "${sameDay.title}" on this day. Only one table per day can be chosen.`,
+          ),
+        )
+        return
       }
-    })
+    }
+    setSelectedLunchIds((prev) =>
+      prev.includes(lunchId)
+        ? prev.filter((id) => id !== lunchId)
+        : [...prev, lunchId],
+    )
     setSubmitError("")
   }
 
@@ -499,123 +552,138 @@ export default function AlmocoPage() {
                 <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>
                   {t(
-                    "Você pode se inscrever em mais de uma mesa. As vagas estarão sujeitas à disponibilidade.",
-                    "You can sign up for more than one table. Seats are subject to availability.",
+                    "Você pode se inscrever em mais de uma mesa, desde que não seja no mesmo dia. As vagas estarão sujeitas à disponibilidade.",
+                    "You can sign up for more than one table, as long as they are not on the same day. Seats are subject to availability.",
                   )}
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
-                {availableLunches.map((item) => {
-                  const isSelected = selectedLunchIds.includes(item.id)
-                  const existingReg = existingRegistrations.find(
-                    (r) => r.lunch_id === item.id,
-                  )
-                  const speakersList = (item.speakers || "")
-                    .split(",")
-                    .map((s) => s.trim())
-                    .filter(Boolean)
+              <div className="space-y-6">
+                {groupLunchesByDate(availableLunches).map((group) => (
+                  <div
+                    key={`${group.date || "no-date"}-${group.time}`}
+                    className="space-y-3"
+                  >
+                    <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide">
+                      {formatLunchGroupHeader(group.date, group.time, isEn)}
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      {group.items.map((item) => {
+                        const isSelected = selectedLunchIds.includes(item.id)
+                        const existingReg = existingRegistrations.find(
+                          (r) => r.lunch_id === item.id,
+                        )
+                        const speakersList = (item.speakers || "")
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean)
 
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => toggleLunchSelection(item.id)}
-                      className={`relative rounded-2xl border-2 transition-all p-5 cursor-pointer shadow-sm ${
-                        isSelected
-                          ? "border-blue-600 bg-blue-50/40 ring-2 ring-blue-600/20"
-                          : "border-slate-200 bg-white hover:border-slate-300 hover:shadow"
-                      }`}
-                    >
-                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                        <div className="flex-1 space-y-2">
-                          {/* Badges */}
-                          <div className="flex flex-wrap items-center gap-2">
-                            {existingReg && (
-                              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-600 text-white flex items-center gap-1">
-                                <Check className="w-3 h-3 stroke-[3]" />
-                                {t("Inscrito", "Registered")}
-                              </span>
-                            )}
-                            {isSelected && (
-                              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-600 text-white">
-                                {t("Selecionada", "Selected")}
-                              </span>
-                            )}
-                          </div>
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => toggleLunchSelection(item.id)}
+                            className={`relative rounded-2xl border-2 transition-all p-5 cursor-pointer shadow-sm ${
+                              isSelected
+                                ? "border-blue-600 bg-blue-50/40 ring-2 ring-blue-600/20"
+                                : "border-slate-200 bg-white hover:border-slate-300 hover:shadow"
+                            }`}
+                          >
+                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                              <div className="flex-1 space-y-2">
+                                {/* Badges */}
+                                <div className="flex flex-wrap items-center gap-2">
+                                  {existingReg && (
+                                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-600 text-white flex items-center gap-1">
+                                      <Check className="w-3 h-3 stroke-[3]" />
+                                      {t("Inscrito", "Registered")}
+                                    </span>
+                                  )}
+                                  {isSelected && (
+                                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-600 text-white">
+                                      {t("Selecionada", "Selected")}
+                                    </span>
+                                  )}
+                                </div>
 
-                          {/* Título & Tema */}
-                          <div>
-                            <h3 className="text-lg font-bold text-slate-900 tracking-tight">
-                              {item.title}
-                            </h3>
-                          </div>
+                                {/* Título & Tema */}
+                                <div>
+                                  <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+                                    {item.title}
+                                  </h3>
+                                </div>
 
-                          {/* Painelistas com foto e nome */}
-                          <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-3">
-                            <span className="text-xs font-semibold text-slate-500">
-                              {t("Com:", "With:")}
-                            </span>
-                            <div className="flex flex-wrap items-center gap-2">
-                              {speakersList.map((speaker, sIdx) => {
-                                const cleanSpeaker = speaker
-                                  .replace(/\s*\(.*?\)/g, "")
-                                  .trim()
-                                const photoUrl = SPEAKER_IMAGES[cleanSpeaker]
+                                {/* Painelistas com foto e nome */}
+                                <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-3">
+                                  <span className="text-xs font-semibold text-slate-500">
+                                    {t("Com:", "With:")}
+                                  </span>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    {speakersList.map((speaker, sIdx) => {
+                                      const cleanSpeaker = speaker
+                                        .replace(/\s*\(.*?\)/g, "")
+                                        .trim()
+                                      const photoUrl =
+                                        SPEAKER_IMAGES[cleanSpeaker]
 
-                                return (
-                                  <div
-                                    key={sIdx}
-                                    className="inline-flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full border border-slate-200/80 text-xs text-slate-800 font-medium shadow-2xs"
-                                  >
-                                    <div className="w-5 h-5 rounded-full overflow-hidden bg-slate-300 relative shrink-0">
-                                      {photoUrl ? (
-                                        <Image
-                                          src={photoUrl}
-                                          alt={speaker}
-                                          fill
-                                          className="object-cover"
-                                        />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-blue-800 text-[10px] text-white">
-                                          {cleanSpeaker.charAt(0)}
+                                      return (
+                                        <div
+                                          key={sIdx}
+                                          className="inline-flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full border border-slate-200/80 text-xs text-slate-800 font-medium shadow-2xs"
+                                        >
+                                          <div className="w-5 h-5 rounded-full overflow-hidden bg-slate-300 relative shrink-0">
+                                            {photoUrl ? (
+                                              <Image
+                                                src={photoUrl}
+                                                alt={speaker}
+                                                fill
+                                                className="object-cover"
+                                              />
+                                            ) : (
+                                              <div className="w-full h-full flex items-center justify-center bg-blue-800 text-[10px] text-white">
+                                                {cleanSpeaker.charAt(0)}
+                                              </div>
+                                            )}
+                                          </div>
+                                          <span>{speaker}</span>
                                         </div>
-                                      )}
-                                    </div>
-                                    <span>{speaker}</span>
+                                      )
+                                    })}
                                   </div>
-                                )
-                              })}
+                                </div>
+                              </div>
+
+                              {/* Checkbox indicator */}
+                              <div className="flex md:flex-col items-center justify-between md:justify-start gap-2.5 shrink-0 pt-2 md:pt-0">
+                                <div
+                                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                    isSelected
+                                      ? "border-blue-600 bg-blue-600 text-white shadow-xs"
+                                      : "border-slate-300 bg-white"
+                                  }`}
+                                >
+                                  {isSelected && (
+                                    <Check className="w-4 h-4 stroke-[3]" />
+                                  )}
+                                </div>
+                                <span
+                                  className={`text-xs font-bold ${
+                                    isSelected
+                                      ? "text-blue-600"
+                                      : "text-slate-400"
+                                  }`}
+                                >
+                                  {isSelected
+                                    ? t("Selecionada", "Selected")
+                                    : t("Selecionar", "Select")}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-
-                        {/* Checkbox indicator */}
-                        <div className="flex md:flex-col items-center justify-between md:justify-start gap-2.5 shrink-0 pt-2 md:pt-0">
-                          <div
-                            className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                              isSelected
-                                ? "border-blue-600 bg-blue-600 text-white shadow-xs"
-                                : "border-slate-300 bg-white"
-                            }`}
-                          >
-                            {isSelected && (
-                              <Check className="w-4 h-4 stroke-[3]" />
-                            )}
-                          </div>
-                          <span
-                            className={`text-xs font-bold ${
-                              isSelected ? "text-blue-600" : "text-slate-400"
-                            }`}
-                          >
-                            {isSelected
-                              ? t("Selecionada", "Selected")
-                              : t("Selecionar", "Select")}
-                          </span>
-                        </div>
-                      </div>
+                        )
+                      })}
                     </div>
-                  )
-                })}
+                  </div>
+                ))}
               </div>
             </div>
 

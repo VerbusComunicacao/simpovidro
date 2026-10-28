@@ -440,6 +440,14 @@ export default function AlmocosAdminPage() {
                   </CardHeader>
 
                   <CardContent className="p-5 pt-0 space-y-4">
+                    {item.lunch_date && (
+                      <p className="text-xs font-semibold text-slate-600">
+                        {item.lunch_date.split("-").reverse().join("/")}
+                        {item.lunch_time &&
+                          ` • ${item.lunch_time.replace(":00", "")}hs`}
+                      </p>
+                    )}
+
                     {/* Lista de Palestrantes */}
                     <div>
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">

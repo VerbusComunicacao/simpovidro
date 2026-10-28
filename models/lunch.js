@@ -62,12 +62,14 @@ async function findAllByHotelId(hotelId, options = {}) {
         l.speakers,
         l.active,
         l.created_at,
+        TO_CHAR(l.lunch_date, 'YYYY-MM-DD') AS lunch_date,
+        TO_CHAR(l.lunch_time, 'HH24:MI') AS lunch_time,
         COUNT(lr.id)::int as registered_count
       FROM lunches l
       LEFT JOIN lunch_registrations lr ON l.id = lr.lunch_id
       WHERE l.hotel_id = $1 ${activeFilter}
       GROUP BY l.id
-      ORDER BY l.created_at ASC
+      ORDER BY l.lunch_date ASC NULLS LAST, l.lunch_time ASC NULLS LAST, l.created_at ASC
     `,
     values: [resolvedHotelId],
   })
@@ -92,6 +94,8 @@ async function findAllByHotelId(hotelId, options = {}) {
           l.speakers,
           l.active,
           l.created_at,
+          TO_CHAR(l.lunch_date, 'YYYY-MM-DD') AS lunch_date,
+          TO_CHAR(l.lunch_time, 'HH24:MI') AS lunch_time,
           0 as registered_count
         FROM lunches l
         WHERE l.hotel_id = $1 AND l.active = true
@@ -106,6 +110,44 @@ async function findAllByHotelId(hotelId, options = {}) {
   return result.rows
 }
 
+const LUNCH_RETURNING = `
+  id, hotel_id, title, speakers, active, created_at, updated_at,
+  TO_CHAR(lunch_date, 'YYYY-MM-DD') AS lunch_date,
+  TO_CHAR(lunch_time, 'HH24:MI') AS lunch_time`
+
+function normalizeLunchDate(value) {
+  if (value === undefined) return undefined
+  if (value === null || value === "") return null
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value))
+  const date = match && new Date(Date.UTC(+match[1], +match[2] - 1, +match[3]))
+  if (
+    !date ||
+    date.getUTCFullYear() !== +match[1] ||
+    date.getUTCMonth() !== +match[2] - 1 ||
+    date.getUTCDate() !== +match[3]
+  ) {
+    throw new ValidationError({
+      message: "A data do almoço é inválida.",
+      action: "Informe a data no formato AAAA-MM-DD, por exemplo 2026-11-06.",
+    })
+  }
+  return String(value)
+}
+
+function normalizeLunchTime(value) {
+  if (value === undefined) return undefined
+  if (value === null || value === "") return null
+
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(value))) {
+    throw new ValidationError({
+      message: "O horário do almoço é inválido.",
+      action: "Informe o horário no formato HH:MM, por exemplo 13:00.",
+    })
+  }
+  return String(value)
+}
+
 async function findById(lunchId) {
   validateUUID(lunchId)
 
@@ -118,6 +160,8 @@ async function findById(lunchId) {
         l.speakers,
         l.active,
         l.created_at,
+        TO_CHAR(l.lunch_date, 'YYYY-MM-DD') AS lunch_date,
+        TO_CHAR(l.lunch_time, 'HH24:MI') AS lunch_time,
         COUNT(lr.id)::int as registered_count
       FROM lunches l
       LEFT JOIN lunch_registrations lr ON l.id = lr.lunch_id
@@ -139,7 +183,14 @@ async function findById(lunchId) {
 }
 
 async function create(lunchData) {
-  let { hotel_id, title, speakers, active = true } = lunchData || {}
+  let {
+    hotel_id,
+    title,
+    speakers,
+    active = true,
+    lunch_date,
+    lunch_time,
+  } = lunchData || {}
 
   if (!hotel_id) {
     const activeHotel = await database.query({
@@ -179,17 +230,29 @@ async function create(lunchData) {
     })
   }
 
+  const normalizedDate = normalizeLunchDate(lunch_date) ?? null
+  const normalizedTime = normalizeLunchTime(lunch_time) ?? null
+
   const result = await database.query({
     text: `
       INSERT INTO lunches (
         hotel_id,
         title,
         speakers,
-        active
-      ) VALUES ($1, $2, $3, $4)
-      RETURNING *
+        active,
+        lunch_date,
+        lunch_time
+      ) VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING ${LUNCH_RETURNING}
     `,
-    values: [hotel_id, title.trim(), speakers.trim(), Boolean(active)],
+    values: [
+      hotel_id,
+      title.trim(),
+      speakers.trim(),
+      Boolean(active),
+      normalizedDate,
+      normalizedTime,
+    ],
   })
 
   return result.rows[0]
@@ -201,7 +264,7 @@ async function update(lunchId, lunchData) {
   // Verify lunch exists
   await findById(lunchId)
 
-  const { title, speakers, active } = lunchData || {}
+  const { title, speakers, active, lunch_date, lunch_time } = lunchData || {}
 
   const updates = []
   const values = []
@@ -234,6 +297,18 @@ async function update(lunchId, lunchData) {
     values.push(Boolean(active))
   }
 
+  const normalizedDate = normalizeLunchDate(lunch_date)
+  if (normalizedDate !== undefined) {
+    updates.push(`lunch_date = $${paramIndex++}`)
+    values.push(normalizedDate)
+  }
+
+  const normalizedTime = normalizeLunchTime(lunch_time)
+  if (normalizedTime !== undefined) {
+    updates.push(`lunch_time = $${paramIndex++}`)
+    values.push(normalizedTime)
+  }
+
   if (updates.length === 0) {
     return await findById(lunchId)
   }
@@ -246,7 +321,7 @@ async function update(lunchId, lunchData) {
       UPDATE lunches
       SET ${updates.join(", ")}
       WHERE id = $${paramIndex}
-      RETURNING *
+      RETURNING ${LUNCH_RETURNING}
     `,
     values,
   })
