@@ -73,10 +73,10 @@ export default function AlmocoPage() {
       setDocValue(val.toUpperCase())
     } else {
       const clean = val.replace(/\D/g, "")
-      if (clean.length > 11) {
-        setDocValue(val.toUpperCase())
+      if (clean.length === 11) {
+        setDocValue(formatCPF(clean))
       } else {
-        setDocValue(formatCPF(val))
+        setDocValue(clean)
       }
     }
     setLookupError("")
@@ -371,8 +371,8 @@ export default function AlmocoPage() {
                     <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                     <span>
                       {t(
-                        "Vagas limitadas em cada mesa. A confirmação respeita a ordem cronológica de registro.",
-                        "Limited seats at each table. Registrations follow first-come, first-served order.",
+                        "Vagas limitadas em cada mesa.",
+                        "Limited seats at each table.",
                       )}
                     </span>
                   </div>

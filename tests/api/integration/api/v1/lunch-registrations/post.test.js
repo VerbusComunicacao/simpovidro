@@ -102,6 +102,29 @@ describe("POST /api/v1/lunch-registrations and /lookup", () => {
     })
     sale2 = { id: regResult2.saleId }
     guest2 = { id: regResult2.guestIds[0] }
+
+    // 6. Create Foreign User with numeric passport 1313131
+    const foreignUser = await orchestrator.createUser({
+      full_name: "John Foreigner",
+      email: "foreigner@example.com",
+      password: "password123",
+    })
+    await orchestrator.activateUser(foreignUser.id)
+
+    await orchestrator.createRegistration(foreignUser.id, {
+      room_id: room.id,
+      guests_data: [
+        {
+          name: "John Foreigner",
+          badge_name: "John",
+          email: "foreigner@example.com",
+          phone: "+15551234567",
+          gender: "Masculino",
+          passport_number: "1313131",
+          birth_date: "1985-08-20",
+        },
+      ],
+    })
   })
 
   test("GET /api/v1/lunches should return active lunch tables", async () => {
@@ -158,6 +181,44 @@ describe("POST /api/v1/lunch-registrations and /lookup", () => {
     expect(data.participant.sale_id).toBe(sale1.id)
     expect(Array.isArray(data.available_lunches)).toBe(true)
     expect(data.existing_registration).toBeNull()
+  })
+
+  test("POST /api/v1/lunch-registrations/lookup with numeric foreign passport 1313131", async () => {
+    const response = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/lunch-registrations/lookup`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ document: "1313131" }),
+      },
+    )
+    expect(response.status).toBe(200)
+
+    const data = await response.json()
+    expect(data.found).toBe(true)
+    expect(data.document_type).toBe("passport")
+    expect(data.participant).toBeDefined()
+    expect(data.participant.participant_name).toBe("John Foreigner")
+    expect(data.participant.passport_number).toBe("1313131")
+  })
+
+  test("POST /api/v1/lunch-registrations/lookup with numeric foreign passport formatted with dots 131.313.1", async () => {
+    const response = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/lunch-registrations/lookup`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ document: "131.313.1" }),
+      },
+    )
+    expect(response.status).toBe(200)
+
+    const data = await response.json()
+    expect(data.found).toBe(true)
+    expect(data.document_type).toBe("passport")
+    expect(data.participant).toBeDefined()
+    expect(data.participant.participant_name).toBe("John Foreigner")
+    expect(data.participant.passport_number).toBe("1313131")
   })
 
   test("POST /api/v1/lunch-registrations - Participant 1 registers for first table and gets position 1", async () => {

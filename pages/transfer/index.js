@@ -144,10 +144,10 @@ export default function TransferPage() {
       setDocValue(val.toUpperCase())
     } else {
       const clean = val.replace(/\D/g, "")
-      if (clean.length > 11) {
-        setDocValue(val.toUpperCase())
+      if (clean.length === 11) {
+        setDocValue(formatCPF(clean))
       } else {
-        setDocValue(formatCPF(val))
+        setDocValue(clean)
       }
     }
     setLookupError("")
