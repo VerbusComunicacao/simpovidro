@@ -88,8 +88,8 @@ async function lookupParticipant(document) {
 
   const participant = guestQuery.rows[0]
 
-  // 3. Check for existing lunch registration
-  let existingRegistration = null
+  // 3. Check for existing lunch registrations
+  const existingRegistrations = []
   const regQuery = await database.query({
     text: `
       SELECT 
@@ -104,15 +104,12 @@ async function lookupParticipant(document) {
       FROM lunch_registrations lr
       JOIN lunches l ON lr.lunch_id = l.id
       WHERE lr.guest_id = $1
-      ORDER BY lr.created_at DESC
-      LIMIT 1
+      ORDER BY lr.created_at ASC
     `,
     values: [participant.guest_id],
   })
 
-  if (regQuery.rowCount > 0) {
-    const reg = regQuery.rows[0]
-    // Calculate queue position for this table
+  for (const reg of regQuery.rows) {
     const posQuery = await database.query({
       text: `
         SELECT COUNT(*)::int as position
@@ -123,14 +120,17 @@ async function lookupParticipant(document) {
       `,
       values: [reg.lunch_id, reg.id],
     })
-    existingRegistration = {
+    existingRegistrations.push({
       ...reg,
       position: posQuery.rows[0]?.position || 1,
-    }
+    })
   }
+
+  const existingRegistration = existingRegistrations[0] || null
 
   // 4. Fetch available lunches for this hotel
   const availableLunches = await lunch.findAllByHotelId(activeHotel.id)
+  const settings = await lunch.getSettings(activeHotel.id)
 
   const isCpf =
     Boolean(participant.participant_cpf) &&
@@ -142,6 +142,7 @@ async function lookupParticipant(document) {
     document: raw,
     document_type: isCpf ? "cpf" : "passport",
     hotel: activeHotel,
+    settings,
     participant: {
       user_id: participant.user_id,
       guest_id: participant.guest_id,
@@ -156,10 +157,11 @@ async function lookupParticipant(document) {
     },
     available_lunches: availableLunches,
     existing_registration: existingRegistration,
+    existing_registrations: existingRegistrations,
   }
 }
 
-async function registerOrUpdate({ guest_id, sale_id, lunch_id }) {
+async function registerOrUpdate({ guest_id, sale_id, lunch_id, lunch_ids }) {
   if (!guest_id) {
     throw new ValidationError({
       message: "Identificador do participante (guest_id) é obrigatório.",
@@ -176,27 +178,10 @@ async function registerOrUpdate({ guest_id, sale_id, lunch_id }) {
   }
   validateUUID(sale_id)
 
-  if (!lunch_id) {
-    throw new ValidationError({
-      message: "A mesa de almoço (lunch_id) deve ser informada.",
-      action: "Escolha uma das mesas disponíveis para continuar.",
-    })
-  }
-  validateUUID(lunch_id)
-
-  // 1. Verify lunch exists and is active
-  const lunchData = await lunch.findById(lunch_id)
-  if (!lunchData.active) {
-    throw new ValidationError({
-      message: "A mesa selecionada não está mais disponível.",
-      action: "Por favor, selecione outra mesa disponível.",
-    })
-  }
-
-  // 2. Verify guest is linked to sale
+  // 1. Verify guest is linked to sale
   const relationCheck = await database.query({
     text: `
-      SELECT sg.id 
+      SELECT sg.id, s.hotel_id 
       FROM sales_guests sg
       JOIN sales s ON sg.sale_id = s.id
       WHERE sg.guest_id = $1 AND sg.sale_id = $2 AND s.status != 'cancelled'
@@ -212,70 +197,157 @@ async function registerOrUpdate({ guest_id, sale_id, lunch_id }) {
     })
   }
 
-  // 3. Check if guest already has a lunch registration
-  const existingCheck = await database.query({
-    text: `
-      SELECT id, lunch_id, created_at
-      FROM lunch_registrations
-      WHERE guest_id = $1
-      ORDER BY created_at DESC
-      LIMIT 1
-    `,
-    values: [guest_id],
-  })
+  const hotelId = relationCheck.rows[0].hotel_id
+  const settings = await lunch.getSettings(hotelId)
+  const allowMultiple = settings.allow_multiple_lunches !== false
+  const maxAllowed =
+    settings.max_lunches_per_guest || (allowMultiple ? null : 1)
 
-  let savedRecord = null
-
-  if (existingCheck.rowCount > 0) {
-    // Update existing registration (updates choice, preserves original queue timestamp)
-    const existing = existingCheck.rows[0]
-    const updateResult = await database.query({
-      text: `
-        UPDATE lunch_registrations
-        SET 
-          lunch_id = $1,
-          sale_id = $2,
-          updated_at = timezone('utc', now())
-        WHERE id = $3
-        RETURNING *
-      `,
-      values: [lunch_id, sale_id, existing.id],
-    })
-    savedRecord = updateResult.rows[0]
-  } else {
-    // Insert new registration
-    const insertResult = await database.query({
-      text: `
-        INSERT INTO lunch_registrations (
-          lunch_id,
-          guest_id,
-          sale_id
-        ) VALUES ($1, $2, $3)
-        RETURNING *
-      `,
-      values: [lunch_id, guest_id, sale_id],
-    })
-    savedRecord = insertResult.rows[0]
+  // 2. Resolve target lunch IDs
+  const isMultiMode = Array.isArray(lunch_ids)
+  let targetIds = []
+  if (isMultiMode) {
+    targetIds = lunch_ids.filter(Boolean)
+  } else if (lunch_id) {
+    targetIds = [lunch_id]
   }
 
-  // 4. Calculate position in the queue for this table (first-come, first-served)
-  const positionResult = await database.query({
-    text: `
-      SELECT COUNT(*)::int as position
-      FROM lunch_registrations
-      WHERE lunch_id = $1 AND created_at <= (
-        SELECT created_at FROM lunch_registrations WHERE id = $2
-      )
-    `,
-    values: [savedRecord.lunch_id, savedRecord.id],
-  })
+  if (targetIds.length === 0) {
+    if (isMultiMode) {
+      // User submitted an empty list, remove all existing registrations
+      await database.query({
+        text: `DELETE FROM lunch_registrations WHERE guest_id = $1`,
+        values: [guest_id],
+      })
+      return {
+        registrations: [],
+        registered_lunch_ids: [],
+        registration: null,
+        position: 0,
+        lunch: null,
+      }
+    }
+    throw new ValidationError({
+      message: "Selecione pelo menos uma mesa de almoço.",
+      action: "Escolha uma das mesas disponíveis para continuar.",
+    })
+  }
 
-  const position = positionResult.rows[0]?.position || 1
+  if (!allowMultiple && targetIds.length > 1) {
+    throw new ValidationError({
+      message: "O evento permite a inscrição em apenas 1 mesa temática.",
+      action: "Selecione apenas uma mesa para continuar.",
+    })
+  }
+
+  if (maxAllowed && targetIds.length > maxAllowed) {
+    throw new ValidationError({
+      message: `O evento permite a inscrição em no máximo ${maxAllowed} mesa(s).`,
+      action: `Selecione no máximo ${maxAllowed} mesa(s) e tente novamente.`,
+    })
+  }
+
+  if (!allowMultiple && targetIds.length === 1) {
+    // In single mode, ensure any existing registrations for other tables are removed
+    await database.query({
+      text: `DELETE FROM lunch_registrations WHERE guest_id = $1 AND lunch_id != $2`,
+      values: [guest_id, targetIds[0]],
+    })
+  }
+
+  // 3. Validate each lunch exists and is active
+  const validatedLunches = []
+  for (const id of targetIds) {
+    validateUUID(id)
+    const lunchData = await lunch.findById(id)
+    if (!lunchData || !lunchData.active) {
+      throw new ValidationError({
+        message: `A mesa "${lunchData?.title || id}" não está mais disponível.`,
+        action: "Por favor, selecione outra mesa disponível.",
+      })
+    }
+    validatedLunches.push(lunchData)
+  }
+
+  // 4. Query current registrations for this guest
+  const currentRegQuery = await database.query({
+    text: `SELECT id, lunch_id, created_at FROM lunch_registrations WHERE guest_id = $1`,
+    values: [guest_id],
+  })
+  const currentMap = new Map(currentRegQuery.rows.map((r) => [r.lunch_id, r]))
+
+  // In multi mode: remove registrations for tables no longer in targetIds
+  if (isMultiMode) {
+    const toRemove = currentRegQuery.rows.filter(
+      (r) => !targetIds.includes(r.lunch_id),
+    )
+    for (const r of toRemove) {
+      await database.query({
+        text: `DELETE FROM lunch_registrations WHERE id = $1`,
+        values: [r.id],
+      })
+    }
+  }
+
+  // 5. Insert new or keep existing
+  const savedRecords = []
+  for (const lunchData of validatedLunches) {
+    let rec = currentMap.get(lunchData.id)
+
+    if (!rec) {
+      const insertResult = await database.query({
+        text: `
+          INSERT INTO lunch_registrations (
+            lunch_id,
+            guest_id,
+            sale_id
+          ) VALUES ($1, $2, $3)
+          RETURNING *
+        `,
+        values: [lunchData.id, guest_id, sale_id],
+      })
+      rec = insertResult.rows[0]
+    } else {
+      // Update sale_id and updated_at
+      const updateResult = await database.query({
+        text: `
+          UPDATE lunch_registrations
+          SET 
+            sale_id = $1,
+            updated_at = timezone('utc', now())
+          WHERE id = $2
+          RETURNING *
+        `,
+        values: [sale_id, rec.id],
+      })
+      rec = updateResult.rows[0]
+    }
+
+    // Calculate queue position for this table
+    const posQuery = await database.query({
+      text: `
+        SELECT COUNT(*)::int as position
+        FROM lunch_registrations
+        WHERE lunch_id = $1 AND created_at <= (
+          SELECT created_at FROM lunch_registrations WHERE id = $2
+        )
+      `,
+      values: [rec.lunch_id, rec.id],
+    })
+
+    savedRecords.push({
+      ...rec,
+      position: posQuery.rows[0]?.position || 1,
+      lunch: lunchData,
+    })
+  }
 
   return {
-    registration: savedRecord,
-    position,
-    lunch: lunchData,
+    registrations: savedRecords,
+    registered_lunch_ids: savedRecords.map((r) => r.lunch_id),
+    registration: savedRecords[0] || null,
+    position: savedRecords[0]?.position || 1,
+    lunch: savedRecords[0]?.lunch || null,
   }
 }
 
@@ -295,6 +367,30 @@ async function deleteByGuestId(guestId) {
     throw new NotFoundError({
       message: "Inscrição de almoço não encontrada para este participante.",
       action: "Verifique o identificador e tente novamente.",
+    })
+  }
+
+  return result.rows[0]
+}
+
+async function deleteByGuestAndLunch(guestId, lunchId) {
+  validateUUID(guestId)
+  validateUUID(lunchId)
+
+  const result = await database.query({
+    text: `
+      DELETE FROM lunch_registrations
+      WHERE guest_id = $1 AND lunch_id = $2
+      RETURNING *
+    `,
+    values: [guestId, lunchId],
+  })
+
+  if (result.rowCount === 0) {
+    throw new NotFoundError({
+      message:
+        "Inscrição de almoço não encontrada para este participante e mesa.",
+      action: "Verifique os dados e tente novamente.",
     })
   }
 
@@ -387,6 +483,7 @@ const lunchRegistration = {
   lookupParticipant,
   registerOrUpdate,
   deleteByGuestId,
+  deleteByGuestAndLunch,
   deleteById,
   listByHotel,
 }

@@ -12,6 +12,9 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
+  Sliders,
+  Check,
+  ChevronDown,
 } from "lucide-react"
 import TableLayout from "@/components/layout/TableLayout"
 import { Button } from "@/components/ui/button"
@@ -55,6 +58,8 @@ export default function AlmocosAdminPage() {
   const [deleteAction, setDeleteAction] = useState("")
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
+  const [isSavingSettings, setIsSavingSettings] = useState(false)
+  const [expandedIds, setExpandedIds] = useState({})
 
   const {
     data: lunches,
@@ -62,6 +67,57 @@ export default function AlmocosAdminPage() {
     mutate,
     isLoading,
   } = useSWR("/api/v1/lunches?include_inactive=true", fetcher)
+
+  const { data: registrations } = useSWR("/api/v1/lunch-registrations", fetcher)
+
+  const registrationsByLunch = useMemo(() => {
+    const grouped = {}
+    for (const reg of registrations || []) {
+      if (!grouped[reg.lunch_id]) grouped[reg.lunch_id] = []
+      grouped[reg.lunch_id].push(reg)
+    }
+    return grouped
+  }, [registrations])
+
+  const { data: settings, mutate: mutateSettings } = useSWR(
+    "/api/v1/lunches/settings",
+    fetcher,
+  )
+
+  const handleRuleChange = async (value) => {
+    setIsSavingSettings(true)
+    let payload = {}
+
+    if (value === "single") {
+      payload = { allow_multiple_lunches: false, max_lunches_per_guest: 1 }
+    } else if (value === "unlimited") {
+      payload = { allow_multiple_lunches: true, max_lunches_per_guest: null }
+    } else if (value.startsWith("max_")) {
+      const num = parseInt(value.replace("max_", ""), 10)
+      payload = { allow_multiple_lunches: true, max_lunches_per_guest: num }
+    }
+
+    try {
+      const res = await fetch("/api/v1/lunches/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+
+      if (res.ok) {
+        mutateSettings()
+      } else {
+        const errorData = await res.json()
+        setDeleteError(errorData.message || "Erro ao salvar configuração.")
+        setIsErrorDialogOpen(true)
+      }
+    } catch (err) {
+      setDeleteError("Erro de comunicação ao salvar configuração.")
+      setIsErrorDialogOpen(true)
+    } finally {
+      setIsSavingSettings(false)
+    }
+  }
 
   const filteredLunches = useMemo(() => {
     if (!Array.isArray(lunches)) return []
@@ -165,7 +221,110 @@ export default function AlmocosAdminPage() {
               </span>
             </CardContent>
           </Card>
+
+          <Card className="shadow-xs border-slate-200">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs font-semibold uppercase text-slate-500">
+                Inscrições Realizadas
+              </CardDescription>
+              <CardTitle className="text-2xl font-bold text-blue-700">
+                {stats.totalRegistered}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <span className="text-xs text-slate-500">
+                Total acumulado nas filas de interesse
+              </span>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-xs border-slate-200">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs font-semibold uppercase text-slate-500">
+                Regra Atual de Inscrição
+              </CardDescription>
+              <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                {settings?.allow_multiple_lunches
+                  ? settings.max_lunches_per_guest
+                    ? `Até ${settings.max_lunches_per_guest} Mesas`
+                    : "Múltiplas (Livre)"
+                  : "Apenas 1 Mesa"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <span className="text-xs text-slate-500">
+                {settings?.allow_multiple_lunches
+                  ? "Participante pode escolher mais de uma mesa"
+                  : "Participante escolhe apenas uma única mesa"}
+              </span>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Configuração Flexível da Regra de Inscrição */}
+        <Card className="border-slate-200 shadow-xs bg-slate-50/70">
+          <CardContent className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="p-2.5 rounded-xl bg-blue-600 text-white shrink-0 shadow-xs">
+                <Sliders className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Regra de Inscrição por Participante
+                  </h3>
+                  <Badge
+                    variant="outline"
+                    className={
+                      settings?.allow_multiple_lunches
+                        ? "bg-emerald-50 text-emerald-800 border-emerald-200 font-bold text-[11px]"
+                        : "bg-amber-50 text-amber-800 border-amber-200 font-bold text-[11px]"
+                    }
+                  >
+                    {settings?.allow_multiple_lunches
+                      ? settings.max_lunches_per_guest
+                        ? `Múltiplas (Até ${settings.max_lunches_per_guest} mesas)`
+                        : "Múltiplas Mesas (Livre)"
+                      : "Apenas 1 Mesa por Participante"}
+                  </Badge>
+                </div>
+                <p className="text-xs text-slate-500">
+                  {settings?.allow_multiple_lunches
+                    ? "Congressistas podem selecionar mais de uma mesa no formulário público."
+                    : "Congressistas podem escolher somente uma única mesa (a nova escolha substitui a anterior)."}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <label className="text-xs font-semibold text-slate-600">
+                Modo no Formulário:
+              </label>
+              <select
+                value={
+                  !settings?.allow_multiple_lunches
+                    ? "single"
+                    : settings?.max_lunches_per_guest
+                      ? `max_${settings.max_lunches_per_guest}`
+                      : "unlimited"
+                }
+                disabled={isSavingSettings || !settings}
+                onChange={(e) => handleRuleChange(e.target.value)}
+                className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer shadow-xs"
+              >
+                <option value="single">Apenas 1 mesa por participante</option>
+                <option value="unlimited">Múltiplas mesas (Sem limite)</option>
+                <option value="max_2">Múltiplas mesas (Máximo 2 mesas)</option>
+                <option value="max_3">Múltiplas mesas (Máximo 3 mesas)</option>
+                <option value="max_4">Múltiplas mesas (Máximo 4 mesas)</option>
+                <option value="max_5">Múltiplas mesas (Até 5 mesas)</option>
+              </select>
+              {isSavingSettings && (
+                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Barra de Filtro / Busca com Botão Nova Mesa */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -298,9 +457,55 @@ export default function AlmocosAdminPage() {
                       </div>
                     </div>
 
+                    {/* Interessados cadastrados */}
+                    {expandedIds[item.id] && (
+                      <div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                          Interessados
+                        </span>
+                        {(registrationsByLunch[item.id] || []).length === 0 ? (
+                          <p className="text-xs text-slate-500 mt-1.5">
+                            Nenhum interessado cadastrado.
+                          </p>
+                        ) : (
+                          <ul className="mt-1.5 space-y-1.5 max-h-60 overflow-y-auto">
+                            {registrationsByLunch[item.id].map((reg) => (
+                              <li
+                                key={reg.id}
+                                className="text-xs bg-slate-50 border border-slate-200/80 rounded-md px-2.5 py-1.5"
+                              >
+                                <p className="font-semibold text-slate-800">
+                                  {reg.participant_name}
+                                </p>
+                                <p className="text-slate-500">
+                                  {[
+                                    reg.company_name,
+                                    reg.participant_email,
+                                    reg.participant_phone,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" • ")}
+                                </p>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+
                     {/* Rodapé com Inscritos e Ações */}
                     <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-600 font-semibold">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedIds((prev) => ({
+                            ...prev,
+                            [item.id]: !prev[item.id],
+                          }))
+                        }
+                        className="flex items-center gap-1.5 text-xs text-slate-600 font-semibold hover:text-blue-600 cursor-pointer"
+                        aria-expanded={!!expandedIds[item.id]}
+                      >
                         <Users className="w-4 h-4 text-blue-600" />
                         <span>
                           {item.registered_count ?? 0}{" "}
@@ -308,7 +513,12 @@ export default function AlmocosAdminPage() {
                             ? "interessado"
                             : "interessados"}
                         </span>
-                      </div>
+                        <ChevronDown
+                          className={`w-3.5 h-3.5 transition-transform ${
+                            expandedIds[item.id] ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
 
                       <div className="flex items-center gap-1">
                         <LunchDialog

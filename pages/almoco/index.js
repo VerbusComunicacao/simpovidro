@@ -57,10 +57,10 @@ export default function AlmocoPage() {
   // Participant & Lunches Data
   const [participant, setParticipant] = useState(null)
   const [availableLunches, setAvailableLunches] = useState([])
-  const [existingRegistration, setExistingRegistration] = useState(null)
+  const [existingRegistrations, setExistingRegistrations] = useState([])
 
-  // Step 2: Selection State
-  const [selectedLunchId, setSelectedLunchId] = useState("")
+  // Step 2: Selection State (Multiple Tables)
+  const [selectedLunchIds, setSelectedLunchIds] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
 
@@ -80,6 +80,17 @@ export default function AlmocoPage() {
       }
     }
     setLookupError("")
+  }
+
+  const toggleLunchSelection = (lunchId) => {
+    setSelectedLunchIds((prev) => {
+      if (prev.includes(lunchId)) {
+        return prev.filter((id) => id !== lunchId)
+      } else {
+        return [...prev, lunchId]
+      }
+    })
+    setSubmitError("")
   }
 
   const handleLookupSubmit = async (e) => {
@@ -131,12 +142,16 @@ export default function AlmocoPage() {
 
       setParticipant(data.participant)
       setAvailableLunches(data.available_lunches || [])
-      setExistingRegistration(data.existing_registration || null)
 
-      if (data.existing_registration?.lunch_id) {
-        setSelectedLunchId(data.existing_registration.lunch_id)
-      } else if (data.available_lunches?.length > 0) {
-        setSelectedLunchId(data.available_lunches[0].id)
+      const regs =
+        data.existing_registrations ||
+        (data.existing_registration ? [data.existing_registration] : [])
+      setExistingRegistrations(regs)
+
+      if (regs.length > 0) {
+        setSelectedLunchIds(regs.map((r) => r.lunch_id))
+      } else {
+        setSelectedLunchIds([])
       }
 
       setCurrentStep(2)
@@ -151,11 +166,11 @@ export default function AlmocoPage() {
   }
 
   const handleConfirmLunch = async () => {
-    if (!selectedLunchId) {
+    if (selectedLunchIds.length === 0) {
       setSubmitError(
         t(
-          "Por favor, selecione uma das mesas para continuar.",
-          "Please select one of the tables to continue.",
+          "Por favor, selecione ao menos uma mesa para continuar.",
+          "Please select at least one table to continue.",
         ),
       )
       return
@@ -171,7 +186,7 @@ export default function AlmocoPage() {
         body: JSON.stringify({
           guest_id: participant.guest_id,
           sale_id: participant.sale_id,
-          lunch_id: selectedLunchId,
+          lunch_ids: selectedLunchIds,
         }),
       })
 
@@ -181,18 +196,19 @@ export default function AlmocoPage() {
         throw new Error(
           data.message ||
             t(
-              "Erro ao salvar inscrição na mesa.",
-              "Error saving lunch table registration.",
+              "Erro ao salvar inscrição nas mesas.",
+              "Error saving lunch table registrations.",
             ),
         )
       }
 
       setSubmissionResult(data)
-      setExistingRegistration(data.registration)
+      setExistingRegistrations(data.registrations || [])
       setCurrentStep(3)
     } catch (err) {
       setSubmitError(
-        err.message || t("Erro ao confirmar mesa.", "Error confirming table."),
+        err.message ||
+          t("Erro ao confirmar mesas.", "Error confirming tables."),
       )
     } finally {
       setIsSubmitting(false)
@@ -419,7 +435,8 @@ export default function AlmocoPage() {
                 onClick={() => {
                   setCurrentStep(1)
                   setParticipant(null)
-                  setExistingRegistration(null)
+                  setExistingRegistrations([])
+                  setSelectedLunchIds([])
                 }}
                 className="text-xs text-slate-600 hover:text-slate-900 border-slate-200 shrink-0 cursor-pointer"
               >
@@ -428,22 +445,26 @@ export default function AlmocoPage() {
               </Button>
             </div>
 
-            {existingRegistration && (
-              <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 flex items-start sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
+            {existingRegistrations.length > 0 && (
+              <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-200 text-blue-900 space-y-2.5">
+                <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0" />
-                  <div className="text-xs sm:text-sm">
-                    <span className="font-semibold text-blue-950">
-                      {t(
-                        "Você já possui registro de interesse em:",
-                        "You are currently registered for:",
-                      )}
-                    </span>{" "}
-                    <strong className="text-blue-700 font-bold">
-                      {existingRegistration.lunch_title}
-                    </strong>{" "}
-                    (Posição na fila: #{existingRegistration.position})
-                  </div>
+                  <span className="font-bold text-xs sm:text-sm text-blue-950">
+                    {t(
+                      "Suas inscrições já confirmadas:",
+                      "Your confirmed table registrations:",
+                    )}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-0.5">
+                  {existingRegistrations.map((reg) => (
+                    <div
+                      key={reg.id}
+                      className="inline-flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-blue-200 text-xs text-blue-950 font-medium shadow-2xs"
+                    >
+                      <span className="font-bold">{reg.lunch_title}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -455,17 +476,41 @@ export default function AlmocoPage() {
               </div>
             )}
 
-            {/* Lista dos 5 Almoços / Mesas Temáticas */}
+            {/* Lista dos Almoços / Mesas Temáticas */}
             <div className="space-y-4">
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Utensils className="w-4 h-4 text-blue-600" />
-                {t("Escolha sua mesa temática", "Choose your thematic table")}
-              </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Utensils className="w-4 h-4 text-blue-600" />
+                  {t(
+                    "Escolha suas mesas temáticas",
+                    "Choose your thematic tables",
+                  )}
+                </h2>
+                <div className="text-xs font-semibold text-slate-500">
+                  {selectedLunchIds.length === 0
+                    ? t("Nenhuma mesa selecionada", "No table selected")
+                    : selectedLunchIds.length === 1
+                      ? t("1 mesa selecionada", "1 table selected")
+                      : `${selectedLunchIds.length} ${t("mesas selecionadas", "tables selected")}`}
+                </div>
+              </div>
+
+              <div className="p-3 bg-amber-50/70 border border-amber-200/60 rounded-xl text-amber-900 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>
+                  {t(
+                    "Você pode se inscrever em mais de uma mesa. As vagas estarão sujeitas à disponibilidade.",
+                    "You can sign up for more than one table. Seats are subject to availability.",
+                  )}
+                </span>
+              </div>
 
               <div className="grid grid-cols-1 gap-4">
                 {availableLunches.map((item) => {
-                  const isSelected = selectedLunchId === item.id
-                  const isCurrent = existingRegistration?.lunch_id === item.id
+                  const isSelected = selectedLunchIds.includes(item.id)
+                  const existingReg = existingRegistrations.find(
+                    (r) => r.lunch_id === item.id,
+                  )
                   const speakersList = (item.speakers || "")
                     .split(",")
                     .map((s) => s.trim())
@@ -474,7 +519,7 @@ export default function AlmocoPage() {
                   return (
                     <div
                       key={item.id}
-                      onClick={() => setSelectedLunchId(item.id)}
+                      onClick={() => toggleLunchSelection(item.id)}
                       className={`relative rounded-2xl border-2 transition-all p-5 cursor-pointer shadow-sm ${
                         isSelected
                           ? "border-blue-600 bg-blue-50/40 ring-2 ring-blue-600/20"
@@ -485,9 +530,15 @@ export default function AlmocoPage() {
                         <div className="flex-1 space-y-2">
                           {/* Badges */}
                           <div className="flex flex-wrap items-center gap-2">
-                            {isCurrent && (
+                            {existingReg && (
+                              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-600 text-white flex items-center gap-1">
+                                <Check className="w-3 h-3 stroke-[3]" />
+                                {t("Inscrito", "Registered")}
+                              </span>
+                            )}
+                            {isSelected && (
                               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-600 text-white">
-                                {t("Sua escolha atual", "Your current choice")}
+                                {t("Selecionada", "Selected")}
                               </span>
                             )}
                           </div>
@@ -538,12 +589,12 @@ export default function AlmocoPage() {
                           </div>
                         </div>
 
-                        {/* Radio Selection Indicator */}
-                        <div className="flex md:flex-col items-center justify-between md:justify-start gap-3 shrink-0 pt-2 md:pt-0">
+                        {/* Checkbox indicator */}
+                        <div className="flex md:flex-col items-center justify-between md:justify-start gap-2.5 shrink-0 pt-2 md:pt-0">
                           <div
-                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                            className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
                               isSelected
-                                ? "border-blue-600 bg-blue-600 text-white"
+                                ? "border-blue-600 bg-blue-600 text-white shadow-xs"
                                 : "border-slate-300 bg-white"
                             }`}
                           >
@@ -579,7 +630,7 @@ export default function AlmocoPage() {
               </Button>
               <Button
                 onClick={handleConfirmLunch}
-                disabled={isSubmitting || !selectedLunchId}
+                disabled={isSubmitting || selectedLunchIds.length === 0}
                 className="w-full sm:w-auto h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md gap-2 cursor-pointer transition-all"
               >
                 {isSubmitting ? (
@@ -590,12 +641,20 @@ export default function AlmocoPage() {
                 ) : (
                   <>
                     <CheckCircle2 className="w-4 h-4" />
-                    {existingRegistration
-                      ? t("Atualizar Escolha da Mesa", "Update Table Selection")
-                      : t(
-                          "Confirmar Escolha da Mesa",
-                          "Confirm Table Selection",
-                        )}
+                    {selectedLunchIds.length > 1
+                      ? t(
+                          `Confirmar Interesse nas ${selectedLunchIds.length} Mesas`,
+                          `Confirm Interest in ${selectedLunchIds.length} Tables`,
+                        )
+                      : existingRegistrations.length > 0
+                        ? t(
+                            "Atualizar Escolha de Mesas",
+                            "Update Tables Selection",
+                          )
+                        : t(
+                            "Confirmar Escolha da Mesa",
+                            "Confirm Table Selection",
+                          )}
                   </>
                 )}
               </Button>
@@ -619,9 +678,15 @@ export default function AlmocoPage() {
                   "Registration Successfully Received!",
                 )}
               </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                {t(
+                  "Suas escolhas de mesas temáticas foram gravadas com sucesso.",
+                  "Your thematic table choices have been saved successfully.",
+                )}
+              </p>
 
-              {/* Box com o comprovante e a posição na fila */}
-              <div className="mt-6 p-5 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-3">
+              {/* Box com o comprovante e as mesas */}
+              <div className="mt-6 p-5 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                   <div>
                     <span className="text-xs text-slate-400 uppercase font-semibold">
@@ -631,19 +696,40 @@ export default function AlmocoPage() {
                       {participant?.participant_name}
                     </p>
                   </div>
+                  <span className="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full">
+                    {submissionResult.registrations?.length || 1}{" "}
+                    {t("mesa(s)", "table(s)")}
+                  </span>
                 </div>
 
-                <div>
+                <div className="space-y-3">
                   <span className="text-xs text-slate-400 uppercase font-semibold">
-                    {t("Mesa Escolhida", "Selected Table")}
+                    {t("Mesas Escolhidas", "Selected Tables")}
                   </span>
-                  <p className="text-base font-bold text-slate-900">
-                    {submissionResult.lunch?.title}
-                  </p>
-                  <p className="text-xs text-blue-700 font-semibold mt-1">
-                    {t("Painelistas:", "Panelists:")}{" "}
-                    {submissionResult.lunch?.speakers}
-                  </p>
+
+                  {(
+                    submissionResult.registrations || [
+                      {
+                        lunch: submissionResult.lunch,
+                        position: submissionResult.position,
+                      },
+                    ]
+                  ).map((item, idx) => (
+                    <div
+                      key={item.id || idx}
+                      className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-1 shadow-2xs"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-bold text-slate-900">
+                          {item.lunch?.title || item.lunch_title}
+                        </p>
+                      </div>
+                      <p className="text-xs text-blue-700 font-medium">
+                        {t("Painelistas:", "Panelists:")}{" "}
+                        {item.lunch?.speakers || item.lunch_speakers}
+                      </p>
+                    </div>
+                  ))}
                 </div>
 
                 <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
@@ -664,7 +750,7 @@ export default function AlmocoPage() {
                   className="w-full sm:w-auto rounded-xl border-slate-300 text-slate-700 cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4 mr-2" />
-                  {t("Alterar Escolha de Mesa", "Change Table Selection")}
+                  {t("Alterar Escolhas de Mesas", "Change Tables Selection")}
                 </Button>
                 <Button
                   onClick={() => router.push("/")}

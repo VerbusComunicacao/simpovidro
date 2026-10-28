@@ -272,12 +272,142 @@ async function deleteById(lunchId) {
   return result.rows[0]
 }
 
+async function getSettings(hotelId = null) {
+  let resolvedHotelId = hotelId
+  if (resolvedHotelId) {
+    validateUUID(resolvedHotelId)
+  } else {
+    const activeHotel = await database.query({
+      text: "SELECT id FROM hotels WHERE active = true LIMIT 1",
+    })
+    if (activeHotel.rowCount > 0) {
+      resolvedHotelId = activeHotel.rows[0].id
+    } else {
+      const fallbackHotel = await database.query({
+        text: "SELECT id FROM hotels ORDER BY created_at DESC LIMIT 1",
+      })
+      if (fallbackHotel.rowCount > 0) {
+        resolvedHotelId = fallbackHotel.rows[0].id
+      }
+    }
+  }
+
+  if (!resolvedHotelId) {
+    return {
+      hotel_id: null,
+      allow_multiple_lunches: true,
+      max_lunches_per_guest: null,
+    }
+  }
+
+  try {
+    const result = await database.query({
+      text: "SELECT id, allow_multiple_lunches, max_lunches_per_guest FROM hotels WHERE id = $1",
+      values: [resolvedHotelId],
+    })
+
+    if (result.rowCount === 0) {
+      throw new NotFoundError({
+        message: "Hotel não encontrado.",
+        action: "Verifique o hotel informado.",
+      })
+    }
+
+    const row = result.rows[0]
+    return {
+      hotel_id: row.id,
+      allow_multiple_lunches: row.allow_multiple_lunches !== false,
+      max_lunches_per_guest: row.max_lunches_per_guest || null,
+    }
+  } catch (err) {
+    return {
+      hotel_id: resolvedHotelId,
+      allow_multiple_lunches: true,
+      max_lunches_per_guest: null,
+    }
+  }
+}
+
+async function updateSettings(hotelId = null, data = {}) {
+  let resolvedHotelId = hotelId
+  if (resolvedHotelId) {
+    validateUUID(resolvedHotelId)
+  } else {
+    const activeHotel = await database.query({
+      text: "SELECT id FROM hotels WHERE active = true LIMIT 1",
+    })
+    if (activeHotel.rowCount > 0) {
+      resolvedHotelId = activeHotel.rows[0].id
+    } else {
+      const fallbackHotel = await database.query({
+        text: "SELECT id FROM hotels ORDER BY created_at DESC LIMIT 1",
+      })
+      if (fallbackHotel.rowCount > 0) {
+        resolvedHotelId = fallbackHotel.rows[0].id
+      }
+    }
+  }
+
+  if (!resolvedHotelId) {
+    throw new ValidationError({
+      message: "Nenhum hotel ativo encontrado para atualizar configurações.",
+      action: "Cadastre um hotel antes de alterar configurações.",
+    })
+  }
+
+  const allowMultiple =
+    data.allow_multiple_lunches !== undefined
+      ? Boolean(data.allow_multiple_lunches)
+      : true
+
+  let maxLunches = null
+  if (
+    data.max_lunches_per_guest !== undefined &&
+    data.max_lunches_per_guest !== null &&
+    data.max_lunches_per_guest !== ""
+  ) {
+    maxLunches = parseInt(data.max_lunches_per_guest, 10)
+    if (isNaN(maxLunches) || maxLunches < 1) {
+      maxLunches = null
+    }
+  }
+
+  const updateResult = await database.query({
+    text: `
+      UPDATE hotels
+      SET 
+        allow_multiple_lunches = $1,
+        max_lunches_per_guest = $2,
+        updated_at = timezone('utc', now())
+      WHERE id = $3
+      RETURNING id, allow_multiple_lunches, max_lunches_per_guest
+    `,
+    values: [allowMultiple, maxLunches, resolvedHotelId],
+  })
+
+  if (updateResult.rowCount === 0) {
+    throw new NotFoundError({
+      message: "Hotel não encontrado para atualizar configurações.",
+      action: "Verifique o identificador do hotel e tente novamente.",
+    })
+  }
+
+  const row = updateResult.rows[0]
+  return {
+    hotel_id: row.id,
+    allow_multiple_lunches: row.allow_multiple_lunches !== false,
+    max_lunches_per_guest: row.max_lunches_per_guest || null,
+  }
+}
+
 const lunch = {
   findAllByHotelId,
   findById,
   create,
   update,
   deleteById,
+  getSettings,
+  updateSettings,
 }
 
 export default lunch

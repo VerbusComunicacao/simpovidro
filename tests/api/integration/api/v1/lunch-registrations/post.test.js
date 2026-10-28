@@ -296,7 +296,7 @@ describe("POST /api/v1/lunch-registrations and /lookup", () => {
         body: JSON.stringify({
           guest_id: guest2.id,
           sale_id: sale2.id,
-          lunch_id: newTargetLunch.id,
+          lunch_ids: [newTargetLunch.id],
         }),
       },
     )
