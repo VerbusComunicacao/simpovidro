@@ -13,8 +13,8 @@ async function lookupParticipant(document) {
 
   const raw = document.toString().trim()
   const cleanCpf = raw.replace(/\D/g, "")
-  const isLikelyCpf =
-    cleanCpf.length === 11 || (cleanCpf.length > 0 && /^\d+$/.test(raw))
+  const cleanAlphaNum = raw.toLowerCase().replace(/[^a-z0-9]/g, "")
+  const isLikelyCpf = cleanCpf.length === 11
 
   // 1. Resolve active hotel
   let activeHotel = null
@@ -61,15 +61,18 @@ async function lookupParticipant(document) {
       JOIN hotels h ON s.hotel_id = h.id
       LEFT JOIN companies c ON s.company_id = c.id
       WHERE 
-        s.hotel_id = $3
+        s.hotel_id = $4
         AND (
-          (LENGTH($1) > 0 AND REGEXP_REPLACE(COALESCE(g.cpf_number, ''), '\\D', '', 'g') = $1)
+          (LENGTH($1) = 11 AND REGEXP_REPLACE(COALESCE(g.cpf_number, ''), '\\D', '', 'g') = $1)
           OR (LENGTH($2) > 0 AND LOWER(TRIM(COALESCE(g.passport_number, ''))) = LOWER(TRIM($2)))
+          OR (LENGTH($3) > 0 AND REGEXP_REPLACE(LOWER(COALESCE(g.passport_number, '')), '[^a-z0-9]', '', 'g') = $3)
+          OR (LENGTH($1) > 0 AND REGEXP_REPLACE(COALESCE(g.passport_number, ''), '\\D', '', 'g') = $1)
+          OR (LENGTH($1) > 0 AND REGEXP_REPLACE(COALESCE(g.cpf_number, ''), '\\D', '', 'g') = $1)
         )
       ORDER BY s.created_at DESC
       LIMIT 1
     `,
-    values: [cleanCpf, raw, activeHotel.id],
+    values: [cleanCpf, raw, cleanAlphaNum, activeHotel.id],
   })
 
   if (guestQuery.rowCount === 0) {
@@ -129,10 +132,15 @@ async function lookupParticipant(document) {
   // 4. Fetch available lunches for this hotel
   const availableLunches = await lunch.findAllByHotelId(activeHotel.id)
 
+  const isCpf =
+    Boolean(participant.participant_cpf) &&
+    cleanCpf.length === 11 &&
+    participant.participant_cpf.replace(/\D/g, "") === cleanCpf
+
   return {
     found: true,
     document: raw,
-    document_type: isLikelyCpf ? "cpf" : "passport",
+    document_type: isCpf ? "cpf" : "passport",
     hotel: activeHotel,
     participant: {
       user_id: participant.user_id,
@@ -140,8 +148,8 @@ async function lookupParticipant(document) {
       sale_id: participant.sale_id,
       sale_number: participant.sale_number,
       participant_name: participant.participant_name,
-      participant_cpf: participant.participant_cpf || (isLikelyCpf ? raw : ""),
-      passport_number: participant.passport_number || (!isLikelyCpf ? raw : ""),
+      participant_cpf: participant.participant_cpf || "",
+      passport_number: participant.passport_number || "",
       participant_email: participant.participant_email || "",
       participant_phone: participant.participant_phone || "",
       company_name: participant.company_name || "",
