@@ -217,6 +217,12 @@ const reportTypes = [
     description:
       "Lista de participantes inscritos nos torneios de Futebol, Vôlei e Tênis",
   },
+  {
+    value: "lunches",
+    label: "Almoço com Painelistas (Mesas Temáticas)",
+    description:
+      "Lista de inscritos e ordem de interesse nas mesas temáticas durante os almoços",
+  },
 ]
 
 export default function RelatoriosPage() {

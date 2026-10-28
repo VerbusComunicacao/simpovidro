@@ -16,12 +16,14 @@ import {
   X,
   FileText,
   CreditCard,
+  Utensils,
 } from "lucide-react"
 import Link from "next/link"
 
 const navItems = [
   { href: "/table", label: "Hotéis", icon: Hotel },
   { href: "/table/inscricoes", label: "Inscrições", icon: ClipboardList },
+  { href: "/table/almocos", label: "Almoços", icon: Utensils },
   { href: "/table/relatorios", label: "Relatórios", icon: FileText },
   { href: "/table/hospedes", label: "Hóspedes", icon: Users },
   { href: "/table/empresas", label: "Empresas", icon: Building2 },

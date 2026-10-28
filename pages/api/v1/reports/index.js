@@ -87,6 +87,10 @@ async function getHandler(request, response) {
     case "by-month":
       reportData = await report.generateByMonthReport(hotel_id)
       break
+    case "lunches":
+    case "almocos":
+      reportData = await report.generateLunchesReport(hotel_id)
+      break
     default:
       throw new ValidationError({
         message: "Tipo de relatório inválido.",
