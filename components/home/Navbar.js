@@ -28,7 +28,11 @@ export default function Navbar({
     showTransfer !== undefined ? showTransfer : router?.pathname === "/"
 
   const currentNavItems = isMainPage
-    ? [...navItems, { name: "Transfer", id: "transfer", href: "/transfer" }]
+    ? [
+        ...navItems,
+        { name: "Transfer", id: "transfer", href: "/transfer" },
+        { name: "Almoços", id: "almoco", href: "/almoco" },
+      ]
     : navItems
 
   return (
@@ -66,7 +70,9 @@ export default function Navbar({
                         ? t("Torneios", "Tournaments")
                         : item.id === "transfer"
                           ? t("Transfer", "Transfer")
-                          : item.name
+                          : item.id === "almoco"
+                            ? t("Almoços", "Lunches")
+                            : item.name
 
             if (item.href) {
               return (
@@ -155,7 +161,9 @@ export default function Navbar({
                         ? t("Torneios", "Tournaments")
                         : item.id === "transfer"
                           ? t("Transfer", "Transfer")
-                          : item.name
+                          : item.id === "almoco"
+                            ? t("Almoços", "Lunches")
+                            : item.name
 
             if (item.href) {
               return (
