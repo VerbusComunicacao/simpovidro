@@ -290,14 +290,14 @@ export default function AlmocoPage() {
           <div className="relative z-10 max-w-2xl">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-3">
               {t(
-                "Mesas Temáticas & Mentoria com os Painelistas",
-                "Thematic Tables & Mentorship with Panelists",
+                "Vagas limitadas: converse com os convidados do 17º Simpovidro",
+                "Limited seating: chat with 17th Simpovidro guests",
               )}
             </h1>
             <p className="text-sm sm:text-base text-blue-100 leading-relaxed">
               {t(
-                "Participe de conversas exclusivas e aproxime-se das maiores lideranças e especialistas do setor vidreiro.",
-                "Join exclusive conversations and get closer to leading experts in the glass industry.",
+                "Participe de conversas exclusivas e aproxime-se das maiores lideranças e especialistas.",
+                "Join exclusive conversations and get closer to leading experts.",
               )}
             </p>
           </div>
