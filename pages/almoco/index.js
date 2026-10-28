@@ -742,14 +742,14 @@ export default function AlmocoPage() {
 
               <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
                 {t(
-                  "Interesse Registrado com Sucesso! Em breve alguém da Abravidro entrará em contato com você.",
-                  "Registration Successfully Received! Someone from Abravidro will contact you shortly.",
+                  "Interesse Registrado com Sucesso!",
+                  "Registration Successfully Received!",
                 )}
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 {t(
-                  "Suas escolhas de mesas temáticas foram gravadas com sucesso.",
-                  "Your thematic table choices have been saved successfully.",
+                  "Em breve alguém da Abravidro entrará em contato com você.",
+                  "Someone from Abravidro will contact you shortly.",
                 )}
               </p>
 
