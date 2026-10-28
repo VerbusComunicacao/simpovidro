@@ -177,6 +177,8 @@ describe("PATCH /api/v1/hotels/[id]", () => {
         active: false,
         checkout_question: null,
         checkout_question_en: null,
+        allow_multiple_lunches: true,
+        max_lunches_per_guest: null,
         price_policies: [],
         user_id: createdUser.id,
         created_at: hotelCreated.created_at.toISOString(),

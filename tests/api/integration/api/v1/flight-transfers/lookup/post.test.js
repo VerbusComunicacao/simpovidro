@@ -36,6 +36,9 @@ describe("POST /api/v1/flight-transfers/lookup", () => {
     // 3. Create Room in Active Hotel
     room = await orchestrator.createRoom(adminUser.id, {
       hotel_id: activeHotel.id,
+      total_rooms: 10,
+      available_rooms: 5,
+      blocked_rooms: 0,
     })
 
     // 4. Create Regular User with Confirmed Registration (Brazilian Guest)

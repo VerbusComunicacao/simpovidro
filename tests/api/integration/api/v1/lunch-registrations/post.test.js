@@ -296,7 +296,7 @@ describe("POST /api/v1/lunch-registrations and /lookup", () => {
         body: JSON.stringify({
           guest_id: guest2.id,
           sale_id: sale2.id,
-          lunch_id: newTargetLunch.id,
+          lunch_ids: [newTargetLunch.id],
         }),
       },
     )
@@ -332,5 +332,100 @@ describe("POST /api/v1/lunch-registrations and /lookup", () => {
     expect(p2).toBeDefined()
     expect(p1["CPF"]).toBe(confirmedCpf1)
     expect(p2["CPF"]).toBe(confirmedCpf2)
+  })
+
+  describe("one table per day rule", () => {
+    const register = (body) =>
+      fetch(`${orchestrator.webserverUrl}/api/v1/lunch-registrations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          guest_id: guest1.id,
+          sale_id: sale1.id,
+          ...body,
+        }),
+      })
+
+    beforeAll(async () => {
+      await orchestrator.setUserFeatures(adminUser.id, [
+        "create:session",
+        "read:session",
+        "update:content",
+      ])
+      const session = await orchestrator.createSession(adminUser.id)
+      const dates = {
+        2: "2026-11-06",
+        3: "2026-11-06",
+        4: "2026-11-07",
+      }
+      for (const [index, lunchDate] of Object.entries(dates)) {
+        const res = await fetch(
+          `${orchestrator.webserverUrl}/api/v1/lunches/${availableLunches[index].id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: `session_id=${session.token}`,
+            },
+            body: JSON.stringify({
+              lunch_date: lunchDate,
+              lunch_time: "13:00",
+            }),
+          },
+        )
+        if (res.status !== 200) {
+          throw new Error(`Failed to set lunch date: ${res.status}`)
+        }
+      }
+    })
+
+    test("registers in a table on a given day", async () => {
+      const res = await register({ lunch_id: availableLunches[2].id })
+      expect(res.status).toBe(201)
+    })
+
+    test("rejects a second table on the same day", async () => {
+      const res = await register({ lunch_id: availableLunches[3].id })
+      expect(res.status).toBe(400)
+
+      const data = await res.json()
+      expect(data.message).toBe(
+        `Não é possível se inscrever em mais de uma mesa no mesmo dia (06/11/2026): "${availableLunches[2].title}" e "${availableLunches[3].title}".`,
+      )
+      expect(data.action).toBe(
+        "Escolha apenas uma mesa por dia e tente novamente.",
+      )
+    })
+
+    test("rejects two tables on the same day sent together in lunch_ids", async () => {
+      const res = await register({
+        lunch_ids: [availableLunches[2].id, availableLunches[3].id],
+      })
+      expect(res.status).toBe(400)
+    })
+
+    test("allows another table on a different day", async () => {
+      const res = await register({ lunch_id: availableLunches[4].id })
+      expect(res.status).toBe(201)
+
+      const lookup = await fetch(
+        `${orchestrator.webserverUrl}/api/v1/lunch-registrations/lookup`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ document: confirmedCpf1 }),
+        },
+      )
+      const data = await lookup.json()
+      const ids = data.existing_registrations.map((r) => r.lunch_id)
+      expect(ids).toEqual(
+        expect.arrayContaining([
+          availableLunches[0].id,
+          availableLunches[2].id,
+          availableLunches[4].id,
+        ]),
+      )
+      expect(ids).not.toContain(availableLunches[3].id)
+    })
   })
 })

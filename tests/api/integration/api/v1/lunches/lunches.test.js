@@ -220,3 +220,138 @@ describe("Lunches Admin API - CRUD Operations", () => {
     expect(afterRes.status).toBe(404)
   })
 })
+
+describe("Lunches Admin API - date and time", () => {
+  let adminSession
+  let hotel
+
+  const post = (body) =>
+    fetch(`${orchestrator.webserverUrl}/api/v1/lunches`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${adminSession.token}`,
+      },
+      body: JSON.stringify({ hotel_id: hotel.id, ...body }),
+    })
+
+  const patch = (id, body) =>
+    fetch(`${orchestrator.webserverUrl}/api/v1/lunches/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${adminSession.token}`,
+      },
+      body: JSON.stringify(body),
+    })
+
+  beforeAll(async () => {
+    const admin = await orchestrator.createUser({
+      full_name: "Admin Lunches Date Test",
+      email: "admin-lunches-date@example.com",
+      password: "password123",
+    })
+    await orchestrator.activateAdmUser(admin.id)
+    await orchestrator.setUserFeatures(admin.id, [
+      "create:session",
+      "read:session",
+      "create:content",
+      "read:content",
+      "update:content",
+    ])
+    adminSession = await orchestrator.createSession(admin.id)
+
+    hotel = await orchestrator.createHotel(admin.id, {
+      name: "Hotel Almoços Data Teste",
+      city: "Florianópolis",
+      country: "Brasil",
+      check_in_date: "2026-11-05",
+      check_out_date: "2026-11-08",
+    })
+  })
+
+  test("POST creates a lunch with date and time", async () => {
+    const res = await post({
+      title: "Mesa Sexta",
+      speakers: "Fulano de Tal",
+      lunch_date: "2026-11-06",
+      lunch_time: "13:00",
+    })
+    expect(res.status).toBe(201)
+
+    const created = await res.json()
+    expect(created.lunch_date).toBe("2026-11-06")
+    expect(created.lunch_time).toBe("13:00")
+  })
+
+  test("POST creates a lunch without date and time", async () => {
+    const res = await post({ title: "Mesa Sem Data", speakers: "Ciclano" })
+    expect(res.status).toBe(201)
+
+    const created = await res.json()
+    expect(created.lunch_date).toBeNull()
+    expect(created.lunch_time).toBeNull()
+  })
+
+  test("PATCH updates and clears date and time", async () => {
+    const created = await (
+      await post({ title: "Mesa Editável", speakers: "Beltrano" })
+    ).json()
+
+    const updatedRes = await patch(created.id, {
+      lunch_date: "2026-11-07",
+      lunch_time: "12:30",
+    })
+    expect(updatedRes.status).toBe(200)
+    const updated = await updatedRes.json()
+    expect(updated.lunch_date).toBe("2026-11-07")
+    expect(updated.lunch_time).toBe("12:30")
+
+    const clearedRes = await patch(created.id, {
+      lunch_date: null,
+      lunch_time: null,
+    })
+    const cleared = await clearedRes.json()
+    expect(cleared.lunch_date).toBeNull()
+    expect(cleared.lunch_time).toBeNull()
+  })
+
+  test("POST with invalid date or time returns 400", async () => {
+    const badDate = await post({
+      title: "Mesa Data Ruim",
+      speakers: "Fulano",
+      lunch_date: "06/11/2026",
+    })
+    expect(badDate.status).toBe(400)
+    expect((await badDate.json()).message).toBe("A data do almoço é inválida.")
+
+    const impossibleDate = await post({
+      title: "Mesa Data Impossível",
+      speakers: "Fulano",
+      lunch_date: "2026-02-31",
+    })
+    expect(impossibleDate.status).toBe(400)
+
+    const badTime = await post({
+      title: "Mesa Hora Ruim",
+      speakers: "Fulano",
+      lunch_time: "25:99",
+    })
+    expect(badTime.status).toBe(400)
+    expect((await badTime.json()).message).toBe(
+      "O horário do almoço é inválido.",
+    )
+  })
+
+  test("GET lists lunches ordered by date, undated last", async () => {
+    const res = await fetch(
+      `${orchestrator.webserverUrl}/api/v1/lunches?hotel_id=${hotel.id}`,
+    )
+    const list = await res.json()
+    const dates = list.map((l) => l.lunch_date)
+
+    const dated = dates.filter(Boolean)
+    expect(dated).toEqual([...dated].sort())
+    expect(dates.indexOf(null)).toBeGreaterThan(dates.lastIndexOf(dated[0]))
+  })
+})
