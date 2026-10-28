@@ -28,6 +28,11 @@ describe("POST /api/v1/lunch-registrations and /lookup", () => {
       password: "password123",
     })
     await orchestrator.activateAdmUser(adminUser.id)
+    await orchestrator.setUserFeatures(adminUser.id, [
+      "create:session",
+      "read:session",
+      "read:sale:others",
+    ])
 
     // 2. Create Active Hotel
     activeHotel = await orchestrator.createHotel(adminUser.id, {
@@ -42,6 +47,8 @@ describe("POST /api/v1/lunch-registrations and /lookup", () => {
     // 3. Create Room in Active Hotel
     room = await orchestrator.createRoom(adminUser.id, {
       hotel_id: activeHotel.id,
+      total_rooms: 20,
+      available_rooms: 20,
     })
 
     // 4. Create Regular User 1
@@ -52,27 +59,23 @@ describe("POST /api/v1/lunch-registrations and /lookup", () => {
     })
     await orchestrator.activateUser(regularUser1.id)
 
-    const regResponse1 = await orchestrator.createRegistration(
-      regularUser1.id,
-      {
-        room_id: room.id,
-        guests_data: [
-          {
-            name: "Participante Um",
-            badge_name: "Um",
-            email: "participante1@example.com",
-            phone: "11988887771",
-            gender: "Masculino",
-            rg_number: "123456781",
-            cpf_number: confirmedCpf1,
-            birth_date: "1990-05-15",
-          },
-        ],
-      },
-    )
-    const regData1 = await regResponse1.json()
-    sale1 = regData1.sale
-    guest1 = regData1.guests?.[0]
+    const regResult1 = await orchestrator.createRegistration(regularUser1.id, {
+      room_id: room.id,
+      guests_data: [
+        {
+          name: "Participante Um",
+          badge_name: "Um",
+          email: "participante1@example.com",
+          phone: "11988887771",
+          gender: "Masculino",
+          rg_number: "123456781",
+          cpf_number: confirmedCpf1,
+          birth_date: "1990-05-15",
+        },
+      ],
+    })
+    sale1 = { id: regResult1.saleId }
+    guest1 = { id: regResult1.guestIds[0] }
 
     // 5. Create Regular User 2
     regularUser2 = await orchestrator.createUser({
@@ -82,27 +85,23 @@ describe("POST /api/v1/lunch-registrations and /lookup", () => {
     })
     await orchestrator.activateUser(regularUser2.id)
 
-    const regResponse2 = await orchestrator.createRegistration(
-      regularUser2.id,
-      {
-        room_id: room.id,
-        guests_data: [
-          {
-            name: "Participante Dois",
-            badge_name: "Dois",
-            email: "participante2@example.com",
-            phone: "11988887772",
-            gender: "Feminino",
-            rg_number: "123456782",
-            cpf_number: confirmedCpf2,
-            birth_date: "1992-08-20",
-          },
-        ],
-      },
-    )
-    const regData2 = await regResponse2.json()
-    sale2 = regData2.sale
-    guest2 = regData2.guests?.[0]
+    const regResult2 = await orchestrator.createRegistration(regularUser2.id, {
+      room_id: room.id,
+      guests_data: [
+        {
+          name: "Participante Dois",
+          badge_name: "Dois",
+          email: "participante2@example.com",
+          phone: "11988887772",
+          gender: "Feminino",
+          rg_number: "123456782",
+          cpf_number: confirmedCpf2,
+          birth_date: "1992-08-20",
+        },
+      ],
+    })
+    sale2 = { id: regResult2.saleId }
+    guest2 = { id: regResult2.guestIds[0] }
   })
 
   test("GET /api/v1/lunches should return active lunch tables", async () => {
@@ -117,7 +116,7 @@ describe("POST /api/v1/lunch-registrations and /lookup", () => {
     availableLunches = data
 
     const titles = data.map((l) => l.title)
-    expect(titles).toContain("Mentoria Exclusiva")
+    expect(titles).toContain("Clínica de Gestão e Mudança, Além do Vidro")
     expect(titles).toContain("Energia")
     expect(titles).toContain("Mercado Global")
     expect(titles).toContain("Inteligência Artificial")

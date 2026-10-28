@@ -14,13 +14,8 @@ import {
   AlertCircle,
   Loader2,
   User,
-  Sparkles,
   RotateCcw,
   Check,
-  Zap,
-  Globe2,
-  Cpu,
-  Scale,
 } from "lucide-react"
 
 function formatCPF(value) {
@@ -44,19 +39,6 @@ const SPEAKER_IMAGES = {
   "Betânia Danelon": "/images/palestrantes/betania.jpg",
   "Lucilene Prado": "/images/palestrantes/lucilene-prado.png",
   "Halim José Abud Neto": "/images/palestrantes/halim-abud-neto.jpeg",
-}
-
-function getTableIcon(title = "") {
-  const t = title.toLowerCase()
-  if (t.includes("mentoria") || t.includes("gestão"))
-    return <Sparkles className="w-5 h-5 text-amber-500" />
-  if (t.includes("energia")) return <Zap className="w-5 h-5 text-amber-500" />
-  if (t.includes("mercado")) return <Globe2 className="w-5 h-5 text-blue-500" />
-  if (t.includes("inteligência") || t.includes("ia"))
-    return <Cpu className="w-5 h-5 text-purple-500" />
-  if (t.includes("tributár"))
-    return <Scale className="w-5 h-5 text-emerald-500" />
-  return <Utensils className="w-5 h-5 text-blue-600" />
 }
 
 export default function AlmocoPage() {
@@ -665,7 +647,12 @@ export default function AlmocoPage() {
                 </div>
 
                 <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-                  <span>{submissionResult.lunch?.time || "Almoço"}</span>
+                  <span>
+                    {t(
+                      "Mesas Temáticas • 17º Simpovidro",
+                      "Thematic Tables • 17th Simpovidro",
+                    )}
+                  </span>
                 </div>
               </div>
 

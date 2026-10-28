@@ -114,9 +114,11 @@ async function lookupParticipant(document) {
       text: `
         SELECT COUNT(*)::int as position
         FROM lunch_registrations
-        WHERE lunch_id = $1 AND created_at <= $2
+        WHERE lunch_id = $1 AND created_at <= (
+          SELECT created_at FROM lunch_registrations WHERE id = $2
+        )
       `,
-      values: [reg.lunch_id, reg.created_at],
+      values: [reg.lunch_id, reg.id],
     })
     existingRegistration = {
       ...reg,
@@ -253,9 +255,11 @@ async function registerOrUpdate({ guest_id, sale_id, lunch_id }) {
     text: `
       SELECT COUNT(*)::int as position
       FROM lunch_registrations
-      WHERE lunch_id = $1 AND created_at <= $2
+      WHERE lunch_id = $1 AND created_at <= (
+        SELECT created_at FROM lunch_registrations WHERE id = $2
+      )
     `,
-    values: [savedRecord.lunch_id, savedRecord.created_at],
+    values: [savedRecord.lunch_id, savedRecord.id],
   })
 
   const position = positionResult.rows[0]?.position || 1
