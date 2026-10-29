@@ -7,6 +7,8 @@ import discountModel from "models/discount.js"
 import {
   calculateTotalPrice,
   calculateMaxInstallments,
+  isBoletoAvailable,
+  generatePixDueDate,
   isAdult,
   isLegalAdult,
 } from "../lib/registration-helpers.js"
@@ -288,7 +290,7 @@ async function create(saleInputValues, externalClient) {
       check_out_date = targetRoom.hotel_check_out_date ||
         new Date(new Date().setDate(new Date().getDate() + 3)),
       total_amount = pricing.originalTotal,
-      payment_method = "cash",
+      payment_method,
       installments_count = 1,
       user_id = null,
       checkout_question_response = null,
@@ -301,6 +303,10 @@ async function create(saleInputValues, externalClient) {
         : dateSource.split("T")[0]
 
     const eventDate = Temporal.PlainDate.from(dateString)
+
+    // Depois do corte do parcelamento não se gera mais boleto: o padrão vira Pix
+    const boletoAvailable = isBoletoAvailable(dateString)
+    payment_method = payment_method || (boletoAvailable ? "cash" : "pix")
 
     // Enforce fixed installments count if payment method is 'installments'
     if (payment_method === "installments") {
@@ -331,6 +337,23 @@ async function create(saleInputValues, externalClient) {
     const lead_guest_id = guest_ids[0]
 
     const isFree = Number(final_amount) === 0
+
+    if (
+      !isFree &&
+      !boletoAvailable &&
+      (payment_method === "cash" || payment_method === "installments")
+    ) {
+      throw new ValidationError({
+        message:
+          lang === "en"
+            ? "Bank slip payment is no longer available for this event."
+            : "O pagamento por boleto não está mais disponível para este evento.",
+        action:
+          lang === "en"
+            ? "Choose Pix or credit card as the payment method."
+            : "Escolha Pix ou cartão de crédito como forma de pagamento.",
+      })
+    }
 
     const saleResults = await client.query({
       text: `
@@ -424,11 +447,11 @@ async function create(saleInputValues, externalClient) {
 
         await saleInstallment.createMany(installmentsToCreate, client)
       } else {
-        // cash or credit-card: 1 single installment of full amount for tracking payment
-        const singleInstallmentDate = saleInstallment.generateInstallmentDates(
-          1,
-          eventDate,
-        )[0]
+        // cash, pix or credit-card: 1 single installment of full amount for tracking payment
+        const singleInstallmentDate =
+          payment_method === "pix"
+            ? generatePixDueDate(eventDate)
+            : saleInstallment.generateInstallmentDates(1, eventDate)[0]
         await saleInstallment.createMany(
           [
             {
@@ -1547,10 +1570,10 @@ async function adjustPrice(saleId, newValue, externalClient) {
           )
         : Temporal.Now.plainDateISO()
 
-      const singleInstallmentDate = saleInstallment.generateInstallmentDates(
-        1,
-        eventDate,
-      )[0]
+      const singleInstallmentDate =
+        targetSale.payment_method === "pix"
+          ? generatePixDueDate(eventDate)
+          : saleInstallment.generateInstallmentDates(1, eventDate)[0]
 
       await saleInstallment.createMany(
         [

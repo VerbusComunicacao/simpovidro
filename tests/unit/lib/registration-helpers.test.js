@@ -1,6 +1,9 @@
 import {
   calculateMaxInstallments,
   generateInstallmentDates,
+  isBoletoAvailable,
+  generatePixDueDate,
+  PIX_DUE_DAYS_BEFORE_EVENT,
 } from "../../../lib/registration-helpers.js"
 
 // Ativa fake timers para congelar o sistema em datas específicas
@@ -48,5 +51,51 @@ describe("registration-helpers.js - Casos de Teste (Hotel 05/11)", () => {
 
     const dates = generateInstallmentDates(1, hotelEntryDate)
     expect(dates[0]).toBe("2026-10-30") // Hoje+5 seria 03/11, trava em 30/10
+  })
+})
+
+describe("registration-helpers.js - Boleto x Pix (Hotel 05/11)", () => {
+  const hotelEntryDate = "2026-11-05"
+
+  // Limite do boleto: 05/11 - 6 dias = 30/10
+
+  test("29/10 ainda permite boleto", () => {
+    jest.setSystemTime(new Date("2026-10-29T12:00:00Z"))
+
+    expect(isBoletoAvailable(hotelEntryDate)).toBe(true)
+  })
+
+  test("30/10 (dia limite) já não permite boleto", () => {
+    jest.setSystemTime(new Date("2026-10-30T12:00:00Z"))
+
+    expect(isBoletoAvailable(hotelEntryDate)).toBe(false)
+  })
+
+  test("depois do limite não permite boleto", () => {
+    jest.setSystemTime(new Date("2026-11-02T12:00:00Z"))
+
+    expect(isBoletoAvailable(hotelEntryDate)).toBe(false)
+  })
+
+  test("aceita Date além de string", () => {
+    jest.setSystemTime(new Date("2026-11-02T12:00:00Z"))
+
+    expect(isBoletoAvailable(new Date("2026-11-05T00:00:00Z"))).toBe(false)
+  })
+
+  test("sem data de check-in mantém boleto disponível", () => {
+    expect(isBoletoAvailable(null)).toBe(true)
+  })
+
+  test("Pix vence no mesmo dia do evento por padrão", () => {
+    expect(PIX_DUE_DAYS_BEFORE_EVENT).toBe(0)
+    expect(generatePixDueDate(hotelEntryDate)).toBe("2026-11-05")
+    expect(generatePixDueDate(new Date("2026-11-05T00:00:00Z"))).toBe(
+      "2026-11-05",
+    )
+  })
+
+  test("Pix sem data de check-in não gera vencimento", () => {
+    expect(generatePixDueDate(null)).toBeNull()
   })
 })

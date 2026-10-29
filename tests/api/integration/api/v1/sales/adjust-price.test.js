@@ -2,6 +2,10 @@ import orchestrator from "tests/orchestrator.js"
 import database from "infra/database.js"
 import { faker } from "@faker-js/faker"
 
+// Check-in futuro: o boleto só existe até 6 dias antes do check-in
+const addDays = (days) =>
+  new Date(Date.now() + days * 86400000).toISOString().split("T")[0]
+
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
   await orchestrator.clearDatabase()
@@ -103,8 +107,8 @@ describe("PATCH /api/v1/sales/[id]/adjust-price", () => {
 
     // 3. Create Hotel & Room
     const hotel = await orchestrator.createHotel(adminUser.id, {
-      check_in_date: "2026-11-01",
-      check_out_date: "2026-11-05",
+      check_in_date: addDays(60),
+      check_out_date: addDays(64),
     })
     const roomType = await orchestrator.createRoomType(adminUser.id)
     const roomCategory = await orchestrator.createRoomCategory(adminUser.id, {

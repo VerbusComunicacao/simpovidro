@@ -37,6 +37,8 @@ import { getInitialLocationState } from "@/lib/location-utils"
 import { Country, State } from "country-state-city"
 import {
   calculateMaxInstallments as calculateInstallments,
+  isBoletoAvailable,
+  generatePixDueDate,
   validateRoomCapacity,
   generateInstallmentDates,
   calculateSummaryPrice,
@@ -158,7 +160,11 @@ export default function CheckoutPage({
       setCustomSector("")
     }
   }, [newCompanyData.cnpj, newCompanyData.activity_sector])
-  const [paymentMethod, setPaymentMethod] = useState("cash")
+  // Depois do corte do parcelamento não há mais boleto: o padrão vira Pix
+  const boletoAvailable = isBoletoAvailable(room.hotel_check_in_date)
+  const [paymentMethod, setPaymentMethod] = useState(
+    boletoAvailable ? "cash" : "pix",
+  )
   const [installmentsCount, setInstallmentsCount] = useState(1)
   const [cardBrand, setCardBrand] = useState("")
   const [cardInstallments, setCardInstallments] = useState(1)
@@ -2698,47 +2704,73 @@ export default function CheckoutPage({
                               : "Forma de Pagamento"}
                           </h3>
                           {!isInternational && (
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                              <Button
-                                type="button"
-                                variant={
-                                  paymentMethod === "cash"
-                                    ? "default"
-                                    : "outline"
-                                }
-                                className={
-                                  paymentMethod === "cash" ? "bg-blue-600" : ""
-                                }
-                                onClick={() => {
-                                  setPaymentMethod("cash")
-                                  setInstallmentsCount(1)
-                                }}
-                              >
-                                {isInternational
-                                  ? "Invoice (Single)"
-                                  : "Boleto à vista"}
-                              </Button>
-                              <Button
-                                type="button"
-                                variant={
-                                  paymentMethod === "installments"
-                                    ? "default"
-                                    : "outline"
-                                }
-                                className={
-                                  paymentMethod === "installments"
-                                    ? "bg-blue-600"
-                                    : ""
-                                }
-                                onClick={() => {
-                                  setPaymentMethod("installments")
-                                  setInstallmentsCount(maxInstallments)
-                                }}
-                              >
-                                {isInternational
-                                  ? "Invoice (Installments)"
-                                  : "Boleto parcelado"}
-                              </Button>
+                            <div
+                              className={`grid grid-cols-1 gap-3 ${boletoAvailable ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}
+                            >
+                              {boletoAvailable ? (
+                                <>
+                                  <Button
+                                    type="button"
+                                    variant={
+                                      paymentMethod === "cash"
+                                        ? "default"
+                                        : "outline"
+                                    }
+                                    className={
+                                      paymentMethod === "cash"
+                                        ? "bg-blue-600"
+                                        : ""
+                                    }
+                                    onClick={() => {
+                                      setPaymentMethod("cash")
+                                      setInstallmentsCount(1)
+                                    }}
+                                  >
+                                    {isInternational
+                                      ? "Invoice (Single)"
+                                      : "Boleto à vista"}
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant={
+                                      paymentMethod === "installments"
+                                        ? "default"
+                                        : "outline"
+                                    }
+                                    className={
+                                      paymentMethod === "installments"
+                                        ? "bg-blue-600"
+                                        : ""
+                                    }
+                                    onClick={() => {
+                                      setPaymentMethod("installments")
+                                      setInstallmentsCount(maxInstallments)
+                                    }}
+                                  >
+                                    {isInternational
+                                      ? "Invoice (Installments)"
+                                      : "Boleto parcelado"}
+                                  </Button>
+                                </>
+                              ) : (
+                                <Button
+                                  type="button"
+                                  variant={
+                                    paymentMethod === "pix"
+                                      ? "default"
+                                      : "outline"
+                                  }
+                                  className={
+                                    paymentMethod === "pix" ? "bg-blue-600" : ""
+                                  }
+                                  onClick={() => {
+                                    setPaymentMethod("pix")
+                                    setInstallmentsCount(1)
+                                  }}
+                                >
+                                  Pix
+                                </Button>
+                              )}
                               <Button
                                 type="button"
                                 variant={
@@ -2762,6 +2794,66 @@ export default function CheckoutPage({
                               </Button>
                             </div>
                           )}
+                          {paymentMethod === "pix" && (
+                            <div className="space-y-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100 mt-4">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-blue-900 font-bold">
+                                  {isInternational
+                                    ? "Single Payment"
+                                    : "Pagamento Único"}
+                                </Label>
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none"
+                                >
+                                  {isInternational
+                                    ? "One-time Total"
+                                    : "Total à Vista"}
+                                </Badge>
+                              </div>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-2xl font-black text-blue-600">
+                                  {new Intl.NumberFormat(
+                                    isInternational ? "en-US" : "pt-BR",
+                                    {
+                                      style: "currency",
+                                      currency: "BRL",
+                                    },
+                                  ).format(finalTotal)}
+                                </span>
+                              </div>
+                              <div className="pt-2 border-t border-blue-100">
+                                <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">
+                                  {isInternational
+                                    ? "Pix Payment:"
+                                    : "Pagamento por Pix:"}
+                                </p>
+                                <p className="text-[11px] text-blue-600 font-black flex justify-between items-center">
+                                  <span>
+                                    {isInternational
+                                      ? "DUE DATE"
+                                      : "VENCIMENTO"}
+                                  </span>
+                                  <span>
+                                    {new Date(
+                                      generatePixDueDate(
+                                        room.hotel_check_in_date,
+                                      ),
+                                    ).toLocaleDateString(
+                                      isInternational ? "en-US" : "pt-BR",
+                                      { timeZone: "UTC" },
+                                    )}
+                                  </span>
+                                </p>
+                                <p className="text-[11px] text-blue-600">
+                                  {isInternational
+                                    ? "The organization will send the Pix payment instructions to your e-mail."
+                                    : "A organização enviará as instruções de pagamento via Pix para o seu e-mail."}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
                           {paymentMethod === "cash" && (
                             <div className="space-y-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100 mt-4">
                               <div className="flex items-center justify-between">

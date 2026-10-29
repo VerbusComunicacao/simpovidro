@@ -242,8 +242,9 @@ async function createRegistration(userId, registrationData) {
       },
     ],
     company_cnpj: registrationData?.company_cnpj || null,
-    payment_method: registrationData?.payment_method || "installments",
-    installments_count: registrationData?.installments_count || 3,
+    // O hotel padrão tem check-in hoje, então já passou o corte do boleto
+    payment_method: registrationData?.payment_method || "pix",
+    installments_count: registrationData?.installments_count || 1,
   }
   return await registration.create(userId, data)
 }

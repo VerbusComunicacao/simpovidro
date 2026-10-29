@@ -556,7 +556,10 @@ export default function MyOrdersPage() {
                                       {order.installments_count}
                                     </td>
                                     <td className="px-4 py-3 text-gray-600">
-                                      {formatDate(installment.due_date)}
+                                      {formatDate(installment.due_date) ||
+                                        (isInternational
+                                          ? "No due date"
+                                          : "Sem vencimento")}
                                     </td>
                                     <td className="px-4 py-3 text-gray-600">
                                       {formatCurrency(installment.amount)}
