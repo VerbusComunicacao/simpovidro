@@ -33,6 +33,7 @@ import {
   calculateSummaryPrice,
   calculateAdultDiscount,
   calculateMaxInstallments,
+  isBoletoAvailable,
   getChildrenCount,
   translateText,
 } from "@/lib/registration-helpers"
@@ -53,6 +54,11 @@ export default function RegistrationPage({ hotels, discounts }) {
       (d) => (d.name || "").toLowerCase().trim() !== "staff",
     )
   }, [discounts])
+
+  // Boleto só existe até o corte do parcelamento; depois disso é Pix
+  const boletoAvailable = useMemo(() => {
+    return isBoletoAvailable(activeHotel?.check_in_date)
+  }, [activeHotel?.check_in_date])
 
   // Calculate maximum boleto installments until event date
   const maxBoletoInstallments = useMemo(() => {
@@ -564,9 +570,11 @@ export default function RegistrationPage({ hotels, discounts }) {
                                   <div className="flex items-start gap-2 pt-1">
                                     <CreditCard className="h-4 w-4 text-blue-600 shrink-0" />
                                     <span className="text-[0.8rem]">
-                                      {maxBoletoInstallments > 1
-                                        ? `${maxBoletoInstallments}x no boleto`
-                                        : "Boleto à vista"}{" "}
+                                      {!boletoAvailable
+                                        ? "Pix à vista"
+                                        : maxBoletoInstallments > 1
+                                          ? `${maxBoletoInstallments}x no boleto`
+                                          : "Boleto à vista"}{" "}
                                       ou até 10x no cartão de crédito
                                     </span>
                                   </div>

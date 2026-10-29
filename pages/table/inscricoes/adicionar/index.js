@@ -665,6 +665,7 @@ export default function AdminAddRegistrationPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="cash">Boleto à vista</SelectItem>
+                        <SelectItem value="pix">Pix</SelectItem>
                         <SelectItem value="installments">
                           Boleto parcelado
                         </SelectItem>

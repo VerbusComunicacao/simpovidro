@@ -1,6 +1,12 @@
 import orchestrator from "tests/orchestrator.js"
 import database from "infra/database.js"
 
+// Check-in futuro: o boleto só existe até 6 dias antes do check-in
+const addDays = (days) =>
+  new Date(Date.now() + days * 86400000).toISOString().split("T")[0]
+const HOTEL_CHECK_IN = addDays(60)
+const HOTEL_CHECK_OUT = addDays(69)
+
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
   await orchestrator.clearDatabase()
@@ -91,8 +97,8 @@ describe("POST /api/v1/registrations", () => {
             name: "Discount Hotel",
             city: "São Paulo",
             country: "Brasil",
-            check_in_date: "2026-11-01",
-            check_out_date: "2026-11-10",
+            check_in_date: HOTEL_CHECK_IN,
+            check_out_date: HOTEL_CHECK_OUT,
           }),
         },
       )
@@ -423,7 +429,7 @@ describe("POST /api/v1/registrations", () => {
       const sale = require("models/sale.js").default
       const saleInstallment = require("models/sale-installment.js").default
 
-      const checkInDate = Temporal.PlainDate.from("2026-11-01")
+      const checkInDate = Temporal.PlainDate.from(HOTEL_CHECK_IN)
       const expectedInstallmentsCount =
         sale.calculateMaxInstallments(checkInDate)
       const expectedDates = saleInstallment.generateInstallmentDates(
@@ -1109,7 +1115,7 @@ describe("POST /api/v1/registrations", () => {
           body: JSON.stringify({
             room_id: roomData.id,
             guests_data: guestsData,
-            payment_method: "cash",
+            payment_method: "pix",
           }),
         },
       )
@@ -1252,7 +1258,7 @@ describe("POST /api/v1/registrations", () => {
           body: JSON.stringify({
             room_id: roomData.id,
             guests_data: guestsData,
-            payment_method: "cash",
+            payment_method: "pix",
           }),
         },
       )
@@ -1838,7 +1844,7 @@ describe("POST /api/v1/registrations", () => {
                 emergency_contact_phone: "(11) 99999-9999",
               },
             ],
-            payment_method: "cash",
+            payment_method: "pix",
           }),
         },
       )

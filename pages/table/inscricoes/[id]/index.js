@@ -927,16 +927,18 @@ export default function RegistrationDetailsPage() {
                     </p>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-gray-700 uppercase text-sm">
-                        {sale.payment_method === "installments"
-                          ? "Boleto Parcelado"
-                          : sale.payment_method ===
-                              "credit-card_mastercard-visa"
-                            ? "Cartão de Crédito (Mastercard/Visa)"
-                            : sale.payment_method === "credit-card_amex"
-                              ? "Cartão de Crédito (AMEX)"
-                              : sale.payment_method?.startsWith("credit")
-                                ? "Cartão de Crédito"
-                                : "Boleto à Vista"}
+                        {sale.payment_method === "pix"
+                          ? "Pix"
+                          : sale.payment_method === "installments"
+                            ? "Boleto Parcelado"
+                            : sale.payment_method ===
+                                "credit-card_mastercard-visa"
+                              ? "Cartão de Crédito (Mastercard/Visa)"
+                              : sale.payment_method === "credit-card_amex"
+                                ? "Cartão de Crédito (AMEX)"
+                                : sale.payment_method?.startsWith("credit")
+                                  ? "Cartão de Crédito"
+                                  : "Boleto à Vista"}
                       </span>
                       <Badge variant="outline">
                         {sale.installments_count}x
@@ -996,7 +998,7 @@ export default function RegistrationDetailsPage() {
                               {inst.installment_number}ª Parcela
                             </p>
                             <p className="text-xs text-gray-500">
-                              {formatDate(inst.due_date)}
+                              {formatDate(inst.due_date) || "Sem vencimento"}
                             </p>
                           </div>
                           <div className="text-right">
