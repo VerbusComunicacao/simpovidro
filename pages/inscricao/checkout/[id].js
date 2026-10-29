@@ -2836,9 +2836,7 @@ export default function CheckoutPage({
                                   </span>
                                   <span>
                                     {new Date(
-                                      generatePixDueDate(
-                                        room.hotel_check_in_date,
-                                      ),
+                                      generatePixDueDate(),
                                     ).toLocaleDateString(
                                       isInternational ? "en-US" : "pt-BR",
                                       { timeZone: "UTC" },

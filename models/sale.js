@@ -450,7 +450,7 @@ async function create(saleInputValues, externalClient) {
         // cash, pix or credit-card: 1 single installment of full amount for tracking payment
         const singleInstallmentDate =
           payment_method === "pix"
-            ? generatePixDueDate(eventDate)
+            ? generatePixDueDate()
             : saleInstallment.generateInstallmentDates(1, eventDate)[0]
         await saleInstallment.createMany(
           [
@@ -1572,7 +1572,7 @@ async function adjustPrice(saleId, newValue, externalClient) {
 
       const singleInstallmentDate =
         targetSale.payment_method === "pix"
-          ? generatePixDueDate(eventDate)
+          ? generatePixDueDate()
           : saleInstallment.generateInstallmentDates(1, eventDate)[0]
 
       await saleInstallment.createMany(

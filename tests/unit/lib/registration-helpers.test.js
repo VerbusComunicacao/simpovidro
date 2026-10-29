@@ -3,7 +3,7 @@ import {
   generateInstallmentDates,
   isBoletoAvailable,
   generatePixDueDate,
-  PIX_DUE_DAYS_BEFORE_EVENT,
+  PIX_DUE_DAYS,
 } from "../../../lib/registration-helpers.js"
 
 // Ativa fake timers para congelar o sistema em datas específicas
@@ -87,15 +87,10 @@ describe("registration-helpers.js - Boleto x Pix (Hotel 05/11)", () => {
     expect(isBoletoAvailable(null)).toBe(true)
   })
 
-  test("Pix vence no mesmo dia do evento por padrão", () => {
-    expect(PIX_DUE_DAYS_BEFORE_EVENT).toBe(0)
-    expect(generatePixDueDate(hotelEntryDate)).toBe("2026-11-05")
-    expect(generatePixDueDate(new Date("2026-11-05T00:00:00Z"))).toBe(
-      "2026-11-05",
-    )
-  })
+  test("Pix vence no dia da inscrição por padrão (pagamento imediato)", () => {
+    jest.setSystemTime(new Date("2026-11-02T12:00:00Z"))
 
-  test("Pix sem data de check-in não gera vencimento", () => {
-    expect(generatePixDueDate(null)).toBeNull()
+    expect(PIX_DUE_DAYS).toBe(0)
+    expect(generatePixDueDate()).toBe("2026-11-02")
   })
 })
