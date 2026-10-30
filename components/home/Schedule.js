@@ -160,10 +160,7 @@ const DAYS = [
       {
         time: ["Noite", "Evening"],
         title: ["Jantar", "Dinner"],
-        place: [
-          "Restaurantes temáticos do resort",
-          "Resort themed restaurants",
-        ],
+        place: ["Restaurantes do resort", "Resort restaurants"],
       },
     ],
   },
