@@ -360,21 +360,23 @@ export default function Schedule() {
       id="programacao"
       className="py-24 bg-logo-navy relative overflow-hidden"
     >
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 opacity-[0.015] pointer-events-none bg-repeat bg-[length:120px_62px]"
+        style={{
+          backgroundImage: "url(/images/pattern-infinito-branco.svg)",
+        }}
+      />
       <div className="max-w-5xl mx-auto px-6 relative z-10">
         <div className="mb-12">
           <h2 className="text-logo-orange uppercase tracking-[0.2em] text-sm mb-4">
-            {isEn ? "Schedule" : "Programação"}
+            {isEn ? "Schedule" : "Programação & Trajes"}
           </h2>
           <h3 className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-4">
             {isEn
-              ? "Four days of content, business and fellowship."
-              : "Quatro dias de conteúdo, negócios e integração."}
+              ? "Four days of content, business, fellowship and leisure."
+              : "Quatro dias de conteúdo, negócios, integração e lazer."}
           </h3>
-          <p className="text-lg text-white/80 max-w-2xl">
-            {isEn
-              ? "Talks and the business fair in the mornings, reserved round tables at lunch, and networking and leisure by the sea in the afternoons and evenings."
-              : "Talks e feira de negócios pela manhã, mesas-redondas reservadas nos almoços e networking e lazer à beira-mar nas tardes e noites."}
-          </p>
         </div>
 
         <div role="tablist" className="grid grid-cols-4 gap-2 md:gap-4 mb-10">
