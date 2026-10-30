@@ -8,6 +8,7 @@ import Navbar from "@/components/home/Navbar"
 import Hero from "@/components/home/Hero"
 import AboutEvent from "@/components/home/AboutEvent"
 import Speakers from "@/components/home/Speakers"
+import Schedule from "@/components/home/Schedule"
 import Location from "@/components/home/Location"
 import Accommodations from "@/components/home/Accommodations"
 import Pricing from "@/components/home/Pricing"
@@ -150,6 +151,8 @@ export default function Home() {
         <AboutEvent scrollToSection={scrollToSection} />
 
         <Speakers router={router} />
+
+        <Schedule />
 
         <Location />
 

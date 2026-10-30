@@ -90,9 +90,10 @@ export default function Hero({ scrollToSection, router: propRouter }) {
               size="lg"
               variant="outline"
               className="bg-logo-orange/20 backdrop-blur-sm border-orange-400/30 text-orange-400 hover:bg-logo-orange/35 hover:text-orange-300 rounded-full h-14 px-10 text-lg transition-all"
-              onClick={(e) => scrollToSection(e, "sobre")}
+              onClick={(e) => scrollToSection(e, "programacao")}
             >
-              {t("Saber mais", "Learn more")} <Info className="ml-2 h-5 w-5" />
+              {t("Confira a programação", "Check the schedule")}{" "}
+              <Info className="ml-2 h-5 w-5" />
             </Button>
           </div>
         </motion.div>

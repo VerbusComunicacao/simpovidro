@@ -37,7 +37,7 @@ export default function RegistrationHeader({ showBackButton = false }) {
           </Link>
 
           {/* Nav Items - Same as Home Navbar */}
-          <nav className="hidden xl:flex items-center gap-6 text-sm font-bold text-slate-600">
+          <nav className="hidden xl:flex items-center gap-6 text-sm text-slate-600">
             {navItems.map((item) => {
               const name =
                 item.id === "sobre"
