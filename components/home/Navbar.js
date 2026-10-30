@@ -8,6 +8,7 @@ import { useRouter } from "next/router"
 export const navItems = [
   { name: "Sobre", id: "sobre" },
   { name: "Palestrantes", id: "palestrantes" },
+  { name: "Programação", id: "programacao" },
   { name: "Local", id: "local" },
   { name: "Condições Especiais", id: "condicoes-especiais" },
   { name: "Torneios", id: "torneios", href: "/torneios" },
@@ -55,24 +56,26 @@ export default function Navbar({
           </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-4 lg:gap-8 text-sm font-medium">
+        <div className="hidden md:flex items-center gap-4 lg:gap-4 text-sm font-medium">
           {currentNavItems.map((item) => {
             const name =
               item.id === "sobre"
                 ? t("Sobre", "About")
                 : item.id === "palestrantes"
                   ? t("Palestrantes", "Speakers")
-                  : item.id === "local"
-                    ? t("Local", "Location")
-                    : item.id === "condicoes-especiais"
-                      ? t("Condições Especiais", "Special Conditions")
-                      : item.id === "torneios"
-                        ? t("Torneios", "Tournaments")
-                        : item.id === "transfer"
-                          ? t("Transfer", "Transfer")
-                          : item.id === "almoco"
-                            ? t("Almoços", "Lunches")
-                            : item.name
+                  : item.id === "programacao"
+                    ? t("Programação", "Schedule")
+                    : item.id === "local"
+                      ? t("Local", "Location")
+                      : item.id === "condicoes-especiais"
+                        ? t("Condições Especiais", "Special Conditions")
+                        : item.id === "torneios"
+                          ? t("Torneios", "Tournaments")
+                          : item.id === "transfer"
+                            ? t("Transfer", "Transfer")
+                            : item.id === "almoco"
+                              ? t("Almoços", "Lunches")
+                              : item.name
 
             if (item.href) {
               return (
@@ -153,17 +156,19 @@ export default function Navbar({
                 ? t("Sobre", "About")
                 : item.id === "palestrantes"
                   ? t("Palestrantes", "Speakers")
-                  : item.id === "local"
-                    ? t("Local", "Location")
-                    : item.id === "condicoes-especiais"
-                      ? t("Condições Especiais", "Special Conditions")
-                      : item.id === "torneios"
-                        ? t("Torneios", "Tournaments")
-                        : item.id === "transfer"
-                          ? t("Transfer", "Transfer")
-                          : item.id === "almoco"
-                            ? t("Almoços", "Lunches")
-                            : item.name
+                  : item.id === "programacao"
+                    ? t("Programação", "Schedule")
+                    : item.id === "local"
+                      ? t("Local", "Location")
+                      : item.id === "condicoes-especiais"
+                        ? t("Condições Especiais", "Special Conditions")
+                        : item.id === "torneios"
+                          ? t("Torneios", "Tournaments")
+                          : item.id === "transfer"
+                            ? t("Transfer", "Transfer")
+                            : item.id === "almoco"
+                              ? t("Almoços", "Lunches")
+                              : item.name
 
             if (item.href) {
               return (
